@@ -1,0 +1,2308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Solaris</title>
+<meta name="description" content="Painel de monitoramento de energia solar com medidor ao vivo, desagregacao por aparelho e metas.">
+<meta name="theme-color" content="#16150F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2316150F'/%3E%3Ccircle cx='50' cy='50' r='15' fill='none' stroke='%23EDA22B' stroke-width='4.5'/%3E%3Cg stroke='%23F5C25B' stroke-width='4.5' stroke-linecap='round'%3E%3Cpath d='M50 23v7M50 70v7M77 50h-7M30 50h-7M69 31l-5 5M36 64l-5 5M69 69l-5-5M36 36l-5-5'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+/* ============================================================
+   SOLARIS - sistema de design
+   Um unico mundo visual: papel quente, tinta oliva, sol ambar.
+   Todas as cores sao pintadas explicitamente.
+   ============================================================ */
+:root{
+  --ground:#EFEBE1;
+  --ground-2:#F7F4EC;
+  --surface:#FFFFFF;
+  --dark:#16150F;
+  --dark-2:#211F17;
+  --ink:#16150F;
+  --ink-2:#4A453B;
+  --muted:#6B665C;
+  --faint:#8B8577;
+  --fainter:#A9A395;
+  --line:#E3DED2;
+  --line-2:#DDD7C9;
+  --on-dark:#F4F1EA;
+  --on-dark-soft:#A79F8E;
+  --on-dark-faint:#8E887A;
+
+  --sun:#EDA22B;
+  --sun-lite:#F5C25B;
+  --sun-deep:#B4761B;
+  --sun-deeper:#8A5810;
+
+  --grid:#3E4C7A;
+  --good:#2E7A5A;
+  --good-soft:#93C7AC;
+  --good-bg:#E4F0EA;
+  --good-line:#C3DFD1;
+  --good-on-dark:#6FD6A4;
+  --warn:#8A6A15;
+  --warn-bg:#FBF0CF;
+  --warn-line:#EDDCA8;
+  --bad:#C4573C;
+  --bad-soft:#E0A79A;
+  --bad-bg:#FBECE8;
+  --bad-line:#EFCFC6;
+  --violet:#7A6BA8;
+  --teal:#4E8FA8;
+
+  --r-lg:20px; --r-md:15px; --r-sm:11px;
+  --shadow:0 1px 3px rgba(22,21,15,.08);
+  --shadow-lift:0 14px 40px -18px rgba(22,21,15,.42);
+
+  --f-display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
+  --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--ground);color:var(--ink);
+  font-family:var(--f-body);font-size:14px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+h1,h2,h3{margin:0;font-family:var(--f-display);text-wrap:balance}
+button{font:inherit;color:inherit;background:none;border:0;margin:0;padding:0;cursor:pointer;text-align:left}
+input{font:inherit;color:inherit}
+svg{display:block}
+[hidden]{display:none !important}
+:focus-visible{outline:2px solid var(--sun-deep);outline-offset:2px;border-radius:6px}
+
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#D8D2C4;border-radius:8px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:#C4BDAA;background-clip:content-box}
+
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.tnum{font-variant-numeric:tabular-nums}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:1.05px;color:var(--faint)}
+.eyebrow-sm{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--fainter)}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ---------- casca ---------- */
+.app{display:flex;min-height:100vh;background:var(--ground)}
+
+.rail{
+  width:244px;flex-shrink:0;background:var(--dark);color:var(--on-dark);
+  display:flex;flex-direction:column;padding:22px 0 18px;
+  position:sticky;top:0;height:100vh;z-index:30;
+}
+.brand{display:flex;align-items:center;gap:11px;padding:0 22px 24px}
+.brand-mark{
+  width:34px;height:34px;border-radius:11px;flex-shrink:0;
+  background:linear-gradient(150deg,var(--sun-lite),#E08A18);
+  display:flex;align-items:center;justify-content:center;
+}
+.brand-mark svg{animation:spin 40s linear infinite}
+.brand-name{font-family:var(--f-display);font-weight:800;font-size:19px;letter-spacing:-.4px;line-height:1}
+.brand-sub{font-size:10.5px;color:var(--on-dark-faint);letter-spacing:.5px;text-transform:uppercase;margin-top:3px}
+
+.nav{display:flex;flex-direction:column;gap:2px;padding:0 12px}
+.nav-item{
+  display:flex;align-items:center;gap:11px;width:100%;
+  padding:9px 12px;border-radius:10px;font-size:13.5px;font-weight:500;
+  color:var(--on-dark-soft);transition:background .15s,color .15s;
+}
+.nav-item:hover{background:rgba(244,241,234,.08);color:var(--on-dark)}
+.nav-item[aria-current="page"]{background:rgba(237,162,43,.16);color:var(--sun-lite);font-weight:600}
+.nav-item svg{flex-shrink:0}
+.nav-label{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{
+  background:var(--bad);color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;
+  border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0;
+}
+
+.rail-spacer{flex:1;min-height:14px}
+.rail-foot{padding:0 12px;display:flex;flex-direction:column;gap:10px}
+.unitbox{background:rgba(244,241,234,.06);border:1px solid rgba(244,241,234,.1);border-radius:14px;padding:13px}
+.unitbox-title{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--on-dark-faint);margin-bottom:9px}
+.unit{display:flex;align-items:center;gap:10px;width:100%;padding:8px 9px;border-radius:9px;color:var(--on-dark-soft);transition:background .15s}
+.unit:hover{background:rgba(244,241,234,.1)}
+.unit[aria-pressed="true"]{background:rgba(244,241,234,.12);color:var(--on-dark)}
+.unit-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:#4A453B}
+.unit[aria-pressed="true"] .unit-dot{background:var(--sun)}
+.unit-name{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.unit-type{font-size:10.5px;color:var(--on-dark-faint)}
+
+.meter{border:1px solid rgba(244,241,234,.1);border-radius:14px;padding:12px 13px 13px;background:rgba(244,241,234,.04)}
+.meter-head{display:flex;align-items:center;gap:7px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--on-dark-faint)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--good-on-dark);flex-shrink:0;animation:beat 2.4s ease-in-out infinite}
+.meter-rows{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+.meter-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--on-dark-soft)}
+.meter-val{font-family:var(--f-mono);font-size:13px;font-weight:500;color:var(--on-dark);font-variant-numeric:tabular-nums}
+.meter-bar{height:4px;border-radius:3px;background:rgba(244,241,234,.12);overflow:hidden;margin-top:10px}
+.meter-bar span{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--sun),var(--sun-lite));transition:width .9s cubic-bezier(.4,0,.2,1)}
+.meter-note{font-size:10.5px;color:var(--on-dark-faint);margin-top:8px;line-height:1.35}
+
+/* ---------- area principal ---------- */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  padding:24px 34px 18px;border-bottom:1px solid var(--line);
+  background:rgba(239,235,225,.9);backdrop-filter:blur(10px);
+  position:sticky;top:0;z-index:20;
+}
+.topbar h1{font-weight:700;font-size:30px;letter-spacing:-.9px;line-height:1.05}
+.topbar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.seg{display:flex;background:#E5E0D3;border-radius:10px;padding:3px}
+.seg button{padding:6px 15px;border-radius:8px;font-size:12.5px;font-weight:600;color:#7A7466;transition:background .15s,color .15s}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.seg .short{display:none}
+.ghost-btn{
+  display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:10px;
+  border:1px solid var(--line-2);background:var(--surface);font-size:12.5px;font-weight:600;color:var(--ink-2);
+  transition:border-color .15s,color .15s;
+}
+.ghost-btn:hover{border-color:var(--ink);color:var(--ink)}
+.dark-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 15px;border-radius:11px;
+  background:var(--dark);color:var(--on-dark);font-size:13px;font-weight:600;transition:background .15s,opacity .15s;
+}
+.dark-btn:hover{background:var(--dark-2)}
+.dark-btn[disabled]{background:var(--line-2);color:#9C9585;cursor:not-allowed}
+.link-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--sun-deep);transition:color .15s}
+.link-btn:hover{color:var(--sun-deeper)}
+
+.page{padding:24px 34px 64px}
+.grid12{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;align-items:start}
+.s3{grid-column:span 3}.s4{grid-column:span 4}.s5{grid-column:span 5}
+.s6{grid-column:span 6}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}
+.stack{display:flex;flex-direction:column;gap:16px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px 26px}
+.card--tight{padding:18px 20px 16px;border-radius:18px}
+.card--dark{background:var(--dark);color:var(--on-dark);border-color:transparent;position:relative;overflow:hidden}
+.card h2{font-weight:600;font-size:19px;letter-spacing:-.5px}
+.card-sub{font-size:12.5px;color:var(--faint);margin-top:4px}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.legend{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+.swatch{width:14px;height:3px;border-radius:2px;flex-shrink:0}
+.swatch--sq{width:10px;height:10px;border-radius:3px}
+.rule{height:1px;background:var(--ground);border:0;margin:16px 0 13px}
+
+.pill{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap}
+.pill--warn{background:var(--warn-bg);color:var(--warn)}
+.pill--good{background:var(--good-bg);color:var(--good)}
+.pill--bad{background:var(--bad-bg);color:var(--bad)}
+.pill--neutral{background:var(--ground);color:var(--faint)}
+.pill--ia{display:inline-flex;align-items:center;gap:4px;background:#F0E9DA;color:#99722A;font-size:10.5px;letter-spacing:.3px;padding:3px 8px;border-radius:20px;font-weight:600}
+
+.big{font-family:var(--f-display);font-weight:700;letter-spacing:-1.3px;line-height:1}
+.big-30{font-size:30px;letter-spacing:-1.2px}
+.big-32{font-size:32px}
+.big-34{font-size:34px;letter-spacing:-1.5px}
+.big-40{font-size:40px;letter-spacing:-1.8px}
+.big-46{font-size:46px;letter-spacing:-2px}
+.big-74{font-size:74px;letter-spacing:-3.4px;line-height:.86}
+
+/* ---------- painel: heroi da economia ---------- */
+.hero{padding:26px 28px 22px}
+.hero-glow{
+  position:absolute;top:-70px;right:-50px;width:230px;height:230px;border-radius:50%;
+  background:radial-gradient(circle,rgba(237,162,43,.35),transparent 68%);
+  animation:pulse 6s ease-in-out infinite;pointer-events:none;
+}
+.hero-in{position:relative}
+.hero-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.hero-kicker{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--on-dark-soft)}
+.delta{
+  display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:4px 10px;
+  font-size:12px;font-weight:600;background:rgba(74,196,140,.16);color:var(--good-on-dark);
+}
+.delta--down{background:rgba(196,87,60,.18);color:#E9A392}
+.delta svg{transition:transform .2s}
+.delta--down svg{transform:rotate(180deg)}
+.hero-money{display:flex;align-items:baseline;gap:10px;margin-top:10px}
+.hero-cur{font-family:var(--f-display);font-weight:400;font-size:30px;color:var(--on-dark-soft)}
+.hero-line{font-size:13.5px;color:var(--on-dark-soft);margin-top:14px;max-width:430px;line-height:1.5}
+.spark{display:flex;align-items:flex-end;gap:5px;height:80px;margin-top:22px}
+.spark-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0}
+.spark-bar{width:100%;border-radius:4px 4px 2px 2px;background:rgba(244,241,234,.16);transition:background .2s,height .5s cubic-bezier(.4,0,.2,1)}
+.spark-col:hover .spark-bar{background:rgba(244,241,234,.34)}
+.spark-col.is-now .spark-bar{background:var(--sun)}
+.spark-lbl{font-family:var(--f-mono);font-size:9.5px;color:var(--on-dark-faint)}
+.spark-col.is-now .spark-lbl{color:var(--sun)}
+
+/* ---------- donut ---------- */
+.donut-wrap{display:flex;align-items:center;gap:22px;margin-top:14px;flex-wrap:wrap}
+.donut{position:relative;width:132px;height:132px;flex-shrink:0}
+.donut svg{transform:rotate(-90deg)}
+.donut-ring{transition:stroke-dasharray 1s cubic-bezier(.4,0,.2,1)}
+.donut-mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut-pct{font-family:var(--f-display);font-weight:700;font-size:33px;letter-spacing:-1.4px;line-height:1}
+.donut-cap{font-size:10.5px;color:var(--faint);letter-spacing:.4px}
+.split{display:flex;flex-direction:column;gap:13px;min-width:0}
+.split-row-top{display:flex;align-items:center;gap:7px}
+.split-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+.split-lbl{font-size:12px;color:var(--muted)}
+.split-val{font-family:var(--f-mono);font-size:17px;font-weight:500;margin-top:2px;font-variant-numeric:tabular-nums}
+
+/* ---------- kpi ---------- */
+.kpi-top{display:flex;align-items:center;gap:8px}
+.kpi-lbl{font-size:12px;color:var(--muted);font-weight:500}
+.kpi-val{display:flex;align-items:baseline;gap:5px;margin-top:11px}
+.kpi-unit{font-size:13px;color:var(--faint);font-weight:500}
+.kpi-note{font-size:11.5px;color:var(--faint);margin-top:8px;line-height:1.4}
+
+/* ---------- graficos ---------- */
+.chart{position:relative;margin-top:16px}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart-axis{display:flex;justify-content:space-between;margin-top:6px;font-family:var(--f-mono);font-size:10.5px;color:var(--fainter)}
+.now-line{stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3;opacity:.45}
+.now-dot{animation:beat 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.tip{
+  position:absolute;z-index:40;pointer-events:none;opacity:0;transform:translate(-50%,-116%);
+  background:var(--dark);color:var(--on-dark);border-radius:10px;padding:8px 11px;
+  font-size:11.5px;line-height:1.45;white-space:nowrap;box-shadow:var(--shadow-lift);
+  transition:opacity .12s;
+}
+.tip.on{opacity:1}
+.tip b{font-family:var(--f-mono);font-weight:500;color:var(--sun-lite)}
+.tip i{font-style:normal;font-family:var(--f-mono);color:#9FB0DD}
+
+/* barras de historico */
+.hbars{display:flex;align-items:flex-end;gap:4px;margin-top:22px}
+.hbar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;cursor:default}
+.hbar-pair{display:flex;align-items:flex-end;gap:2px;height:150px;width:100%}
+.hbar-pair i{display:block;width:100%;border-radius:3px 3px 0 0;transition:height .45s cubic-bezier(.4,0,.2,1),opacity .15s}
+.hbar-c{background:var(--grid)}
+.hbar-g{background:var(--sun)}
+.hbar:hover .hbar-pair i{opacity:.78}
+.hbar-saldo{width:100%;height:4px;border-radius:2px}
+.hbar-lbl{font-family:var(--f-mono);font-size:9.5px;color:var(--fainter);height:12px;white-space:nowrap}
+
+.compare-lbl{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-bottom:7px}
+.track{height:12px;background:#F4F1EA;border-radius:6px;overflow:hidden}
+.track i{display:block;height:100%;border-radius:6px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+
+.note{display:flex;gap:13px;padding:14px 16px;border-radius:14px}
+.note-dot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.note-t{font-size:13.5px;font-weight:600}
+.note-s{font-size:12.5px;margin-top:3px}
+.note--good{background:var(--good-bg)}
+.note--good .note-dot{background:var(--good)}
+.note--good .note-s{color:#4A6B5C}
+.note--bad{background:var(--bad-bg)}
+.note--bad .note-dot{background:var(--bad)}
+.note--bad .note-s{color:#8A5040}
+.note--sun{background:var(--ground-2)}
+.note--sun .note-dot{background:var(--sun)}
+.note--sun .note-s{color:var(--muted)}
+
+/* ---------- para onde vai a energia ---------- */
+.mixbar{display:flex;height:13px;border-radius:7px;overflow:hidden;margin-top:18px;gap:2px}
+.mixbar i{display:block;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.mixbar i:hover{filter:brightness(1.12)}
+.toplist{display:flex;flex-direction:column;gap:2px;margin-top:16px}
+.toprow{display:flex;align-items:center;gap:13px;width:100%;padding:9px 10px;border-radius:11px;transition:background .13s}
+.toprow:hover{background:var(--ground-2)}
+.toprow-bar{width:10px;height:34px;border-radius:5px;flex-shrink:0}
+.toprow-name{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toprow-sub{font-size:11.5px;color:var(--faint)}
+.toprow-num{font-family:var(--f-mono);font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}
+.toprow-cash{font-size:11px;color:var(--faint)}
+
+/* ---------- tabela de aparelhos ---------- */
+.eq-head,.eq-row{display:grid;grid-template-columns:28px minmax(0,1fr) 96px 84px 58px 32px;gap:12px;align-items:center}
+.eq-head{padding:0 14px 9px;font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--fainter);border-bottom:1px solid var(--ground)}
+.eq-list{display:flex;flex-direction:column;gap:1px;margin-top:6px}
+.eq-row{
+  width:100%;padding:13px 14px;border-radius:13px;border:1px solid transparent;transition:background .13s,border-color .13s;
+}
+.eq-row:hover{background:var(--ground-2)}
+.eq-row[aria-expanded="true"]{background:var(--surface);border-color:var(--ink)}
+.eq-pos{font-family:var(--f-mono);font-size:12px;color:var(--fainter)}
+.eq-name{display:flex;align-items:center;gap:8px;min-width:0}
+.eq-name b{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eq-meta{font-size:11.5px;color:var(--faint);margin-top:2px}
+.eq-track{height:8px;background:#F4F1EA;border-radius:4px;overflow:hidden}
+.eq-track i{display:block;height:100%;border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.eq-pct{font-size:11px;color:var(--faint);margin-top:4px}
+.eq-kwh{font-family:var(--f-mono);font-size:13.5px;font-weight:500;font-variant-numeric:tabular-nums}
+.eq-cash{font-size:11px;color:var(--faint)}
+.eq-trend{font-family:var(--f-mono);font-size:11.5px;font-weight:500}
+.eq-kill{opacity:0;color:var(--fainter);padding:4px;border-radius:8px;transition:opacity .13s,color .13s,background .13s}
+.eq-row:hover .eq-kill,.eq-kill:focus-visible{opacity:1}
+.eq-kill:hover{color:var(--bad);background:var(--bad-bg)}
+
+.detect{display:flex;align-items:center;gap:16px;background:var(--dark);color:var(--on-dark);border-radius:16px;padding:16px 20px;flex-wrap:wrap}
+.detect-ic{width:36px;height:36px;border-radius:12px;background:rgba(237,162,43,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.detect-t{font-size:14px;font-weight:600}
+.detect-s{font-size:12.5px;color:var(--on-dark-soft);margin-top:3px}
+.detect-btns{display:flex;gap:8px;flex-shrink:0}
+.btn-no{padding:8px 15px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid rgba(244,241,234,.24);color:var(--on-dark-soft);transition:color .15s,border-color .15s}
+.btn-no:hover{color:var(--on-dark);border-color:var(--on-dark)}
+.btn-yes{padding:8px 15px;border-radius:10px;font-size:13px;font-weight:600;background:var(--sun);color:var(--dark);transition:background .15s}
+.btn-yes:hover{background:var(--sun-lite)}
+
+.empty{background:var(--ground-2);border:1px dashed var(--line-2);border-radius:var(--r-lg);padding:34px 26px;text-align:center}
+.empty-t{font-size:14px;font-weight:600;color:var(--muted);margin-top:12px}
+.empty-s{font-size:12.5px;color:var(--faint);margin-top:6px;line-height:1.5}
+
+.det-head{display:flex;align-items:flex-start;gap:14px}
+.det-chip{width:46px;height:46px;border-radius:14px;flex-shrink:0}
+.det-name{font-family:var(--f-display);font-weight:700;font-size:19px;letter-spacing:-.5px;line-height:1.15}
+.det-loc{font-size:12.5px;color:var(--faint);margin-top:3px}
+.det-x{color:var(--fainter);padding:2px;transition:color .15s}
+.det-x:hover{color:var(--ink)}
+.det-facts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.fact{background:var(--ground-2);border-radius:12px;padding:11px 13px}
+.fact-k{font-size:11px;color:var(--faint)}
+.fact-v{font-family:var(--f-mono);font-size:15px;font-weight:500;margin-top:3px}
+.prof{display:flex;align-items:flex-end;gap:2px;height:54px}
+.prof i{display:block;flex:1;border-radius:2px 2px 0 0;transition:height .4s cubic-bezier(.4,0,.2,1)}
+.tips{display:flex;flex-direction:column;gap:11px}
+.tip-row{display:flex;gap:10px}
+.tip-row svg{flex-shrink:0;margin-top:2px}
+.tip-txt{font-size:13px;line-height:1.45}
+.tip-txt b{font-weight:600}
+.tip-txt span{color:var(--muted)}
+
+/* ---------- formulario ---------- */
+.field{margin-top:20px}
+.field:first-of-type{margin-top:22px}
+.field-lbl{font-size:12px;font-weight:600;color:var(--ink-2)}
+.text-in{
+  width:100%;height:44px;margin-top:7px;padding:0 14px;border-radius:12px;
+  border:1px solid var(--line-2);background:#FCFBF7;font-family:var(--f-body);font-size:14px;color:var(--ink);outline:none;
+  transition:border-color .15s;
+}
+.text-in:focus{border-color:var(--ink)}
+.text-in::placeholder{color:var(--fainter)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.chip{
+  padding:7px 13px;border-radius:9px;font-size:12.5px;font-weight:500;
+  border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);transition:all .13s;
+}
+.chip:hover{border-color:var(--faint)}
+.chip[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--on-dark)}
+.slider-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.slider-val{font-family:var(--f-mono);font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;margin:10px 0 0;accent-color:var(--sun);cursor:pointer;height:22px}
+.slider-ends{display:flex;justify-content:space-between;font-size:11px;color:var(--fainter);margin-top:2px}
+.sliders{display:flex;flex-direction:column;gap:20px}
+.est-bar{height:10px;background:rgba(244,241,234,.12);border-radius:5px;overflow:hidden;margin-top:20px}
+.est-bar i{display:block;height:100%;border-radius:5px;background:var(--sun);transition:width .4s cubic-bezier(.4,0,.2,1)}
+.saved{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12.5px;color:var(--good-on-dark)}
+.preset{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px 11px;border-radius:11px;transition:background .13s}
+.preset:hover{background:var(--ground-2)}
+.preset-n{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.preset-d{font-size:11.5px;color:var(--faint);margin-top:2px}
+
+/* ---------- alertas ---------- */
+.goal-track{position:relative;height:14px;background:#F4F1EA;border-radius:7px;margin-top:22px}
+.goal-fill{height:100%;border-radius:7px;transition:width .5s cubic-bezier(.4,0,.2,1),background .3s}
+.goal-mark{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);border-radius:1px}
+.goal-mark::after{content:attr(data-l);position:absolute;top:-19px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--faint);white-space:nowrap;font-family:var(--f-mono)}
+.rule-row{display:flex;align-items:center;gap:14px;width:100%;padding:12px 10px;border-radius:12px;transition:background .13s}
+.rule-row:hover{background:var(--ground-2)}
+.rule-t{font-size:13.5px;font-weight:600;line-height:1.35}
+.rule-s{font-size:11.5px;color:var(--faint);margin-top:3px}
+.tog{width:42px;height:24px;border-radius:14px;flex-shrink:0;padding:3px;display:flex;transition:background .18s,justify-content .18s;background:var(--line-2);justify-content:flex-start}
+.tog[aria-pressed="true"]{background:var(--good);justify-content:flex-end}
+.tog i{display:block;width:18px;height:18px;border-radius:50%;background:#fff}
+.feed{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.feed-item{display:flex;gap:13px;padding:15px 17px;border-radius:15px;border:1px solid}
+.feed-item--alto{background:var(--bad-bg);border-color:var(--bad-line)}
+.feed-item--alto .feed-dot{background:var(--bad)}
+.feed-item--medio{background:var(--warn-bg);border-color:var(--warn-line)}
+.feed-item--medio .feed-dot{background:var(--warn)}
+.feed-item--bom{background:var(--good-bg);border-color:var(--good-line)}
+.feed-item--bom .feed-dot{background:var(--good)}
+.feed-dot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.feed-t{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.feed-t b{font-size:14px;font-weight:600}
+.feed-t span{font-size:11.5px;color:var(--faint)}
+.feed-x{font-size:13px;color:var(--ink-2);margin-top:4px;line-height:1.5;max-width:78ch}
+
+/* ---------- relatorio ---------- */
+.inv-head,.inv-row{display:grid;grid-template-columns:1fr 150px 130px;gap:12px}
+.inv-head{margin-top:26px;padding-bottom:9px;font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--fainter)}
+.inv-row{padding:11px 0;border-top:1px solid var(--ground);font-size:13.5px}
+.inv-row--total{padding:16px 0 4px;border-top:1px solid var(--ink);font-size:15px;font-weight:700}
+.inv-row--credit{color:var(--good)}
+.inv-q{font-family:var(--f-mono);font-size:12.5px;color:var(--muted)}
+.inv-v{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+.leaf{display:flex;gap:14px;background:var(--good-bg);border-radius:var(--r-md);padding:18px 20px;margin-top:24px}
+.leaf-t{font-size:14px;font-weight:600;color:#235C44}
+.leaf-s{font-size:13px;color:#3E6B57;margin-top:4px;line-height:1.5}
+.ybars{display:flex;align-items:flex-end;gap:4px;height:104px;margin-top:18px}
+.ybar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.ybar i{display:block;width:100%;border-radius:5px 5px 2px 2px;background:#E0DACC;transition:height .5s cubic-bezier(.4,0,.2,1)}
+.ybar.is-now i{background:var(--sun)}
+.ybar span{font-family:var(--f-mono);font-size:9px;color:var(--fainter)}
+
+/* ---------- config ---------- */
+.kv{display:flex;justify-content:space-between;align-items:baseline;gap:18px;font-size:13.5px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;text-align:right;font-weight:600}
+.kv dd.mono{font-weight:500}
+.kvs{display:flex;flex-direction:column;gap:13px;margin:0}
+.softbox{background:var(--ground-2);border-radius:14px;padding:15px 17px;margin-top:20px;font-size:12.5px;color:var(--muted);line-height:1.5}
+.softbox b{color:var(--ink);font-weight:600}
+.danger-btn{font-size:12.5px;font-weight:600;color:var(--bad);transition:color .15s}
+.danger-btn:hover{color:#8A3A25}
+
+/* ---------- toasts ---------- */
+.toasts{position:fixed;right:20px;bottom:20px;z-index:200;display:flex;flex-direction:column;gap:10px;max-width:min(360px,calc(100vw - 40px))}
+.toast{
+  display:flex;gap:11px;background:var(--dark);color:var(--on-dark);border-radius:14px;padding:13px 15px;
+  box-shadow:var(--shadow-lift);animation:slidein .32s cubic-bezier(.16,1,.3,1);
+}
+.toast.out{animation:slideout .28s ease forwards}
+.toast-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;background:var(--sun)}
+.toast--good .toast-dot{background:var(--good-on-dark)}
+.toast--bad .toast-dot{background:#E9A392}
+.toast-t{font-size:13px;font-weight:600}
+.toast-s{font-size:12px;color:var(--on-dark-soft);margin-top:3px;line-height:1.45}
+
+/* ---------- animacoes ---------- */
+@keyframes pulse{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:.7;transform:scale(1.06)}}
+@keyframes beat{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.42;transform:scale(.82)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes slidein{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes slideout{to{opacity:0;transform:translateX(24px)}}
+@keyframes fadeup{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+.enter>*{animation:fadeup .34s cubic-bezier(.16,1,.3,1) backwards}
+.enter>*:nth-child(1){animation-delay:.01s}
+.enter>*:nth-child(2){animation-delay:.04s}
+.enter>*:nth-child(3){animation-delay:.07s}
+.enter>*:nth-child(4){animation-delay:.1s}
+.enter>*:nth-child(5){animation-delay:.13s}
+.enter>*:nth-child(6){animation-delay:.16s}
+.enter>*:nth-child(n+7){animation-delay:.19s}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+}
+
+/* ============================================================
+   APP MOBILE - a mesma logica, outra casca
+   ============================================================ */
+/* o palco escuro precisa cobrir a janela inteira; o body acompanha
+   para não sobrar faixa creme embaixo em telas curtas */
+body.vista-celular{background:var(--dark)}
+.phone-stage{
+  min-height:100vh;min-height:100dvh;background:var(--dark);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:22px;padding:36px 20px;
+}
+.phone-back{
+  display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:11px;
+  border:1px solid rgba(244,241,234,.2);color:var(--on-dark-soft);font-size:13px;font-weight:600;transition:all .15s;
+}
+.phone-back:hover{color:var(--on-dark);border-color:var(--on-dark)}
+.phone{
+  width:393px;height:852px;max-height:calc(100vh - 130px);border-radius:48px;
+  background:#0A0A0A;padding:11px;box-shadow:0 0 0 2px #2B2B2B,0 34px 70px -24px rgba(0,0,0,.85);
+  position:relative;flex-shrink:0;
+}
+.phone-screen{width:100%;height:100%;border-radius:38px;overflow:hidden;position:relative;background:var(--ground)}
+.phone-island{
+  position:absolute;top:22px;left:50%;transform:translateX(-50%);
+  width:126px;height:37px;border-radius:24px;background:#000;z-index:60;pointer-events:none;
+}
+.phone-home{
+  position:absolute;bottom:9px;left:50%;transform:translateX(-50%);
+  width:139px;height:5px;border-radius:100px;background:rgba(22,21,15,.32);z-index:60;pointer-events:none;
+}
+
+.mob{display:flex;flex-direction:column;height:100%;background:var(--ground);color:var(--ink)}
+.mob-head{padding:58px 20px 12px;flex-shrink:0;background:var(--ground)}
+.mob-back{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--sun-deep);margin-bottom:6px}
+.mob-unit{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--faint)}
+.mob-title{font-family:var(--f-display);font-weight:700;font-size:25px;letter-spacing:-.8px;margin-top:3px}
+.mob-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 16px 22px;-webkit-overflow-scrolling:touch}
+.mob-col{display:flex;flex-direction:column;gap:12px}
+.mob-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 17px}
+.mob-hero{background:var(--dark);color:var(--on-dark);border-radius:20px;padding:20px 20px 18px;position:relative;overflow:hidden}
+.mob-hero .hero-glow{width:170px;height:170px;top:-56px;right:-40px}
+.mob-hero-k{font-size:10.5px;text-transform:uppercase;letter-spacing:.9px;color:var(--on-dark-soft)}
+.mob-hero-v{display:flex;align-items:baseline;gap:7px;margin-top:8px}
+.mob-hero-v .cur{font-family:var(--f-display);font-size:21px;color:var(--on-dark-soft)}
+.mob-hero-v .num{font-family:var(--f-display);font-weight:700;font-size:44px;letter-spacing:-2px;line-height:.9}
+.mob-hero-s{font-size:12.5px;color:var(--on-dark-soft);margin-top:10px;line-height:1.45}
+.mob-live{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:13px;border-top:1px solid rgba(244,241,234,.12);font-size:11.5px;color:var(--on-dark-soft)}
+.mob-live b{font-family:var(--f-mono);font-weight:500;color:var(--on-dark)}
+.mob-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mob-tile{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:13px 14px}
+.mob-tile-k{font-size:11px;color:var(--faint)}
+.mob-tile-v{font-family:var(--f-display);font-weight:700;font-size:24px;letter-spacing:-1px;margin-top:5px;line-height:1}
+.mob-tile-s{font-size:10.5px;color:var(--fainter);margin-top:3px}
+.mob-seg{display:flex;background:#E5E0D3;border-radius:11px;padding:3px}
+.mob-seg button{flex:1;padding:8px 0;border-radius:9px;font-size:12.5px;font-weight:600;color:#7A7466;text-align:center}
+.mob-seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.mob-rowline{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:9px 0;border-top:1px solid var(--ground)}
+.mob-rowline:first-child{border-top:0}
+.mob-rowline span:first-child{color:var(--muted)}
+.mob-menu{display:flex;align-items:center;gap:13px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 15px;transition:border-color .15s}
+.mob-menu:hover{border-color:var(--ink)}
+.mob-menu-ic{width:36px;height:36px;border-radius:12px;background:var(--ground-2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mob-menu-t{font-size:13.5px;font-weight:600}
+.mob-menu-s{font-size:11.5px;color:var(--faint);margin-top:2px}
+.mob-tabs{
+  display:flex;flex-shrink:0;background:rgba(255,255,255,.93);backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);padding:6px 4px 20px;
+}
+.mob-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0 2px;min-width:0;color:#9C9585;transition:color .15s}
+.mob-tab[aria-current="page"]{color:var(--sun-deep)}
+.mob-tab span{font-size:10px;font-weight:500;white-space:nowrap}
+.mob-tab[aria-current="page"] span{font-weight:600}
+.mob-hbars{display:flex;align-items:flex-end;gap:2px;margin-top:14px}
+.mob-hbars .hbar-pair{height:104px;gap:1px}
+.mob-hbars .hbar-lbl{font-size:8px}
+
+/* ---------- responsivo ---------- */
+@media (max-width:1240px){
+  .s3{grid-column:span 6}
+  .s7,.s8{grid-column:span 12}
+  .s4,.s5{grid-column:span 12}
+  .det-sticky{position:static !important}
+  .inv-head,.inv-row{grid-template-columns:1fr 118px 108px}
+  .eq-head,.eq-row{grid-template-columns:24px minmax(0,1fr) 84px 76px 52px 28px;gap:10px}
+}
+@media (max-width:1040px){
+  .rail{width:74px}
+  .nav-label,.brand-text,.unitbox,.meter-rows,.meter-note,.meter-bar,.meter-lbl{display:none}
+  .rail-foot{padding:0 10px}
+  .meter{padding:10px;display:flex;justify-content:center}
+  .brand{padding:0 20px 24px;justify-content:center}
+  .nav-item{justify-content:center;padding:11px 0}
+  .badge{position:absolute;transform:translate(14px,-12px)}
+  .nav-item{position:relative}
+  .page,.topbar{padding-left:20px;padding-right:20px}
+  .seg .full{display:none}
+  .seg .short{display:inline}
+  .seg button{padding:6px 12px}
+}
+@media (max-width:900px){
+  .eq-head,.eq-row{grid-template-columns:minmax(0,1fr) 76px 52px 28px}
+  .eq-hide{display:none}
+  .topbar h1{font-size:25px}
+  .card{padding:18px 18px}
+  .hero{padding:20px 20px 18px}
+  .big-74{font-size:56px;letter-spacing:-2.4px}
+  .inv-head,.inv-row{grid-template-columns:1fr 92px}
+  .inv-q{display:none}
+}
+/* abaixo disso o app vira app de celular de verdade */
+@media (max-width:760px){
+  .desk{display:none !important}
+  body.vista-celular{background:var(--ground)}
+  .phone-stage{padding:0;min-height:100dvh;background:var(--ground)}
+  .phone-back{display:none}
+  .phone{width:100%;height:100dvh;max-height:none;border-radius:0;padding:0;box-shadow:none;background:var(--ground)}
+  .phone-screen{border-radius:0}
+  .phone-island,.phone-home{display:none}
+  .mob-head{padding-top:max(20px,env(safe-area-inset-top))}
+  .mob-tabs{padding-bottom:max(10px,env(safe-area-inset-bottom))}
+}
+@media (min-width:761px){
+  .mobile-only{display:none !important}
+}
+
+/* ---------- impressao ---------- */
+@media print{
+  @page{margin:14mm}
+  body{background:#fff}
+  .rail,.topbar,.toasts,.no-print,.mob-tabs{display:none !important}
+  .app{display:block}
+  .page{padding:0}
+  .card{border-color:#D8D2C4;break-inside:avoid;box-shadow:none}
+  .grid12{display:block}
+  .s8,.s4{width:100%}
+  .s4{margin-top:14px}
+  .print-head{display:flex !important}
+}
+.print-head{display:none;align-items:center;gap:10px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+
+</style>
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<div id="root"></div>
+<div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+<noscript>
+  <div style="max-width:60ch;margin:12vh auto;padding:0 24px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#16150F">
+    <h1 style="font-family:'Bricolage Grotesque',sans-serif;font-size:30px;letter-spacing:-.9px;margin:0 0 12px">Solaris</h1>
+    <p style="line-height:1.6;color:#6B665C">O painel lê o medidor em tempo real, então precisa de JavaScript ativado para funcionar.</p>
+  </div>
+</noscript>
+<script>
+/* ===== motor.js ===== */
+/* ============================================================
+   SOLARIS — motor
+   Um medidor virtual que roda de verdade: curva solar calculada
+   pela posição do sol na data, nuvens com ruído semeado, consumo
+   hora a hora, compensação de créditos mês a mês.
+   ============================================================ */
+'use strict';
+
+/* ---------- utilidades ---------- */
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const soma = a => a.reduce((x, y) => x + y, 0);
+
+const nf = (v, d) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+const brl = (v, d) => 'R$ ' + nf(v, d === undefined ? 0 : d);
+const pct = (v, d) => nf(v, d === undefined ? 0 : d) + '%';
+const sinal = (v, d) => (v >= 0 ? '+' : '−') + nf(Math.abs(v), d === undefined ? 0 : d);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+const MES3 = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const DIA3 = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+const DIAF = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+const diasNoMes = (y, m) => new Date(y, m + 1, 0).getDate();
+
+/* ruído semeado — o mesmo dia sempre gera o mesmo tempo */
+function semente(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function ruido(chave) {
+  let a = semente(chave) | 0;
+  a = a + 0x6D2B79F5 | 0;
+  let t = Math.imul(a ^ a >>> 15, 1 | a);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+  return ((t ^ t >>> 14) >>> 0) / 4294967296;
+}
+/* ruído suave: interpola entre âncoras a cada 4 passos */
+function suave(chave, i, passo) {
+  const p = passo || 4, base = Math.floor(i / p), t = (i % p) / p;
+  const a = ruido(chave + ':' + base), b = ruido(chave + ':' + (base + 1));
+  const s = t * t * (3 - 2 * t);
+  return a + (b - a) * s;
+}
+
+/* ---------- unidades ---------- */
+const LAT = -23.55 * Math.PI / 180; /* São Paulo */
+
+const UNIDADES = {
+  residencial: {
+    chave: 'residencial', nome: 'Casa das Acácias', tipo: 'Residencial · 4 pessoas', curto: 'Residencial',
+    distribuidora: 'Enel SP', tarifa: 0.92, tarifaComp: 0.79, ilum: 22, minFatura: 50,
+    potenciaKwp: 4.4, paineis: 10, investimento: 18400, mesesOperacao: 14,
+    consumoMes: 320, geracaoMes: 285, metaPadrao: 300,
+    consumoH: [.22, .20, .19, .19, .21, .30, .66, .88, .54, .37, .33, .35, .47, .51, .54, .57, .63, .76, .98, 1.12, .96, .70, .44, .27],
+    semana: [1.13, .95, .95, .95, .95, .97, 1.10],
+    comodos: ['Sala', 'Cozinha', 'Quarto', 'Banheiro suíte', 'Área de serviço', 'Externo'],
+    /* share = fatia do consumo medido que a IA atribui ao aparelho.
+       As horas de uso são deduzidas dela, para o ranking sempre fechar com o medidor. */
+    equipamentos: [
+      { id: 'ar', nome: 'Ar-condicionado', local: 'Sala', cat: 'Climatização', pot: 1200, share: .2875, cor: '#3E4C7A', conf: 'alta', fonte: 'ia', tend: 14 },
+      { id: 'chu', nome: 'Chuveiro elétrico', local: 'Banheiro suíte', cat: 'Aquecimento', pot: 5500, share: .1906, cor: '#C4573C', conf: 'alta', fonte: 'ia', tend: -3 },
+      { id: 'gel', nome: 'Geladeira', local: 'Cozinha', cat: 'Refrigeração', pot: 180, share: .15, cor: '#2E7A5A', conf: 'alta', fonte: 'ia', tend: 2 },
+      { id: 'lav', nome: 'Máquina de lavar', local: 'Área de serviço', cat: 'Lavanderia', pot: 900, share: .0813, cor: '#7A6BA8', conf: 'média', fonte: 'ia', tend: 9 },
+      { id: 'fre', nome: 'Freezer horizontal', local: 'Área de serviço', cat: 'Refrigeração', pot: 145, share: .0656, cor: '#4E8FA8', conf: 'alta', fonte: 'manual', tend: 0 },
+      { id: 'for', nome: 'Forno e micro-ondas', local: 'Cozinha', cat: 'Cozinha', pot: 1400, share: .0563, cor: '#B4761B', conf: 'média', fonte: 'ia', tend: -6 },
+      { id: 'luz', nome: 'Iluminação', local: 'Casa toda', cat: 'Iluminação', pot: 190, share: .0469, cor: '#EDA22B', conf: 'média', fonte: 'ia', tend: -1 },
+      { id: 'tv', nome: 'TV e eletrônicos', local: 'Sala', cat: 'Eletrônicos', pot: 130, share: .0375, cor: '#8B8577', conf: 'média', fonte: 'ia', tend: 4 },
+      { id: 'bom', nome: 'Bomba d’água', local: 'Externo', cat: 'Outros', pot: 750, share: .0281, cor: '#6B9E8E', conf: 'baixa', fonte: 'ia', tend: 0 }
+    ],
+    deteccoes: [
+      { id: 'd1', palpite: 'Secadora de roupas', quando: 'terça, 21h04', kwh: 2.3, certeza: 78, pot: 1500, horas: 1.5, cat: 'Lavanderia' },
+      { id: 'd2', palpite: 'Aquecedor de água', quando: 'domingo, 07h12', kwh: 1.1, certeza: 54, pot: 1200, horas: 0.9, cat: 'Aquecimento' }
+    ]
+  },
+  negocio: {
+    chave: 'negocio', nome: 'Padaria Pão de Ouro', tipo: 'Pequeno negócio · Centro', curto: 'Pequeno negócio',
+    distribuidora: 'Enel SP', tarifa: 0.78, tarifaComp: 0.66, ilum: 58, minFatura: 100,
+    potenciaKwp: 18.6, paineis: 42, investimento: 96000, mesesOperacao: 22,
+    consumoMes: 1840, geracaoMes: 1150, metaPadrao: 1700,
+    consumoH: [1.4, 1.3, 1.3, 2.9, 4.6, 5.2, 4.1, 3.4, 3.1, 3.0, 2.9, 3.2, 3.4, 3.1, 2.6, 2.3, 2.1, 1.9, 1.8, 1.7, 1.6, 1.5, 1.5, 1.4],
+    semana: [.52, 1.04, 1.04, 1.04, 1.05, 1.08, 1.06],
+    comodos: ['Produção', 'Atendimento', 'Estoque', 'Escritório', 'Externo'],
+    equipamentos: [
+      { id: 'for', nome: 'Forno de lastro', local: 'Produção', cat: 'Cozinha', pot: 12000, share: .2761, cor: '#C4573C', conf: 'alta', fonte: 'manual', tend: 3 },
+      { id: 'cam', nome: 'Câmara fria', local: 'Estoque', cat: 'Refrigeração', pot: 2200, share: .2239, cor: '#4E8FA8', conf: 'alta', fonte: 'ia', tend: 11 },
+      { id: 'arc', nome: 'Ar-condicionado salão', local: 'Atendimento', cat: 'Climatização', pot: 5300, share: .1571, cor: '#3E4C7A', conf: 'alta', fonte: 'ia', tend: 18 },
+      { id: 'exp', nome: 'Expositores refrigerados', local: 'Atendimento', cat: 'Refrigeração', pot: 900, share: .1255, cor: '#2E7A5A', conf: 'alta', fonte: 'ia', tend: 1 },
+      { id: 'mas', nome: 'Masseira e batedeira', local: 'Produção', cat: 'Cozinha', pot: 3000, share: .0804, cor: '#7A6BA8', conf: 'média', fonte: 'ia', tend: -4 },
+      { id: 'luz', nome: 'Iluminação', local: 'Loja toda', cat: 'Iluminação', pot: 640, share: .0620, cor: '#EDA22B', conf: 'média', fonte: 'ia', tend: 0 },
+      { id: 'caf', nome: 'Cafeteira industrial', local: 'Atendimento', cat: 'Cozinha', pot: 2400, share: .0342, cor: '#B4761B', conf: 'média', fonte: 'ia', tend: 6 }
+    ],
+    deteccoes: [
+      { id: 'd1', palpite: 'Segundo freezer no estoque', quando: 'quinta, 04h40', kwh: 6.8, certeza: 71, pot: 400, horas: 17, cat: 'Refrigeração' }
+    ]
+  }
+};
+
+/* perfis horários por categoria (peso relativo em 24 h) */
+const PERFIS = {
+  'Refrigeração': [.9, .85, .8, .8, .8, .85, .95, 1, 1.05, 1.05, 1.1, 1.15, 1.2, 1.2, 1.15, 1.1, 1.1, 1.15, 1.2, 1.2, 1.1, 1, .95, .9],
+  'Climatização': [.5, .4, .3, .25, .2, .2, .15, .2, .3, .4, .55, .7, .9, 1.05, 1.2, 1.3, 1.35, 1.3, 1.2, 1.15, 1.1, 1, .85, .7],
+  'Aquecimento': [.02, .01, .01, .01, .02, .1, .5, 1.2, .9, .3, .15, .1, .12, .12, .15, .2, .4, .9, 1.3, 1.1, .6, .3, .1, .04],
+  'Cozinha': [.05, .02, .02, .02, .03, .1, .4, .6, .4, .3, .5, 1.1, 1.3, .7, .35, .3, .5, .9, 1.3, 1, .5, .25, .12, .06],
+  'Lavanderia': [.02, .01, .01, .01, .02, .05, .3, .7, 1.1, 1.3, 1.2, 1, .8, .7, .6, .5, .4, .3, .2, .15, .1, .06, .04, .03],
+  'Iluminação': [.15, .1, .08, .08, .08, .15, .35, .3, .15, .08, .06, .05, .05, .05, .06, .1, .35, .9, 1.3, 1.35, 1.2, .9, .55, .3],
+  'Eletrônicos': [.2, .12, .08, .06, .06, .1, .3, .5, .5, .5, .5, .55, .6, .6, .6, .65, .8, 1, 1.25, 1.35, 1.3, 1, .6, .35],
+  'Outros': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+};
+/* a padaria acorda cedo */
+const PERFIS_NEGOCIO = {
+  'Cozinha': [.1, .1, .4, 1.35, 1.4, 1.3, 1.1, .8, .6, .5, .5, .6, .7, .6, .4, .35, .3, .25, .2, .15, .12, .1, .1, .1],
+  'Iluminação': [.1, .1, .3, .9, 1.2, 1.3, 1.3, 1.25, 1.2, 1.2, 1.2, 1.2, 1.2, 1.15, 1.1, 1, .9, .8, .6, .3, .15, .1, .1, .1],
+  'Climatização': [.05, .05, .05, .1, .2, .35, .6, .9, 1.1, 1.2, 1.3, 1.35, 1.35, 1.3, 1.2, 1.05, .9, .7, .4, .2, .1, .07, .05, .05]
+};
+const CATS = ['Climatização', 'Refrigeração', 'Aquecimento', 'Cozinha', 'Lavanderia', 'Iluminação', 'Eletrônicos', 'Outros'];
+const CORES_EXTRA = ['#7A6BA8', '#4E8FA8', '#6B9E8E', '#B4761B', '#C4573C', '#3E4C7A', '#2E7A5A'];
+
+function perfilCat(unidade, cat) {
+  const p = (unidade.chave === 'negocio' && PERFIS_NEGOCIO[cat]) || PERFIS[cat] || PERFIS['Outros'];
+  const t = soma(p);
+  return p.map(v => v / t);
+}
+
+/* ---------- sol: janela de luz calculada pela data ---------- */
+function diaDoAno(d) {
+  return Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+}
+function janelaSolar(d) {
+  const decl = 0.4093 * Math.sin(2 * Math.PI * (284 + diaDoAno(d)) / 365);
+  const ha = Math.acos(clamp(-Math.tan(LAT) * Math.tan(decl), -1, 1));
+  const meio = 12.2, meiaJornada = ha * 12 / Math.PI;
+  return { nascer: meio - meiaJornada, por: meio + meiaJornada, meio: meio };
+}
+/* forma horária da geração: 24 pesos somando 1 */
+function formaSolar(d) {
+  const j = janelaSolar(d), out = [];
+  for (let hr = 0; hr < 24; hr++) {
+    const t = hr + 0.5;
+    if (t <= j.nascer || t >= j.por) { out.push(0); continue; }
+    const x = (t - j.nascer) / (j.por - j.nascer);
+    out.push(Math.pow(Math.sin(Math.PI * x), 1.28));
+  }
+  const t = soma(out) || 1;
+  return out.map(v => v / t);
+}
+/* nuvens do dia: 0,25 (fechado) a 1,05 (céu limpo) */
+function tempoDoDia(chave, d) {
+  const idx = Math.round(d.getTime() / 86400000);
+  let c = 0.48 + 0.57 * suave(chave + '|ceu', idx, 3);
+  if (ruido(chave + '|chuva' + idx) < 0.13) c *= 0.42;
+  return clamp(c, 0.18, 1.06);
+}
+
+/* ---------- mês simulado (memoizado) ---------- */
+const _cacheMes = new Map();
+function mesSimulado(chave, y, m) {
+  const ck = chave + '|' + y + '|' + m;
+  if (_cacheMes.has(ck)) return _cacheMes.get(ck);
+  const u = UNIDADES[chave], nd = diasNoMes(y, m);
+
+  const sazG = 1 + 0.19 * Math.cos(2 * Math.PI * (m - 11) / 12);
+  const sazC = 1 + 0.15 * Math.cos(2 * Math.PI * m / 12);
+  const alvoG = u.geracaoMes * sazG, alvoC = u.consumoMes * sazC;
+
+  const formaC = u.consumoH.slice(), somaFC = soma(formaC);
+  const brutoG = [], brutoC = [], formasG = [];
+  for (let i = 0; i < nd; i++) {
+    const d = new Date(y, m, i + 1);
+    formasG.push(formaSolar(d));
+    brutoG.push(tempoDoDia(chave, d));
+    const idx = Math.round(d.getTime() / 86400000);
+    brutoC.push((0.87 + 0.27 * suave(chave + '|uso', idx, 3)) * u.semana[d.getDay()]);
+  }
+  const kG = alvoG / (soma(brutoG) || 1), kC = alvoC / (soma(brutoC) || 1);
+
+  const dias = [];
+  for (let i = 0; i < nd; i++) {
+    const totG = brutoG[i] * kG, totC = brutoC[i] * kC;
+    const ger = formasG[i].map(v => v * totG);
+    const idx = Math.round(new Date(y, m, i + 1).getTime() / 86400000);
+    let cons = formaC.map((v, hr) => (v / somaFC) * totC * (0.9 + 0.2 * ruido(chave + '|h' + idx + '_' + hr)));
+    const kk = totC / (soma(cons) || 1);
+    cons = cons.map(v => v * kk);
+    let auto = 0, inj = 0, rede = 0;
+    for (let hr = 0; hr < 24; hr++) {
+      auto += Math.min(cons[hr], ger[hr]);
+      inj += Math.max(0, ger[hr] - cons[hr]);
+      rede += Math.max(0, cons[hr] - ger[hr]);
+    }
+    dias.push({ dia: i + 1, dow: new Date(y, m, i + 1).getDay(), cons: cons, ger: ger, tc: totC, tg: totG, auto: auto, inj: inj, rede: rede });
+  }
+  const r = {
+    y: y, m: m, nd: nd, dias: dias,
+    tc: soma(dias.map(d => d.tc)), tg: soma(dias.map(d => d.tg)),
+    auto: soma(dias.map(d => d.auto)), inj: soma(dias.map(d => d.inj)), rede: soma(dias.map(d => d.rede))
+  };
+  _cacheMes.set(ck, r);
+  return r;
+}
+
+/* soma parcial de um mês até "horas" decorridas */
+function ate(md, horas) {
+  const r = { tc: 0, tg: 0, auto: 0, inj: 0, rede: 0, dias: 0 };
+  if (horas == null) horas = md.nd * 24;
+  for (let i = 0; i < md.nd; i++) {
+    const d = md.dias[i];
+    const ini = i * 24;
+    if (ini >= horas) break;
+    const fim = Math.min(24, horas - ini);
+    if (fim >= 24) { r.tc += d.tc; r.tg += d.tg; r.auto += d.auto; r.inj += d.inj; r.rede += d.rede; r.dias++; continue; }
+    for (let hr = 0; hr < 24; hr++) {
+      const f = clamp(fim - hr, 0, 1);
+      if (f <= 0) break;
+      const c = d.cons[hr] * f, g = d.ger[hr] * f;
+      r.tc += c; r.tg += g;
+      r.auto += Math.min(c, g); r.inj += Math.max(0, g - c); r.rede += Math.max(0, c - g);
+    }
+    r.dias += fim / 24;
+  }
+  return r;
+}
+
+/* ---------- livro de créditos: compensação mês a mês ---------- */
+const _cacheLedger = new Map();
+function ledger(chave, ate_y, ate_m, horasUltimo) {
+  const ck = chave + '|' + ate_y + '|' + ate_m + '|' + (horasUltimo == null ? 'cheio' : Math.floor(horasUltimo));
+  if (_cacheLedger.has(ck)) return _cacheLedger.get(ck);
+  const u = UNIDADES[chave];
+  const fim = ate_y * 12 + ate_m;
+  const ini = fim - (u.mesesOperacao - 1);
+  let creditos = 0, economiaTotal = 0;
+  const linhas = [];
+  for (let k = ini; k <= fim; k++) {
+    const y = Math.floor(k / 12), m = k - y * 12;
+    const md = mesSimulado(chave, y, m);
+    const p = (k === fim) ? ate(md, horasUltimo) : ate(md, null);
+    creditos += p.inj;
+    /* o mínimo faturável (custo de disponibilidade) nunca é abatido por crédito */
+    const usado = Math.min(creditos, Math.max(0, p.rede - u.minFatura));
+    creditos -= usado;
+    const faturado = p.rede - usado;
+    const economia = p.auto * u.tarifa + p.inj * u.tarifaComp;
+    economiaTotal += economia;
+    linhas.push({ y: y, m: m, k: k, cons: p.tc, ger: p.tg, auto: p.auto, inj: p.inj, rede: p.rede, usado: usado, faturado: faturado, economia: economia, creditos: creditos });
+  }
+  const r = { linhas: linhas, creditos: creditos, economiaTotal: economiaTotal };
+  _cacheLedger.set(ck, r);
+  return r;
+}
+
+/* ---------- estado ---------- */
+const CHAVE_LS = 'solaris.v2';
+const PADRAO = {
+  perfil: 'residencial', tela: 'painel', periodo: 'mes', vista: 'desktop',
+  tab: 'painel', msub: null, detalhe: null,
+  metas: { residencial: 300, negocio: 1700 },
+  regras: { meta: true, salto: true, solar: true, standby: false },
+  tarifa: { residencial: null, negocio: null },
+  extras: [], removidos: [], respondidas: {},
+  novo: { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: 'Sala' },
+  salvo: false, visto: false
+};
+let S = JSON.parse(JSON.stringify(PADRAO));
+
+function carregar() {
+  try {
+    const raw = localStorage.getItem(CHAVE_LS);
+    if (!raw) return;
+    const o = JSON.parse(raw);
+    Object.keys(PADRAO).forEach(k => {
+      if (o[k] === undefined) return;
+      if (k === 'metas' || k === 'regras' || k === 'tarifa' || k === 'novo' || k === 'respondidas') S[k] = Object.assign({}, PADRAO[k], o[k]);
+      else S[k] = o[k];
+    });
+    S.salvo = false;
+  } catch (e) { /* armazenamento indisponível: segue com os padrões */ }
+}
+let _tsave = 0;
+function salvar() {
+  clearTimeout(_tsave);
+  _tsave = setTimeout(() => {
+    try { localStorage.setItem(CHAVE_LS, JSON.stringify(S)); } catch (e) { }
+  }, 180);
+}
+
+/* ---------- visão consolidada ---------- */
+function unidade() { return UNIDADES[S.perfil]; }
+function tarifaAtual() { const u = unidade(); return S.tarifa[S.perfil] != null ? S.tarifa[S.perfil] : u.tarifa; }
+
+function agora() { return new Date(); }
+function horasDecorridas(d) { return (d.getDate() - 1) * 24 + d.getHours() + d.getMinutes() / 60; }
+
+/* A desagregação sempre fecha com o medidor: os aparelhos da IA ocupam a fatia
+   que lhes cabe da projeção do mês, os cadastrados à mão entram com o consumo
+   informado, e o que sobra vira "Não identificado". */
+function aparelhos() {
+  const u = unidade(), t = tarifaAtual(), v = visao(), nd = v.nd;
+  const nativos = u.equipamentos.filter(e => S.removidos.indexOf(S.perfil + ':' + e.id) < 0);
+  const extras = S.extras.filter(e => e.perfil === S.perfil)
+    .map(e => Object.assign({}, e, { kwh: (e.pot / 1000) * e.horas * e.dias }));
+
+  const restante = Math.max(0, v.projConsumo - soma(extras.map(e => e.kwh)));
+  const bruto = nativos.map(e => e.share * v.projConsumo);
+  const somaBruto = soma(bruto);
+  const k = somaBruto > 0 ? Math.min(1, restante / somaBruto) : 0;
+
+  const lista = nativos.map((e, i) => {
+    const kwh = bruto[i] * k;
+    return Object.assign({}, e, {
+      kwh: kwh, dias: nd,
+      horas: e.pot > 0 ? (kwh * 1000) / (e.pot * nd) : 0
+    });
+  }).concat(extras);
+
+  const nid = Math.max(0, restante - somaBruto * k);
+  if (nid > 0.5) {
+    lista.push({
+      id: 'nid', nome: 'Não identificado', local: '—', cat: 'Outros', pot: 0, horas: 0, dias: 0,
+      cor: '#C9C2B2', conf: 'baixa', fonte: 'ia', tend: 5, kwh: nid, sintetico: true
+    });
+  }
+  lista.sort((a, b) => b.kwh - a.kwh);
+  lista.forEach(e => { e.reais = e.kwh * t; });
+  return lista;
+}
+
+/* quanto os aparelhos cadastrados à mão passam do que o medidor registra (0 = tudo certo) */
+function extrasExcedem() {
+  const s = soma(S.extras.filter(e => e.perfil === S.perfil).map(e => (e.pot / 1000) * e.horas * e.dias));
+  const p = visao().projConsumo;
+  return s > p ? s - p : 0;
+}
+
+let _visao = null, _visaoHora = -1;
+function visao(forcar) {
+  const d = agora();
+  const marca = d.getFullYear() * 1e6 + d.getMonth() * 1e4 + d.getDate() * 100 + d.getHours();
+  if (!forcar && _visao && _visaoHora === marca && _visao.perfil === S.perfil && _visao.tarifa === tarifaAtual()) return _visao;
+
+  const u = unidade(), t = tarifaAtual();
+  const y = d.getFullYear(), m = d.getMonth();
+  const hDec = horasDecorridas(d);
+  const md = mesSimulado(S.perfil, y, m);
+  const mtd = ate(md, hDec);
+  const cheio = ate(md, null);
+  const lg = ledger(S.perfil, y, m, hDec);
+  const atual = lg.linhas[lg.linhas.length - 1];
+  const anteriores = lg.linhas.slice(0, -1);
+
+  /* A projeção é o mês inteiro já simulado — o que passou mais o que falta.
+     Extrapolar a média do que decorreu explodia no dia 1º, quando há
+     poucas horas medidas para dividir. */
+  const fracao = clamp(hDec / (md.nd * 24), 0.001, 1);
+  const lgFim = ledger(S.perfil, y, m, null);
+  const fim = lgFim.linhas[lgFim.linhas.length - 1];
+  const projConsumo = cheio.tc;
+  const projGeracao = cheio.tg;
+  const projRede = cheio.rede;
+  const projInj = cheio.inj;
+
+  const economia = mtd.auto * t + mtd.inj * u.tarifaComp;
+  const economiaCheia = cheio.auto * t + cheio.inj * u.tarifaComp;
+  const anteriorEcon = anteriores.length ? anteriores[anteriores.length - 1].economia : economia;
+
+  const bandeira = mtd.rede * 0.0189;
+  const projUsado = fim.usado;
+  const projFaturado = fim.faturado;
+  const contaProj = projFaturado * t + projRede * 0.0189 + u.ilum;
+  const semSolarProj = Math.max(projConsumo, u.minFatura) * t + projConsumo * 0.0189 + u.ilum;
+
+  const autoPct = mtd.tc > 0 ? (mtd.auto / mtd.tc) * 100 : 0;
+  const co2 = mtd.tg * 0.0861;
+
+  _visao = {
+    perfil: S.perfil, tarifa: t, data: d, y: y, m: m, nd: md.nd, hDec: hDec, fracao: fracao,
+    md: md, mtd: mtd, cheio: cheio, ledger: lg, linhaAtual: atual, anteriores: anteriores,
+    projConsumo: projConsumo, projGeracao: projGeracao, projRede: projRede, projInj: projInj,
+    projUsado: projUsado, projFaturado: projFaturado,
+    economia: economia, economiaCheia: economiaCheia, anteriorEcon: anteriorEcon,
+    creditos: lg.creditos, economiaTotal: lg.economiaTotal,
+    bandeira: bandeira, contaProj: contaProj, semSolarProj: semSolarProj,
+    autoPct: autoPct, co2: co2
+  };
+  _visaoHora = marca;
+  return _visao;
+}
+
+/* potência instantânea — interpola a curva do dia e treme um pouco.
+   De vez em quando um aparelho pesado liga: é o surto. */
+let _jitterC = 1, _jitterG = 1, _surto = 0;
+function surtoAtivo() { return _surto > 0; }
+function pulso() {
+  if (_surto > 0) _surto--;
+  else if (Math.random() < 0.014) _surto = 5 + Math.floor(Math.random() * 7);
+  const alvo = _surto > 0 ? 1.9 + Math.random() * 0.5 : 1;
+  _jitterC = clamp(_jitterC + (alvo - _jitterC) * 0.38 + (Math.random() - 0.5) * 0.07, 0.82, 2.5);
+  _jitterG = clamp(_jitterG + (Math.random() - 0.5) * 0.06, 0.9, 1.08);
+}
+function potenciaAgora() {
+  const d = agora(), v = visao();
+  const dia = v.md.dias[Math.min(d.getDate() - 1, v.md.nd - 1)];
+  const hr = d.getHours(), f = d.getMinutes() / 60;
+  const lerp = arr => arr[hr] * (1 - f) + arr[Math.min(23, hr + 1)] * f;
+  const c = Math.max(0.02, lerp(dia.cons) * _jitterC);
+  const g = Math.max(0, lerp(dia.ger) * _jitterG);
+  return { cons: c, ger: g, rede: Math.max(0, c - g), inj: Math.max(0, g - c), hora: hr + f };
+}
+
+/* série do período selecionado */
+function seriePeriodo() {
+  const v = visao(), d = v.data;
+  if (S.periodo === 'dia') {
+    const dia = v.md.dias[d.getDate() - 1];
+    const ha = Math.max(1, Math.ceil(v.hDec - (d.getDate() - 1) * 24));
+    return {
+      rotulo: 'Hoje, hora a hora', unidade: 'hora',
+      cons: dia.cons.slice(0, ha), ger: dia.ger.slice(0, ha),
+      rede: soma(dia.cons.slice(0, ha).map((c, i) => Math.max(0, c - dia.ger[i]))),
+      labels: dia.cons.slice(0, ha).map((_, i) => i % 3 === 0 ? String(i).padStart(2, '0') + 'h' : ''),
+      nomes: dia.cons.map((_, i) => String(i).padStart(2, '0') + 'h'),
+      anterior: (() => { const p = new Date(d); p.setDate(d.getDate() - 1); const pm = mesSimulado(S.perfil, p.getFullYear(), p.getMonth()); const pd = pm.dias[p.getDate() - 1]; const n = Math.max(1, ha); return { c: soma(pd.cons.slice(0, n)), g: soma(pd.ger.slice(0, n)) }; })()
+    };
+  }
+  if (S.periodo === 'semana') {
+    const cons = [], ger = [], labels = [], nomes = [];
+    let ac = 0, ag = 0, redeTot = 0;
+    for (let i = 6; i >= 0; i--) {
+      const dd = new Date(d); dd.setDate(d.getDate() - i);
+      const mm = mesSimulado(S.perfil, dd.getFullYear(), dd.getMonth());
+      const dia = mm.dias[dd.getDate() - 1];
+      const parcial = i === 0 ? (d.getHours() + d.getMinutes() / 60) : 24;
+      let c = 0, g = 0;
+      for (let hr = 0; hr < 24; hr++) {
+        const f = clamp(parcial - hr, 0, 1);
+        c += dia.cons[hr] * f; g += dia.ger[hr] * f;
+        redeTot += Math.max(0, dia.cons[hr] - dia.ger[hr]) * f;
+      }
+      cons.push(c); ger.push(g);
+      labels.push(DIA3[dd.getDay()]); nomes.push(DIAF[dd.getDay()] + ', ' + dd.getDate() + '/' + (dd.getMonth() + 1));
+      const pd = new Date(dd); pd.setDate(dd.getDate() - 7);
+      const pm = mesSimulado(S.perfil, pd.getFullYear(), pd.getMonth());
+      const pdia = pm.dias[pd.getDate() - 1];
+      ac += pdia.tc; ag += pdia.tg;
+    }
+    return { rotulo: 'Últimos 7 dias', unidade: 'dia', cons: cons, ger: ger, rede: redeTot, labels: labels, nomes: nomes, anterior: { c: ac, g: ag } };
+  }
+  const nDias = Math.ceil(v.hDec / 24);
+  const cons = [], ger = [], labels = [], nomes = [];
+  for (let i = 0; i < nDias; i++) {
+    const dia = v.md.dias[i];
+    const parcial = i === nDias - 1 ? (v.hDec - i * 24) : 24;
+    let c = 0, g = 0;
+    for (let hr = 0; hr < 24; hr++) { const f = clamp(parcial - hr, 0, 1); c += dia.cons[hr] * f; g += dia.ger[hr] * f; }
+    cons.push(c); ger.push(g);
+    labels.push((i + 1) % 5 === 0 || i === 0 ? String(i + 1) : '');
+    nomes.push(dia.dia + ' de ' + MESES[v.m]);
+  }
+  const pk = v.y * 12 + v.m - 1, py = Math.floor(pk / 12), pm2 = pk - py * 12;
+  const ant = ate(mesSimulado(S.perfil, py, pm2), Math.min(v.hDec, diasNoMes(py, pm2) * 24));
+  return { rotulo: MESES[v.m].charAt(0).toUpperCase() + MESES[v.m].slice(1) + ', dia a dia', unidade: 'dia', cons: cons, ger: ger, rede: v.mtd.rede, labels: labels, nomes: nomes, anterior: { c: ant.tc, g: ant.tg } };
+}
+
+/* caminho SVG */
+function caminho(vals, max, w, hh, fechar) {
+  const n = vals.length; if (n < 2) return '';
+  const passo = w / (n - 1);
+  let d = '';
+  vals.forEach((v, i) => {
+    const x = +(i * passo).toFixed(1), y = +(hh - (v / max) * hh).toFixed(1);
+    d += (i === 0 ? 'M' : 'L') + x + ' ' + y + ' ';
+  });
+  if (fechar) d += 'L' + w + ' ' + hh + ' L0 ' + hh + ' Z';
+  return d.trim();
+}
+
+/* alertas derivados do estado real */
+function alertas() {
+  const v = visao(), u = unidade(), t = tarifaAtual(), eq = aparelhos();
+  const meta = S.metas[S.perfil], proj = v.projConsumo;
+  const out = [];
+  if (S.regras.meta) {
+    if (proj > meta) out.push({ id: 'meta', tipo: 'alto', titulo: 'A meta de ' + nf(meta) + ' kWh deve estourar', quando: 'projeção de agora', txt: 'No ritmo de hoje o mês fecha em ' + nf(proj) + ' kWh — ' + nf(proj - meta) + ' kWh acima, cerca de ' + brl((proj - meta) * t) + ' a mais na conta. Cortar ' + nf((proj - meta) / Math.max(1, v.nd - v.mtd.dias), 1) + ' kWh por dia até o fim do mês já resolve.' });
+    else if (meta - proj > meta * 0.2) out.push({ id: 'meta', tipo: 'bom', titulo: 'Meta folgada: sobram ' + nf(meta - proj) + ' kWh', quando: 'projeção de agora', txt: 'O mês deve fechar bem abaixo do limite. Dá para apertar a meta e economizar mais — ou usar a folga nos dias quentes.' });
+    else out.push({ id: 'meta', tipo: 'bom', titulo: 'No caminho certo para bater a meta', quando: 'projeção de agora', txt: 'A projeção fecha em ' + nf(proj) + ' kWh, dentro dos ' + nf(meta) + ' kWh definidos.' });
+  }
+  if (S.regras.salto) {
+    const alta = eq.filter(e => !e.sintetico && e.tend >= 10).sort((a, b) => b.tend - a.tend)[0];
+    if (alta) out.push({ id: 'salto-' + alta.id, tipo: 'alto', titulo: alta.nome + ' subiu ' + alta.tend + '%', quando: 'contra a média de 4 semanas', txt: 'São ' + brl(alta.kwh * t * (alta.tend / 100)) + ' a mais no mês. O aparelho responde por ' + pct((alta.kwh / v.projConsumo) * 100) + ' de tudo que a unidade gasta.' });
+  }
+  if (S.regras.solar) {
+    const dia = v.md.dias[v.data.getDate() - 1];
+    let noite = 0, tot = 0;
+    for (let hr = 0; hr < 24; hr++) { tot += dia.cons[hr]; if (dia.ger[hr] < dia.cons[hr] * 0.2) noite += dia.cons[hr]; }
+    const p = tot > 0 ? (noite / tot) * 100 : 0;
+    out.push({ id: 'solar', tipo: p > 55 ? 'medio' : 'bom', titulo: p > 55 ? pct(p) + ' do consumo cai fora do sol' : 'Bom aproveitamento do sol hoje', quando: 'hoje', txt: p > 55 ? 'Boa parte do gasto acontece quando os painéis já não produzem, então vem da rede. Puxar a máquina de lavar ou o forno para a faixa das 10h às 15h troca rede por sol.' : 'A maior parte do consumo está caindo dentro da janela de geração — é o cenário em que o painel paga a conta na hora.' });
+  }
+  if (S.regras.standby) {
+    const dia = v.md.dias[v.data.getDate() - 1];
+    const madrugada = soma(dia.cons.slice(0, 5));
+    out.push({ id: 'standby', tipo: 'medio', titulo: 'Madrugada consumiu ' + nf(madrugada, 1) + ' kWh', quando: 'entre 0h e 5h', txt: 'Com quase tudo desligado, esse piso é o standby da casa: ' + brl(madrugada * 30 * t) + ' por mês só de aparelhos em espera.' });
+  }
+  const melhor = v.md.dias.slice(0, Math.ceil(v.hDec / 24)).slice().sort((a, b) => b.tg - a.tg)[0];
+  if (melhor) out.push({ id: 'melhor', tipo: 'bom', titulo: 'Melhor dia de geração do mês', quando: 'dia ' + melhor.dia, txt: 'Os painéis entregaram ' + nf(melhor.tg, 1) + ' kWh — céu limpo praticamente o dia inteiro.' });
+  return out;
+}
+
+function deteccoesPendentes() {
+  return unidade().deteccoes.filter(x => !S.respondidas[S.perfil + ':' + x.id]);
+}
+
+function saudacao() {
+  const hr = agora().getHours();
+  return (hr < 12 ? 'Bom dia' : hr < 18 ? 'Boa tarde' : 'Boa noite') + ', Marina';
+}
+
+
+/* ===== telas.js ===== */
+
+/* ============================================================
+   SOLARIS — telas
+   ============================================================ */
+
+const IC = {
+  painel: 'M3 13a9 9 0 0 1 18 0M12 13l4.5-4.5',
+  historico: 'M4 19V11M9 19V5M14 19v-6M19 19V8',
+  aparelhos: 'M9 3v6M15 3v6M6 9h12v3a6 6 0 0 1-12 0zM12 18v3',
+  mais: 'M12 5v14M5 12h14',
+  sino: 'M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6M10.5 20a2 2 0 0 0 3 0',
+  papel: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4',
+  ajustes: 'M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M7 15v4',
+  sol: 'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v3M12 20v3M23 12h-3M4 12H1M19.1 4.9l-2.1 2.1M7 17l-2.1 2.1M19.1 19.1L17 17M7 7L4.9 4.9',
+  raio: 'M13 2L3 14h7l-1 8 10-12h-7z',
+  folha: 'M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10zM2 21c0-3 1.85-5.36 5.08-6',
+  troca: 'M3 12h18M12 3v18M7 7l10 10',
+  faisca: 'M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4z',
+  seta: 'M5 12h14M13 6l6 6-6 6',
+  cima: 'M5 15l7-7 7 7',
+  check: 'M20 6L9 17l-5-5',
+  x: 'M6 6l12 12M18 6L6 18',
+  lupa: 'M20 20l-3.5-3.5',
+  print: 'M6 9V3h12v6M6 18H4v-6h16v6h-2M8 14h8v7H8z',
+  celular: 'M11 18.5h2',
+  desktop: 'M8 21h8',
+  volta: 'M15 6l-6 6 6 6',
+  chevron: 'M9 6l6 6-6 6',
+  lixo: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3'
+};
+function ico(d, sz, cor, sw) {
+  return '<svg width="' + (sz || 16) + '" height="' + (sz || 16) + '" viewBox="0 0 24 24" fill="none" stroke="' + (cor || 'currentColor') + '" stroke-width="' + (sw || 1.8) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"/></svg>';
+}
+const CONF = {
+  alta: { bg: 'var(--good-bg)', cor: 'var(--good)', txt: 'Certeza alta' },
+  'média': { bg: 'var(--warn-bg)', cor: 'var(--warn)', txt: 'Certeza média' },
+  baixa: { bg: 'var(--ground)', cor: 'var(--faint)', txt: 'Certeza baixa' }
+};
+const TELAS = {
+  painel: ['', 'Painel'], historico: ['Comparativos', 'Histórico'],
+  equipamentos: ['Desagregação por IA', 'Seus aparelhos'], cadastro: ['Novo aparelho', 'Cadastrar consumo'],
+  alertas: ['Regras e limites', 'Alertas e metas'], relatorio: ['Fechamento do mês', 'Relatório mensal'],
+  config: ['Unidade e tarifa', 'Configurações']
+};
+const NAV = [
+  { k: 'painel', label: 'Painel', icon: IC.painel },
+  { k: 'historico', label: 'Histórico', icon: IC.historico },
+  { k: 'equipamentos', label: 'Aparelhos', icon: IC.aparelhos },
+  { k: 'cadastro', label: 'Cadastrar', icon: IC.mais },
+  { k: 'alertas', label: 'Alertas e metas', icon: IC.sino },
+  { k: 'relatorio', label: 'Relatório', icon: IC.papel },
+  { k: 'config', label: 'Configurações', icon: IC.ajustes }
+];
+const PRESETS = [
+  { nome: 'Ar-condicionado 12.000 BTU', pot: 1200, horas: 5, cat: 'Climatização' },
+  { nome: 'Chuveiro elétrico', pot: 5500, horas: 0.6, cat: 'Aquecimento' },
+  { nome: 'Geladeira frost free', pot: 180, horas: 8.9, cat: 'Refrigeração' },
+  { nome: 'Máquina de lavar', pot: 900, horas: 0.9, cat: 'Lavanderia' },
+  { nome: 'Micro-ondas', pot: 1400, horas: 0.4, cat: 'Cozinha' },
+  { nome: 'Computador e monitor', pot: 190, horas: 8, cat: 'Eletrônicos' }
+];
+
+/* ---------- casca desktop ---------- */
+function vRail() {
+  const pend = deteccoesPendentes().length;
+  const p = potenciaAgora();
+  const nav = NAV.map(n => {
+    const at = S.tela === n.k;
+    return '<button class="nav-item" data-act="nav" data-tela="' + n.k + '"' + (at ? ' aria-current="page"' : '') + '>' +
+      ico(n.icon, 18, 'currentColor', 1.7) +
+      '<span class="nav-label">' + n.label + '</span>' +
+      (n.k === 'equipamentos' && pend ? '<span class="badge">' + pend + '</span>' : '') +
+      '</button>';
+  }).join('');
+  const units = Object.keys(UNIDADES).map(k => {
+    const u = UNIDADES[k];
+    return '<button class="unit" data-act="unit" data-unit="' + k + '" aria-pressed="' + (S.perfil === k) + '">' +
+      '<span class="unit-dot"></span><span style="min-width:0"><span class="unit-name" style="display:block">' + esc(u.nome) + '</span>' +
+      '<span class="unit-type" style="display:block">' + esc(u.curto) + '</span></span></button>';
+  }).join('');
+  return '<aside class="rail">' +
+    '<div class="brand"><span class="brand-mark">' + ico(IC.sol, 19, '#16150F', 2.2) + '</span>' +
+    '<span class="brand-text"><span class="brand-name" style="display:block">Solaris</span><span class="brand-sub" style="display:block">Energia sob controle</span></span></div>' +
+    '<nav class="nav" aria-label="Seções">' + nav + '</nav>' +
+    '<div class="rail-spacer"></div>' +
+    '<div class="rail-foot">' +
+    '<div class="meter"><div class="meter-head"><span class="live-dot"></span><span class="meter-lbl">Medidor agora</span></div>' +
+    '<div class="meter-rows">' +
+    '<div class="meter-row"><span>Consumindo</span><span class="meter-val" id="liveC">' + nf(p.cons, 2) + ' kW</span></div>' +
+    '<div class="meter-row"><span>Gerando</span><span class="meter-val" id="liveG">' + nf(p.ger, 2) + ' kW</span></div>' +
+    '</div><div class="meter-bar"><span id="liveBar" style="width:' + clamp((p.ger / Math.max(p.cons, .001)) * 100, 0, 100) + '%"></span></div>' +
+    '<div class="meter-note" id="liveNote">' + textoMedidor(p) + '</div></div>' +
+    '<div class="unitbox"><div class="unitbox-title">Unidade</div><div style="display:flex;flex-direction:column;gap:4px">' + units + '</div></div>' +
+    '</div></aside>';
+}
+function textoMedidor(p) {
+  if (p.ger <= 0.02) return 'Painéis dormindo. Tudo vem da rede.';
+  if (p.inj > 0.05) return 'Sobrando ' + nf(p.inj, 2) + ' kW para a rede — virando crédito.';
+  return 'O sol cobre ' + pct((p.ger / Math.max(p.cons, .001)) * 100) + ' do que a casa puxa agora.';
+}
+
+function vTopbar() {
+  const v = visao();
+  const t = TELAS[S.tela];
+  const kicker = S.tela === 'painel'
+    ? MESES[v.m].charAt(0).toUpperCase() + MESES[v.m].slice(1) + ' de ' + v.y + ' · dia ' + v.data.getDate() + ' de ' + v.nd
+    : t[0];
+  const titulo = S.tela === 'painel' ? saudacao() : t[1];
+  const mostraPeriodo = S.tela === 'historico';
+  const per = [['dia', 'Dia', 'D'], ['semana', 'Semana', 'S'], ['mes', 'Mês', 'M']].map(p =>
+    '<button data-act="periodo" data-p="' + p[0] + '" aria-pressed="' + (S.periodo === p[0]) + '"><span class="full">' + p[1] + '</span><span class="short">' + p[2] + '</span></button>').join('');
+  return '<header class="topbar no-print"><div><div class="eyebrow">' + esc(kicker) + '</div><h1>' + esc(titulo) + '</h1></div>' +
+    '<div class="topbar-actions">' +
+    (mostraPeriodo ? '<div class="seg" role="group" aria-label="Período">' + per + '</div>' : '') +
+    '<button class="ghost-btn" data-act="mobile">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="' + IC.celular + '"/></svg>Celular</button>' +
+    '</div></header>';
+}
+
+/* ---------- painel ---------- */
+function vPainel() {
+  const v = visao(), u = unidade(), t = tarifaAtual(), eq = aparelhos();
+  const dEcon = v.anteriorEcon > 0 ? ((v.economiaCheia - v.anteriorEcon) / v.anteriorEcon) * 100 : 0;
+  const meses = v.ledger.linhas.slice(-12);
+  const maxE = Math.max.apply(null, meses.map(l => l.economia)) || 1;
+  const spark = meses.map((l, i) => {
+    const ehAgora = i === meses.length - 1;
+    return '<div class="spark-col' + (ehAgora ? ' is-now' : '') + '" title="' + MES3[l.m] + ': ' + brl(l.economia) + '">' +
+      '<span class="spark-bar" style="height:' + Math.round((l.economia / maxE) * 52 + 6) + 'px"></span>' +
+      '<span class="spark-lbl">' + MES3[l.m] + '</span></div>';
+  }).join('');
+
+  const diasGratis = Math.round(v.economia / Math.max(t * (v.projConsumo / v.nd), .01));
+  const hero = '<section class="card card--dark hero s7"><span class="hero-glow"></span><div class="hero-in">' +
+    '<div class="hero-top"><span class="hero-kicker">Você economizou em ' + MESES[v.m] + '</span>' +
+    '<span class="delta' + (dEcon < 0 ? ' delta--down' : '') + '">' + ico(IC.cima, 12, 'currentColor', 2.6) + sinal(dEcon, 0) + '%</span></div>' +
+    '<div class="hero-money"><span class="hero-cur">R$</span><span class="big big-74" id="heroEcon">' + nf(v.economia) + '</span></div>' +
+    '<p class="hero-line">Equivale a ' + diasGratis + ' dias de energia de graça. Seu telhado cobriu ' + pct(v.autoPct) + ' de tudo que a unidade gastou até agora — e o mês deve fechar em ' + brl(v.economiaCheia) + '.</p>' +
+    '<div class="spark">' + spark + '</div></div></section>';
+
+  const dash = Math.round((clamp(v.autoPct, 0, 100) / 100) * 351.8);
+  const donut = '<section class="card s5"><div class="eyebrow" style="font-size:12px">Autossuficiência</div>' +
+    '<div class="donut-wrap"><div class="donut"><svg width="132" height="132" viewBox="0 0 132 132">' +
+    '<circle cx="66" cy="66" r="56" fill="none" stroke="#EFEBE1" stroke-width="15"/>' +
+    '<circle class="donut-ring" cx="66" cy="66" r="56" fill="none" stroke="var(--sun)" stroke-width="15" stroke-linecap="round" stroke-dasharray="' + dash + ' 351.8"/></svg>' +
+    '<div class="donut-mid"><span class="donut-pct">' + pct(v.autoPct) + '</span><span class="donut-cap">do consumo</span></div></div>' +
+    '<div class="split">' +
+    linhaSplit('var(--sun)', 'Sol direto', nf(v.mtd.auto, 1) + ' kWh') +
+    linhaSplit('var(--grid)', 'Da rede', nf(v.mtd.rede, 1) + ' kWh') +
+    linhaSplit('var(--good-soft)', 'Injetado', nf(v.mtd.inj, 1) + ' kWh') +
+    '</div></div></section>';
+
+  const kpis = [
+    { l: 'Consumo do mês', v: nf(v.mtd.tc), un: 'kWh', cor: 'var(--grid)', ic: IC.raio, n: 'Média de ' + nf(v.mtd.tc / Math.max(v.mtd.dias, .1), 1) + ' kWh por dia' },
+    { l: 'Geração solar', v: nf(v.mtd.tg), un: 'kWh', cor: 'var(--sun)', ic: IC.sol, n: u.paineis + ' painéis · ' + nf(u.potenciaKwp, 1) + ' kWp instalados' },
+    { l: 'CO₂ evitado', v: nf(v.co2, 1), un: 'kg', cor: 'var(--good)', ic: IC.folha, n: 'Como ' + nf(v.co2 / 0.12) + ' km de carro não rodados' },
+    { l: 'Créditos na rede', v: nf(v.creditos), un: 'kWh', cor: 'var(--violet)', ic: IC.troca, n: 'Válidos por 60 meses · ' + u.distribuidora }
+  ].map(k => '<section class="card card--tight s3"><div class="kpi-top">' + ico(k.ic, 15, k.cor, 1.9) + '<span class="kpi-lbl">' + k.l + '</span></div>' +
+    '<div class="kpi-val"><span class="big big-32">' + k.v + '</span><span class="kpi-unit">' + k.un + '</span></div>' +
+    '<div class="kpi-note">' + k.n + '</div></section>').join('');
+
+  const dia = v.md.dias[v.data.getDate() - 1];
+  const curva = graficoDia(dia, v);
+
+  const somaTop = soma(eq.map(e => e.kwh)) || 1;
+  const mix = eq.slice(0, 6).map(e => '<i style="width:' + (e.kwh / somaTop) * 100 + '%;background:' + e.cor + '" title="' + esc(e.nome) + ': ' + pct((e.kwh / somaTop) * 100) + '"></i>').join('');
+  const top = eq.slice(0, 5).map(e => '<button class="toprow" data-act="eq-abrir" data-id="' + e.id + '">' +
+    '<span class="toprow-bar" style="background:' + e.cor + '"></span>' +
+    '<span style="flex:1;min-width:0"><span class="toprow-name" style="display:block">' + esc(e.nome) + '</span>' +
+    '<span class="toprow-sub" style="display:block">' + pct((e.kwh / somaTop) * 100) + ' do total · ' + esc(e.local) + '</span></span>' +
+    '<span style="text-align:right"><span class="toprow-num" style="display:block">' + nf(e.kwh) + ' kWh</span>' +
+    '<span class="toprow-cash" style="display:block">' + brl(e.reais) + '</span></span></button>').join('');
+
+  const desagreg = '<section class="card s7"><div style="display:flex;align-items:center;gap:9px">' +
+    '<h2>Para onde vai sua energia</h2><span class="pill--ia">' + ico(IC.faisca, 10, 'currentColor', 2.4) + 'IA</span></div>' +
+    '<div class="card-sub">Estimado pelo padrão do medidor, sem sensor em cada tomada</div>' +
+    '<div class="mixbar">' + mix + '</div><div class="toplist">' + top + '</div>' +
+    '<button class="link-btn" style="margin:12px 0 0 10px" data-act="nav" data-tela="equipamentos">Ver todos os ' + eq.length + ' aparelhos' + ico(IC.seta, 13, 'currentColor', 2.4) + '</button></section>';
+
+  const fech = new Date(v.y, v.m + 1, 12);
+  const conta = '<section class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px">' +
+    '<span class="eyebrow" style="font-size:12px">Próxima conta</span><span class="pill pill--warn">Bandeira amarela</span></div>' +
+    '<div style="display:flex;align-items:baseline;gap:8px;margin-top:10px"><span class="big big-40">' + brl(v.contaProj) + '</span>' +
+    '<span style="font-size:13px;color:var(--faint)">estimado · fecha ' + fech.getDate() + ' de ' + MESES[fech.getMonth()] + '</span></div>' +
+    '<hr class="rule">' +
+    '<div style="display:flex;flex-direction:column;gap:9px">' +
+    linhaConta('Energia da rede (' + nf(v.projRede) + ' kWh)', brl(v.projRede * t), 'var(--ink)') +
+    linhaConta('Bandeira + iluminação pública', brl(v.projRede * 0.0189 + u.ilum), 'var(--ink)') +
+    linhaConta('Abatido por créditos solares', '− ' + brl(v.projUsado * t), 'var(--good)') +
+    '</div></section>';
+
+  const mesesPay = v.economiaTotal > 0 ? Math.round(u.investimento / (v.economiaTotal / u.mesesOperacao)) : 0;
+  const pbPct = clamp((v.economiaTotal / u.investimento) * 100, 0, 100);
+  const payback = '<section class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px">' +
+    '<span class="eyebrow" style="font-size:12px">Retorno do investimento</span>' +
+    '<span class="mono" style="font-size:12px;color:var(--good);font-weight:500">' + pct(pbPct) + ' pago</span></div>' +
+    '<div style="height:9px;background:var(--ground);border-radius:6px;margin-top:13px;overflow:hidden">' +
+    '<div style="height:100%;border-radius:6px;background:linear-gradient(90deg,var(--sun),var(--good));width:' + pbPct + '%;transition:width .8s cubic-bezier(.4,0,.2,1)"></div></div>' +
+    '<div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--faint)">' +
+    '<span>' + u.mesesOperacao + ' meses · ' + brl(v.economiaTotal) + ' economizados</span>' +
+    '<span>faltam ' + nf(Math.max(0, mesesPay - u.mesesOperacao) / 12, 1) + ' anos</span></div></section>';
+
+  return '<div class="grid12 enter">' + hero + donut + kpis + curva + desagreg +
+    '<div class="s5 stack">' + conta + payback + '</div></div>';
+}
+function linhaSplit(cor, lbl, val) {
+  return '<div><div class="split-row-top"><span class="split-dot" style="background:' + cor + '"></span><span class="split-lbl">' + lbl + '</span></div><div class="split-val">' + val + '</div></div>';
+}
+function linhaConta(l, v, cor) {
+  return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px"><span style="color:var(--muted)">' + l + '</span><span class="mono" style="font-weight:500;color:' + cor + '">' + v + '</span></div>';
+}
+
+function graficoDia(dia, v) {
+  const max = Math.max(Math.max.apply(null, dia.cons), Math.max.apply(null, dia.ger)) * 1.15 || 1;
+  const W = 720, H = 200;
+  const grade = [0, 1, 2, 3].map(i => '<g><line x1="0" y1="' + i * 50 + '" x2="720" y2="' + i * 50 + '" stroke="#EFEBE1" stroke-width="1"/>' +
+    '<text x="0" y="' + (i * 50 + 12) + '" fill="#A9A395" font-size="10" font-family="IBM Plex Mono, monospace">' + nf(max * (1 - i / 4), 1) + ' kW</text></g>').join('');
+  const nowX = (v.hDec - (v.data.getDate() - 1) * 24) / 23 * W;
+  const hr = Math.min(23, Math.floor(v.hDec - (v.data.getDate() - 1) * 24));
+  const nowY = H - (dia.ger[hr] / max) * H;
+  const eixo = ['00h', '04h', '08h', '12h', '16h', '20h', '23h'].map(t => '<span>' + t + '</span>').join('');
+  return '<section class="card s12"><div class="card-head"><div><h2>Hoje, hora a hora</h2>' +
+    '<div class="card-sub">Onde o sol cobre e onde a rede entra · a linha pontilhada vertical é agora</div></div>' +
+    '<div class="legend"><span><i class="swatch" style="background:var(--sun)"></i>Geração solar</span>' +
+    '<span><i class="swatch" style="background:var(--grid)"></i>Consumo</span></div></div>' +
+    '<div class="chart" id="chartDia" data-max="' + max + '"><svg viewBox="0 0 720 215" role="img" aria-label="Curva de geração e consumo de hoje">' +
+    '<defs><linearGradient id="gSol" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EDA22B" stop-opacity="0.28"/><stop offset="100%" stop-color="#EDA22B" stop-opacity="0"/></linearGradient></defs>' +
+    grade +
+    '<path d="' + caminho(dia.ger, max, W, H, true) + '" fill="url(#gSol)"/>' +
+    '<path d="' + caminho(dia.ger, max, W, H) + '" fill="none" stroke="#EDA22B" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>' +
+    '<path d="' + caminho(dia.cons, max, W, H) + '" fill="none" stroke="#3E4C7A" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="5 4"/>' +
+    '<line class="now-line" x1="' + nowX.toFixed(1) + '" y1="0" x2="' + nowX.toFixed(1) + '" y2="' + H + '"/>' +
+    '<circle class="now-dot" cx="' + nowX.toFixed(1) + '" cy="' + nowY.toFixed(1) + '" r="4.5" fill="#EDA22B" stroke="#EFEBE1" stroke-width="2"/>' +
+    '</svg><div class="tip" id="tipDia"></div></div>' +
+    '<div class="chart-axis">' + eixo + '</div></section>';
+}
+
+/* ---------- histórico ---------- */
+function vHistorico() {
+  const v = visao(), t = tarifaAtual(), s = seriePeriodo();
+  const max = Math.max(Math.max.apply(null, s.cons), Math.max.apply(null, s.ger)) * 1.08 || 1;
+  const tC = soma(s.cons), tG = soma(s.ger);
+  const aC = s.anterior.c || 1, aG = s.anterior.g || 1;
+  const dC = ((tC - aC) / aC) * 100, dG = ((tG - aG) / aG) * 100;
+  const saldos = s.cons.map((c, i) => s.ger[i] - c);
+  let iM = 0, iP = 0;
+  saldos.forEach((x, i) => { if (x > saldos[iM]) iM = i; if (x < saldos[iP]) iP = i; });
+  const cobertos = saldos.filter(x => x >= 0).length;
+
+  const barras = s.cons.map((c, i) => '<div class="hbar" data-i="' + i + '">' +
+    '<span class="hbar-pair"><i class="hbar-c" style="height:' + Math.max(1, (c / max) * 150) + 'px"></i>' +
+    '<i class="hbar-g" style="height:' + Math.max(1, (s.ger[i] / max) * 150) + 'px"></i></span>' +
+    '<span class="hbar-saldo" style="background:' + (saldos[i] >= 0 ? 'var(--good-soft)' : 'var(--bad-soft)') + '"></span>' +
+    '<span class="hbar-lbl">' + s.labels[i] + '</span></div>').join('');
+
+  const tiles = [
+    ['Consumo no período', nf(tC, 1), 'kWh', '<span style="color:' + (dC <= 0 ? 'var(--good)' : 'var(--bad)') + '">' + sinal(dC, 1) + '% vs período anterior</span>'],
+    ['Geração no período', nf(tG, 1), 'kWh', '<span style="color:' + (dG >= 0 ? 'var(--good)' : 'var(--bad)') + '">' + sinal(dG, 1) + '% vs período anterior</span>'],
+    ['Saldo', sinal(tG - tC, 1), 'kWh', 'Sobra da geração sobre o consumo'],
+    ['Energia puxada da rede', nf(s.rede, 1), 'kWh', 'Custa ' + brl(s.rede * t) + ' — só o que o sol não cobriu']
+  ].map(x => '<section class="card card--tight s3"><div class="kpi-lbl">' + x[0] + '</div>' +
+    '<div class="kpi-val"><span class="big big-30">' + x[1] + '</span>' + (x[2] ? '<span class="kpi-unit">' + x[2] + '</span>' : '') + '</div>' +
+    '<div style="font-size:12px;margin-top:7px;color:var(--faint);font-weight:500">' + x[3] + '</div></section>').join('');
+
+  const cmp = '<section class="card s7"><h2>Comparado com o período anterior</h2>' +
+    '<div style="display:flex;flex-direction:column;gap:18px;margin-top:20px">' +
+    blocoCmp('Consumo agora', nf(tC, 1) + ' kWh', tC, aC, 'var(--grid)') +
+    '<div style="height:1px;background:var(--ground)"></div>' +
+    blocoCmp('Geração agora', nf(tG, 1) + ' kWh', tG, aG, 'var(--sun)') +
+    '</div></section>';
+
+  const dest = '<section class="card s5" style="display:flex;flex-direction:column;gap:16px"><h2>Destaques</h2>' +
+    notaBox('good', 'Melhor: ' + s.nomes[iM], sinal(saldos[iM], 1) + ' kWh de sobra') +
+    notaBox('bad', 'Mais dependente da rede: ' + s.nomes[iP], nf(Math.abs(saldos[iP]), 1) + ' kWh puxados da rede') +
+    notaBox('sun', cobertos + ' de ' + saldos.length + ' ' + (s.unidade === 'dia' ? 'dias' : 'horas') + ' com saldo positivo',
+      'Em ' + pct((cobertos / saldos.length) * 100) + ' do período o sol deu conta sozinho') +
+    '</section>';
+
+  return '<div class="grid12 enter"><section class="card s12"><div class="card-head"><div><h2>' + esc(s.rotulo) + '</h2>' +
+    '<div class="card-sub">A faixa fina embaixo mostra se o sol cobriu o gasto daquele ' + s.unidade + '</div></div>' +
+    '<div class="legend"><span><i class="swatch swatch--sq" style="background:var(--grid)"></i>Consumo</span>' +
+    '<span><i class="swatch swatch--sq" style="background:var(--sun)"></i>Geração</span></div></div>' +
+    '<div class="chart" style="margin-top:0"><div class="hbars" id="hbars">' + barras + '</div><div class="tip" id="tipHist"></div></div>' +
+    '</section>' + tiles + cmp + dest + '</div>';
+}
+function blocoCmp(lbl, val, atual, ant, cor) {
+  const m = Math.max(atual, ant) || 1;
+  return '<div><div class="compare-lbl"><span>' + lbl + '</span><span class="mono" style="color:var(--ink)">' + val + '</span></div>' +
+    '<div class="track"><i style="width:' + (atual / m) * 100 + '%;background:' + cor + '"></i></div>' +
+    '<div class="compare-lbl" style="margin:9px 0 7px;color:var(--fainter)"><span>Período anterior</span><span class="mono">' + nf(ant, 1) + ' kWh</span></div>' +
+    '<div class="track"><i style="width:' + (ant / m) * 100 + '%;background:#C9C2B2"></i></div></div>';
+}
+function notaBox(tipo, t, s) {
+  return '<div class="note note--' + tipo + '"><span class="note-dot"></span><div><div class="note-t">' + esc(t) + '</div><div class="note-s">' + esc(s) + '</div></div></div>';
+}
+
+/* ---------- aparelhos ---------- */
+function vEquip() {
+  const v = visao(), t = tarifaAtual(), eq = aparelhos();
+  const pend = deteccoesPendentes();
+  const total = soma(eq.map(e => e.kwh)) || 1;
+  const maxK = eq[0] ? eq[0].kwh : 1;
+
+  const det = pend.map(x => '<div class="detect"><span class="detect-ic">' + ico(IC.faisca, 17, '#F5C25B', 2) + '</span>' +
+    '<div style="flex:1;min-width:200px"><div class="detect-t">Um aparelho novo apareceu no medidor — é ' + esc(x.palpite) + '?</div>' +
+    '<div class="detect-s">Primeiro registro ' + esc(x.quando) + ' · ' + nf(x.kwh, 1) + ' kWh nesse uso · ' + x.certeza + '% de certeza</div></div>' +
+    '<div class="detect-btns"><button class="btn-no" data-act="det-nao" data-id="' + x.id + '">Não é</button>' +
+    '<button class="btn-yes" data-act="det-sim" data-id="' + x.id + '">Confirmar</button></div></div>').join('');
+
+  const linhas = eq.map((e, i) => {
+    const aberto = S.detalhe === e.id;
+    const c = CONF[e.conf] || CONF.baixa;
+    return '<div class="eq-row" role="button" tabindex="0" data-act="eq-abrir" data-id="' + e.id + '" aria-expanded="' + aberto + '">' +
+      '<span class="eq-pos eq-hide">' + String(i + 1).padStart(2, '0') + '</span>' +
+      '<span style="min-width:0"><span class="eq-name"><b title="' + esc(e.nome) + '">' + esc(e.nome) + '</b>' +
+      '<span class="pill" style="background:' + c.bg + ';color:' + c.cor + ';font-size:10.5px;padding:3px 8px">' + c.txt + '</span></span>' +
+      '<span class="eq-meta" style="display:block">' + esc(e.local) + ' · ' + (e.fonte === 'ia' ? 'Detectado por IA' : 'Cadastrado por você') + '</span></span>' +
+      '<span class="eq-hide"><span class="eq-track"><i style="width:' + (e.kwh / maxK) * 100 + '%;background:' + e.cor + '"></i></span>' +
+      '<span class="eq-pct" style="display:block">' + pct((e.kwh / total) * 100) + '</span></span>' +
+      '<span style="text-align:right"><span class="eq-kwh" style="display:block">' + nf(e.kwh) + ' kWh</span>' +
+      '<span class="eq-cash" style="display:block">' + brl(e.reais) + '</span></span>' +
+      '<span style="text-align:right"><span class="eq-trend" style="color:' + (e.tend > 0 ? 'var(--bad)' : e.tend < 0 ? 'var(--good)' : 'var(--faint)') + '">' + (e.tend > 0 ? '+' : '') + e.tend + '%</span></span>' +
+      (e.sintetico ? '<span></span>' : '<button class="eq-kill" data-act="eq-remover" data-id="' + e.id + '" title="Remover ' + esc(e.nome) + '" aria-label="Remover ' + esc(e.nome) + '">' + ico(IC.lixo, 15, 'currentColor', 1.8) + '</button>') +
+      '</div>';
+  }).join('');
+
+  const lista = '<section class="card s8" style="padding:20px 16px 18px">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 12px 14px;flex-wrap:wrap">' +
+    '<div><h2>Ranking de consumo</h2><div class="card-sub">Clique em um aparelho para ver o detalhe</div></div>' +
+    '<button class="dark-btn" data-act="nav" data-tela="cadastro">' + ico(IC.mais, 13, 'currentColor', 2.6) + 'Cadastrar</button></div>' +
+    '<div class="eq-head"><span class="eq-hide">#</span><span>Aparelho</span><span class="eq-hide">Participação</span>' +
+    '<span style="text-align:right">Consumo</span><span style="text-align:right">Variação</span><span></span></div>' +
+    '<div class="eq-list">' + linhas + '</div></section>';
+
+  const alvo = eq.filter(e => e.id === S.detalhe)[0];
+  const painel = '<div class="s4 det-sticky" style="position:sticky;top:104px">' + (alvo ? cardDetalhe(alvo, total, t) : cardVazio()) + '</div>';
+
+  const excedeu = extrasExcedem();
+  const alertaExcesso = excedeu > 0
+    ? '<div class="feed-item feed-item--medio"><span class="feed-dot"></span><div>' +
+    '<div class="feed-t"><b>Os aparelhos que você cadastrou somam mais do que o medidor registra</b></div>' +
+    '<div class="feed-x">Sobram ' + nf(excedeu) + ' kWh sem lastro na leitura do mês, então as estimativas da IA ficaram zeradas. ' +
+    'Revise as horas de uso ou remova o que estiver duplicado com algo que a IA já detecta.</div></div></div>'
+    : '';
+
+  return '<div class="stack enter">' + (det ? '<div class="stack">' + det + '</div>' : '') + alertaExcesso +
+    '<div class="grid12">' + lista + painel + '</div></div>';
+}
+function cardVazio() {
+  return '<section class="empty">' +
+    '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B9B2A2" stroke-width="1.6" stroke-linecap="round" style="margin:0 auto"><circle cx="11" cy="11" r="7"/><path d="' + IC.lupa + '"/></svg>' +
+    '<div class="empty-t">Escolha um aparelho</div>' +
+    '<div class="empty-s">O detalhe mostra o horário de pico, quanto pesa no ano e o que dá para fazer a respeito.</div></section>';
+}
+function cardDetalhe(e, total, t) {
+  const u = unidade();
+  const perfil = perfilCat(u, e.cat);
+  const maxP = Math.max.apply(null, perfil) || 1;
+  const iPico = perfil.indexOf(maxP);
+  const barras = perfil.map(p => '<i style="background:' + e.cor + ';opacity:' + (0.32 + 0.68 * (p / maxP)).toFixed(2) + ';height:' + Math.max(2, (p / maxP) * 54) + 'px"></i>').join('');
+  const dicas = [];
+  if (e.horas >= 3) dicas.push(['Uma hora a menos por dia', 'economiza ' + brl((e.pot / 1000) * 30 * t) + ' por mês']);
+  if (e.cat === 'Refrigeração') dicas.push(['Limpar a serpentina a cada 6 meses', 'corta até 15% do consumo deste aparelho']);
+  if (e.cat === 'Climatização') dicas.push(['Subir o termostato em 2 °C', 'reduz cerca de 12% sem perder conforto']);
+  if (e.cat === 'Aquecimento') dicas.push(['Trocar para a posição verão', 'derruba a potência quase pela metade']);
+  if (iPico >= 9 && iPico <= 15) dicas.push(['O pico cai dentro da geração', 'esse aparelho já roda quase todo no sol — mantenha assim']);
+  if (!dicas.length) dicas.push(['Concentrar o uso entre 10h e 15h', 'aproveita o sol em vez da rede']);
+
+  return '<section class="card"><div class="det-head"><span class="det-chip" style="background:' + e.cor + '"></span>' +
+    '<div style="flex:1;min-width:0"><div class="det-name">' + esc(e.nome) + '</div>' +
+    '<div class="det-loc">' + esc(e.local) + ' · ' + esc(e.cat) + '</div></div>' +
+    '<button class="det-x" data-act="det-fechar" aria-label="Fechar detalhe">' + ico(IC.x, 16, 'currentColor', 2.2) + '</button></div>' +
+    '<div style="display:flex;align-items:baseline;gap:8px;margin-top:18px"><span class="big big-34">' + brl(e.reais) + '</span>' +
+    '<span style="font-size:13px;color:var(--faint)">por mês · ' + nf(e.kwh) + ' kWh</span></div>' +
+    '<div style="font-size:12.5px;color:var(--faint);margin-top:5px">' + pct((e.kwh / total) * 100) + ' da unidade · ' + brl(e.reais * 12) + ' por ano</div>' +
+    '<div class="det-facts"><div class="fact"><div class="fact-k">Potência</div><div class="fact-v">' + (e.pot ? nf(e.pot) + ' W' : '—') + '</div></div>' +
+    '<div class="fact"><div class="fact-k">Uso estimado</div><div class="fact-v">' + (e.horas ? nf(e.horas, 1) + ' h/dia' : '—') + '</div></div></div>' +
+    '<div class="eyebrow-sm" style="margin:20px 0 9px">Perfil de uso nas 24 horas</div>' +
+    '<div class="prof">' + barras + '</div>' +
+    '<div style="font-size:12px;color:var(--faint);margin-top:8px">Uso concentrado por volta das ' + String(iPico).padStart(2, '0') + 'h</div>' +
+    '<hr class="rule" style="margin:18px 0 14px">' +
+    '<div class="tips">' + dicas.map(d => '<div class="tip-row">' + ico(IC.check, 15, 'var(--good)', 2.2) +
+      '<div class="tip-txt"><b>' + d[0] + '</b> <span>' + d[1] + '</span></div></div>').join('') + '</div></section>';
+}
+
+/* ---------- cadastro ---------- */
+function estimativaNovo() {
+  const n = S.novo, v = visao(), t = tarifaAtual();
+  const kwh = (n.pot / 1000) * n.horas * n.dias;
+  const p = (kwh / Math.max(v.projConsumo, 1)) * 100;
+  return { kwh: kwh, custo: kwh * t, ano: kwh * t * 12, pct: p, pctBar: clamp(p, 0, 100) };
+}
+function textoEstimativa(e) {
+  return e.pct > 100
+    ? 'Sozinho já passa do que o medidor registra no mês (' + nf(e.pct) + '%) — revise a potência ou as horas'
+    : nf(e.pct, 1) + '% do consumo da unidade';
+}
+function vCadastro() {
+  const u = unidade(), n = S.novo, e = estimativaNovo();
+  const pode = n.nome.trim().length > 1;
+  const cats = CATS.map(c => '<button class="chip" data-act="chip" data-campo="cat" data-v="' + esc(c) + '" aria-pressed="' + (n.cat === c) + '">' + c + '</button>').join('');
+  const coms = u.comodos.map(c => '<button class="chip" data-act="chip" data-campo="comodo" data-v="' + esc(c) + '" aria-pressed="' + (n.comodo === c) + '">' + c + '</button>').join('');
+  const presets = PRESETS.map((p, i) => '<button class="preset" data-act="preset" data-i="' + i + '">' +
+    '<span style="min-width:0"><span class="preset-n" style="display:block">' + esc(p.nome) + '</span>' +
+    '<span class="preset-d" style="display:block">' + nf(p.pot) + ' W · ' + nf(p.horas, 1) + ' h/dia</span></span>' +
+    ico(IC.chevron, 14, '#B9B2A2', 2.2) + '</button>').join('');
+
+  const form = '<section class="card s7" style="padding:24px 28px 28px"><h2>Descreva o aparelho</h2>' +
+    '<div class="card-sub">A IA já estima quase tudo sozinha. Cadastre o que ela não reconhece ou o que você quer acompanhar de perto.</div>' +
+    '<div class="field"><label class="field-lbl" for="inNome">Nome</label>' +
+    '<input class="text-in" id="inNome" data-fid="nome" data-in="nome" type="text" value="' + esc(n.nome) + '" placeholder="Ex.: Ar-condicionado do quarto" autocomplete="off"></div>' +
+    '<div class="field"><span class="field-lbl">Categoria</span><div class="chips">' + cats + '</div></div>' +
+    '<div class="field"><span class="field-lbl">Onde fica</span><div class="chips">' + coms + '</div></div>' +
+    '<hr class="rule" style="margin:24px 0 20px">' +
+    '<div class="sliders">' +
+    sliderBloco('Potência', 'potLbl', nf(n.pot) + ' W', 'pot', 20, 12000, 10, n.pot, '20 W', '12.000 W') +
+    sliderBloco('Horas de uso por dia', 'horasLbl', nf(n.horas, 1) + ' h por dia', 'horas', 0.1, 24, 0.1, n.horas, '6 min', '24 h') +
+    sliderBloco('Dias de uso por mês', 'diasLbl', n.dias + ' dias por mês', 'dias', 1, 31, 1, n.dias, '1 dia', '31 dias') +
+    '</div></section>';
+
+  const est = '<section class="card card--dark" style="padding:24px 26px 26px">' +
+    '<div class="eyebrow" style="font-size:12px;color:var(--on-dark-soft)">Estimativa</div>' +
+    '<div style="display:flex;align-items:baseline;gap:8px;margin-top:12px">' +
+    '<span class="big big-46" id="estKwh">' + nf(e.kwh, 1) + '</span><span style="font-size:15px;color:var(--on-dark-soft)">kWh por mês</span></div>' +
+    '<div class="big" id="estCusto" style="font-weight:600;font-size:24px;color:var(--sun-lite);margin-top:10px;letter-spacing:-.8px">' + brl(e.custo) + ' por mês</div>' +
+    '<div style="font-size:13px;color:var(--on-dark-soft);margin-top:5px" id="estAno">' + brl(e.ano) + ' ao longo de um ano</div>' +
+    '<div class="est-bar"><i id="estBar" style="width:' + e.pctBar + '%"></i></div>' +
+    '<div style="font-size:12px;color:var(--on-dark-soft);margin-top:8px" id="estPct">' + textoEstimativa(e) + '</div>' +
+    '<button class="dark-btn" data-act="salvar" style="width:100%;height:46px;margin-top:18px;border-radius:13px;font-size:14.5px;' +
+    (pode ? 'background:var(--on-dark);color:var(--dark)' : '') + '"' + (pode ? '' : ' disabled') + '>' +
+    ico(IC.mais, 15, 'currentColor', 2.4) + 'Adicionar aos meus aparelhos</button>' +
+    (S.salvo ? '<div class="saved">' + ico(IC.check, 14, 'currentColor', 2.6) + 'Aparelho cadastrado e já no ranking</div>' : '') +
+    '</section>';
+
+  const mod = '<section class="card" style="padding:20px 22px 22px"><div class="eyebrow" style="font-size:12px">Começar de um modelo</div>' +
+    '<div style="display:flex;flex-direction:column;gap:2px;margin-top:12px">' + presets + '</div></section>';
+
+  return '<div class="grid12 enter">' + form + '<div class="s5 stack">' + est + mod + '</div></div>';
+}
+function sliderBloco(lbl, idLbl, valor, campo, min, max, step, val, esq, dir) {
+  return '<div><div class="slider-head"><span class="field-lbl">' + lbl + '</span><span class="slider-val" id="' + idLbl + '">' + valor + '</span></div>' +
+    '<input type="range" data-fid="' + campo + '" data-in="' + campo + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '" aria-label="' + lbl + '">' +
+    '<div class="slider-ends"><span>' + esq + '</span><span>' + dir + '</span></div></div>';
+}
+
+/* ---------- alertas e metas ---------- */
+function vAlertas() {
+  const v = visao(), t = tarifaAtual();
+  const meta = S.metas[S.perfil];
+  const usado = v.mtd.tc, proj = v.projConsumo;
+  const acima = proj > meta;
+  const p = clamp((usado / meta) * 100, 0, 100);
+  const marca = clamp((meta / Math.max(meta, proj)) * 100, 0, 100);
+
+  const regras = [
+    ['meta', 'Avisar quando eu passar de 80% da meta', 'Notificação no app e por e-mail'],
+    ['salto', 'Alertar aparelho com salto acima de 10%', 'Comparado com a média de quatro semanas'],
+    ['solar', 'Sugerir melhor horário para usar o sol', 'Uma vez por dia, às 9h'],
+    ['standby', 'Relatar consumo em standby da madrugada', 'Resumo semanal aos domingos']
+  ].map(r => '<button class="rule-row" data-act="regra" data-k="' + r[0] + '">' +
+    '<span style="flex:1;min-width:0"><span class="rule-t" style="display:block">' + r[1] + '</span>' +
+    '<span class="rule-s" style="display:block">' + r[2] + '</span></span>' +
+    '<span class="tog" role="switch" aria-checked="' + !!S.regras[r[0]] + '" aria-pressed="' + !!S.regras[r[0]] + '"><i></i></span></button>').join('');
+
+  const feed = alertas().map(a => '<div class="feed-item feed-item--' + a.tipo + '"><span class="feed-dot"></span>' +
+    '<div style="flex:1;min-width:0"><div class="feed-t"><b>' + esc(a.titulo) + '</b><span>' + esc(a.quando) + '</span></div>' +
+    '<div class="feed-x">' + esc(a.txt) + '</div></div></div>').join('');
+
+  return '<div class="grid12 enter">' +
+    '<section class="card s7" style="padding:24px 28px 26px"><div class="card-head"><div><h2>Meta do mês</h2>' +
+    '<div class="card-sub">Quanto você quer consumir no total, somando rede e sol</div></div>' +
+    '<div style="text-align:right"><div class="big" style="font-size:26px;letter-spacing:-1px" id="metaLbl">' + nf(meta) + ' kWh</div>' +
+    '<div style="font-size:12px;color:var(--faint);margin-top:4px" id="metaCusto">≈ ' + brl(meta * t) + '</div></div></div>' +
+    '<input type="range" data-fid="meta" data-in="meta" min="80" max="2600" step="10" value="' + meta + '" aria-label="Meta mensal em kWh" style="accent-color:var(--good);margin-top:20px">' +
+    '<div class="goal-track"><div class="goal-fill" id="metaFill" style="width:' + p + '%;background:' + (acima ? 'var(--bad)' : 'var(--good)') + '"></div>' +
+    '<div class="goal-mark" style="left:' + marca + '%" data-l="meta"></div></div>' +
+    '<div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12.5px;color:var(--muted)">' +
+    '<span>Já consumido: <b class="mono" style="color:var(--ink);font-weight:500">' + nf(usado) + ' kWh</b></span>' +
+    '<span>' + pct((usado / meta) * 100) + ' da meta</span></div>' +
+    '<div style="font-size:13.5px;font-weight:600;margin-top:10px;color:' + (acima ? 'var(--bad)' : 'var(--good)') + '">' +
+    (acima ? 'Você deve estourar a meta em ' + nf(proj - meta) + ' kWh' : 'No ritmo atual, você fecha o mês dentro da meta') + '</div>' +
+    '<div style="font-size:12.5px;color:var(--faint);margin-top:3px">Projeção de fechamento: ' + nf(proj) + ' kWh</div></section>' +
+
+    '<section class="card s5" style="padding:22px 24px 24px"><h2>Quando avisar</h2>' +
+    '<div style="display:flex;flex-direction:column;gap:4px;margin-top:16px">' + regras + '</div></section>' +
+
+    '<section class="card s12"><h2>O que aconteceu por aqui</h2><div class="feed">' + feed + '</div></section></div>';
+}
+
+/* ---------- relatório ---------- */
+function vRelatorio() {
+  const v = visao(), u = unidade(), t = tarifaAtual();
+  const l = v.linhaAtual;
+  const faturado = Math.max(l.rede - l.usado, 0);
+  const cobrado = Math.max(faturado, 0);
+  const bandeira = l.rede * 0.0189;
+  const total = cobrado * t + bandeira + u.ilum;
+  const semSolar = Math.max(l.cons, 0) * t + l.cons * 0.0189 + u.ilum;
+  const arv = Math.round(v.co2 / 22 * 12);
+
+  const linhas = [
+    ['Consumo registrado no medidor', nf(l.cons) + ' kWh', brl(l.cons * t), ''],
+    ['Energia gerada e autoconsumida', '− ' + nf(l.auto) + ' kWh', '− ' + brl(l.auto * t), 'credit'],
+    ['Energia injetada na rede', '− ' + nf(l.inj) + ' kWh', '− ' + brl(l.inj * u.tarifaComp), 'credit'],
+    ['Créditos usados neste mês', '− ' + nf(l.usado) + ' kWh', '− ' + brl(l.usado * t), 'credit'],
+    ['Bandeira amarela', '—', brl(bandeira, 2), ''],
+    ['Contribuição de iluminação pública', '—', brl(u.ilum, 2), ''],
+    ['Total a pagar', nf(faturado) + ' kWh faturados', brl(total), 'total']
+  ].map(r => '<div class="inv-row' + (r[3] === 'total' ? ' inv-row--total' : r[3] === 'credit' ? ' inv-row--credit' : '') + '">' +
+    '<span>' + r[0] + '</span><span class="inv-q">' + r[1] + '</span><span class="inv-v">' + r[2] + '</span></div>').join('');
+
+  const meses = v.ledger.linhas.slice(-12);
+  const maxE = Math.max.apply(null, meses.map(x => x.economia)) || 1;
+  const ybars = meses.map((x, i) => '<div class="ybar' + (i === meses.length - 1 ? ' is-now' : '') + '" title="' + MES3[x.m] + ': ' + brl(x.economia) + '">' +
+    '<i style="height:' + Math.round((x.economia / maxE) * 92 + 8) + 'px"></i><span>' + MES3[x.m] + '</span></div>').join('');
+
+  const hoje = v.data;
+  return '<div class="grid12 enter">' +
+    '<section class="card s8" style="padding:30px 34px 32px">' +
+    '<div class="print-head"><span class="brand-mark" style="background:var(--dark)">' + ico(IC.sol, 17, '#EDA22B', 2.2) + '</span><b style="font-family:var(--f-display);font-size:17px">Solaris</b></div>' +
+    '<div class="card-head"><div><div class="big" style="font-size:22px;letter-spacing:-.7px">' + esc(u.nome) + '</div>' +
+    '<div class="card-sub">' + esc(u.distribuidora) + ' · 01 a ' + hoje.getDate() + ' de ' + MESES[v.m] + ' de ' + v.y + '</div></div>' +
+    '<button class="ghost-btn no-print" data-act="imprimir">' + ico(IC.print, 14, 'currentColor', 1.9) + 'Imprimir</button></div>' +
+    '<div class="inv-head"><span>Descrição</span><span>Quantidade</span><span style="text-align:right">Valor</span></div>' +
+    linhas +
+    '<div class="leaf">' + ico(IC.folha, 20, 'var(--good)', 1.9) +
+    '<div><div class="leaf-t">Sem os painéis, esta conta seria ' + brl(semSolar) + '</div>' +
+    '<div class="leaf-s">Você vai pagar ' + brl(total) + ' — ' + pct(((semSolar - total) / Math.max(semSolar, 1)) * 100) + ' menor. No mês, ' +
+    nf(v.co2, 1) + ' kg de CO₂ deixaram de ir para a atmosfera, o mesmo que ' + arv + ' árvores absorvem em um mês.</div></div></div>' +
+    '<div style="font-size:11.5px;color:var(--fainter);margin-top:18px">Emitido em ' + hoje.getDate() + ' de ' + MESES[v.m] + ' de ' + v.y +
+    ' · valores estimados a partir do medidor e da tarifa cadastrada</div></section>' +
+
+    '<div class="s4 stack">' +
+    '<section class="card" style="padding:20px 22px 22px"><div class="eyebrow" style="font-size:12px">Economia nos 12 meses</div>' +
+    '<div class="big big-30" style="margin-top:8px">' + brl(soma(meses.map(x => x.economia))) + '</div>' +
+    '<div class="ybars">' + ybars + '</div></section>' +
+    '<section class="card" style="padding:20px 22px 22px"><div class="eyebrow" style="font-size:12px">Saldo de créditos</div>' +
+    '<div class="big big-30" style="margin-top:8px">' + nf(v.creditos) + ' kWh</div>' +
+    '<div style="font-size:12.5px;color:var(--faint);margin-top:6px;line-height:1.5">' +
+    (v.creditos >= 1
+      ? 'Energia injetada que ainda não foi usada. Vale por 60 meses e abate contas futuras — neste mês ela já derrubou ' + brl(l.usado * t) + '.'
+      : 'Esta unidade consome mais do que gera, então tudo o que é injetado volta no mesmo ciclo: não sobra saldo. Neste mês os créditos abateram ' + brl(l.usado * t) + '.') +
+    '</div></section>' +
+    '</div></div>';
+}
+
+/* ---------- configurações ---------- */
+function vConfig() {
+  const v = visao(), u = unidade(), t = tarifaAtual();
+  const inicio = new Date(v.y, v.m - (u.mesesOperacao - 1), 1);
+  return '<div class="grid12 enter">' +
+    '<section class="card s6" style="padding:24px 26px 26px"><h2>Tarifa de energia</h2>' +
+    '<div class="card-sub">É o número que transforma kWh em reais em todo o sistema</div>' +
+    '<div class="big" style="font-size:38px;letter-spacing:-1.6px;margin-top:18px" id="tarLbl">R$ ' + nf(t, 2) + ' / kWh</div>' +
+    '<input type="range" data-fid="tarifa" data-in="tarifa" min="40" max="160" step="1" value="' + Math.round(t * 100) + '" aria-label="Tarifa em centavos por kWh" style="margin-top:18px">' +
+    '<div class="slider-ends"><span>R$ 0,40</span><span>R$ 1,60</span></div>' +
+    (S.tarifa[S.perfil] != null ? '<button class="link-btn" style="margin-top:14px" data-act="reset-tarifa">Voltar para a tarifa da distribuidora</button>' :
+      '<div style="margin-top:14px;font-size:12.5px;color:var(--faint)">Usando a tarifa da ' + esc(u.distribuidora) + '</div>') +
+    '<hr class="rule" style="margin:20px 0 16px">' +
+    '<dl class="kvs">' +
+    kv('Tarifa de compensação (injetado)', 'R$ ' + nf(u.tarifaComp, 2) + ' / kWh', true) +
+    kv('Distribuidora', esc(u.distribuidora)) +
+    kv('Consumo mínimo faturado', nf(u.minFatura) + ' kWh', true) +
+    kv('Fator de emissão da rede', nf(86.1, 1) + ' g CO₂ por kWh', true) +
+    '</dl></section>' +
+
+    '<section class="card s6" style="padding:24px 26px 26px"><h2>Unidade e sistema solar</h2>' +
+    '<dl class="kvs" style="margin-top:18px">' +
+    kv('Unidade', esc(u.nome)) +
+    kv('Perfil', esc(u.tipo)) +
+    kv('Potência instalada', nf(u.potenciaKwp, 1) + ' kWp', true) +
+    kv('Painéis', u.paineis + ' painéis', true) +
+    kv('Investimento', brl(u.investimento), true) +
+    kv('Em operação desde', MESES[inicio.getMonth()] + ' de ' + inicio.getFullYear() + ' · ' + u.mesesOperacao + ' meses') +
+    '</dl>' +
+    '<div class="softbox">Com a tarifa atual, sua conta média sem geração solar seria <b>' + brl(v.semSolarProj) + '</b> por mês. Com os painéis, a projeção é <b>' + brl(v.contaProj) + '</b>.</div>' +
+    '<hr class="rule" style="margin:22px 0 14px">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">' +
+    '<div style="font-size:12.5px;color:var(--faint);max-width:44ch">Aparelhos cadastrados, metas e tarifa ficam salvos neste navegador.</div>' +
+    '<button class="danger-btn" data-act="reset-tudo">Apagar meus dados</button></div>' +
+    '</section></div>';
+}
+function kv(k, v, mono) {
+  return '<div class="kv"><dt>' + k + '</dt><dd' + (mono ? ' class="mono"' : '') + '>' + v + '</dd></div>';
+}
+
+
+/* ===== celular.js ===== */
+
+/* ============================================================
+   SOLARIS — app de celular
+   ============================================================ */
+const MTABS = [
+  { k: 'painel', label: 'Painel', icon: IC.painel },
+  { k: 'historico', label: 'Histórico', icon: IC.historico },
+  { k: 'aparelhos', label: 'Aparelhos', icon: IC.aparelhos },
+  { k: 'metas', label: 'Metas', icon: IC.sino },
+  { k: 'mais', label: 'Mais', icon: 'M5 12h.01M12 12h.01M19 12h.01' }
+];
+const MMENU = [
+  { k: 'conta', t: 'Conta do mês', s: 'Fatura detalhada e economia do ano', icon: IC.papel },
+  { k: 'cadastro', t: 'Cadastrar aparelho', s: 'Estime o consumo de algo que a IA não viu', icon: IC.mais },
+  { k: 'config', t: 'Configurações', s: 'Tarifa, distribuidora e sistema solar', icon: IC.ajustes }
+];
+
+function vMobile() {
+  const v = visao(), u = unidade();
+  const sub = S.msub;
+  const titulos = { painel: saudacao(), historico: 'Histórico', aparelhos: 'Seus aparelhos', metas: 'Metas e alertas', mais: 'Mais' };
+  const subT = { conta: 'Conta de ' + MESES[v.m], cadastro: 'Novo aparelho', config: 'Configurações' };
+  const titulo = sub ? subT[sub] : titulos[S.tab];
+
+  let corpo = '';
+  if (sub === 'conta') corpo = mConta();
+  else if (sub === 'cadastro') corpo = mCadastro();
+  else if (sub === 'config') corpo = mConfig();
+  else if (S.tab === 'painel') corpo = mPainel();
+  else if (S.tab === 'historico') corpo = mHistorico();
+  else if (S.tab === 'aparelhos') corpo = mAparelhos();
+  else if (S.tab === 'metas') corpo = mMetas();
+  else corpo = mMais();
+
+  const tabs = MTABS.map(t => '<button class="mob-tab" data-act="mtab" data-k="' + t.k + '"' +
+    (S.tab === t.k && !sub ? ' aria-current="page"' : '') + '>' + ico(t.icon, 21, 'currentColor', 1.8) +
+    '<span>' + t.label + '</span></button>').join('');
+
+  return '<div class="phone-stage">' +
+    '<button class="phone-back" data-act="desktop">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="' + IC.desktop + '"/></svg>' +
+    'Voltar para o desktop</button>' +
+    '<div class="phone"><div class="phone-island"></div><div class="phone-home"></div><div class="phone-screen"><div class="mob">' +
+    '<div class="mob-head">' +
+    (sub ? '<button class="mob-back" data-act="mback">' + ico(IC.volta, 14, 'currentColor', 2.4) + 'Voltar</button>' : '') +
+    '<div class="mob-unit">' + esc(u.nome) + '</div><div class="mob-title">' + esc(titulo) + '</div></div>' +
+    '<div class="mob-body">' + corpo + '</div>' +
+    '<nav class="mob-tabs" aria-label="Seções">' + tabs + '</nav>' +
+    '</div></div></div></div>';
+}
+
+function mPainel() {
+  const v = visao(), p = potenciaAgora();
+  const dia = v.md.dias[v.data.getDate() - 1];
+  const max = Math.max(Math.max.apply(null, dia.cons), Math.max.apply(null, dia.ger)) * 1.12 || 1;
+  const tiles = [
+    ['Consumo', nf(v.mtd.tc), 'kWh no mês'],
+    ['Geração', nf(v.mtd.tg), 'kWh no mês'],
+    ['CO₂ evitado', nf(v.co2, 1), 'kg neste mês'],
+    ['Créditos', nf(v.creditos), 'kWh na rede']
+  ].map(t => '<div class="mob-tile"><div class="mob-tile-k">' + t[0] + '</div><div class="mob-tile-v">' + t[1] + '</div><div class="mob-tile-s">' + t[2] + '</div></div>').join('');
+
+  return '<div class="mob-col">' +
+    '<div class="mob-hero"><span class="hero-glow"></span><div style="position:relative">' +
+    '<div class="mob-hero-k">Economizado em ' + MESES[v.m] + '</div>' +
+    '<div class="mob-hero-v"><span class="cur">R$</span><span class="num">' + nf(v.economia) + '</span></div>' +
+    '<div class="mob-hero-s">O sol cobriu ' + pct(v.autoPct) + ' do seu consumo até agora</div>' +
+    '<div class="mob-live"><span class="live-dot"></span><span>Agora: consumindo <b id="mLiveC">' + nf(p.cons, 2) + ' kW</b> · gerando <b id="mLiveG">' + nf(p.ger, 2) + ' kW</b></span></div>' +
+    '</div></div>' +
+    '<div class="mob-card"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px">' +
+    '<span class="eyebrow-sm">Hoje</span><div class="legend" style="gap:11px">' +
+    '<span><i class="swatch" style="background:var(--sun)"></i>Sol</span><span><i class="swatch" style="background:var(--grid)"></i>Consumo</span></div></div>' +
+    '<svg viewBox="0 0 320 100" style="width:100%;height:auto;margin-top:10px;overflow:visible">' +
+    '<defs><linearGradient id="gSolM" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EDA22B" stop-opacity="0.3"/><stop offset="100%" stop-color="#EDA22B" stop-opacity="0"/></linearGradient></defs>' +
+    '<path d="' + caminho(dia.ger, max, 320, 96, true) + '" fill="url(#gSolM)"/>' +
+    '<path d="' + caminho(dia.ger, max, 320, 96) + '" fill="none" stroke="#EDA22B" stroke-width="2.4" stroke-linejoin="round"/>' +
+    '<path d="' + caminho(dia.cons, max, 320, 96) + '" fill="none" stroke="#3E4C7A" stroke-width="2" stroke-dasharray="4 3" stroke-linejoin="round"/>' +
+    '<line x1="' + ((v.hDec - (v.data.getDate() - 1) * 24) / 23 * 320).toFixed(1) + '" y1="0" x2="' + ((v.hDec - (v.data.getDate() - 1) * 24) / 23 * 320).toFixed(1) + '" y2="96" stroke="#16150F" stroke-width="1" stroke-dasharray="3 3" opacity=".4"/>' +
+    '</svg></div>' +
+    '<div class="mob-grid2">' + tiles + '</div></div>';
+}
+
+function mHistorico() {
+  const s = seriePeriodo();
+  const max = Math.max(Math.max.apply(null, s.cons), Math.max.apply(null, s.ger)) * 1.08 || 1;
+  const tC = soma(s.cons), tG = soma(s.ger);
+  const dC = ((tC - (s.anterior.c || 1)) / (s.anterior.c || 1)) * 100;
+  const dG = ((tG - (s.anterior.g || 1)) / (s.anterior.g || 1)) * 100;
+  const saldos = s.cons.map((c, i) => s.ger[i] - c);
+  let iM = 0; saldos.forEach((x, i) => { if (x > saldos[iM]) iM = i; });
+  const cobertos = saldos.filter(x => x >= 0).length;
+  const t = tarifaAtual();
+
+  const per = [['dia', 'Dia'], ['semana', 'Semana'], ['mes', 'Mês']].map(p =>
+    '<button data-act="periodo" data-p="' + p[0] + '" aria-pressed="' + (S.periodo === p[0]) + '">' + p[1] + '</button>').join('');
+  const barras = s.cons.map((c, i) => '<div class="hbar" title="' + esc(s.nomes[i]) + ' · consumo ' + nf(c, 1) + ' kWh · geração ' + nf(s.ger[i], 1) + ' kWh">' +
+    '<span class="hbar-pair"><i class="hbar-c" style="height:' + Math.max(1, (c / max) * 104) + 'px"></i>' +
+    '<i class="hbar-g" style="height:' + Math.max(1, (s.ger[i] / max) * 104) + 'px"></i></span>' +
+    '<span class="hbar-saldo" style="background:' + (saldos[i] >= 0 ? 'var(--good-soft)' : 'var(--bad-soft)') + '"></span>' +
+    '<span class="hbar-lbl">' + s.labels[i] + '</span></div>').join('');
+
+  return '<div class="mob-col"><div class="mob-seg">' + per + '</div>' +
+    '<div class="mob-card"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px">' +
+    '<span style="font-size:13px;font-weight:600">' + esc(s.rotulo) + '</span></div>' +
+    '<div class="hbars mob-hbars">' + barras + '</div></div>' +
+    '<div class="mob-grid2">' +
+    '<div class="mob-tile"><div class="mob-tile-k">Consumo</div><div class="mob-tile-v">' + nf(tC, 1) + '</div>' +
+    '<div class="mob-tile-s" style="color:' + (dC <= 0 ? 'var(--good)' : 'var(--bad)') + '">' + sinal(dC, 1) + '%</div></div>' +
+    '<div class="mob-tile"><div class="mob-tile-k">Geração</div><div class="mob-tile-v">' + nf(tG, 1) + '</div>' +
+    '<div class="mob-tile-s" style="color:' + (dG >= 0 ? 'var(--good)' : 'var(--bad)') + '">' + sinal(dG, 1) + '%</div></div></div>' +
+    '<div class="mob-card">' +
+    '<div class="mob-rowline"><span>Saldo do período</span><b class="mono">' + sinal(tG - tC, 1) + ' kWh</b></div>' +
+    '<div class="mob-rowline"><span>Puxado da rede</span><b class="mono">' + nf(s.rede, 1) + ' kWh · ' + brl(s.rede * t) + '</b></div>' +
+    '<div class="mob-rowline"><span>Coberto pelo sol</span><b class="mono">' + cobertos + ' de ' + saldos.length + '</b></div></div>' +
+    notaBox('good', 'Melhor: ' + s.nomes[iM], sinal(saldos[iM], 1) + ' kWh de sobra') + '</div>';
+}
+
+function mAparelhos() {
+  const eq = aparelhos(), total = soma(eq.map(e => e.kwh)) || 1, maxK = eq[0] ? eq[0].kwh : 1;
+  const linhas = eq.slice(0, 8).map(e => '<div class="mob-card">' +
+    '<div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">' +
+    '<b style="font-size:13.5px">' + esc(e.nome) + '</b><span class="mono" style="font-size:13px">' + brl(e.reais) + '</span></div>' +
+    '<div class="eq-track" style="margin-top:9px"><i style="width:' + (e.kwh / maxK) * 100 + '%;background:' + e.cor + '"></i></div>' +
+    '<div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--faint);margin-top:6px">' +
+    '<span>' + nf(e.kwh) + ' kWh</span><span>' + pct((e.kwh / total) * 100) + ' do total</span></div></div>').join('');
+  return '<div class="mob-col"><div class="eyebrow-sm">Estimado por IA a partir do medidor</div>' + linhas + '</div>';
+}
+
+function mMetas() {
+  const v = visao(), meta = S.metas[S.perfil];
+  const p = clamp((v.mtd.tc / meta) * 100, 0, 100);
+  const acima = v.projConsumo > meta;
+  const feed = alertas().slice(0, 4).map(a => '<div class="feed-item feed-item--' + a.tipo + '"><span class="feed-dot"></span>' +
+    '<div><div style="font-size:13px;font-weight:600">' + esc(a.titulo) + '</div>' +
+    '<div style="font-size:12px;color:var(--ink-2);margin-top:3px;line-height:1.45">' + esc(a.txt) + '</div></div></div>').join('');
+  return '<div class="mob-col"><div class="mob-card">' +
+    '<div class="eyebrow-sm">Meta do mês</div>' +
+    '<div style="display:flex;align-items:baseline;gap:6px;margin-top:6px">' +
+    '<span class="big" style="font-size:30px">' + nf(v.mtd.tc) + '</span>' +
+    '<span style="font-size:13px;color:var(--faint)">de <b id="metaLbl">' + nf(meta) + '</b> kWh</span></div>' +
+    '<div class="track" style="margin-top:12px"><i id="metaFill" style="width:' + p + '%;background:' + (acima ? 'var(--bad)' : 'var(--good)') + '"></i></div>' +
+    '<div style="font-size:12px;color:var(--faint);margin-top:8px">' + pct((v.mtd.tc / meta) * 100) + ' da meta · projeção ' + nf(v.projConsumo) + ' kWh</div>' +
+    '<input type="range" data-fid="meta" data-in="meta" min="80" max="2600" step="10" value="' + meta + '" aria-label="Meta mensal" style="accent-color:var(--good)">' +
+    '<div style="font-size:13px;font-weight:600;margin-top:6px;color:' + (acima ? 'var(--bad)' : 'var(--good)') + '">' +
+    (acima ? 'Deve estourar em ' + nf(v.projConsumo - meta) + ' kWh' : 'No ritmo atual você fecha dentro da meta') + '</div></div>' +
+    feed + '</div>';
+}
+
+function mMais() {
+  const menu = MMENU.map(x => '<button class="mob-menu" data-act="msub" data-k="' + x.k + '">' +
+    '<span class="mob-menu-ic">' + ico(x.icon, 17, 'var(--sun-deep)', 1.9) + '</span>' +
+    '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + x.t + '</span>' +
+    '<span class="mob-menu-s" style="display:block">' + x.s + '</span></span>' + ico(IC.chevron, 15, '#B9B2A2', 2.2) + '</button>').join('');
+  const uns = Object.keys(UNIDADES).map(k => {
+    const u = UNIDADES[k], at = S.perfil === k;
+    return '<button class="mob-menu" data-act="unit" data-unit="' + k + '" style="border-color:' + (at ? 'var(--ink)' : 'var(--line)') + '">' +
+      '<span style="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:' + (at ? 'var(--sun)' : 'var(--line-2)') + '"></span>' +
+      '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + esc(u.nome) + '</span>' +
+      '<span class="mob-menu-s" style="display:block">' + esc(u.tipo) + '</span></span></button>';
+  }).join('');
+  return '<div class="mob-col">' + menu +
+    '<div class="eyebrow-sm" style="margin-top:10px">Trocar de unidade</div>' + uns + '</div>';
+}
+
+function mConta() {
+  const v = visao(), u = unidade(), t = tarifaAtual(), l = v.linhaAtual;
+  const faturado = Math.max(l.rede - l.usado, 0);
+  const total = faturado * t + l.rede * 0.0189 + u.ilum;
+  const semSolar = l.cons * t + l.cons * 0.0189 + u.ilum;
+  const linhas = [
+    ['Consumo no medidor', brl(l.cons * t)],
+    ['Autoconsumo solar', '− ' + brl(l.auto * t)],
+    ['Injetado na rede', '− ' + brl(l.inj * u.tarifaComp)],
+    ['Créditos usados', '− ' + brl(l.usado * t)],
+    ['Bandeira + iluminação', brl(l.rede * 0.0189 + u.ilum, 2)]
+  ].map(x => '<div class="mob-rowline"><span>' + x[0] + '</span><b class="mono">' + x[1] + '</b></div>').join('');
+  return '<div class="mob-col">' +
+    '<div class="mob-hero"><div class="mob-hero-k">Total a pagar</div>' +
+    '<div class="mob-hero-v"><span class="num" style="font-size:38px">' + brl(total) + '</span></div>' +
+    '<div class="mob-hero-s">Sem os painéis seria ' + brl(semSolar) + '</div></div>' +
+    '<div class="mob-card">' + linhas + '</div>' +
+    notaBox('good', 'Você economizou ' + brl(v.economia) + ' neste mês', nf(v.co2, 1) + ' kg de CO₂ deixaram de ir para a atmosfera') + '</div>';
+}
+
+function mCadastro() {
+  const u = unidade(), n = S.novo, e = estimativaNovo();
+  const pode = n.nome.trim().length > 1;
+  const coms = u.comodos.map(c => '<button class="chip" data-act="chip" data-campo="comodo" data-v="' + esc(c) + '" aria-pressed="' + (n.comodo === c) + '">' + c + '</button>').join('');
+  return '<div class="mob-col"><div class="mob-card">' +
+    '<label class="field-lbl" for="mNome">Nome</label>' +
+    '<input class="text-in" id="mNome" data-fid="nome" data-in="nome" type="text" value="' + esc(n.nome) + '" placeholder="Ex.: Ar do quarto" autocomplete="off">' +
+    '<div class="slider-head" style="margin-top:16px"><span class="field-lbl">Potência</span><span class="slider-val" id="potLbl">' + nf(n.pot) + ' W</span></div>' +
+    '<input type="range" data-fid="pot" data-in="pot" min="20" max="12000" step="10" value="' + n.pot + '" aria-label="Potência">' +
+    '<div class="slider-head" style="margin-top:12px"><span class="field-lbl">Horas por dia</span><span class="slider-val" id="horasLbl">' + nf(n.horas, 1) + ' h por dia</span></div>' +
+    '<input type="range" data-fid="horas" data-in="horas" min="0.1" max="24" step="0.1" value="' + n.horas + '" aria-label="Horas por dia">' +
+    '<div class="slider-head" style="margin-top:12px"><span class="field-lbl">Dias por mês</span><span class="slider-val" id="diasLbl">' + n.dias + ' dias por mês</span></div>' +
+    '<input type="range" data-fid="dias" data-in="dias" min="1" max="31" step="1" value="' + n.dias + '" aria-label="Dias por mês"></div>' +
+    '<div class="mob-card"><div class="eyebrow-sm">Onde fica</div><div class="chips">' + coms + '</div></div>' +
+    '<div class="mob-hero"><div class="mob-hero-k">Estimativa</div>' +
+    '<div class="mob-hero-v"><span class="num" style="font-size:36px" id="estKwh">' + nf(e.kwh, 1) + '</span><span class="cur" style="font-size:14px">kWh/mês</span></div>' +
+    '<div style="font-size:17px;font-weight:600;color:var(--sun-lite);margin-top:6px" id="estCusto">' + brl(e.custo) + ' por mês</div>' +
+    '<div style="font-size:12px;color:var(--on-dark-soft);margin-top:3px" id="estAno">' + brl(e.ano) + ' ao longo de um ano</div>' +
+    '<div class="est-bar"><i id="estBar" style="width:' + e.pctBar + '%"></i></div>' +
+    '<div style="font-size:11.5px;color:var(--on-dark-soft);margin-top:7px" id="estPct">' + textoEstimativa(e) + '</div>' +
+    '<button class="dark-btn" data-act="salvar" style="width:100%;height:44px;margin-top:16px;border-radius:12px;' +
+    (pode ? 'background:var(--on-dark);color:var(--dark)' : '') + '"' + (pode ? '' : ' disabled') + '>Adicionar aparelho</button>' +
+    (S.salvo ? '<div class="saved">' + ico(IC.check, 14, 'currentColor', 2.6) + 'Cadastrado e já no ranking</div>' : '') +
+    '</div></div>';
+}
+
+function mConfig() {
+  const v = visao(), u = unidade(), t = tarifaAtual();
+  return '<div class="mob-col"><div class="mob-card">' +
+    '<div class="eyebrow-sm">Tarifa de energia</div>' +
+    '<div class="big" style="font-size:30px;margin-top:6px" id="tarLbl">R$ ' + nf(t, 2) + ' / kWh</div>' +
+    '<input type="range" data-fid="tarifa" data-in="tarifa" min="40" max="160" step="1" value="' + Math.round(t * 100) + '" aria-label="Tarifa">' +
+    (S.tarifa[S.perfil] != null ? '<button class="link-btn" style="margin-top:8px" data-act="reset-tarifa">Voltar para a tarifa da distribuidora</button>' : '') +
+    '</div>' +
+    '<div class="mob-card">' +
+    '<div class="mob-rowline"><span>Distribuidora</span><b>' + esc(u.distribuidora) + '</b></div>' +
+    '<div class="mob-rowline"><span>Compensação</span><b class="mono">R$ ' + nf(u.tarifaComp, 2) + '</b></div>' +
+    '<div class="mob-rowline"><span>Potência</span><b class="mono">' + nf(u.potenciaKwp, 1) + ' kWp</b></div>' +
+    '<div class="mob-rowline"><span>Painéis</span><b class="mono">' + u.paineis + '</b></div>' +
+    '<div class="mob-rowline"><span>Mínimo faturado</span><b class="mono">' + u.minFatura + ' kWh</b></div></div>' +
+    '<div class="softbox" style="margin-top:0">Sem geração solar sua conta seria <b>' + brl(v.semSolarProj) + '</b> por mês.</div>' +
+    '<button class="danger-btn" style="padding:10px 0" data-act="reset-tudo">Apagar meus dados</button></div>';
+}
+
+
+/* ===== controle.js ===== */
+
+/* ============================================================
+   SOLARIS — controle, eventos e o tique do medidor
+   ============================================================ */
+const TELA_ORDEM = NAV.map(n => n.k);
+function modoMobile() { return S.vista === 'mobile' || window.innerWidth <= 760; }
+
+function corpoDesktop() {
+  let tela = '';
+  if (S.tela === 'painel') tela = vPainel();
+  else if (S.tela === 'historico') tela = vHistorico();
+  else if (S.tela === 'equipamentos') tela = vEquip();
+  else if (S.tela === 'cadastro') tela = vCadastro();
+  else if (S.tela === 'alertas') tela = vAlertas();
+  else if (S.tela === 'relatorio') tela = vRelatorio();
+  else tela = vConfig();
+  return '<div class="app">' + vRail() + '<main class="main">' + vTopbar() + '<div class="page">' + tela + '</div></main></div>';
+}
+
+let _ultimoModo = null;
+function render() {
+  const root = $('#root');
+  const ativo = document.activeElement;
+  const fid = ativo && ativo.dataset ? ativo.dataset.fid : null;
+  const caret = ativo && ativo.selectionStart != null ? ativo.selectionStart : null;
+
+  const mob = modoMobile();
+  root.innerHTML = mob ? vMobile() : corpoDesktop();
+  document.body.classList.toggle('vista-celular', mob);
+  _ultimoModo = mob;
+
+  if (fid) {
+    const alvo = $('[data-fid="' + fid + '"]');
+    if (alvo) {
+      alvo.focus({ preventScroll: true });
+      if (caret != null && alvo.setSelectionRange && alvo.type === 'text') {
+        try { alvo.setSelectionRange(caret, caret); } catch (e) { }
+      }
+    }
+  }
+  ligarGraficos();
+  atualizarHash();
+}
+
+/* ---------- gráficos interativos ---------- */
+function ligarGraficos() {
+  const c = $('#chartDia');
+  if (c) {
+    const tip = $('#tipDia'), v = visao();
+    const dia = v.md.dias[v.data.getDate() - 1];
+    const mover = ev => {
+      const r = c.getBoundingClientRect();
+      const x = clamp((ev.clientX - r.left) / r.width, 0, 1);
+      const i = Math.round(x * 23);
+      tip.innerHTML = String(i).padStart(2, '0') + 'h<br>Sol <b>' + nf(dia.ger[i], 2) + ' kW</b> · Consumo <i>' + nf(dia.cons[i], 2) + ' kW</i>';
+      tip.style.left = (i / 23) * 100 + '%';
+      tip.style.top = '10px';
+      tip.classList.add('on');
+    };
+    c.addEventListener('mousemove', mover);
+    c.addEventListener('mouseleave', () => tip.classList.remove('on'));
+  }
+  const hb = $('#hbars');
+  if (hb) {
+    const tip = $('#tipHist'), s = seriePeriodo();
+    hb.addEventListener('mousemove', ev => {
+      const alvo = ev.target.closest ? ev.target.closest('.hbar') : null;
+      if (!alvo) { tip.classList.remove('on'); return; }
+      const i = +alvo.dataset.i;
+      const saldo = s.ger[i] - s.cons[i];
+      tip.innerHTML = esc(s.nomes[i]) + '<br>Consumo <i>' + nf(s.cons[i], 1) + ' kWh</i> · Geração <b>' + nf(s.ger[i], 1) + ' kWh</b><br>Saldo ' + sinal(saldo, 1) + ' kWh';
+      const r = hb.getBoundingClientRect(), rb = alvo.getBoundingClientRect();
+      tip.style.left = (rb.left - r.left + rb.width / 2) + 'px';
+      tip.style.top = '18px';
+      tip.classList.add('on');
+    });
+    hb.addEventListener('mouseleave', () => tip.classList.remove('on'));
+  }
+}
+
+/* ---------- avisos ---------- */
+function aviso(titulo, sub, tipo) {
+  const w = $('#toasts');
+  if (!w) return;
+  const el = document.createElement('div');
+  el.className = 'toast toast--' + (tipo || 'sun');
+  el.setAttribute('role', 'status');
+  el.innerHTML = '<span class="toast-dot"></span><div><div class="toast-t">' + esc(titulo) + '</div>' +
+    (sub ? '<div class="toast-s">' + esc(sub) + '</div>' : '') + '</div>';
+  w.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 5200);
+  while (w.children.length > 3) w.firstChild.remove();
+}
+
+/* ---------- sincronizações leves (sem re-render) ---------- */
+function txt(sel, valor) { const e = $(sel); if (e) e.textContent = valor; }
+function syncCadastro() {
+  const n = S.novo, e = estimativaNovo();
+  txt('#potLbl', nf(n.pot) + ' W');
+  txt('#horasLbl', nf(n.horas, 1) + ' h por dia');
+  txt('#diasLbl', n.dias + ' dias por mês');
+  txt('#estKwh', nf(e.kwh, 1));
+  txt('#estCusto', brl(e.custo) + ' por mês');
+  txt('#estAno', brl(e.ano) + ' ao longo de um ano');
+  txt('#estPct', textoEstimativa(e));
+  const b = $('#estBar'); if (b) b.style.width = e.pctBar + '%';
+  const btn = $('[data-act="salvar"]');
+  if (btn) {
+    const pode = n.nome.trim().length > 1;
+    btn.disabled = !pode;
+    btn.style.background = pode ? 'var(--on-dark)' : '';
+    btn.style.color = pode ? 'var(--dark)' : '';
+  }
+}
+function syncMeta() {
+  const v = visao(), meta = S.metas[S.perfil], t = tarifaAtual();
+  txt('#metaLbl', modoMobile() ? nf(meta) : nf(meta) + ' kWh');
+  txt('#metaCusto', '≈ ' + brl(meta * t));
+  const f = $('#metaFill');
+  if (f) {
+    f.style.width = clamp((v.mtd.tc / meta) * 100, 0, 100) + '%';
+    f.style.background = v.projConsumo > meta ? 'var(--bad)' : 'var(--good)';
+  }
+}
+function syncTarifa() { txt('#tarLbl', 'R$ ' + nf(tarifaAtual(), 2) + ' / kWh'); }
+
+/* ---------- ações ---------- */
+function irPara(tela) { S.tela = tela; S.detalhe = null; S.salvo = false; salvar(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+const ACOES = {
+  nav: el => irPara(el.dataset.tela),
+  unit: el => {
+    S.perfil = el.dataset.unit; S.detalhe = null; S.salvo = false;
+    S.novo.comodo = UNIDADES[S.perfil].comodos[0];
+    _visao = null; salvar(); render();
+    aviso('Unidade trocada', UNIDADES[S.perfil].nome + ' · ' + UNIDADES[S.perfil].tipo, 'sun');
+  },
+  periodo: el => { S.periodo = el.dataset.p; salvar(); render(); },
+  mobile: () => { S.vista = 'mobile'; S.tab = 'painel'; S.msub = null; salvar(); render(); },
+  desktop: () => { S.vista = 'desktop'; S.msub = null; salvar(); render(); },
+  mtab: el => { S.tab = el.dataset.k; S.msub = null; salvar(); render(); },
+  msub: el => { S.msub = el.dataset.k; S.salvo = false; salvar(); render(); },
+  mback: () => { S.msub = null; salvar(); render(); },
+  'eq-abrir': el => { S.detalhe = S.detalhe === el.dataset.id ? null : el.dataset.id; if (S.tela !== 'equipamentos') S.tela = 'equipamentos'; salvar(); render(); },
+  'det-fechar': () => { S.detalhe = null; salvar(); render(); },
+  'eq-remover': el => {
+    const id = el.dataset.id;
+    const extra = S.extras.filter(e => e.perfil === S.perfil && e.id === id)[0];
+    const nome = (aparelhos().filter(e => e.id === id)[0] || {}).nome || 'Aparelho';
+    if (extra) S.extras = S.extras.filter(e => !(e.perfil === S.perfil && e.id === id));
+    else S.removidos = S.removidos.concat([S.perfil + ':' + id]);
+    if (S.detalhe === id) S.detalhe = null;
+    salvar(); render();
+    aviso(nome + ' removido', 'O consumo dele voltou para “Não identificado”.', 'bad');
+  },
+  'det-sim': el => {
+    const x = unidade().deteccoes.filter(d => d.id === el.dataset.id)[0];
+    S.respondidas[S.perfil + ':' + x.id] = 'sim';
+    S.extras = S.extras.concat([{
+      id: 'det-' + x.id, perfil: S.perfil, nome: x.palpite, local: '—', cat: x.cat,
+      pot: x.pot, horas: x.horas, dias: 26, cor: CORES_EXTRA[S.extras.length % CORES_EXTRA.length],
+      conf: 'média', fonte: 'ia', tend: 0
+    }]);
+    salvar(); render();
+    aviso(x.palpite + ' confirmado', 'Entrou no ranking com estimativa própria.', 'good');
+  },
+  'det-nao': el => {
+    const x = unidade().deteccoes.filter(d => d.id === el.dataset.id)[0];
+    S.respondidas[S.perfil + ':' + x.id] = 'nao';
+    salvar(); render();
+    aviso('Palpite descartado', 'A IA não vai sugerir “' + x.palpite + '” de novo.', 'sun');
+  },
+  chip: el => { S.novo[el.dataset.campo] = el.dataset.v; S.salvo = false; salvar(); render(); },
+  preset: el => {
+    const p = PRESETS[+el.dataset.i];
+    S.novo = Object.assign({}, S.novo, { nome: p.nome, pot: p.pot, horas: p.horas, cat: p.cat });
+    S.salvo = false; salvar(); render();
+  },
+  salvar: () => {
+    const n = S.novo;
+    if (n.nome.trim().length < 2) return;
+    const kwh = (n.pot / 1000) * n.horas * n.dias;
+    S.extras = S.extras.concat([{
+      id: 'x' + Date.now().toString(36), perfil: S.perfil, nome: n.nome.trim(), local: n.comodo,
+      cat: n.cat, pot: n.pot, horas: n.horas, dias: n.dias,
+      cor: CORES_EXTRA[S.extras.length % CORES_EXTRA.length], conf: 'alta', fonte: 'manual', tend: 0
+    }]);
+    S.salvo = true;
+    S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: UNIDADES[S.perfil].comodos[0] };
+    salvar(); render();
+    aviso(n.nome.trim() + ' cadastrado', nf(kwh, 1) + ' kWh por mês · ' + brl(kwh * tarifaAtual()) + ' na conta.', 'good');
+  },
+  regra: el => {
+    const k = el.dataset.k;
+    S.regras[k] = !S.regras[k];
+    salvar(); render();
+  },
+  imprimir: () => window.print(),
+  'reset-tarifa': () => { S.tarifa[S.perfil] = null; salvar(); render(); aviso('Tarifa restaurada', 'Voltou para R$ ' + nf(unidade().tarifa, 2) + ' / kWh da ' + unidade().distribuidora + '.', 'sun'); },
+  'reset-tudo': () => {
+    if (!window.confirm('Apagar aparelhos cadastrados, metas, tarifa e respostas da IA neste navegador?')) return;
+    try { localStorage.removeItem(CHAVE_LS); } catch (e) { }
+    S = JSON.parse(JSON.stringify(PADRAO));
+    _visao = null; render();
+    aviso('Dados apagados', 'O Solaris voltou ao estado inicial.', 'bad');
+  }
+};
+
+document.addEventListener('click', ev => {
+  const el = ev.target.closest ? ev.target.closest('[data-act]') : null;
+  if (!el) return;
+  const fn = ACOES[el.dataset.act];
+  if (!fn) return;
+  ev.preventDefault();
+  fn(el);
+});
+document.addEventListener('keydown', ev => {
+  const el = ev.target.closest ? ev.target.closest('[data-act][role="button"]') : null;
+  if (el && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); (ACOES[el.dataset.act] || function () { })(el); return; }
+  if (ev.target.tagName === 'INPUT' || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  if (ev.key === 'Escape') { if (S.msub) { S.msub = null; render(); } else if (S.detalhe) { S.detalhe = null; render(); } return; }
+  if (ev.key >= '1' && ev.key <= '7' && !modoMobile()) { irPara(TELA_ORDEM[+ev.key - 1]); return; }
+  if (ev.key.toLowerCase() === 'c') { S.vista = S.vista === 'mobile' ? 'desktop' : 'mobile'; S.msub = null; salvar(); render(); }
+});
+
+/* entradas contínuas */
+document.addEventListener('input', ev => {
+  const el = ev.target;
+  if (!el.dataset || !el.dataset.in) return;
+  const campo = el.dataset.in;
+  if (campo === 'nome') { S.novo.nome = el.value; S.salvo = false; syncCadastro(); salvar(); return; }
+  if (campo === 'pot' || campo === 'horas' || campo === 'dias') {
+    S.novo[campo] = Number(el.value); S.salvo = false; syncCadastro(); salvar(); return;
+  }
+  if (campo === 'meta') { S.metas[S.perfil] = Number(el.value); syncMeta(); salvar(); return; }
+  if (campo === 'tarifa') { S.tarifa[S.perfil] = Number(el.value) / 100; _visao = null; syncTarifa(); salvar(); return; }
+});
+document.addEventListener('change', ev => {
+  const el = ev.target;
+  if (!el.dataset || !el.dataset.in) return;
+  if (el.type === 'range') { _visao = null; render(); }
+});
+
+/* ---------- hash ---------- */
+function hashAtual() {
+  return S.vista === 'mobile'
+    ? '#/celular/' + S.tab + (S.msub ? '/' + S.msub : '')
+    : '#/' + S.tela;
+}
+/* alguns contextos (data:, about:) recusam mudança de hash — o app segue sem ela */
+const HASH_OK = location.protocol === 'http:' || location.protocol === 'https:' || location.protocol === 'file:';
+function atualizarHash() {
+  if (!HASH_OK) return;
+  try {
+    const h = hashAtual();
+    if (location.hash !== h) location.hash = h;
+  } catch (e) { }
+}
+/* só re-renderiza se o hash descrever um estado diferente do atual —
+   evita o laço entre atualizarHash e o evento hashchange */
+function lerHash() {
+  const p = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+  if (!p.length) return;
+  if (p[0] === 'celular') {
+    const tab = p[1] || 'painel', sub = p[2] || null;
+    if (S.vista === 'mobile' && S.tab === tab && S.msub === sub) return;
+    S.vista = 'mobile'; S.tab = tab; S.msub = sub;
+  } else if (TELAS[p[0]]) {
+    if (S.vista === 'desktop' && S.tela === p[0]) return;
+    S.vista = 'desktop'; S.tela = p[0];
+  } else return;
+  salvar(); render();
+}
+window.addEventListener('hashchange', lerHash);
+window.addEventListener('resize', () => { if (modoMobile() !== _ultimoModo) render(); });
+
+/* ---------- o tique ---------- */
+let _spikeCooldown = 0, _spikeAtivo = false;
+function tique() {
+  pulso();
+  const p = potenciaAgora();
+  txt('#liveC', nf(p.cons, 2) + ' kW');
+  txt('#liveG', nf(p.ger, 2) + ' kW');
+  txt('#mLiveC', nf(p.cons, 2) + ' kW');
+  txt('#mLiveG', nf(p.ger, 2) + ' kW');
+  txt('#liveNote', textoMedidor(p));
+  const b = $('#liveBar');
+  if (b) b.style.width = clamp((p.ger / Math.max(p.cons, .001)) * 100, 0, 100) + '%';
+
+  if (_spikeCooldown > 0) _spikeCooldown--;
+  const emSurto = surtoAtivo();
+  if (emSurto && !_spikeAtivo && _spikeCooldown === 0) {
+    _spikeCooldown = 60;
+    const eq = aparelhos().filter(e => !e.sintetico && e.pot > 900);
+    const culpado = eq.length ? eq[Math.floor(Math.random() * eq.length)].nome : 'Algum aparelho';
+    aviso('Pico de consumo agora', culpado + ' provavelmente acabou de ligar — o medidor saltou para ' + nf(p.cons, 2) + ' kW.', 'bad');
+  }
+  _spikeAtivo = emSurto;
+}
+let _ultimaHora = -1;
+function tiqueLento() {
+  const h = new Date().getHours();
+  _visao = null;
+  if (h !== _ultimaHora) { _ultimaHora = h; render(); }
+}
+
+/* ---------- partida ---------- */
+function iniciar() {
+  carregar();
+  if (!UNIDADES[S.perfil]) S.perfil = 'residencial';
+  if (!TELAS[S.tela]) S.tela = 'painel';
+  _ultimaHora = new Date().getHours();
+  lerHash();
+  render();
+  setInterval(tique, 2000);
+  setInterval(tiqueLento, 45000);
+  const v = visao();
+  setTimeout(() => {
+    aviso('Medidor conectado', 'Lendo ' + unidade().nome + ' em tempo real · ' + nf(v.mtd.tc) + ' kWh no mês até agora.', 'good');
+  }, 900);
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
+else iniciar();
+
+</script>
+</body>
+</html>

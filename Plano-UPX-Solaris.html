@@ -1,0 +1,640 @@
+<title>Plano de Semestre Solaris</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#EFEBE1; --ground-2:#F7F4EC; --surface:#FFFFFF;
+  --dark:#16150F; --dark-2:#211F17;
+  --ink:#16150F; --ink-2:#4A453B; --muted:#6B665C; --faint:#8B8577; --fainter:#A9A395;
+  --line:#E3DED2; --line-2:#DDD7C9;
+  --on-dark:#F4F1EA; --on-dark-soft:#A79F8E; --on-dark-faint:#8E887A;
+  --sun:#EDA22B; --sun-lite:#F5C25B; --sun-deep:#B4761B;
+  --grid:#3E4C7A; --good:#2E7A5A; --good-bg:#E4F0EA; --good-line:#C3DFD1;
+  --warn:#8A6A15; --warn-bg:#FBF0CF; --warn-line:#EDDCA8;
+  --bad:#C4573C; --bad-bg:#FBECE8; --bad-line:#EFCFC6;
+  --violet:#7A6BA8; --teal:#4E8FA8;
+  --f-display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
+  --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0;background:var(--ground);color:var(--ink);
+  font-family:var(--f-body);font-size:15px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px 96px}
+h1,h2,h3,h4{margin:0;font-family:var(--f-display);text-wrap:balance}
+p{margin:0}
+ul,ol{margin:0;padding-left:20px}
+li{margin:5px 0}
+a{color:var(--sun-deep)}
+code{font-family:var(--f-mono);font-size:.88em;background:var(--ground-2);padding:2px 6px;border-radius:5px;border:1px solid var(--line)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--faint);font-weight:600}
+
+/* capa */
+.hero{background:var(--dark);color:var(--on-dark);position:relative;overflow:hidden;margin-bottom:44px}
+.hero-glow{position:absolute;top:-160px;right:-110px;width:460px;height:460px;border-radius:50%;
+  background:radial-gradient(circle,rgba(237,162,43,.34),transparent 68%);pointer-events:none}
+.hero-in{max-width:1080px;margin:0 auto;padding:52px 28px 46px;position:relative}
+.hero .eyebrow{color:var(--sun-lite)}
+.hero h1{font-size:clamp(38px,6vw,60px);font-weight:800;letter-spacing:-2.2px;line-height:1;margin:14px 0 0}
+.hero .lede{font-size:17px;color:var(--on-dark-soft);max-width:62ch;margin-top:18px;line-height:1.6}
+.hero-facts{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.fact{background:rgba(244,241,234,.07);border:1px solid rgba(244,241,234,.14);border-radius:12px;padding:9px 14px;font-size:12.5px}
+.fact b{color:var(--on-dark);font-weight:600}
+.fact span{color:var(--on-dark-faint);display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px}
+
+section{margin-top:52px}
+.sec-head{border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:24px}
+.sec-head h2{font-size:27px;font-weight:700;letter-spacing:-.8px}
+.sec-head p{color:var(--muted);font-size:14.5px;margin-top:6px;max-width:70ch}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 24px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:860px){.g2,.g3{grid-template-columns:1fr}}
+
+/* papeis */
+.role{display:flex;gap:14px;align-items:flex-start}
+.role-n{width:30px;height:30px;border-radius:9px;background:var(--dark);color:var(--sun-lite);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-family:var(--f-mono);font-size:12px;font-weight:600}
+.role h4{font-size:15.5px;font-weight:700;letter-spacing:-.2px}
+.role .who{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--sun-deep);font-weight:600;margin-top:3px}
+.role p{font-size:13.5px;color:var(--muted);margin-top:7px}
+
+/* linha do tempo */
+.gantt-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:18px 20px 20px}
+.gantt{min-width:720px}
+.gantt-head{display:grid;grid-template-columns:132px repeat(14,1fr);gap:3px;margin-bottom:9px}
+.gantt-head span{font-family:var(--f-mono);font-size:9.5px;color:var(--fainter);text-align:center}
+.gantt-head span:first-child{text-align:left}
+.gantt-row{display:grid;grid-template-columns:132px repeat(14,1fr);gap:3px;align-items:center;margin-bottom:5px}
+.gantt-lbl{font-size:12px;font-weight:600;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{height:20px;border-radius:5px;display:flex;align-items:center;padding:0 7px;
+  font-size:9.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden}
+.bar--motor{background:var(--grid)}
+.bar--ui{background:var(--sun);color:var(--dark)}
+.bar--iot{background:var(--violet)}
+.bar--qa{background:var(--good)}
+.bar--banca{background:var(--bad)}
+.bar--slack{background:repeating-linear-gradient(45deg,var(--line-2),var(--line-2) 5px,var(--ground-2) 5px,var(--ground-2) 10px);color:var(--muted)}
+.gantt-legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;padding-top:14px;border-top:1px solid var(--ground)}
+.gantt-legend span{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+.dot{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+
+/* sprints */
+.sprint{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:0;overflow:hidden;margin-bottom:16px}
+.sprint-top{display:flex;gap:16px;align-items:flex-start;padding:20px 24px 18px;border-bottom:1px solid var(--ground)}
+.sprint-num{font-family:var(--f-display);font-size:30px;font-weight:800;letter-spacing:-1.4px;color:var(--sun);line-height:1;flex-shrink:0;min-width:46px}
+.sprint-top h3{font-size:19px;font-weight:700;letter-spacing:-.5px}
+.sprint-when{font-family:var(--f-mono);font-size:11.5px;color:var(--faint);margin-top:4px}
+.sprint-goal{font-size:14px;color:var(--muted);margin-top:9px;max-width:74ch}
+.sprint-body{padding:18px 24px 22px;display:grid;grid-template-columns:1.55fr 1fr;gap:26px}
+@media(max-width:860px){.sprint-body{grid-template-columns:1fr;gap:18px}}
+.sprint-body h5{font-size:10.5px;text-transform:uppercase;letter-spacing:.9px;color:var(--fainter);margin:0 0 9px;font-weight:700;font-family:var(--f-body)}
+.task{display:flex;gap:10px;align-items:flex-start;margin-bottom:9px;font-size:13.5px;line-height:1.5}
+.task-tag{font-family:var(--f-mono);font-size:9.5px;font-weight:600;padding:2px 6px;border-radius:5px;flex-shrink:0;margin-top:2px;letter-spacing:.3px}
+.t-motor{background:#E7EAF3;color:var(--grid)}
+.t-ui{background:#FBF0CF;color:var(--warn)}
+.t-iot{background:#EDEAF5;color:var(--violet)}
+.t-qa{background:var(--good-bg);color:var(--good)}
+.t-banca{background:var(--bad-bg);color:var(--bad)}
+.done{background:var(--ground-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.done h5{margin-bottom:8px}
+.done ul{padding-left:17px;font-size:13px;color:var(--muted)}
+.done li{margin:6px 0}
+
+.callout{border-radius:15px;padding:18px 22px;display:flex;gap:14px;align-items:flex-start;margin:18px 0}
+.callout-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:8px}
+.callout h4{font-size:15px;font-weight:700;letter-spacing:-.2px}
+.callout p{font-size:13.5px;margin-top:6px;line-height:1.55}
+.c-warn{background:var(--warn-bg);border:1px solid var(--warn-line)}
+.c-warn .callout-dot{background:var(--warn)}
+.c-warn p{color:#6E5512}
+.c-bad{background:var(--bad-bg);border:1px solid var(--bad-line)}
+.c-bad .callout-dot{background:var(--bad)}
+.c-bad p{color:#8A5040}
+.c-good{background:var(--good-bg);border:1px solid var(--good-line)}
+.c-good .callout-dot{background:var(--good)}
+.c-good p{color:#3E6B57}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--fainter);
+  font-weight:700;padding:13px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:13px 16px;border-bottom:1px solid var(--ground);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.sev{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.s-alta{background:var(--bad-bg);color:var(--bad)}
+.s-media{background:var(--warn-bg);color:var(--warn)}
+.s-baixa{background:var(--good-bg);color:var(--good)}
+
+.qa{border-left:3px solid var(--sun);padding:2px 0 2px 18px;margin-bottom:22px}
+.qa q{display:block;font-size:15.5px;font-weight:600;font-style:normal;letter-spacing:-.2px}
+.qa q::before,.qa q::after{content:'"'}
+.qa p{font-size:13.5px;color:var(--muted);margin-top:8px;line-height:1.6}
+
+.roteiro{counter-reset:passo}
+.passo{display:flex;gap:16px;padding:14px 0;border-top:1px solid var(--ground)}
+.passo:first-child{border-top:0}
+.passo-t{font-family:var(--f-mono);font-size:12px;font-weight:600;color:var(--sun-deep);flex-shrink:0;width:62px;padding-top:1px}
+.passo b{font-size:14.5px;font-weight:600;display:block}
+.passo p{font-size:13.5px;color:var(--muted);margin-top:4px}
+
+.corte{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--ground);font-size:13.5px}
+.corte:first-child{border-top:0}
+.corte-x{color:var(--bad);font-weight:700;flex-shrink:0;font-family:var(--f-mono)}
+.corte b{font-weight:600}
+.corte span{color:var(--muted);display:block;margin-top:3px;font-size:13px}
+
+footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);font-size:12.5px;color:var(--faint)}
+</style>
+
+<div class="hero">
+  <span class="hero-glow"></span>
+  <div class="hero-in">
+    <div class="eyebrow">Plano de semestre · UPX</div>
+    <h1>Solaris</h1>
+    <p class="lede">Monitoramento de energia solar residencial e de pequeno negócio. O sistema já roda — este plano leva ele de protótipo funcional a projeto defendido em banca, em 14 semanas, com uma equipe de cinco.</p>
+    <div class="hero-facts">
+      <div class="fact"><span>Duração</span><b>14 semanas · 01/set a 05/dez</b></div>
+      <div class="fact"><span>Equipe</span><b>5 pessoas, 5 frentes</b></div>
+      <div class="fact"><span>Nota</span><b>Pitch e banca</b></div>
+      <div class="fact"><span>Bônus</span><b>IoT com ESP32</b></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<section style="margin-top:0">
+  <div class="sec-head">
+    <h2>A ideia que organiza tudo</h2>
+    <p>A nota vem da banca, não do código. Então o plano se lê de trás para frente: cada sprint existe para tornar a apresentação final mais difícil de derrubar.</p>
+  </div>
+  <p style="font-size:15.5px;max-width:74ch;color:var(--ink-2)">Um dashboard é fácil de mostrar e fácil de atacar. A pergunta que mata projetos de monitoramento é sempre a mesma — <em>“de onde vêm esses números?”</em>. O Solaris tem uma resposta boa: os números não são digitados, são calculados a partir da posição do sol na data, de nuvens semeadas por dia e da regra de compensação da ANEEL. O trabalho do semestre é transformar essa resposta em algo que a banca possa verificar ao vivo.</p>
+  <div class="callout c-good">
+    <span class="callout-dot"></span>
+    <div>
+      <h4>O trunfo já existe e é raro</h4>
+      <p>A maioria dos projetos de dashboard mostra tela parada com dado inventado. O Solaris tem um medidor virtual que pulsa a cada 2 segundos, uma curva solar que encurta no inverno sozinha e uma desagregação por aparelho que fecha exatamente com a leitura. Isso, demonstrado ao vivo, vale mais que qualquer slide.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <h2>Onde estamos hoje</h2>
+    <p>Balanço honesto do que já está entregue e do que está furado. Este é o ponto de partida real, não o otimista.</p>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="eyebrow" style="color:var(--good)">Pronto e verificado</div>
+      <ul style="margin-top:12px;font-size:13.5px;color:var(--ink-2)">
+        <li>Sete telas no desktop e app de celular completo, com o mesmo motor.</li>
+        <li>Medidor virtual ao vivo, com surtos de consumo e alerta de pico.</li>
+        <li>Curva solar por declinação da data; nuvens determinísticas por dia.</li>
+        <li>Autoconsumo, injeção e importação calculados hora a hora.</li>
+        <li>Compensação de créditos respeitando o mínimo faturável.</li>
+        <li>Desagregação que fecha com o medidor nos dois perfis.</li>
+        <li>Alertas derivados do estado real; metas, tarifa e aparelhos persistidos.</li>
+        <li>82 combinações de perfil × tela × período renderizadas sem erro.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="eyebrow" style="color:var(--bad)">Falta ou está furado</div>
+      <ul style="margin-top:12px;font-size:13.5px;color:var(--ink-2)">
+        <li><b>Lei 14.300 não implementada</b> — compensação ainda é 1:1.</li>
+        <li>Não dá para editar aparelho, só adicionar e remover.</li>
+        <li>Alertas não têm “lido” nem “dispensar”.</li>
+        <li>Unidades fixas em código; não dá para cadastrar a sua.</li>
+        <li>Tooltips dos gráficos só respondem a mouse.</li>
+        <li>Zero teste automatizado.</li>
+        <li>Impressão do relatório nunca foi conferida visualmente.</li>
+        <li>Código vive em um arquivo único de 2.289 linhas.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout c-bad">
+    <span class="callout-dot"></span>
+    <div>
+      <h4>O furo que mais importa: Lei 14.300/2022</h4>
+      <p>O sistema residencial do Solaris entrou em operação em julho de 2025, depois do marco legal da geração distribuída. Isso significa que ele paga <b>Fio B sobre a energia injetada</b> — 60% da componente TUSD Fio B em 2026, subindo para 75% em 2027 e 90% em 2028. Hoje o app compensa um para um, como era antes da lei. Numa banca de engenharia essa é exatamente a pergunta que derruba o grupo, e é barata de consertar: entra no Sprint 2.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <h2>Quem faz o quê</h2>
+    <p>Cinco frentes, uma pessoa dona de cada. Dono não significa fazer sozinho — significa que, se aquilo atrasar, existe um nome para cobrar.</p>
+  </div>
+  <div class="grid g2">
+    <div class="card role"><span class="role-n">01</span><div>
+      <h4>Motor e Dados</h4><div class="who">Frente azul</div>
+      <p>Física da simulação, compensação de créditos, Lei 14.300, calibração contra dados reais de irradiação. É a pessoa que responde “de onde vem esse número” na banca.</p>
+    </div></div>
+    <div class="card role"><span class="role-n">02</span><div>
+      <h4>Interface e Experiência</h4><div class="who">Frente âmbar</div>
+      <p>Telas, design system, acessibilidade, o fluxo de cadastro de unidade. Mantém a coerência visual que já existe em vez de reinventar a cada tela.</p>
+    </div></div>
+    <div class="card role"><span class="role-n">03</span><div>
+      <h4>IoT e Integração</h4><div class="who">Frente violeta</div>
+      <p>ESP32, sensor de corrente, firmware e o contrato de dados que liga o hardware ao dashboard. Trabalha isolado para que um fracasso aqui não contamine o resto.</p>
+    </div></div>
+    <div class="card role"><span class="role-n">04</span><div>
+      <h4>Qualidade e Validação</h4><div class="who">Frente verde</div>
+      <p>Testes automatizados do motor, teste com usuários reais, conferência de acessibilidade e impressão. Produz a evidência de que o sistema funciona.</p>
+    </div></div>
+    <div class="card role"><span class="role-n">05</span><div>
+      <h4>Narrativa e Banca</h4><div class="who">Frente vermelha</div>
+      <p>Existe desde a semana 1, não desde a semana 13. Escreve o roteiro, monta os slides, cronometra ensaios e mantém o banco de perguntas prováveis atualizado a cada sprint.</p>
+    </div></div>
+    <div class="card" style="background:var(--ground-2);border-style:dashed">
+      <div class="eyebrow">Se o grupo não tiver cinco</div>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px">Com <b>quatro</b>, Narrativa acumula com Qualidade — as duas frentes têm pico no fim e vale de folga no meio. Com <b>seis</b>, IoT vira dupla: uma pessoa no firmware, outra na integração com o dashboard.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <h2>Linha do tempo</h2>
+    <p>Catorze semanas. As barras mostram quando cada frente está carregada — repare que Narrativa nunca some e que IoT tem folga proposital antes da banca.</p>
+  </div>
+  <div class="gantt-scroll">
+    <div class="gantt">
+      <div class="gantt-head">
+        <span>Semana</span>
+        <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span>
+        <span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span>
+      </div>
+      <div class="gantt-row">
+        <span class="gantt-lbl">Motor e Dados</span>
+        <div style="grid-column:2/4" class="bar bar--motor">Modularizar</div>
+        <div style="grid-column:4/8" class="bar bar--motor">Lei 14.300 · calibração</div>
+        <div style="grid-column:8/10" class="bar bar--motor">Unidades</div>
+        <div style="grid-column:12/15" class="bar bar--slack">apoio</div>
+      </div>
+      <div class="gantt-row">
+        <span class="gantt-lbl">Interface</span>
+        <div style="grid-column:2/6" class="bar bar--ui">CRUD e acessibilidade</div>
+        <div style="grid-column:7/11" class="bar bar--ui">Cadastro de unidade · modo ao vivo</div>
+        <div style="grid-column:12/14" class="bar bar--ui">Polimento</div>
+      </div>
+      <div class="gantt-row">
+        <span class="gantt-lbl">IoT</span>
+        <div style="grid-column:4/7" class="bar bar--slack">estudo e compras</div>
+        <div style="grid-column:8/12" class="bar bar--iot">Firmware e integração</div>
+        <div style="grid-column:12/13" class="bar bar--slack">folga</div>
+      </div>
+      <div class="gantt-row">
+        <span class="gantt-lbl">Qualidade</span>
+        <div style="grid-column:4/8" class="bar bar--qa">Testes do motor</div>
+        <div style="grid-column:10/13" class="bar bar--qa">Teste com usuários</div>
+        <div style="grid-column:13/15" class="bar bar--qa">Regressão</div>
+      </div>
+      <div class="gantt-row">
+        <span class="gantt-lbl">Narrativa e banca</span>
+        <div style="grid-column:2/12" class="bar bar--slack">roteiro vivo · perguntas</div>
+        <div style="grid-column:12/15" class="bar bar--banca">Slides · ensaios · banca</div>
+      </div>
+      <div class="gantt-legend">
+        <span><i class="dot" style="background:var(--grid)"></i>Motor</span>
+        <span><i class="dot" style="background:var(--sun)"></i>Interface</span>
+        <span><i class="dot" style="background:var(--violet)"></i>IoT</span>
+        <span><i class="dot" style="background:var(--good)"></i>Qualidade</span>
+        <span><i class="dot" style="background:var(--bad)"></i>Banca</span>
+        <span><i class="dot" style="background:repeating-linear-gradient(45deg,var(--line-2),var(--line-2) 3px,var(--ground-2) 3px,var(--ground-2) 6px)"></i>Carga leve</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <h2>As sete etapas</h2>
+    <p>Cada uma fecha com um critério de pronto verificável. Se o critério não pode ser demonstrado, a etapa não fechou.</p>
+  </div>
+
+  <div class="sprint">
+    <div class="sprint-top">
+      <span class="sprint-num">00</span>
+      <div>
+        <h3>Fundação</h3>
+        <div class="sprint-when">Semana 1 · 01 a 07 de setembro</div>
+        <p class="sprint-goal">Sair do arquivo único e montar o terreno onde cinco pessoas conseguem trabalhar ao mesmo tempo sem se atropelar.</p>
+      </div>
+    </div>
+    <div class="sprint-body">
+      <div>
+        <h5>Tarefas</h5>
+        <div class="task"><span class="task-tag t-motor">MOT</span><span>Quebrar o <code>Solaris.html</code> em <code>index.html</code>, <code>motor.js</code>, <code>telas.js</code>, <code>celular.js</code>, <code>estilo.css</code> — mesma saída, arquivos editáveis.</span></div>
+        <div class="task"><span class="task-tag t-motor">MOT</span><span>Repositório Git com branch por frente e um <code>README</code> que explica como rodar (abrir o arquivo, sem build).</span></div>
+        <div class="task"><span class="task-tag t-banca">BAN</span><span>Definir a tese do projeto em uma frase e escrever a primeira versão do roteiro de 8 minutos — antes de existir o que apresentar.</span></div>
+        <div class="task"><span class="task-tag t-banca">BAN</span><span>Amarrar ao ODS 7 (energia limpa e acessível) e ao ODS 12; anotar como cada um aparece no produto.</span></div>
+        <div class="task"><span class="task-tag t-iot">IOT</span><span>Levantar preço e prazo de ESP32 + SCT-013-030 + burden. Comprar nesta semana — frete é o maior risco de cronograma.</span></div>
+      </div>
+      <div class="done">
+        <h5>Pronto quando</h5>
+        <ul>
+          <li>Qualquer pessoa do grupo clona, abre e vê o Solaris rodando.</li>
+          <li>Existe um roteiro escrito, mesmo ruim.</li>
+          <li>Componentes comprados, com previsão de entrega anotada.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="sprint">
+    <div class="sprint-top">
+      <span class="sprint-num">01</span>
+      <div>
+        <h3>Fechar o produto</h3>
+        <div class="sprint-when">Semanas 2 e 3 · 08 a 21 de setembro</div>
+        <p class="sprint-goal">Tirar os buracos que aparecem em dez segundos de uso. Ninguém defende um sistema onde o avaliador clica e não consegue editar o que acabou de criar.</p>
+      </div>
+    </div>
+    <div class="sprint-body">
+      <div>
+        <h5>Tarefas</h5>
+        <div class="task"><span class="task-tag t-ui">INT</span><span>Editar aparelho: reabrir o formulário com os valores atuais, salvar por cima. Fecha o CRUD.</span></div>
+        <div class="task"><span class="task-tag t-ui">INT</span><span>Dispensar alerta, com estado persistido e contador no menu lateral.</span></div>
+        <div class="task"><span class="task-tag t-ui">INT</span><span>Tooltips dos gráficos por toque e por teclado, não só mouse.</span></div>
+        <div class="task"><span class="task-tag t-ui">INT</span><span>Conferir ordem de títulos, contraste e foco visível; adicionar link de pular navegação.</span></div>
+        <div class="task"><span class="task-tag t-qa">QUA</span><span>Imprimir o relatório em papel e em PDF; ajustar o que quebrar.</span></div>
+        <div class="task"><span class="task-tag t-qa">QUA</span><span>Remover o campo morto <code>visto</code> do estado e varrer o resto.</span></div>
+      </div>
+      <div class="done">
+        <h5>Pronto quando</h5>
+        <ul>
+          <li>Dá para criar, ver, editar e apagar um aparelho sem recarregar.</li>
+          <li>O relatório sai em PDF legível.</li>
+          <li>O sistema é navegável só pelo teclado.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="sprint">
+    <div class="sprint-top">
+      <span class="sprint-num">02</span>
+      <div>
+        <h3>Credibilidade dos números</h3>
+        <div class="sprint-when">Semanas 4 e 5 · 22 de setembro a 05 de outubro</div>
+        <p class="sprint-goal">O sprint mais importante do semestre. É aqui que o projeto deixa de ser bonito e passa a ser defensável.</p>
+      </div>
+    </div>
+    <div class="sprint-body">
+      <div>
+        <h5>Tarefas</h5>
+        <div class="task"><span class="task-tag t-motor">MOT</span><span><b>Implementar a Lei 14.300</b>: cobrar o percentual vigente do Fio B sobre a energia injetada, com o degrau anual até 2029 e isenção para sistemas anteriores a 07/01/2023.</span></div>
+        <div class="task"><span class="task-tag t-motor">MOT</span><span>Mostrar o Fio B como linha própria na fatura e explicar em uma frase o que é.</span></div>
+        <div class="task"><span class="task-tag t-motor">MOT</span><span>Calibrar a irradiação contra o Atlas Brasileiro de Energia Solar (INPE) para a cidade do projeto, em vez do valor genérico atual.</span></div>
+        <div class="task"><span class="task-tag t-qa">QUA</span><span>Conseguir <b>uma conta de luz real</b> de alguém do grupo e comparar com o que o modelo prevê. Documentar o erro percentual — inclusive se for grande.</span></div>
+        <div class="task"><span class="task-tag t-qa">QUA</span><span>Testes automatizados do motor: conservação de energia hora a hora, ranking fechando com o medidor, projeção estável do dia 1º ao 31, virada de ano.</span></div>
+      </div>
+      <div class="done">
+        <h5>Pronto quando</h5>
+        <ul>
+          <li>A fatura mostra Fio B e bate com a regra da ANEEL para 2026.</li>
+          <li>Existe um número: “nosso modelo erra X% contra uma conta real”.</li>
+          <li>Os testes rodam e passam, com o comando no README.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="sprint">
+    <div class="sprint-top">
+      <span class="sprint-num">03</span>
+      <div>
+        <h3>A unidade é sua</h3>
+        <div class="sprint-when">Semanas 6 a 8 · 06 a 26 de outubro</div>
+        <p class="sprint-goal">Responder à pergunta inevitável “e se eu quiser usar isso na minha casa?” sem precisar mexer no código.</p>
+      </div>
+    </div>
+    <div class="sprint-body">
+      <div>
+        <h5>Tarefas</h5>
+        <div class="task"><span class="task-tag t-motor">MOT</span><span>Tirar as duas unidades do código e transformá-las em dados criáveis pelo usuário.</span></div>
+        <div class="task"><span class="task-tag t-ui">INT</span><span>Formulário de nova unidade: nome, tipo, distribuidora, tarifa, potência instalada, nº de painéis, investimento, data de entrada em operação.</span></div>
+        <div class="task"><span class="task-tag t-ui">INT</span><span>Perfil de consumo por arquétipo (casa vazia de dia, casa cheia, comércio de manhã) em vez de exigir 24 números do usuário.</span></div>
+        <div class="task"><span class="task-tag t-ui">INT</span><span>Preparar o seletor “simulado / medidor real” que o Sprint 4 vai preencher.</span></div>
+        <div class="task"><span class="task-tag t-banca">BAN</span><span>Primeiro ensaio cronometrado, com o sistema no estado atual. Descobrir cedo o que não cabe em 8 minutos.</span></div>
+      </div>
+      <div class="done">
+        <h5>Pronto quando</h5>
+        <ul>
+          <li>Alguém de fora do grupo cadastra a própria casa e vê números plausíveis.</li>
+          <li>O primeiro ensaio aconteceu e o roteiro foi cortado com base nele.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="sprint">
+    <div class="sprint-top">
+      <span class="sprint-num">04</span>
+      <div>
+        <h3>O medidor de verdade</h3>
+        <div class="sprint-when">Semanas 8 a 11 · 20 de outubro a 16 de novembro</div>
+        <p class="sprint-goal">O bônus que conta ponto. Roda em paralelo e é a única etapa que pode ser cortada inteira sem comprometer a entrega.</p>
+      </div>
+    </div>
+    <div class="sprint-body">
+      <div>
+        <h5>Tarefas</h5>
+        <div class="task"><span class="task-tag t-iot">IOT</span><span>Montar ESP32 + SCT-013-030 com burden resistor e divisor; calibrar contra uma carga conhecida (uma lâmpada de potência declarada).</span></div>
+        <div class="task"><span class="task-tag t-iot">IOT</span><span>Firmware: amostrar corrente, calcular RMS, publicar leitura a cada 2 segundos.</span></div>
+        <div class="task"><span class="task-tag t-iot">IOT</span><span>Definir o contrato de dados — o mesmo formato que <code>potenciaAgora()</code> já devolve. O dashboard não deve saber se a fonte é sensor ou simulação.</span></div>
+        <div class="task"><span class="task-tag t-ui">INT</span><span>Ligar o seletor: com o ESP32 na rede, o medidor do painel passa a mostrar corrente real.</span></div>
+        <div class="task"><span class="task-tag t-qa">QUA</span><span>Comparar 24 horas de leitura real contra a simulação e registrar a diferença.</span></div>
+      </div>
+      <div class="done">
+        <h5>Pronto quando</h5>
+        <ul>
+          <li>Ligar um chuveiro faz o número subir na tela em menos de 3 segundos.</li>
+          <li>Desligar o ESP32 devolve o sistema ao modo simulado sem quebrar.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="sprint">
+    <div class="sprint-top">
+      <span class="sprint-num">05</span>
+      <div>
+        <h3>Gente de fora usando</h3>
+        <div class="sprint-when">Semanas 10 a 12 · 03 a 23 de novembro</div>
+        <p class="sprint-goal">Evidência de usabilidade é a coisa mais fácil de produzir e a que quase nenhum grupo leva para a banca.</p>
+      </div>
+    </div>
+    <div class="sprint-body">
+      <div>
+        <h5>Tarefas</h5>
+        <div class="task"><span class="task-tag t-qa">QUA</span><span>Recrutar 6 a 8 pessoas fora do grupo, de preferência donos de imóvel com conta de luz alta.</span></div>
+        <div class="task"><span class="task-tag t-qa">QUA</span><span>Roteiro de três tarefas: descobrir qual aparelho gasta mais, cadastrar um aparelho novo, dizer quanto vai vir na próxima conta.</span></div>
+        <div class="task"><span class="task-tag t-qa">QUA</span><span>Medir taxa de conclusão e tempo; anotar toda frase de confusão sem corrigir a pessoa.</span></div>
+        <div class="task"><span class="task-tag t-ui">INT</span><span>Corrigir os três problemas mais frequentes. Só os três.</span></div>
+        <div class="task"><span class="task-tag t-banca">BAN</span><span>Transformar os resultados em um slide de números, e escolher uma citação boa de usuário.</span></div>
+      </div>
+      <div class="done">
+        <h5>Pronto quando</h5>
+        <ul>
+          <li>Existe um slide com “X de 8 pessoas completaram a tarefa em menos de Y segundos”.</li>
+          <li>As três correções foram feitas e reverificadas.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="sprint">
+    <div class="sprint-top">
+      <span class="sprint-num">06</span>
+      <div>
+        <h3>A banca</h3>
+        <div class="sprint-when">Semanas 12 a 14 · 24 de novembro a 12 de dezembro</div>
+        <p class="sprint-goal">Congelar o código e ensaiar até a demonstração ficar chata de tão previsível.</p>
+      </div>
+    </div>
+    <div class="sprint-body">
+      <div>
+        <h5>Tarefas</h5>
+        <div class="task"><span class="task-tag t-banca">BAN</span><span><b>Congelamento na semana 13.</b> Depois disso só entra correção de defeito, nunca funcionalidade.</span></div>
+        <div class="task"><span class="task-tag t-banca">BAN</span><span>Slides seguindo a identidade do produto — mesma paleta, mesmas fontes. Coerência visual é ponto de graça barato.</span></div>
+        <div class="task"><span class="task-tag t-banca">BAN</span><span>Gravar um vídeo de 90 segundos da demo funcionando, como plano B se a internet ou o ESP32 falharem.</span></div>
+        <div class="task"><span class="task-tag t-banca">BAN</span><span>Três ensaios cronometrados com o grupo inteiro, sendo o último com alguém de fora fazendo perguntas hostis.</span></div>
+        <div class="task"><span class="task-tag t-qa">QUA</span><span>Regressão final: as sete telas, os dois perfis, os três períodos, celular e impressão.</span></div>
+      </div>
+      <div class="done">
+        <h5>Pronto quando</h5>
+        <ul>
+          <li>A demo roda três vezes seguidas sem susto.</li>
+          <li>Cada pessoa sabe responder às cinco perguntas do banco abaixo.</li>
+          <li>O vídeo reserva está no celular de duas pessoas.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <h2>Riscos</h2>
+    <p>O que provavelmente vai dar errado, e o que fazer quando der.</p>
+  </div>
+  <div class="tbl-scroll">
+    <table>
+      <thead><tr><th>Risco</th><th>Gravidade</th><th>Mitigação</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>Componente de IoT atrasa ou queima</b></td>
+          <td><span class="sev s-media">Média</span></td>
+          <td>Comprar na semana 1, com peça sobressalente. O simulador já entrega o projeto sozinho — o hardware é bônus, e o plano trata assim desde o começo.</td>
+        </tr>
+        <tr>
+          <td><b>A banca ataca o dado simulado</b></td>
+          <td><span class="sev s-alta">Alta</span></td>
+          <td>É a pergunta esperada, não uma surpresa. A resposta está no banco abaixo e é sustentada pelo Sprint 2: física real, lei real, erro medido contra conta real.</td>
+        </tr>
+        <tr>
+          <td><b>Grupo empilha funcionalidade até a véspera</b></td>
+          <td><span class="sev s-alta">Alta</span></td>
+          <td>Congelamento na semana 13, combinado por escrito no Sprint 0. Funcionalidade nova na última semana é como quase todo projeto quebra na apresentação.</td>
+        </tr>
+        <tr>
+          <td><b>Ninguém consegue conta de luz real</b></td>
+          <td><span class="sev s-baixa">Baixa</span></td>
+          <td>Cinco pessoas, cinco famílias. Se falhar, usar as tarifas homologadas da ANEEL e uma conta pública de exemplo, deixando claro que a validação foi por tarifa e não por fatura.</td>
+        </tr>
+        <tr>
+          <td><b>Demo ao vivo falha na hora</b></td>
+          <td><span class="sev s-media">Média</span></td>
+          <td>Vídeo de 90 segundos gravado, arquivo local aberto antes da apresentação, e nada que dependa de internet — o sistema roda de arquivo, sem servidor.</td>
+        </tr>
+        <tr>
+          <td><b>Uma pessoa some no meio do semestre</b></td>
+          <td><span class="sev s-media">Média</span></td>
+          <td>Frentes têm dono, mas o Git tem todo mundo. A frente de IoT é a única cortável inteira; as outras quatro se redistribuem entre quem ficou.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <h2>Roteiro da apresentação</h2>
+    <p>Oito minutos. Construído para que o momento mais forte aconteça cedo, não no fim.</p>
+  </div>
+  <div class="card roteiro">
+    <div class="passo"><span class="passo-t">0:00</span><div><b>O problema, com um número</b><p>Quanto uma família brasileira paga de luz por ano e quanto disso ela não sabe explicar. Sem slide de agenda, sem apresentar os integrantes ainda.</p></div></div>
+    <div class="passo"><span class="passo-t">0:45</span><div><b>Abrir o Solaris ao vivo</b><p>O medidor já está pulsando quando a tela aparece. Falar por cima dele enquanto os números mudam sozinhos. Esse é o momento que vende o projeto.</p></div></div>
+    <div class="passo"><span class="passo-t">2:00</span><div><b>Ligar uma carga real</b><p>Se o ESP32 estiver pronto, ligar um secador ou chaleira na tomada instrumentada e mostrar a curva subir. Se não estiver, trocar por trocar de unidade e mostrar a padaria.</p></div></div>
+    <div class="passo"><span class="passo-t">3:15</span><div><b>Para onde vai sua energia</b><p>A desagregação por aparelho, e a frase que a torna honesta: é estimativa a partir do padrão do medidor, sem sensor em cada tomada. Admitir o limite antes que perguntem.</p></div></div>
+    <div class="passo"><span class="passo-t">4:30</span><div><b>Como os números nascem</b><p>Um slide só: declinação solar pela data, nuvens por dia, compensação pela ANEEL com Fio B. Terminar com o erro medido contra a conta real.</p></div></div>
+    <div class="passo"><span class="passo-t">6:00</span><div><b>Gente usando</b><p>Os números do teste de usabilidade e uma citação de usuário. Prova de que saiu da bancada.</p></div></div>
+    <div class="passo"><span class="passo-t">7:00</span><div><b>O que aprendemos</b><p>Contar a descoberta dos 36% de autossuficiência: o modelo contrariou a expectativa do próprio grupo e o motivo é físico. Mostra que o modelo tem poder explicativo, não é enfeite.</p></div></div>
+    <div class="passo"><span class="passo-t">7:45</span><div><b>Fechar e abrir para perguntas</b><p>Deixar o sistema na tela, rodando, durante toda a arguição.</p></div></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <h2>Banco de perguntas</h2>
+    <p>As cinco que vêm. Todo mundo do grupo precisa saber responder qualquer uma delas, não só o dono da frente.</p>
+  </div>
+
+  <div class="qa">
+    <q>Os dados são simulados. Isso não invalida o projeto?</q>
+    <p>Não, porque a simulação é a <em>fonte</em>, não o resultado. A física entre a fonte e a tela é real: a janela de luz vem da declinação solar na data, o autoconsumo é a sobreposição hora a hora entre geração e carga, e a compensação segue a regra da ANEEL com o mínimo faturável e o Fio B da Lei 14.300. Trocar a fonte é uma etapa isolada — foi o que fizemos com o ESP32, e o resto do sistema não precisou saber. Além disso, comparamos com uma conta de luz real e medimos o erro.</p>
+  </div>
+
+  <div class="qa">
+    <q>Por que a autossuficiência é só 36% se a geração quase iguala o consumo?</q>
+    <p>Porque não há bateria. A casa gera ao meio-dia e consome à noite; sem armazenamento, o que sobra vai para a rede e volta como crédito, não como autoconsumo. Com o perfil de carga dessa casa, o teto teórico de autossuficiência é 48% — é a fração do consumo que cai dentro da janela de sol. Esse foi um resultado que contrariou nossa expectativa inicial de 65%, e investigar a diferença nos ensinou mais que o número bonito ensinaria.</p>
+  </div>
+
+  <div class="qa">
+    <q>Vocês consideraram a Lei 14.300 e a cobrança do Fio B?</q>
+    <p>Sim. O sistema entrou em operação em julho de 2025, depois do marco legal, então paga percentual crescente do Fio B sobre a energia injetada: 60% em 2026, 75% em 2027, 90% em 2028. Está numa linha própria da fatura. Sistemas conectados antes de 07/01/2023 mantêm a compensação integral até 2045, e o modelo trata os dois casos.</p>
+  </div>
+
+  <div class="qa">
+    <q>Qual a diferença disso para o aplicativo que a distribuidora já oferece?</q>
+    <p>O app da distribuidora mostra o total da fatura depois que ela fechou. O Solaris responde três coisas que ele não responde: <em>qual aparelho</em> está puxando o gasto, <em>quanto vai vir</em> antes de fechar o mês, e <em>quanto do consumo</em> o sol cobriu de fato. A desagregação por aparelho a partir do padrão do medidor é a parte que nenhuma distribuidora entrega.</p>
+  </div>
+
+  <div class="qa">
+    <q>Por que não usaram React, banco de dados, backend?</q>
+    <p>Escolha consciente de escopo. O sistema roda de um arquivo, sem servidor e sem instalação — o que significa que a banca pode abrir no próprio computador e que a demonstração não depende de rede. Um backend não apareceria na apresentação e consumiria as semanas que investimos em validar o modelo físico e testar com usuários. Se o projeto seguisse para produção, a primeira mudança seria persistência em servidor, e o motor está isolado para permitir isso.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <h2>O que ficou fora de propósito</h2>
+    <p>Escopo cortado é decisão, não esquecimento. Vale dizer isso na banca se perguntarem.</p>
+  </div>
+  <div class="card">
+    <div class="corte"><span class="corte-x">✕</span><div><b>Backend e banco de dados</b><span>Não aparece na apresentação e custaria três semanas. Persistência local resolve o caso de uso do semestre.</span></div></div>
+    <div class="corte"><span class="corte-x">✕</span><div><b>Login e múltiplos usuários</b><span>O produto é de uso pessoal em um dispositivo. Autenticação seria complexidade sem demonstração.</span></div></div>
+    <div class="corte"><span class="corte-x">✕</span><div><b>Exportar CSV</b><span>Download iniciado pela própria página é bloqueado em vários contextos de visualização. A impressão do relatório cobre a necessidade.</span></div></div>
+    <div class="corte"><span class="corte-x">✕</span><div><b>Tarifa branca e horária</b><span>Aumenta muito a complexidade do motor para um caso ainda raro em residências. Fica como trabalho futuro no slide final.</span></div></div>
+    <div class="corte"><span class="corte-x">✕</span><div><b>Previsão do tempo real por API</b><span>Criaria dependência de internet na hora da demo. As nuvens semeadas dão o mesmo efeito visual com risco zero.</span></div></div>
+  </div>
+</section>
+
+<footer>
+  Plano de semestre do projeto Solaris · 14 semanas · elaborado em 25 de agosto de 2026.
+  As datas assumem início em 1º de setembro e devem ser ajustadas ao calendário acadêmico da turma.
+</footer>
+
+</div>

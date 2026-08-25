@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="#16150F"/><circle cx="100" cy="100" r="30" fill="none" stroke="#EDA22B" stroke-width="9"/><g stroke="#F5C25B" stroke-width="9" stroke-linecap="round"><path d="M100 46V60"/><path d="M100 140v14"/><path d="M154 100h-14"/><path d="M60 100H46"/><path d="M138 62l-10 10"/><path d="M72 128l-10 10"/><path d="M138 138l-10-10"/><path d="M72 72L62 62"/></g></svg></template>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #EFEBE1; }
+  * { box-sizing: border-box; }
+  a { color: #B4761B; text-decoration: none; }
+  a:hover { color: #8A5810; text-decoration: underline; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #D8D2C4; border-radius: 8px; border: 3px solid transparent; background-clip: content-box; }
+  @keyframes solPulse { 0%,100% { opacity: .35; transform: scale(1);} 50% { opacity: .7; transform: scale(1.06);} }
+  /* thumb */
+  @media (max-width: 1180px) {
+    main[data-main] { min-width: 0 !important; }
+    [data-span] { grid-column: span 12 !important; }
+    [data-span="3"] { grid-column: span 6 !important; }
+    [data-detwrap] { position: static !important; }
+    [data-inv] { grid-template-columns: 1fr 118px 108px !important; }
+    [data-eqrow] { grid-template-columns: 24px 1fr 92px 76px 52px !important; gap: 10px !important; }
+  }
+  @media (max-width: 900px) {
+    aside[data-rail] { width: 70px !important; }
+    [data-navlabel], [data-brandtext], [data-unitbox], [data-periodlabel] { display: none !important; }
+    [data-span="3"] { grid-column: span 12 !important; }
+    [data-eqrow] { grid-template-columns: 1fr 76px 52px !important; }
+    [data-eqhide] { display: none !important; }
+    [data-periodshort] { display: inline !important; }
+  }
+</style>
+</helmet>
+
+<sc-if value="{{ ehDesktop }}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; min-height: 100vh; background: #EFEBE1; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #16150F;">
+
+  <aside data-rail="1" style="width: 244px; flex-shrink: 0; background: #16150F; color: #F4F1EA; display: flex; flex-direction: column; padding: 22px 0 18px; position: sticky; top: 0; height: 100vh;">
+    <div style="display: flex; align-items: center; gap: 11px; padding: 0 22px 26px;">
+      <div style="width: 34px; height: 34px; border-radius: 11px; background: linear-gradient(150deg, #F5C25B, #E08A18); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#16150F" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2v2.4M12 19.6V22M22 12h-2.4M4.4 12H2M19.07 4.93l-1.7 1.7M6.63 17.37l-1.7 1.7M19.07 19.07l-1.7-1.7M6.63 6.63l-1.7-1.7"></path></svg>
+      </div>
+      <div data-brandtext="1">
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 19px; letter-spacing: -0.4px; line-height: 1;">Solaris</div>
+        <div style="font-size: 10.5px; color: #8E887A; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 3px;">Energia sob controle</div>
+      </div>
+    </div>
+
+    <nav style="display: flex; flex-direction: column; gap: 2px; padding: 0 12px;">
+      <sc-for list="{{ nav }}" as="it" hint-placeholder-count="7">
+        <div onClick="{{ it.go }}" style="{{ it.css }}" style-hover="background: rgba(244,241,234,0.08); color: #F4F1EA;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="{{ it.icon }}"></path></svg>
+          <span data-navlabel="1" style="flex: 1;">{{ it.label }}</span>
+          <sc-if value="{{ it.badge }}">
+            <span style="background: #C4573C; color: #fff; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 5px;">{{ it.badge }}</span>
+          </sc-if>
+        </div>
+      </sc-for>
+    </nav>
+
+    <div style="flex: 1;"></div>
+
+    <div data-unitbox="1" style="padding: 0 12px;">
+      <div style="background: rgba(244,241,234,0.06); border: 1px solid rgba(244,241,234,0.1); border-radius: 14px; padding: 13px;">
+        <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #8E887A; margin-bottom: 9px;">Unidade</div>
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <sc-for list="{{ perfis }}" as="p" hint-placeholder-count="2">
+            <div onClick="{{ p.go }}" style="{{ p.css }}" style-hover="background: rgba(244,241,234,0.1);">
+              <div style="{{ p.dot }}"></div>
+              <div style="min-width: 0;">
+                <div style="font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ p.nome }}</div>
+                <div style="font-size: 10.5px; color: #8E887A;">{{ p.tipo }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main data-main="1" style="flex: 1; min-width: 1150px; display: flex; flex-direction: column;">
+    <header style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 26px 34px 20px; border-bottom: 1px solid #E3DED2; background: #EFEBE1; position: sticky; top: 0; z-index: 20;">
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.1px; color: #8B8577; margin-bottom: 6px;">{{ tituloKicker }}</div>
+        <h1 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -0.9px; margin: 0; line-height: 1.05;">{{ titulo }}</h1>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="display: flex; background: #E5E0D3; border-radius: 10px; padding: 3px;">
+          <sc-for list="{{ periodos }}" as="pe" hint-placeholder-count="3">
+            <div onClick="{{ pe.go }}" style="{{ pe.css }}"><span data-periodlabel="1">{{ pe.label }}</span><span data-periodshort="1" style="display: none;">{{ pe.curto }}</span></div>
+          </sc-for>
+        </div>
+        <div onClick="{{ verMobile }}" style="display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 13px; border-radius: 10px; border: 1px solid #D8D2C4; background: #fff; font-size: 12.5px; font-weight: 600; cursor: pointer; color: #4A453B;" style-hover="border-color: #16150F; color: #16150F;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="7" y="2" width="10" height="20" rx="2.5"></rect><path d="M11 18.5h2"></path></svg>
+          Celular
+        </div>
+      </div>
+    </header>
+
+    <div style="padding: 26px 34px 60px;">
+
+      <sc-if value="{{ ehPainel }}" hint-placeholder-val="{{ true }}">
+      <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px;">
+
+        <section data-span="7" style="grid-column: span 7; background: #16150F; color: #F4F1EA; border-radius: 20px; padding: 26px 28px 22px; position: relative; overflow: hidden;">
+          <div style="position: absolute; top: -70px; right: -50px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(237,162,43,0.35), transparent 68%); animation: solPulse 6s ease-in-out infinite;"></div>
+          <div style="position: relative;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+              <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #A79F8E;">Você economizou em {{ f.mesNome }}</div>
+              <div style="display: flex; align-items: center; gap: 5px; background: rgba(74,196,140,0.16); color: #6FD6A4; border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 600;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15l7-7 7 7"></path></svg>
+                {{ f.deltaEconomia }}
+              </div>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 10px;">
+              <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 400; font-size: 30px; color: #A79F8E;">R$</span>
+              <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 74px; letter-spacing: -3.4px; line-height: 0.86;">{{ f.economia }}</span>
+            </div>
+            <div style="font-size: 13.5px; color: #A79F8E; margin-top: 14px; max-width: 400px; line-height: 1.5;">
+              {{ f.frase }}
+            </div>
+
+            <div style="display: flex; align-items: flex-end; gap: 5px; height: 76px; margin-top: 22px;">
+              <sc-for list="{{ barrasEconomia }}" as="m" hint-placeholder-count="12">
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; cursor: default;">
+                  <div style="{{ m.css }}" title="{{ m.tip }}"></div>
+                  <div style="{{ m.labelCss }}">{{ m.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+
+        <section data-span="5" style="grid-column: span 5; background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 24px 26px; display: flex; flex-direction: column;">
+          <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #8B8577;">Autossuficiência</div>
+          <div style="display: flex; align-items: center; gap: 22px; margin-top: 14px;">
+            <div style="position: relative; width: 132px; height: 132px; flex-shrink: 0;">
+              <svg width="132" height="132" viewBox="0 0 132 132" style="transform: rotate(-90deg);">
+                <circle cx="66" cy="66" r="56" fill="none" stroke="#EFEBE1" stroke-width="15"></circle>
+                <circle cx="66" cy="66" r="56" fill="none" stroke="#EDA22B" stroke-width="15" stroke-linecap="round" stroke-dasharray="{{ f.donutDash }}"></circle>
+              </svg>
+              <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 33px; letter-spacing: -1.4px; line-height: 1;">{{ f.autoPct }}</span>
+                <span style="font-size: 10.5px; color: #8B8577; letter-spacing: 0.4px;">do consumo</span>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 13px; min-width: 0;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 7px;"><div style="width: 9px; height: 9px; border-radius: 3px; background: #EDA22B;"></div><span style="font-size: 12px; color: #6B665C;">Sol direto</span></div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 500; margin-top: 2px;">{{ f.autoconsumo }} kWh</div>
+              </div>
+              <div>
+                <div style="display: flex; align-items: center; gap: 7px;"><div style="width: 9px; height: 9px; border-radius: 3px; background: #3E4C7A;"></div><span style="font-size: 12px; color: #6B665C;">Da rede</span></div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 500; margin-top: 2px;">{{ f.daRede }} kWh</div>
+              </div>
+              <div>
+                <div style="display: flex; align-items: center; gap: 7px;"><div style="width: 9px; height: 9px; border-radius: 3px; background: #93C7AC;"></div><span style="font-size: 12px; color: #6B665C;">Injetado</span></div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 500; margin-top: 2px;">{{ f.injetado }} kWh</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+          <section data-span="3" style="grid-column: span 3; background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 18px 20px 16px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{ k.cor }}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{ k.icon }}"></path></svg>
+              <span style="font-size: 12px; color: #6B665C; font-weight: 500;">{{ k.label }}</span>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 5px; margin-top: 11px;">
+              <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 32px; letter-spacing: -1.3px; line-height: 1;">{{ k.valor }}</span>
+              <span style="font-size: 13px; color: #8B8577; font-weight: 500;">{{ k.unidade }}</span>
+            </div>
+            <div style="font-size: 11.5px; color: #8B8577; margin-top: 8px; line-height: 1.4;">{{ k.nota }}</div>
+          </section>
+        </sc-for>
+
+        <section style="grid-column: span 12; background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 22px 26px 18px;">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+            <div>
+              <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 19px; letter-spacing: -0.5px; margin: 0;">Um dia típico</h2>
+              <div style="font-size: 12.5px; color: #8B8577; margin-top: 4px;">Média horária de {{ f.mesNome }} — onde o sol cobre e onde a rede entra</div>
+            </div>
+            <div style="display: flex; gap: 18px; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 7px;"><div style="width: 14px; height: 3px; border-radius: 2px; background: #EDA22B;"></div><span style="font-size: 12px; color: #6B665C;">Geração solar</span></div>
+              <div style="display: flex; align-items: center; gap: 7px;"><div style="width: 14px; height: 3px; border-radius: 2px; background: #3E4C7A;"></div><span style="font-size: 12px; color: #6B665C;">Consumo</span></div>
+            </div>
+          </div>
+          <div style="margin-top: 16px;">
+            <svg viewBox="0 0 720 220" style="width: 100%; height: auto; display: block; overflow: visible;">
+              <defs>
+                <linearGradient id="gSol" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EDA22B" stop-opacity="0.28"></stop><stop offset="100%" stop-color="#EDA22B" stop-opacity="0"></stop></linearGradient>
+              </defs>
+              <sc-for list="{{ gradeY }}" as="g" hint-placeholder-count="4">
+                <g><line x1="0" y1="{{ g.y }}" x2="720" y2="{{ g.y }}" stroke="#EFEBE1" stroke-width="1"></line><text x="0" y="{{ g.ty }}" fill="#A9A395" font-size="10" font-family="IBM Plex Mono, monospace">{{ g.label }}</text></g>
+              </sc-for>
+              <path d="{{ f.areaSol }}" fill="url(#gSol)"></path>
+              <path d="{{ f.lineSol }}" fill="none" stroke="#EDA22B" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"></path>
+              <path d="{{ f.lineCons }}" fill="none" stroke="#3E4C7A" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="5 4"></path>
+            </svg>
+            <div style="display: flex; justify-content: space-between; margin-top: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #A9A395;">
+              <sc-for list="{{ horasLabel }}" as="h" hint-placeholder-count="7"><span>{{ h.t }}</span></sc-for>
+            </div>
+          </div>
+        </section>
+
+        <section data-span="7" style="grid-column: span 7; background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 22px 26px 24px;">
+          <div style="display: flex; align-items: center; gap: 9px;">
+            <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 19px; letter-spacing: -0.5px; margin: 0;">Para onde vai sua energia</h2>
+            <span style="display: flex; align-items: center; gap: 4px; background: #F0E9DA; color: #99722A; font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 20px; letter-spacing: 0.3px;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4z"></path></svg>
+              IA
+            </span>
+          </div>
+          <div style="font-size: 12.5px; color: #8B8577; margin-top: 4px;">Estimado pelo padrão do medidor, sem sensor em cada tomada</div>
+          <div style="display: flex; height: 13px; border-radius: 7px; overflow: hidden; margin-top: 18px; gap: 2px;">
+            <sc-for list="{{ topSeg }}" as="s" hint-placeholder-count="5"><div style="{{ s.css }}" title="{{ s.tip }}"></div></sc-for>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 16px;">
+            <sc-for list="{{ topEquip }}" as="e" hint-placeholder-count="5">
+              <div onClick="{{ e.go }}" style="display: flex; align-items: center; gap: 13px; padding: 9px 10px; border-radius: 11px; cursor: pointer;" style-hover="background: #F7F4EC;">
+                <div style="{{ e.dot }}"></div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ e.nome }}</div>
+                  <div style="font-size: 11.5px; color: #8B8577;">{{ e.sub }}</div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 500;">{{ e.kwh }}</div>
+                  <div style="font-size: 11px; color: #8B8577;">{{ e.reais }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div onClick="{{ irEquip }}" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; margin-left: 10px; font-size: 13px; font-weight: 600; color: #B4761B; cursor: pointer;" style-hover="color: #8A5810;">
+            Ver todos os {{ f.qtdEquip }} aparelhos
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+          </div>
+        </section>
+
+        <div data-span="5" style="grid-column: span 5; display: flex; flex-direction: column; gap: 16px;">
+          <section style="background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 20px 22px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #8B8577;">Próxima conta</span>
+              <span style="{{ f.bandeiraCss }}">{{ f.bandeiraLabel }}</span>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 10px;">
+              <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 40px; letter-spacing: -1.8px; line-height: 1;">{{ f.projecao }}</span>
+              <span style="font-size: 13px; color: #8B8577;">estimado · fecha {{ f.fechamento }}</span>
+            </div>
+            <div style="height: 1px; background: #EFEBE1; margin: 16px 0 13px;"></div>
+            <div style="display: flex; flex-direction: column; gap: 9px;">
+              <sc-for list="{{ contaLinhas }}" as="c" hint-placeholder-count="3">
+                <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                  <span style="color: #6B665C;">{{ c.label }}</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: {{ c.cor }};">{{ c.valor }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+
+          <section style="background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 20px 22px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #8B8577;">Retorno do investimento</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #2E7A5A; font-weight: 500;">{{ f.paybackPct }}</span>
+            </div>
+            <div style="height: 9px; background: #EFEBE1; border-radius: 6px; margin-top: 13px; overflow: hidden;">
+              <div style="{{ f.paybackBar }}"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: #8B8577;">
+              <span>{{ f.paybackFeito }}</span>
+              <span>faltam {{ f.paybackFalta }}</span>
+            </div>
+          </section>
+        </div>
+
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ ehHistorico }}">
+      <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px;">
+        <section style="grid-column: span 12; background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 22px 26px 20px;">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+            <div>
+              <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 19px; letter-spacing: -0.5px; margin: 0;">{{ h.rotulo }}</h2>
+              <div style="font-size: 12.5px; color: #8B8577; margin-top: 4px;">A faixa fina embaixo mostra se o sol cobriu o gasto daquele período</div>
+            </div>
+            <div style="display: flex; gap: 18px; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 7px;"><div style="width: 10px; height: 10px; border-radius: 3px; background: #3E4C7A;"></div><span style="font-size: 12px; color: #6B665C;">Consumo</span></div>
+              <div style="display: flex; align-items: center; gap: 7px;"><div style="width: 10px; height: 10px; border-radius: 3px; background: #EDA22B;"></div><span style="font-size: 12px; color: #6B665C;">Geração</span></div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: flex-end; gap: 4px; margin-top: 22px;">
+            <sc-for list="{{ barrasHist }}" as="b" hint-placeholder-count="24">
+              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0;">
+                <div style="display: flex; align-items: flex-end; gap: 2px; height: 150px; width: 100%;" title="{{ b.tip }}">
+                  <div style="{{ b.cCss }}"></div>
+                  <div style="{{ b.gCss }}"></div>
+                </div>
+                <div style="{{ b.saldoCss }}"></div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: #A9A395; height: 12px; white-space: nowrap;">{{ b.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <section data-span="3" style="grid-column: span 3; background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 18px 20px;">
+          <div style="font-size: 12px; color: #6B665C; font-weight: 500;">Consumo no período</div>
+          <div style="display: flex; align-items: baseline; gap: 5px; margin-top: 10px;">
+            <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -1.2px;">{{ h.totalCons }}</span>
+            <span style="font-size: 13px; color: #8B8577;">kWh</span>
+          </div>
+          <div style="font-size: 12px; margin-top: 7px; color: {{ h.deltaConsCor }}; font-weight: 600;">{{ h.deltaCons }} vs período anterior</div>
+        </section>
+        <section data-span="3" style="grid-column: span 3; background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 18px 20px;">
+          <div style="font-size: 12px; color: #6B665C; font-weight: 500;">Geração no período</div>
+          <div style="display: flex; align-items: baseline; gap: 5px; margin-top: 10px;">
+            <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -1.2px;">{{ h.totalGer }}</span>
+            <span style="font-size: 13px; color: #8B8577;">kWh</span>
+          </div>
+          <div style="font-size: 12px; margin-top: 7px; color: {{ h.deltaGerCor }}; font-weight: 600;">{{ h.deltaGer }} vs período anterior</div>
+        </section>
+        <section data-span="3" style="grid-column: span 3; background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 18px 20px;">
+          <div style="font-size: 12px; color: #6B665C; font-weight: 500;">Saldo</div>
+          <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -1.2px; margin-top: 10px; color: {{ h.saldoCor }};">{{ h.saldoTotal }}</div>
+          <div style="font-size: 12px; margin-top: 7px; color: #8B8577;">Sobra da geração sobre o consumo</div>
+        </section>
+        <section data-span="3" style="grid-column: span 3; background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 18px 20px;">
+          <div style="font-size: 12px; color: #6B665C; font-weight: 500;">Custo da energia da rede</div>
+          <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -1.2px; margin-top: 10px;">{{ h.custo }}</div>
+          <div style="font-size: 12px; margin-top: 7px; color: #8B8577;">Só o que o sol não cobriu</div>
+        </section>
+
+        <section data-span="7" style="grid-column: span 7; background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 22px 26px 24px;">
+          <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 19px; letter-spacing: -0.5px; margin: 0;">Comparado com o período anterior</h2>
+          <div style="display: flex; flex-direction: column; gap: 18px; margin-top: 20px;">
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 12.5px; color: #6B665C; margin-bottom: 7px;"><span>Consumo agora</span><span style="font-family: 'IBM Plex Mono', monospace; color: #16150F;">{{ h.totalCons }} kWh</span></div>
+              <div style="height: 12px; background: #F4F1EA; border-radius: 6px; overflow: hidden;"><div style="{{ h.barAtualCons }}"></div></div>
+              <div style="display: flex; justify-content: space-between; font-size: 12.5px; color: #A9A395; margin: 9px 0 7px;"><span>Período anterior</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ h.antCons }}</span></div>
+              <div style="height: 12px; background: #F4F1EA; border-radius: 6px; overflow: hidden;"><div style="{{ h.barAnteriorCons }}"></div></div>
+            </div>
+            <div style="height: 1px; background: #EFEBE1;"></div>
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 12.5px; color: #6B665C; margin-bottom: 7px;"><span>Geração agora</span><span style="font-family: 'IBM Plex Mono', monospace; color: #16150F;">{{ h.totalGer }} kWh</span></div>
+              <div style="height: 12px; background: #F4F1EA; border-radius: 6px; overflow: hidden;"><div style="{{ h.barAtualGer }}"></div></div>
+              <div style="display: flex; justify-content: space-between; font-size: 12.5px; color: #A9A395; margin: 9px 0 7px;"><span>Período anterior</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ h.antGer }}</span></div>
+              <div style="height: 12px; background: #F4F1EA; border-radius: 6px; overflow: hidden;"><div style="{{ h.barAnteriorGer }}"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section data-span="5" style="grid-column: span 5; background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 22px 26px 24px; display: flex; flex-direction: column; gap: 16px;">
+          <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 19px; letter-spacing: -0.5px; margin: 0;">Destaques</h2>
+          <div style="display: flex; gap: 13px; padding: 14px 16px; background: #E4F0EA; border-radius: 14px;">
+            <div style="width: 9px; height: 9px; border-radius: 50%; background: #2E7A5A; margin-top: 5px; flex-shrink: 0;"></div>
+            <div>
+              <div style="font-size: 13.5px; font-weight: 600;">Melhor: {{ h.melhorNome }}</div>
+              <div style="font-size: 12.5px; color: #4A6B5C; margin-top: 3px;">{{ h.melhorVal }}</div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 13px; padding: 14px 16px; background: #FBECE8; border-radius: 14px;">
+            <div style="width: 9px; height: 9px; border-radius: 50%; background: #C4573C; margin-top: 5px; flex-shrink: 0;"></div>
+            <div>
+              <div style="font-size: 13.5px; font-weight: 600;">Mais dependente da rede: {{ h.piorNome }}</div>
+              <div style="font-size: 12.5px; color: #8A5040; margin-top: 3px;">{{ h.piorVal }}</div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 13px; padding: 14px 16px; background: #F4F1EA; border-radius: 14px;">
+            <div style="width: 9px; height: 9px; border-radius: 50%; background: #EDA22B; margin-top: 5px; flex-shrink: 0;"></div>
+            <div>
+              <div style="font-size: 13.5px; font-weight: 600;">{{ h.cobertura }} com saldo positivo</div>
+              <div style="font-size: 12.5px; color: #6B665C; margin-top: 3px;">Em {{ h.coberturaPct }} do período o sol deu conta sozinho</div>
+            </div>
+          </div>
+        </section>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ ehEquip }}">
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <sc-if value="{{ temDeteccoes }}">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <sc-for list="{{ deteccoes }}" as="x" hint-placeholder-count="1">
+            <div style="display: flex; align-items: center; gap: 16px; background: #16150F; color: #F4F1EA; border-radius: 16px; padding: 16px 20px;">
+              <div style="width: 36px; height: 36px; border-radius: 12px; background: rgba(237,162,43,0.18); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F5C25B" stroke-width="2" stroke-linecap="round"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4z"></path></svg>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 14px; font-weight: 600;">Um aparelho novo apareceu no medidor — é {{ x.palpite }}?</div>
+                <div style="font-size: 12.5px; color: #A79F8E; margin-top: 3px;">Primeiro registro {{ x.quando }} · {{ x.resumo }}</div>
+              </div>
+              <div style="display: flex; gap: 8px; flex-shrink: 0;">
+                <div onClick="{{ x.negar }}" style="padding: 8px 15px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid rgba(244,241,234,0.24); color: #A79F8E;" style-hover="color: #F4F1EA; border-color: #F4F1EA;">Não é</div>
+                <div onClick="{{ x.confirmar }}" style="padding: 8px 15px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; background: #EDA22B; color: #16150F;" style-hover="background: #F5C25B;">Confirmar</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; align-items: start;">
+          <section data-span="8" style="grid-column: span 8; background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 20px 16px 18px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 12px 14px;">
+              <div>
+                <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 19px; letter-spacing: -0.5px; margin: 0;">Ranking de consumo</h2>
+                <div style="font-size: 12.5px; color: #8B8577; margin-top: 4px;">Clique em um aparelho para ver o detalhe</div>
+              </div>
+              <div onClick="{{ irCadastro }}" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; background: #16150F; color: #F4F1EA; font-size: 13px; font-weight: 600; cursor: pointer;" style-hover="background: #2C2A20;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+                Cadastrar
+              </div>
+            </div>
+            <div data-eqrow="1" style="display: grid; grid-template-columns: 30px 1fr 118px 84px 62px; gap: 14px; padding: 0 14px 9px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.7px; color: #A9A395; border-bottom: 1px solid #EFEBE1;">
+              <span data-eqhide="1">#</span><span>Aparelho</span><span data-eqhide="1">Participação</span><span style="text-align: right;">Consumo</span><span style="text-align: right;">Variação</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 1px; margin-top: 6px;">
+              <sc-for list="{{ listaEquip }}" as="e" hint-placeholder-count="8">
+                <div onClick="{{ e.go }}" data-eqrow="1" style="{{ e.linhaCss }}" style-hover="background: #F7F4EC;">
+                  <span data-eqhide="1" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #A9A395;">{{ e.pos }}</span>
+                  <div style="min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span style="font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ e.nome }}</span>
+                      <span style="{{ e.confCss }}">{{ e.confTxt }}</span>
+                    </div>
+                    <div style="font-size: 11.5px; color: #8B8577; margin-top: 2px;">{{ e.local }} · {{ e.fonteTxt }}</div>
+                  </div>
+                  <div data-eqhide="1">
+                    <div style="height: 8px; background: #F4F1EA; border-radius: 4px; overflow: hidden;"><div style="{{ e.barra }}"></div></div>
+                    <div style="font-size: 11px; color: #8B8577; margin-top: 4px;">{{ e.pct }}</div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; font-weight: 500;">{{ e.kwh }}</div>
+                    <div style="font-size: 11px; color: #8B8577;">{{ e.reais }}</div>
+                  </div>
+                  <div style="text-align: right;"><span style="{{ e.tendCss }}">{{ e.tend }}</span></div>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+
+          <div data-span="4" data-detwrap="1" style="grid-column: span 4; position: sticky; top: 108px;">
+            <sc-if value="{{ semDetalhe }}">
+              <section style="background: #F7F4EC; border: 1px dashed #D8D2C4; border-radius: 20px; padding: 34px 26px; text-align: center;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B9B2A2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px;"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+                <div style="font-size: 14px; font-weight: 600; color: #6B665C;">Escolha um aparelho</div>
+                <div style="font-size: 12.5px; color: #8B8577; margin-top: 6px; line-height: 1.5;">O detalhe mostra o horário de pico, quanto pesa no ano e o que dá para fazer a respeito.</div>
+              </section>
+            </sc-if>
+            <sc-if value="{{ temDetalhe }}">
+              <section style="background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 22px 24px 24px;">
+                <div style="display: flex; align-items: flex-start; gap: 14px;">
+                  <div style="{{ det.corBar }}"></div>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; letter-spacing: -0.5px; line-height: 1.15;">{{ det.nome }}</div>
+                    <div style="font-size: 12.5px; color: #8B8577; margin-top: 3px;">{{ det.local }} · {{ det.cat }}</div>
+                  </div>
+                  <div onClick="{{ fecharDet }}" style="cursor: pointer; color: #A9A395; padding: 2px;" style-hover="color: #16150F;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 18px;">
+                  <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 34px; letter-spacing: -1.5px;">{{ det.reais }}</span>
+                  <span style="font-size: 13px; color: #8B8577;">por mês · {{ det.kwh }}</span>
+                </div>
+                <div style="font-size: 12.5px; color: #8B8577; margin-top: 5px;">{{ det.pct }} · {{ det.ano }} por ano</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px;">
+                  <div style="background: #F7F4EC; border-radius: 12px; padding: 11px 13px;">
+                    <div style="font-size: 11px; color: #8B8577;">Potência</div>
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 500; margin-top: 3px;">{{ det.pot }}</div>
+                  </div>
+                  <div style="background: #F7F4EC; border-radius: 12px; padding: 11px 13px;">
+                    <div style="font-size: 11px; color: #8B8577;">Uso estimado</div>
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 500; margin-top: 3px;">{{ det.horas }}</div>
+                  </div>
+                </div>
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #A9A395; margin: 20px 0 9px;">Perfil de uso nas 24 horas</div>
+                <div style="display: flex; align-items: flex-end; gap: 2px; height: 54px;">
+                  <sc-for list="{{ detPerfil }}" as="p" hint-placeholder-count="24"><div style="{{ p.css }}"></div></sc-for>
+                </div>
+                <div style="font-size: 12px; color: #8B8577; margin-top: 8px;">{{ det.pico }}</div>
+                <div style="height: 1px; background: #EFEBE1; margin: 18px 0 14px;"></div>
+                <div style="display: flex; flex-direction: column; gap: 11px;">
+                  <sc-for list="{{ detDicas }}" as="dc" hint-placeholder-count="2">
+                    <div style="display: flex; gap: 10px;">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2E7A5A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><path d="M20 6L9 17l-5-5"></path></svg>
+                      <div style="font-size: 13px; line-height: 1.45;"><span style="font-weight: 600;">{{ dc.t }}</span> <span style="color: #6B665C;">{{ dc.v }}</span></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </section>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ ehCadastro }}">
+      <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; align-items: start;">
+        <section data-span="7" style="grid-column: span 7; background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 24px 28px 28px;">
+          <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 19px; letter-spacing: -0.5px; margin: 0;">Descreva o aparelho</h2>
+          <div style="font-size: 12.5px; color: #8B8577; margin-top: 4px;">A IA já estima quase tudo sozinha. Cadastre o que ela não reconhece ou o que você quer acompanhar de perto.</div>
+
+          <div style="margin-top: 22px;">
+            <label style="font-size: 12px; font-weight: 600; color: #4A453B;">Nome</label>
+            <input type="text" value="{{ nv.nome }}" onChange="{{ setNome }}" placeholder="Ex.: Ar-condicionado do quarto" style="width: 100%; height: 44px; margin-top: 7px; padding: 0 14px; border-radius: 12px; border: 1px solid #DDD7C9; background: #FCFBF7; font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; color: #16150F; outline: none;" style-focus="border-color: #16150F;">
+          </div>
+
+          <div style="margin-top: 20px;">
+            <label style="font-size: 12px; font-weight: 600; color: #4A453B;">Categoria</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px;">
+              <sc-for list="{{ cats }}" as="c" hint-placeholder-count="8"><div onClick="{{ c.go }}" style="{{ c.css }}">{{ c.label }}</div></sc-for>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <label style="font-size: 12px; font-weight: 600; color: #4A453B;">Onde fica</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px;">
+              <sc-for list="{{ comodos }}" as="c" hint-placeholder-count="6"><div onClick="{{ c.go }}" style="{{ c.css }}">{{ c.label }}</div></sc-for>
+            </div>
+          </div>
+
+          <div style="height: 1px; background: #EFEBE1; margin: 24px 0 20px;"></div>
+
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <label style="font-size: 12px; font-weight: 600; color: #4A453B;">Potência</label>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 500;">{{ nv.potLabel }}</span>
+              </div>
+              <input type="range" min="20" max="12000" step="10" value="{{ nv.pot }}" onChange="{{ setPot }}" style="width: 100%; margin-top: 10px; accent-color: #EDA22B; cursor: pointer;">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: #A9A395; margin-top: 2px;"><span>20 W</span><span>12.000 W</span></div>
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <label style="font-size: 12px; font-weight: 600; color: #4A453B;">Horas de uso por dia</label>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 500;">{{ nv.horasLabel }}</span>
+              </div>
+              <input type="range" min="0.1" max="24" step="0.1" value="{{ nv.horas }}" onChange="{{ setHoras }}" style="width: 100%; margin-top: 10px; accent-color: #EDA22B; cursor: pointer;">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: #A9A395; margin-top: 2px;"><span>6 min</span><span>24 h</span></div>
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <label style="font-size: 12px; font-weight: 600; color: #4A453B;">Dias de uso por mês</label>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 500;">{{ nv.diasLabel }}</span>
+              </div>
+              <input type="range" min="1" max="31" step="1" value="{{ nv.dias }}" onChange="{{ setDias }}" style="width: 100%; margin-top: 10px; accent-color: #EDA22B; cursor: pointer;">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: #A9A395; margin-top: 2px;"><span>1 dia</span><span>31 dias</span></div>
+            </div>
+          </div>
+        </section>
+
+        <div data-span="5" style="grid-column: span 5; display: flex; flex-direction: column; gap: 16px;">
+          <section style="background: #16150F; color: #F4F1EA; border-radius: 20px; padding: 24px 26px 26px;">
+            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #A79F8E;">Estimativa</div>
+            <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 12px;">
+              <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 46px; letter-spacing: -2px; line-height: 1;">{{ nv.kwh }}</span>
+              <span style="font-size: 15px; color: #A79F8E;">kWh por mês</span>
+            </div>
+            <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 24px; color: #F5C25B; margin-top: 10px; letter-spacing: -0.8px;">{{ nv.custo }} por mês</div>
+            <div style="font-size: 13px; color: #A79F8E; margin-top: 5px;">{{ nv.ano }} ao longo de um ano</div>
+            <div style="height: 10px; background: rgba(244,241,234,0.12); border-radius: 5px; overflow: hidden; margin-top: 20px;"><div style="{{ nv.barra }}"></div></div>
+            <div style="font-size: 12px; color: #A79F8E; margin-top: 8px;">{{ nv.pctTxt }}</div>
+            <div onClick="{{ salvarEquip }}" style="{{ nv.salvarCss }}" style-hover="opacity: .9;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+              Adicionar aos meus aparelhos
+            </div>
+            <sc-if value="{{ salvoOk }}">
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 12.5px; color: #6FD6A4;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+                Aparelho cadastrado e já no ranking
+              </div>
+            </sc-if>
+          </section>
+
+          <section style="background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 20px 22px 22px;">
+            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #8B8577;">Começar de um modelo</div>
+            <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 12px;">
+              <sc-for list="{{ sugestoes }}" as="g" hint-placeholder-count="6">
+                <div onClick="{{ g.go }}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 11px; border-radius: 11px; cursor: pointer;" style-hover="background: #F7F4EC;">
+                  <div style="min-width: 0;">
+                    <div style="font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ g.nome }}</div>
+                    <div style="font-size: 11.5px; color: #8B8577; margin-top: 2px;">{{ g.det }}</div>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B9B2A2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M9 6l6 6-6 6"></path></svg>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ ehAlertas }}">
+      <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; align-items: start;">
+        <section data-span="7" style="grid-column: span 7; background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 24px 28px 26px;">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;">
+            <div>
+              <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 19px; letter-spacing: -0.5px; margin: 0;">Meta do mês</h2>
+              <div style="font-size: 12.5px; color: #8B8577; margin-top: 4px;">Quanto você quer consumir da rede e do sol somados</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -1px; line-height: 1;">{{ al.metaLabel }}</div>
+              <div style="font-size: 12px; color: #8B8577; margin-top: 4px;">≈ {{ al.custoMeta }}</div>
+            </div>
+          </div>
+          <input type="range" min="80" max="2600" step="10" value="{{ al.meta }}" onChange="{{ setMeta }}" style="width: 100%; margin-top: 20px; accent-color: #2E7A5A; cursor: pointer;">
+          <div style="position: relative; height: 14px; background: #F4F1EA; border-radius: 7px; overflow: visible; margin-top: 22px;">
+            <div style="{{ al.barra }}"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 12.5px; color: #6B665C;">
+            <span>Já consumido: <span style="font-family: 'IBM Plex Mono', monospace; color: #16150F;">{{ al.usado }}</span></span>
+            <span>{{ al.pctTxt }}</span>
+          </div>
+          <div style="{{ al.vereditoCss }}">{{ al.veredito }}</div>
+          <div style="font-size: 12.5px; color: #8B8577; margin-top: 3px;">Projeção de fechamento: {{ al.proj }}</div>
+        </section>
+
+        <section data-span="5" style="grid-column: span 5; background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 22px 24px 24px;">
+          <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 19px; letter-spacing: -0.5px; margin: 0;">Quando avisar</h2>
+          <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 16px;">
+            <sc-for list="{{ regras }}" as="r" hint-placeholder-count="4">
+              <div onClick="{{ r.go }}" style="display: flex; align-items: center; gap: 14px; padding: 12px 10px; border-radius: 12px; cursor: pointer;" style-hover="background: #F7F4EC;">
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-size: 13.5px; font-weight: 600; line-height: 1.35;">{{ r.t }}</div>
+                  <div style="font-size: 11.5px; color: #8B8577; margin-top: 3px;">{{ r.s }}</div>
+                </div>
+                <div style="{{ r.trilho }}"><div style="{{ r.bolinha }}"></div></div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <section style="grid-column: span 12; background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 22px 26px 24px;">
+          <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 19px; letter-spacing: -0.5px; margin: 0;">O que aconteceu esta semana</h2>
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 16px;">
+            <sc-for list="{{ feed }}" as="a" hint-placeholder-count="3">
+              <div style="{{ a.css }}">
+                <div style="{{ a.dot }}"></div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;">
+                    <span style="font-size: 14px; font-weight: 600;">{{ a.titulo }}</span>
+                    <span style="font-size: 11.5px; color: #8B8577;">{{ a.quando }}</span>
+                  </div>
+                  <div style="font-size: 13px; color: #4A453B; margin-top: 4px; line-height: 1.5; max-width: 760px;">{{ a.txt }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ ehRelatorio }}">
+      <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; align-items: start;">
+        <section data-span="8" style="grid-column: span 8; background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 30px 34px 32px;">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;">
+            <div>
+              <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -0.7px;">{{ rel.unidade }}</div>
+              <div style="font-size: 12.5px; color: #8B8577; margin-top: 4px;">{{ rel.distribuidora }} · {{ rel.periodo }}</div>
+            </div>
+            <div onClick="{{ rel.imprimir }}" style="display: flex; align-items: center; gap: 7px; padding: 9px 15px; border-radius: 11px; border: 1px solid #D8D2C4; font-size: 13px; font-weight: 600; cursor: pointer; color: #4A453B;" style-hover="border-color: #16150F; color: #16150F;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4v-6h16v6h-2M8 14h8v7H8z"></path></svg>
+              Imprimir
+            </div>
+          </div>
+          <div data-inv="1" style="display: grid; grid-template-columns: 1fr 150px 130px; gap: 12px; margin-top: 26px; padding-bottom: 9px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.7px; color: #A9A395;">
+            <span>Descrição</span><span>Quantidade</span><span style="text-align: right;">Valor</span>
+          </div>
+          <sc-for list="{{ linhasFatura }}" as="l" hint-placeholder-count="6">
+            <div data-inv="1" style="{{ l.css }}">
+              <span>{{ l.l }}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #6B665C;">{{ l.q }}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; text-align: right;">{{ l.v }}</span>
+            </div>
+          </sc-for>
+          <div style="display: flex; gap: 14px; background: #E4F0EA; border-radius: 15px; padding: 18px 20px; margin-top: 24px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2E7A5A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10zM2 21c0-3 1.85-5.36 5.08-6"></path></svg>
+            <div>
+              <div style="font-size: 14px; font-weight: 600; color: #235C44;">Sem os painéis, esta conta seria {{ rel.semSolar }}</div>
+              <div style="font-size: 13px; color: #3E6B57; margin-top: 4px; line-height: 1.5;">Você pagou {{ rel.comSolar }} — {{ rel.pctEconomia }}. No mês, {{ rel.co2 }} de CO₂ deixaram de ir para a atmosfera, o mesmo que {{ rel.arvores }} absorvem em um mês.</div>
+            </div>
+          </div>
+          <div style="font-size: 11.5px; color: #A9A395; margin-top: 18px;">{{ rel.emitido }} · valores estimados a partir do medidor e da tarifa cadastrada</div>
+        </section>
+
+        <div data-span="4" data-detwrap="1" style="grid-column: span 4; display: flex; flex-direction: column; gap: 16px;">
+          <section style="background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 20px 22px 22px;">
+            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #8B8577;">Economia nos 12 meses</div>
+            <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -1.2px; margin-top: 8px;">{{ rel.acumulado }}</div>
+            <div style="display: flex; align-items: flex-end; gap: 4px; height: 100px; margin-top: 18px;">
+              <sc-for list="{{ barrasAno }}" as="b" hint-placeholder-count="12">
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;" title="{{ b.valor }}">
+                  <div style="{{ b.css }}"></div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #A9A395;">{{ b.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+          <section style="background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 20px 22px 22px;">
+            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #8B8577;">Saldo de créditos</div>
+            <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -1.2px; margin-top: 8px;">{{ rel.creditos }}</div>
+            <div style="font-size: 12.5px; color: #8B8577; margin-top: 6px; line-height: 1.5;">Energia injetada que ainda não foi usada. Vale por 60 meses e abate contas futuras.</div>
+          </section>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ ehConfig }}">
+      <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; align-items: start;">
+        <section data-span="6" style="grid-column: span 6; background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 24px 26px 26px;">
+          <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 19px; letter-spacing: -0.5px; margin: 0;">Tarifa de energia</h2>
+          <div style="font-size: 12.5px; color: #8B8577; margin-top: 4px;">É o número que transforma kWh em reais em todo o sistema</div>
+          <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 18px;">
+            <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 38px; letter-spacing: -1.6px; line-height: 1;">{{ cf.tarifaLabel }}</span>
+          </div>
+          <input type="range" min="40" max="160" step="1" value="{{ tarifaSlider }}" onChange="{{ setTarifa }}" style="width: 100%; margin-top: 18px; accent-color: #EDA22B; cursor: pointer;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #A9A395;"><span>R$ 0,40</span><span>R$ 1,60</span></div>
+          <div onClick="{{ resetTarifa }}" style="display: inline-block; margin-top: 14px; font-size: 12.5px; font-weight: 600; color: #B4761B; cursor: pointer;" style-hover="color: #8A5810;">Voltar para a tarifa da distribuidora</div>
+          <div style="height: 1px; background: #EFEBE1; margin: 20px 0 16px;"></div>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; gap: 18px; font-size: 13.5px;"><span style="color: #6B665C;">Tarifa de compensação (injetado)</span><span style="font-family: 'IBM Plex Mono', monospace; white-space: nowrap;">{{ cf.tarifaComp }}</span></div>
+            <div style="display: flex; justify-content: space-between; gap: 18px; font-size: 13.5px;"><span style="color: #6B665C;">Distribuidora</span><span style="font-weight: 600; white-space: nowrap;">{{ cf.distribuidora }}</span></div>
+            <div style="display: flex; justify-content: space-between; gap: 18px; font-size: 13.5px;"><span style="color: #6B665C;">Fator de emissão da rede</span><span style="font-family: 'IBM Plex Mono', monospace; white-space: nowrap;">{{ cf.fator }}</span></div>
+          </div>
+        </section>
+
+        <section data-span="6" style="grid-column: span 6; background: #fff; border: 1px solid #E3DED2; border-radius: 20px; padding: 24px 26px 26px;">
+          <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 19px; letter-spacing: -0.5px; margin: 0;">Unidade e sistema solar</h2>
+          <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; font-size: 13.5px;"><span style="color: #6B665C;">Unidade</span><span style="font-weight: 600; text-align: right;">{{ cf.unidade }}</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; font-size: 13.5px;"><span style="color: #6B665C;">Perfil</span><span style="text-align: right;">{{ cf.tipo }}</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; font-size: 13.5px;"><span style="color: #6B665C;">Potência instalada</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ cf.potencia }}</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; font-size: 13.5px;"><span style="color: #6B665C;">Painéis</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ cf.paineis }}</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; font-size: 13.5px;"><span style="color: #6B665C;">Investimento</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ cf.investimento }}</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; font-size: 13.5px;"><span style="color: #6B665C;">Em operação desde</span><span style="text-align: right;">{{ cf.instalado }}</span></div>
+          </div>
+          <div style="background: #F7F4EC; border-radius: 14px; padding: 15px 17px; margin-top: 20px;">
+            <div style="font-size: 12.5px; color: #6B665C; line-height: 1.5;">Com a tarifa atual, sua conta média sem geração solar seria <span style="font-weight: 600; color: #16150F;">{{ cf.contaMedia }}</span> por mês.</div>
+          </div>
+        </section>
+      </div>
+      </sc-if>
+
+    </div>
+  </main>
+</div>
+</sc-if>
+
+<sc-if value="{{ ehMobile }}">
+<div style="min-height: 100vh; background: #16150F; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 40px 20px; font-family: 'IBM Plex Sans', system-ui, sans-serif;">
+  <div onClick="{{ verDesktop }}" style="display: flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 11px; border: 1px solid rgba(244,241,234,0.2); color: #A79F8E; font-size: 13px; font-weight: 600; cursor: pointer;" style-hover="color: #F4F1EA; border-color: #F4F1EA;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"></rect><path d="M8 21h8"></path></svg>
+    Voltar para o desktop
+  </div>
+
+  <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="393px,852px">
+    <div style="display: flex; flex-direction: column; height: 100%; background: #EFEBE1; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #16150F;">
+      <div style="padding: 58px 20px 12px; background: #EFEBE1; flex-shrink: 0;">
+        <sc-if value="{{ mTemVoltar }}">
+          <div onClick="{{ mVoltar }}" style="display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; color: #B4761B; cursor: pointer; margin-bottom: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+            Voltar
+          </div>
+        </sc-if>
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #8B8577;">{{ m.perfilNome }}</div>
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 25px; letter-spacing: -0.8px; margin-top: 3px;">{{ mTitulo }}</div>
+      </div>
+
+      <div style="flex: 1; overflow-y: auto; padding: 4px 16px 20px;">
+        <sc-if value="{{ mTabPainel }}">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="background: #16150F; color: #F4F1EA; border-radius: 20px; padding: 20px 22px; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -50px; right: -36px; width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle, rgba(237,162,43,0.35), transparent 68%);"></div>
+            <div style="position: relative;">
+              <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #A79F8E;">Economizado em agosto</div>
+              <div style="display: flex; align-items: baseline; gap: 7px; margin-top: 8px;">
+                <span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 22px; color: #A79F8E;">R$</span>
+                <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 50px; letter-spacing: -2.2px; line-height: 0.9;">{{ m.economia }}</span>
+              </div>
+              <div style="font-size: 13px; color: #A79F8E; margin-top: 10px;">O sol cobriu {{ m.autoPct }} do seu consumo</div>
+            </div>
+          </div>
+
+          <div style="background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 16px 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; color: #8B8577;">Hoje</span>
+              <div style="display: flex; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 10px; height: 3px; border-radius: 2px; background: #EDA22B;"></div><span style="font-size: 11px; color: #6B665C;">Sol</span></div>
+                <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 10px; height: 3px; border-radius: 2px; background: #3E4C7A;"></div><span style="font-size: 11px; color: #6B665C;">Consumo</span></div>
+              </div>
+            </div>
+            <svg viewBox="0 0 320 100" style="width: 100%; height: auto; margin-top: 12px; display: block;">
+              <defs><linearGradient id="gSolM" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EDA22B" stop-opacity="0.3"></stop><stop offset="100%" stop-color="#EDA22B" stop-opacity="0"></stop></linearGradient></defs>
+              <path d="{{ m.areaSol }}" fill="url(#gSolM)"></path>
+              <path d="{{ m.lineSol }}" fill="none" stroke="#EDA22B" stroke-width="2.4" stroke-linejoin="round"></path>
+              <path d="{{ m.lineCons }}" fill="none" stroke="#3E4C7A" stroke-width="2" stroke-dasharray="4 3" stroke-linejoin="round"></path>
+            </svg>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 15px 17px;">
+              <div style="font-size: 11.5px; color: #6B665C;">Consumo</div>
+              <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -1px; margin-top: 5px;">{{ m.consumo }}</div>
+              <div style="font-size: 11px; color: #8B8577;">kWh no mês</div>
+            </div>
+            <div style="background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 15px 17px;">
+              <div style="font-size: 11.5px; color: #6B665C;">Geração</div>
+              <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -1px; margin-top: 5px;">{{ m.geracao }}</div>
+              <div style="font-size: 11px; color: #8B8577;">kWh no mês</div>
+            </div>
+            <div style="background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 15px 17px;">
+              <div style="font-size: 11.5px; color: #6B665C;">CO₂ evitado</div>
+              <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -1px; margin-top: 5px;">{{ m.co2 }}</div>
+              <div style="font-size: 11px; color: #8B8577;">kg neste mês</div>
+            </div>
+            <div style="background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 15px 17px;">
+              <div style="font-size: 11.5px; color: #6B665C;">Créditos</div>
+              <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -1px; margin-top: 5px;">{{ m.creditos }}</div>
+              <div style="font-size: 11px; color: #8B8577;">kWh na rede</div>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ mTabHistorico }}">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; background: #E5E0D3; border-radius: 11px; padding: 3px;">
+            <sc-for list="{{ periodos }}" as="pe" hint-placeholder-count="3">
+              <div onClick="{{ pe.go }}" style="{{ pe.css }}; flex: 1; text-align: center;">{{ pe.label }}</div>
+            </sc-for>
+          </div>
+          <div style="background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 16px 14px 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px;">
+              <span style="font-size: 12.5px; font-weight: 600;">{{ h.rotulo }}</span>
+              <div style="display: flex; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 4px;"><div style="width: 9px; height: 9px; border-radius: 3px; background: #3E4C7A;"></div><span style="font-size: 10.5px; color: #6B665C;">Consumo</span></div>
+                <div style="display: flex; align-items: center; gap: 4px;"><div style="width: 9px; height: 9px; border-radius: 3px; background: #EDA22B;"></div><span style="font-size: 10.5px; color: #6B665C;">Geração</span></div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: flex-end; gap: 2px; margin-top: 16px;">
+              <sc-for list="{{ barrasHist }}" as="b" hint-placeholder-count="24">
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0;">
+                  <div style="display: flex; align-items: flex-end; gap: 1px; height: 108px; width: 100%;" title="{{ b.tip }}">
+                    <div style="{{ b.cCss }}"></div>
+                    <div style="{{ b.gCss }}"></div>
+                  </div>
+                  <div style="{{ b.saldoCss }}"></div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: #A9A395; height: 10px; white-space: nowrap;">{{ b.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 15px 17px;">
+              <div style="font-size: 11.5px; color: #6B665C;">Consumo</div>
+              <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 23px; letter-spacing: -0.9px; margin-top: 5px;">{{ h.totalCons }}</div>
+              <div style="font-size: 11px; font-weight: 600; margin-top: 3px; color: {{ h.deltaConsCor }};">{{ h.deltaCons }}</div>
+            </div>
+            <div style="background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 15px 17px;">
+              <div style="font-size: 11.5px; color: #6B665C;">Geração</div>
+              <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 23px; letter-spacing: -0.9px; margin-top: 5px;">{{ h.totalGer }}</div>
+              <div style="font-size: 11px; font-weight: 600; margin-top: 3px; color: {{ h.deltaGerCor }};">{{ h.deltaGer }}</div>
+            </div>
+          </div>
+          <div style="background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 16px 18px;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0;"><span style="color: #6B665C;">Saldo do período</span><span style="font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: {{ h.saldoCor }};">{{ h.saldoTotal }}</span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0;"><span style="color: #6B665C;">Custo da rede</span><span style="font-family: 'IBM Plex Mono', monospace; font-weight: 500;">{{ h.custo }}</span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0;"><span style="color: #6B665C;">Coberto pelo sol</span><span style="font-family: 'IBM Plex Mono', monospace; font-weight: 500;">{{ h.cobertura }}</span></div>
+          </div>
+          <div style="display: flex; gap: 11px; padding: 14px 16px; background: #E4F0EA; border-radius: 15px;">
+            <div style="width: 8px; height: 8px; border-radius: 50%; background: #2E7A5A; margin-top: 5px; flex-shrink: 0;"></div>
+            <div>
+              <div style="font-size: 13px; font-weight: 600;">Melhor: {{ h.melhorNome }}</div>
+              <div style="font-size: 12px; color: #4A6B5C; margin-top: 2px;">{{ h.melhorVal }}</div>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ mTabAparelhos }}">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="font-size: 12.5px; color: #8B8577; padding: 0 2px 2px;">Estimado por IA a partir do medidor</div>
+          <sc-for list="{{ mEquip }}" as="e" hint-placeholder-count="6">
+            <div style="background: #fff; border: 1px solid #E3DED2; border-radius: 16px; padding: 14px 16px;">
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+                <span style="font-size: 14.5px; font-weight: 600;">{{ e.nome }}</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 500;">{{ e.reais }}</span>
+              </div>
+              <div style="height: 8px; background: #F4F1EA; border-radius: 4px; overflow: hidden; margin-top: 10px;"><div style="{{ e.barra }}"></div></div>
+              <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 11.5px; color: #8B8577;"><span>{{ e.kwh }}</span><span>{{ e.pct }} do total</span></div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ mTabMetas }}">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 18px 20px;">
+            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; color: #8B8577;">Meta do mês</div>
+            <div style="display: flex; align-items: baseline; gap: 7px; margin-top: 8px;">
+              <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 32px; letter-spacing: -1.3px;">{{ m.consumo }}</span>
+              <span style="font-size: 13px; color: #8B8577;">de {{ m.meta }} kWh</span>
+            </div>
+            <div style="height: 12px; background: #F4F1EA; border-radius: 6px; overflow: hidden; margin-top: 14px;"><div style="{{ m.metaBar }}"></div></div>
+            <div style="font-size: 12px; color: #8B8577; margin-top: 8px;">{{ m.metaPct }}</div>
+            <input type="range" min="80" max="2600" step="10" value="{{ al.meta }}" onChange="{{ setMeta }}" style="width: 100%; margin-top: 14px; accent-color: #2E7A5A; cursor: pointer;">
+            <div style="{{ al.vereditoCss }}">{{ al.veredito }}</div>
+          </div>
+          <sc-for list="{{ feed }}" as="a" hint-placeholder-count="3">
+            <div style="{{ a.css }}">
+              <div style="{{ a.dot }}"></div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 13.5px; font-weight: 600; line-height: 1.35;">{{ a.titulo }}</div>
+                <div style="font-size: 12.5px; color: #4A453B; margin-top: 4px; line-height: 1.45;">{{ a.txt }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ mTabMais }}">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <sc-for list="{{ mMenu }}" as="x" hint-placeholder-count="3">
+            <div onClick="{{ x.go }}" style="display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid #E3DED2; border-radius: 16px; padding: 15px 17px; cursor: pointer;" style-hover="border-color: #16150F;">
+              <div style="width: 38px; height: 38px; border-radius: 12px; background: #F4F1EA; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4A453B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ x.icon }}"></path></svg>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 14.5px; font-weight: 600;">{{ x.t }}</div>
+                <div style="font-size: 11.5px; color: #8B8577; margin-top: 2px;">{{ x.s }}</div>
+              </div>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#B9B2A2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M9 6l6 6-6 6"></path></svg>
+            </div>
+          </sc-for>
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.9px; color: #8B8577; margin: 14px 2px 2px;">Trocar de unidade</div>
+          <sc-for list="{{ mPerfis }}" as="p" hint-placeholder-count="2">
+            <div onClick="{{ p.go }}" style="{{ p.css }}">
+              <div style="{{ p.dot }}"></div>
+              <div style="min-width: 0;">
+                <div style="font-size: 14px; font-weight: 600;">{{ p.nome }}</div>
+                <div style="font-size: 11.5px; color: #8B8577; margin-top: 2px;">{{ p.tipo }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ mSubConta }}">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 18px 20px;">
+            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; color: #8B8577;">Total a pagar</div>
+            <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 40px; letter-spacing: -1.8px; margin-top: 6px;">{{ m.conta }}</div>
+            <div style="font-size: 12.5px; color: #8B8577; margin-top: 4px;">Sem os painéis seria {{ rel.semSolar }}</div>
+          </div>
+          <sc-for list="{{ linhasFatura }}" as="l" hint-placeholder-count="6">
+            <div style="display: flex; justify-content: space-between; gap: 12px; background: #fff; border: 1px solid #E3DED2; border-radius: 14px; padding: 12px 16px; font-size: 13px;">
+              <span style="min-width: 0;">{{ l.l }}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; white-space: nowrap;">{{ l.v }}</span>
+            </div>
+          </sc-for>
+          <div style="display: flex; gap: 12px; background: #E4F0EA; border-radius: 15px; padding: 16px 18px;">
+            <div style="width: 8px; height: 8px; border-radius: 50%; background: #2E7A5A; margin-top: 5px; flex-shrink: 0;"></div>
+            <div style="font-size: 12.5px; color: #3E6B57; line-height: 1.5;">Você economizou <span style="font-weight: 700; color: #235C44;">{{ rel.economizado }}</span> neste mês e {{ rel.co2 }} de CO₂ deixaram de ir para a atmosfera.</div>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ mSubCadastro }}">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 18px 20px 20px;">
+            <label style="font-size: 12px; font-weight: 600; color: #4A453B;">Nome</label>
+            <input type="text" value="{{ nv.nome }}" onChange="{{ setNome }}" placeholder="Ex.: Ar do quarto" style="width: 100%; height: 46px; margin-top: 8px; padding: 0 14px; border-radius: 12px; border: 1px solid #DDD7C9; background: #FCFBF7; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; color: #16150F; outline: none;" style-focus="border-color: #16150F;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 20px;">
+              <label style="font-size: 12px; font-weight: 600; color: #4A453B;">Potência</label>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 500;">{{ nv.potLabel }}</span>
+            </div>
+            <input type="range" min="20" max="12000" step="10" value="{{ nv.pot }}" onChange="{{ setPot }}" style="width: 100%; margin-top: 10px; accent-color: #EDA22B; cursor: pointer;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 18px;">
+              <label style="font-size: 12px; font-weight: 600; color: #4A453B;">Horas por dia</label>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 500;">{{ nv.horasLabel }}</span>
+            </div>
+            <input type="range" min="0.1" max="24" step="0.1" value="{{ nv.horas }}" onChange="{{ setHoras }}" style="width: 100%; margin-top: 10px; accent-color: #EDA22B; cursor: pointer;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 18px;">
+              <label style="font-size: 12px; font-weight: 600; color: #4A453B;">Dias por mês</label>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 500;">{{ nv.diasLabel }}</span>
+            </div>
+            <input type="range" min="1" max="31" step="1" value="{{ nv.dias }}" onChange="{{ setDias }}" style="width: 100%; margin-top: 10px; accent-color: #EDA22B; cursor: pointer;">
+          </div>
+          <div style="background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 16px 18px;">
+            <div style="font-size: 12px; font-weight: 600; color: #4A453B; margin-bottom: 10px;">Onde fica</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <sc-for list="{{ comodos }}" as="c" hint-placeholder-count="6"><div onClick="{{ c.go }}" style="{{ c.css }}">{{ c.label }}</div></sc-for>
+            </div>
+          </div>
+          <div style="background: #16150F; color: #F4F1EA; border-radius: 18px; padding: 18px 20px 20px;">
+            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #A79F8E;">Estimativa</div>
+            <div style="display: flex; align-items: baseline; gap: 7px; margin-top: 8px;">
+              <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 36px; letter-spacing: -1.5px; line-height: 1;">{{ nv.kwh }}</span>
+              <span style="font-size: 13px; color: #A79F8E;">kWh/mês</span>
+            </div>
+            <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 20px; color: #F5C25B; margin-top: 8px; letter-spacing: -0.6px;">{{ nv.custo }} por mês</div>
+            <div onClick="{{ salvarEquip }}" style="{{ nv.salvarCss }}; margin-top: 18px;">Adicionar aparelho</div>
+            <sc-if value="{{ salvoOk }}">
+              <div style="font-size: 12.5px; color: #6FD6A4; margin-top: 10px; text-align: center;">Cadastrado e já no ranking</div>
+            </sc-if>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ mSubConfig }}">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 18px 20px 20px;">
+            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; color: #8B8577;">Tarifa de energia</div>
+            <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -1.2px; margin-top: 8px;">{{ cf.tarifaLabel }}</div>
+            <input type="range" min="40" max="160" step="1" value="{{ tarifaSlider }}" onChange="{{ setTarifa }}" style="width: 100%; margin-top: 14px; accent-color: #EDA22B; cursor: pointer;">
+            <div onClick="{{ resetTarifa }}" style="font-size: 12.5px; font-weight: 600; color: #B4761B; cursor: pointer; margin-top: 10px;">Voltar para a tarifa da distribuidora</div>
+          </div>
+          <div style="background: #fff; border: 1px solid #E3DED2; border-radius: 18px; padding: 16px 18px;">
+            <div style="display: flex; justify-content: space-between; gap: 14px; font-size: 13px; padding: 6px 0;"><span style="color: #6B665C;">Distribuidora</span><span style="font-weight: 600;">{{ cf.distribuidora }}</span></div>
+            <div style="display: flex; justify-content: space-between; gap: 14px; font-size: 13px; padding: 6px 0;"><span style="color: #6B665C;">Compensação</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ cf.tarifaComp }}</span></div>
+            <div style="display: flex; justify-content: space-between; gap: 14px; font-size: 13px; padding: 6px 0;"><span style="color: #6B665C;">Potência</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ cf.potencia }}</span></div>
+            <div style="display: flex; justify-content: space-between; gap: 14px; font-size: 13px; padding: 6px 0;"><span style="color: #6B665C;">Painéis</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ cf.paineis }}</span></div>
+            <div style="display: flex; justify-content: space-between; gap: 14px; font-size: 13px; padding: 6px 0;"><span style="color: #6B665C;">Emissão da rede</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ cf.fator }}</span></div>
+          </div>
+          <div style="background: #F7F4EC; border-radius: 15px; padding: 15px 17px;">
+            <div style="font-size: 12.5px; color: #6B665C; line-height: 1.5;">Sem geração solar sua conta média seria <span style="font-weight: 600; color: #16150F;">{{ cf.contaMedia }}</span> por mês.</div>
+          </div>
+        </div>
+        </sc-if>
+      </div>
+
+      <div style="display: flex; background: rgba(252,251,247,0.94); border-top: 1px solid #E3DED2; padding: 4px 8px 28px; backdrop-filter: blur(12px); flex-shrink: 0;">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+          <div onClick="{{ t.go }}" style="{{ t.css }}">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ t.icon }}"></path></svg>
+            <span style="{{ t.txt }}">{{ t.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </x-import>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1024},&quot;tarifa&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:0.92,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:0.4,&quot;max&quot;:1.6,&quot;step&quot;:0.01,&quot;unit&quot;:&quot;R$/kWh&quot;,&quot;section&quot;:&quot;Cálculo&quot;,&quot;label&quot;:&quot;Tarifa de energia&quot;},&quot;fatorCO2&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:0.0861,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:0.01,&quot;max&quot;:0.6,&quot;step&quot;:0.0001,&quot;unit&quot;:&quot;kg/kWh&quot;,&quot;section&quot;:&quot;Cálculo&quot;},&quot;mostrarPayback&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Cálculo&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#EDA22B&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#EDA22B&quot;,&quot;#2E7A5A&quot;,&quot;#3E4C7A&quot;,&quot;#C4573C&quot;],&quot;section&quot;:&quot;Aparência&quot;}}">
+class Component extends DCLogic {
+  state = {
+    tela: 'painel', perfil: 'residencial', periodo: 'mes', vista: 'desktop', tab: 'painel',
+    detalhe: null, addAberto: false, deteccaoAberta: true, editando: null,
+    novo: { nome: '', cat: 'Climatização', pot: 1400, horas: 3, comodo: 'Sala', dias: 30 },
+    metas: { residencial: 300, negocio: 1700 }, regras: { pico: true, meta: true, solar: true, standby: false },
+    alertasLidos: [], extras: [], respondidas: {}, tarifaLocal: null, salvo: false, msub: null
+  };
+
+  dados() {
+    const R = {
+      chave: 'residencial', nome: 'Casa das Acácias', tipo: 'Residencial · 4 pessoas',
+      distribuidora: 'Enel SP', tarifa: 0.92, tarifaComp: 0.79, potenciaKwp: 4.4, paineis: 10,
+      consumo: 320, geracao: 280, autoconsumo: 182, injetado: 98, daRede: 138,
+      creditos: 214, investimento: 18400, mesesPayback: 79, mesesDecorridos: 14,
+      economiaMeses: [168, 152, 139, 181, 205, 226, 241, 263, 258, 231, 219, 245],
+      consumoH: [0.22,0.20,0.19,0.19,0.21,0.30,0.66,0.88,0.54,0.37,0.33,0.35,0.47,0.51,0.54,0.57,0.63,0.76,0.98,1.12,0.96,0.70,0.44,0.27],
+      geracaoH: [0,0,0,0,0,0.02,0.13,0.36,0.63,0.87,1.06,1.19,1.25,1.21,1.07,0.84,0.55,0.26,0.06,0,0,0,0,0],
+      equipamentos: [
+        { id: 'ar', nome: 'Ar-condicionado', local: 'Sala', kwh: 92, conf: 'alta', cor: '#3E4C7A', cat: 'Climatização', pot: 1200, horas: 4.9, fonte: 'ia', tend: 14 },
+        { id: 'chu', nome: 'Chuveiro elétrico', local: 'Banheiro suíte', kwh: 61, conf: 'alta', cor: '#C4573C', cat: 'Aquecimento', pot: 5500, horas: 0.6, fonte: 'ia', tend: -3 },
+        { id: 'gel', nome: 'Geladeira', local: 'Cozinha', kwh: 48, conf: 'alta', cor: '#2E7A5A', cat: 'Refrigeração', pot: 180, horas: 24, fonte: 'ia', tend: 2 },
+        { id: 'lav', nome: 'Máquina de lavar', local: 'Área de serviço', kwh: 26, conf: 'média', cor: '#7A6BA8', cat: 'Lavanderia', pot: 900, horas: 0.9, fonte: 'ia', tend: 9 },
+        { id: 'fre', nome: 'Freezer horizontal', local: 'Área de serviço', kwh: 21, conf: 'alta', cor: '#4E8FA8', cat: 'Refrigeração', pot: 145, horas: 24, fonte: 'manual', tend: 0 },
+        { id: 'for', nome: 'Forno e micro-ondas', local: 'Cozinha', kwh: 18, conf: 'média', cor: '#B4761B', cat: 'Cozinha', pot: 1400, horas: 0.4, fonte: 'ia', tend: -6 },
+        { id: 'luz', nome: 'Iluminação', local: 'Casa toda', kwh: 15, conf: 'média', cor: '#EDA22B', cat: 'Iluminação', pot: 190, horas: 2.6, fonte: 'ia', tend: -1 },
+        { id: 'tv', nome: 'TV e eletrônicos', local: 'Sala', kwh: 12, conf: 'média', cor: '#8B8577', cat: 'Eletrônicos', pot: 130, horas: 3.1, fonte: 'ia', tend: 4 },
+        { id: 'bom', nome: 'Bomba d\u2019água', local: 'Externo', kwh: 9, conf: 'baixa', cor: '#6B9E8E', cat: 'Outros', pot: 750, horas: 0.4, fonte: 'ia', tend: 0 },
+        { id: 'nid', nome: 'Não identificado', local: '—', kwh: 18, conf: 'baixa', cor: '#C9C2B2', cat: 'Outros', pot: 0, horas: 0, fonte: 'ia', tend: 5 }
+      ],
+      deteccoes: [
+        { id: 'd1', palpite: 'Secadora de roupas', quando: 'terça, 21h04', kwh: 2.3, certeza: 78 },
+        { id: 'd2', palpite: 'Aquecedor de água', quando: 'domingo, 07h12', kwh: 1.1, certeza: 54 }
+      ]
+    };
+    const N = {
+      chave: 'negocio', nome: 'Padaria Pão de Ouro', tipo: 'Pequeno negócio · Centro',
+      distribuidora: 'Enel SP', tarifa: 0.78, tarifaComp: 0.66, potenciaKwp: 18.6, paineis: 42,
+      consumo: 1840, geracao: 1150, autoconsumo: 1010, injetado: 140, daRede: 830,
+      creditos: 386, investimento: 96000, mesesPayback: 104, mesesDecorridos: 22,
+      economiaMeses: [612, 658, 703, 741, 788, 812, 845, 903, 871, 834, 802, 880],
+      consumoH: [1.4,1.3,1.3,2.9,4.6,5.2,4.1,3.4,3.1,3.0,2.9,3.2,3.4,3.1,2.6,2.3,2.1,1.9,1.8,1.7,1.6,1.5,1.5,1.4],
+      geracaoH: [0,0,0,0,0,0.1,0.6,1.6,2.9,4.0,4.8,5.4,5.6,5.4,4.7,3.7,2.4,1.1,0.2,0,0,0,0,0],
+      equipamentos: [
+        { id: 'for', nome: 'Forno de lastro', local: 'Produção', kwh: 508, conf: 'alta', cor: '#C4573C', cat: 'Cozinha', pot: 12000, horas: 1.4, fonte: 'manual', tend: 3 },
+        { id: 'cam', nome: 'Câmara fria', local: 'Estoque', kwh: 412, conf: 'alta', cor: '#4E8FA8', cat: 'Refrigeração', pot: 2200, horas: 6.2, fonte: 'ia', tend: 11 },
+        { id: 'ar', nome: 'Ar-condicionado salão', local: 'Atendimento', kwh: 289, conf: 'alta', cor: '#3E4C7A', cat: 'Climatização', pot: 5300, horas: 1.8, fonte: 'ia', tend: 18 },
+        { id: 'exp', nome: 'Expositores refrigerados', local: 'Atendimento', kwh: 231, conf: 'alta', cor: '#2E7A5A', cat: 'Refrigeração', pot: 900, horas: 8.5, fonte: 'ia', tend: 1 },
+        { id: 'mas', nome: 'Masseira e batedeira', local: 'Produção', kwh: 148, conf: 'média', cor: '#7A6BA8', cat: 'Cozinha', pot: 3000, horas: 1.6, fonte: 'ia', tend: -4 },
+        { id: 'luz', nome: 'Iluminação', local: 'Loja toda', kwh: 114, conf: 'média', cor: '#EDA22B', cat: 'Iluminação', pot: 640, horas: 5.9, fonte: 'ia', tend: 0 },
+        { id: 'caf', nome: 'Cafeteira industrial', local: 'Atendimento', kwh: 63, conf: 'média', cor: '#B4761B', cat: 'Cozinha', pot: 2400, horas: 0.9, fonte: 'ia', tend: 6 },
+        { id: 'nid', nome: 'Não identificado', local: '—', kwh: 75, conf: 'baixa', cor: '#C9C2B2', cat: 'Outros', pot: 0, horas: 0, fonte: 'ia', tend: 2 }
+      ],
+      deteccoes: [
+        { id: 'd1', palpite: 'Segundo freezer no estoque', quando: 'quinta, 04h40', kwh: 6.8, certeza: 71 }
+      ]
+    };
+    const base = this.state.perfil === 'negocio' ? N : R;
+    const extras = this.state.extras.filter(x => x.perfil === this.state.perfil);
+    if (!extras.length) return base;
+    const somaExtras = extras.reduce((a, b) => a + b.kwh, 0);
+    const eqs = base.equipamentos.map(e => e.id === 'nid' ? { ...e, kwh: Math.max(0, e.kwh - somaExtras) } : e);
+    return { ...base, equipamentos: eqs.concat(extras) };
+  }
+
+  cfg() {
+    return {
+      tarifa: this.state.tarifaLocal ?? this.props.tarifa ?? null,
+      fatorCO2: this.props.fatorCO2 ?? 0.0861,
+      accent: this.props.accent ?? '#EDA22B',
+      payback: this.props.mostrarPayback ?? true
+    };
+  }
+
+  num(v, d) { return v.toLocaleString('pt-BR', { minimumFractionDigits: d ?? 0, maximumFractionDigits: d ?? 0 }); }
+  brl(v, d) { return 'R$ ' + this.num(v, d ?? 0); }
+
+  serie(base, n, seed, amp) {
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const w = Math.sin((i + seed) * 1.37) * 0.55 + Math.sin((i + seed) * 0.61) * 0.45;
+      out.push(Math.max(0, base * (1 + w * amp)));
+    }
+    return out;
+  }
+
+  path(vals, max, w, h, fechar) {
+    const n = vals.length, step = w / (n - 1);
+    let d = '';
+    vals.forEach((v, i) => {
+      const x = +(i * step).toFixed(1), y = +(h - (v / max) * h).toFixed(1);
+      d += (i === 0 ? 'M' : 'L') + x + ' ' + y + ' ';
+    });
+    if (fechar) d += 'L' + w + ' ' + h + ' L0 ' + h + ' Z';
+    return d.trim();
+  }
+
+  ir(tela) { return () => this.setState({ tela, detalhe: null }); }
+
+  renderVals() {
+    const d = this.dados(), c = this.cfg(), s = this.state;
+    const tarifa = c.tarifa || d.tarifa;
+    const economia = Math.round(d.autoconsumo * tarifa + d.injetado * d.tarifaComp);
+    const co2 = d.geracao * c.fatorCO2;
+    const autoPct = Math.round((d.autoconsumo / d.consumo) * 100);
+    const prev = d.economiaMeses[d.economiaMeses.length - 2];
+    const delta = Math.round(((economia - prev) / prev) * 100);
+    const maxEcon = Math.max(...d.economiaMeses);
+    const mesesLbl = ['set','out','nov','dez','jan','fev','mar','abr','mai','jun','jul','ago'];
+    const eq = d.equipamentos.slice().sort((a, b) => b.kwh - a.kwh);
+    const maxH = Math.max(...d.consumoH, ...d.geracaoH) * 1.15;
+    const projecao = Math.round(d.daRede * tarifa + 22 + d.daRede * 0.0189);
+    const pbPct = Math.round((d.mesesDecorridos / d.mesesPayback) * 100);
+
+    const navDef = [
+      { k: 'painel', label: 'Painel', icon: 'M3 13a9 9 0 0 1 18 0M12 13l4.5-4.5' },
+      { k: 'historico', label: 'Histórico', icon: 'M4 19V11M9 19V5M14 19v-6M19 19V8' },
+      { k: 'equipamentos', label: 'Aparelhos', icon: 'M9 3v6M15 3v6M6 9h12v3a6 6 0 0 1-12 0zM12 18v3', badge: d.deteccoes.filter(x => !s.respondidas[x.id]).length || null },
+      { k: 'cadastro', label: 'Cadastrar', icon: 'M12 5v14M5 12h14' },
+      { k: 'alertas', label: 'Alertas e metas', icon: 'M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6M10.5 20a2 2 0 0 0 3 0' },
+      { k: 'relatorio', label: 'Relatório', icon: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4' },
+      { k: 'config', label: 'Configurações', icon: 'M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M7 15v4' }
+    ];
+    const titulos = {
+      painel: ['Agosto de 2026', 'Bom dia, Marina'],
+      historico: ['Comparativos', 'Histórico'],
+      equipamentos: ['Desagregação por IA', 'Seus aparelhos'],
+      cadastro: ['Novo aparelho', 'Cadastrar consumo'],
+      alertas: ['Regras e limites', 'Alertas e metas'],
+      relatorio: ['Fechamento de agosto', 'Relatório mensal'],
+      config: ['Unidade e tarifa', 'Configurações']
+    };
+
+    return {
+      ehDesktop: s.vista === 'desktop',
+      ehMobile: s.vista === 'mobile',
+      ehPainel: s.tela === 'painel',
+      verMobile: () => this.setState({ vista: 'mobile', tab: 'painel' }),
+      irEquip: this.ir('equipamentos'),
+      tituloKicker: titulos[s.tela][0],
+      titulo: titulos[s.tela][1],
+
+      nav: navDef.map(n => ({
+        label: n.label, icon: n.icon, badge: n.badge, go: this.ir(n.k),
+        css: 'display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-radius: 10px; font-size: 13.5px; font-weight: ' + (s.tela === n.k ? '600' : '500') + '; cursor: pointer; transition: background .15s; background: ' + (s.tela === n.k ? 'rgba(237,162,43,0.16)' : 'transparent') + '; color: ' + (s.tela === n.k ? '#F5C25B' : '#A79F8E') + ';'
+      })),
+
+      perfis: [
+        { chave: 'residencial', nome: 'Casa das Acácias', tipo: 'Residencial' },
+        { chave: 'negocio', nome: 'Padaria Pão de Ouro', tipo: 'Pequeno negócio' }
+      ].map(p => ({
+        nome: p.nome, tipo: p.tipo,
+        go: () => this.setState({ perfil: p.chave, detalhe: null }),
+        css: 'display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 9px; cursor: pointer; background: ' + (s.perfil === p.chave ? 'rgba(244,241,234,0.12)' : 'transparent') + '; color: ' + (s.perfil === p.chave ? '#F4F1EA' : '#A79F8E') + ';',
+        dot: 'width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: ' + (s.perfil === p.chave ? '#EDA22B' : '#4A453B') + ';'
+      })),
+
+      periodos: [
+        { k: 'dia', label: 'Dia', curto: 'D' }, { k: 'semana', label: 'Semana', curto: 'S' }, { k: 'mes', label: 'Mês', curto: 'M' }
+      ].map(p => ({
+        label: p.label, curto: p.curto, go: () => this.setState({ periodo: p.k }),
+        css: 'padding: 6px 15px; border-radius: 8px; font-size: 12.5px; font-weight: 600; cursor: pointer; background: ' + (s.periodo === p.k ? '#fff' : 'transparent') + '; color: ' + (s.periodo === p.k ? '#16150F' : '#7A7466') + '; box-shadow: ' + (s.periodo === p.k ? '0 1px 3px rgba(0,0,0,.08)' : 'none') + ';'
+      })),
+
+      f: {
+        mesNome: 'agosto',
+        economia: this.num(economia),
+        deltaEconomia: (delta >= 0 ? '+' : '') + delta + '%',
+        frase: 'Equivale a ' + Math.round(economia / (tarifa * 30)) + ' dias de energia grátis. Seu telhado cobriu ' + autoPct + '% de tudo que a casa gastou.',
+        autoPct: autoPct + '%',
+        donutDash: Math.round((autoPct / 100) * 351.8) + ' 351.8',
+        autoconsumo: this.num(d.autoconsumo), daRede: this.num(d.daRede), injetado: this.num(d.injetado),
+        areaSol: this.path(d.geracaoH, maxH, 720, 200, true),
+        lineSol: this.path(d.geracaoH, maxH, 720, 200),
+        lineCons: this.path(d.consumoH, maxH, 720, 200),
+        qtdEquip: d.equipamentos.length,
+        projecao: this.brl(projecao), fechamento: '12 de setembro',
+        bandeiraLabel: 'Bandeira amarela',
+        bandeiraCss: 'background: #FBF0CF; color: #8A6A15; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px;',
+        paybackPct: pbPct + '% pago',
+        paybackBar: 'height: 100%; border-radius: 6px; background: linear-gradient(90deg, #EDA22B, #2E7A5A); width: ' + pbPct + '%;',
+        paybackFeito: d.mesesDecorridos + ' meses · ' + this.brl(d.economiaMeses.reduce((a, b) => a + b, 0)) + ' economizados',
+        paybackFalta: Math.round((d.mesesPayback - d.mesesDecorridos) / 12 * 10) / 10 + ' anos'
+      },
+
+      barrasEconomia: d.economiaMeses.map((v, i) => ({
+        css: 'width: 100%; border-radius: 4px 4px 2px 2px; height: ' + Math.round((v / maxEcon) * 52 + 6) + 'px; background: ' + (i === 11 ? '#EDA22B' : 'rgba(244,241,234,0.16)') + ';',
+        labelCss: 'font-family: IBM Plex Mono, monospace; font-size: 9.5px; color: ' + (i === 11 ? '#EDA22B' : '#6B665C') + ';',
+        label: mesesLbl[i], tip: mesesLbl[i] + ': ' + this.brl(v)
+      })),
+
+      kpis: [
+        { label: 'Consumo total', valor: this.num(d.consumo), unidade: 'kWh', cor: '#3E4C7A', icon: 'M13 2L3 14h7l-1 8 10-12h-7z', nota: 'Média de ' + this.num(d.consumo / 31, 1) + ' kWh por dia' },
+        { label: 'Geração solar', valor: this.num(d.geracao), unidade: 'kWh', cor: '#EDA22B', icon: 'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v3M12 20v3M23 12h-3M4 12H1', nota: d.paineis + ' painéis · ' + this.num(d.potenciaKwp, 1) + ' kWp instalados' },
+        { label: 'CO₂ evitado', valor: this.num(co2, 1), unidade: 'kg', cor: '#2E7A5A', icon: 'M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10zM2 21c0-3 1.85-5.36 5.08-6', nota: 'Como ' + Math.round(co2 / 0.12) + ' km de carro não rodados' },
+        { label: 'Créditos na rede', valor: this.num(d.creditos), unidade: 'kWh', cor: '#7A6BA8', icon: 'M3 12h18M12 3v18M7 7l10 10', nota: 'Válidos por 60 meses · ' + d.distribuidora }
+      ],
+
+      gradeY: [0, 1, 2, 3].map(i => ({
+        y: i * 50, ty: i * 50 - 5,
+        label: this.num(maxH * (1 - i / 4), 1) + ' kW'
+      })),
+
+      horasLabel: ['00h', '04h', '08h', '12h', '16h', '20h', '23h'].map(t => ({ t })),
+
+      topSeg: eq.slice(0, 6).map(e => ({
+        css: 'width: ' + ((e.kwh / d.consumo) * 100) + '%; background: ' + e.cor + ';',
+        tip: e.nome + ': ' + Math.round((e.kwh / d.consumo) * 100) + '%'
+      })),
+
+      topEquip: eq.slice(0, 5).map(e => ({
+        nome: e.nome,
+        sub: Math.round((e.kwh / d.consumo) * 100) + '% do total · ' + e.local,
+        kwh: this.num(e.kwh) + ' kWh',
+        reais: this.brl(e.kwh * tarifa),
+        dot: 'width: 10px; height: 34px; border-radius: 5px; flex-shrink: 0; background: ' + e.cor + ';',
+        go: () => this.setState({ tela: 'equipamentos', detalhe: e.id })
+      })),
+
+      contaLinhas: [
+        { label: 'Energia da rede (' + this.num(d.daRede) + ' kWh)', valor: this.brl(d.daRede * tarifa), cor: '#16150F' },
+        { label: 'Bandeira amarela + iluminação pública', valor: this.brl(22 + d.daRede * 0.0189), cor: '#16150F' },
+        { label: 'Abatido pelos créditos solares', valor: '− ' + this.brl(d.injetado * d.tarifaComp), cor: '#2E7A5A' }
+      ],
+
+      ...this.valsHistorico(d, tarifa),
+      ...this.valsEquip(d, tarifa, eq),
+      ...this.valsCadastro(d, tarifa),
+      ...this.valsAlertas(d, tarifa, eq),
+      ...this.valsRelatorio(d, tarifa, co2, economia),
+      ...this.valsConfig(d, tarifa),
+      ...this.valsMobile(d, tarifa, eq, economia, autoPct, co2)
+    };
+  }
+
+  valsHistorico(d, tarifa) {
+    const s = this.state;
+    let cons, ger, labels, rotulo, unidade;
+    if (s.periodo === 'dia') {
+      cons = d.consumoH.slice(); ger = d.geracaoH.slice();
+      labels = cons.map((_, i) => (i % 3 === 0 ? String(i).padStart(2, '0') + 'h' : ''));
+      rotulo = 'Hoje, hora a hora'; unidade = 'hora';
+    } else if (s.periodo === 'semana') {
+      cons = this.serie(d.consumo / 31, 7, 3, 0.2); ger = this.serie(d.geracao / 31, 7, 7, 0.3);
+      labels = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
+      rotulo = 'Últimos 7 dias'; unidade = 'dia';
+    } else {
+      cons = this.serie(d.consumo / 31, 30, 3, 0.22); ger = this.serie(d.geracao / 31, 30, 7, 0.34);
+      labels = cons.map((_, i) => ((i + 1) % 5 === 0 || i === 0 ? String(i + 1) : ''));
+      rotulo = 'Agosto, dia a dia'; unidade = 'dia';
+    }
+    const max = Math.max(...cons, ...ger) * 1.08;
+    const tC = cons.reduce((a, b) => a + b, 0), tG = ger.reduce((a, b) => a + b, 0);
+    const antC = this.serie(d.consumo / 31, cons.length, 11, 0.2).reduce((a, b) => a + b, 0);
+    const antG = this.serie(d.geracao / 31, ger.length, 5, 0.3).reduce((a, b) => a + b, 0);
+    const dC = ((tC - antC) / antC) * 100, dG = ((tG - antG) / antG) * 100;
+    const saldos = cons.map((v, i) => ger[i] - v);
+    let iMelhor = 0, iPior = 0;
+    saldos.forEach((v, i) => { if (v > saldos[iMelhor]) iMelhor = i; if (v < saldos[iPior]) iPior = i; });
+    const nomeBucket = i => s.periodo === 'dia' ? String(i).padStart(2, '0') + 'h' : (s.periodo === 'semana' ? ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'][i] : 'dia ' + (i + 1));
+    const cobertos = saldos.filter(v => v >= 0).length;
+
+    return {
+      ehHistorico: s.tela === 'historico',
+      h: {
+        rotulo: rotulo,
+        totalCons: this.num(tC, 1), totalGer: this.num(tG, 1),
+        saldoTotal: (tG - tC >= 0 ? '+' : '−') + this.num(Math.abs(tG - tC), 1) + ' kWh',
+        saldoCor: tG - tC >= 0 ? '#2E7A5A' : '#C4573C',
+        custo: this.brl(Math.max(0, tC - tG) * tarifa),
+        deltaCons: (dC >= 0 ? '+' : '') + this.num(dC, 1) + '%',
+        deltaConsCor: dC <= 0 ? '#2E7A5A' : '#C4573C',
+        deltaGer: (dG >= 0 ? '+' : '') + this.num(dG, 1) + '%',
+        deltaGerCor: dG >= 0 ? '#2E7A5A' : '#C4573C',
+        barAnteriorCons: 'height: 100%; border-radius: 5px; background: #C9C2B2; width: ' + Math.round((antC / Math.max(antC, tC)) * 100) + '%;',
+        barAtualCons: 'height: 100%; border-radius: 5px; background: #3E4C7A; width: ' + Math.round((tC / Math.max(antC, tC)) * 100) + '%;',
+        barAnteriorGer: 'height: 100%; border-radius: 5px; background: #C9C2B2; width: ' + Math.round((antG / Math.max(antG, tG)) * 100) + '%;',
+        barAtualGer: 'height: 100%; border-radius: 5px; background: #EDA22B; width: ' + Math.round((tG / Math.max(antG, tG)) * 100) + '%;',
+        antCons: this.num(antC, 1) + ' kWh', antGer: this.num(antG, 1) + ' kWh',
+        melhorNome: nomeBucket(iMelhor), melhorVal: '+' + this.num(saldos[iMelhor], 1) + ' kWh de sobra',
+        piorNome: nomeBucket(iPior), piorVal: this.num(Math.abs(saldos[iPior]), 1) + ' kWh puxados da rede',
+        cobertura: cobertos + ' de ' + saldos.length + ' ' + (unidade === 'dia' ? 'dias' : 'horas'),
+        coberturaPct: Math.round((cobertos / saldos.length) * 100) + '%',
+        larguraBarra: s.periodo === 'semana' ? '38px' : (s.periodo === 'dia' ? '14px' : '11px')
+      },
+      barrasHist: cons.map((v, i) => ({
+        label: labels[i],
+        cCss: 'width: 100%; border-radius: 3px 3px 0 0; background: #3E4C7A; height: ' + Math.max(1, (v / max) * 150) + 'px;',
+        gCss: 'width: 100%; border-radius: 3px 3px 0 0; background: #EDA22B; height: ' + Math.max(1, (ger[i] / max) * 150) + 'px;',
+        tip: nomeBucket(i) + ' · consumo ' + this.num(v, 1) + ' kWh · geração ' + this.num(ger[i], 1) + ' kWh',
+        saldoCss: 'width: 100%; height: 4px; border-radius: 2px; background: ' + (saldos[i] >= 0 ? '#93C7AC' : '#E0A79A') + ';'
+      }))
+    };
+  }
+
+  valsEquip(d, tarifa, eq) {
+    const s = this.state;
+    const conf = {
+      alta: { bg: '#E4F0EA', cor: '#2E7A5A', txt: 'Certeza alta' },
+      'média': { bg: '#FBF0CF', cor: '#8A6A15', txt: 'Certeza média' },
+      baixa: { bg: '#EFEBE1', cor: '#8B8577', txt: 'Certeza baixa' }
+    };
+    const det = s.detalhe ? eq.find(e => e.id === s.detalhe) : null;
+    const pend = d.deteccoes.filter(x => !s.respondidas[x.id]);
+    let perfilHora = [], picoTxt = '', dicas = [];
+    if (det) {
+      perfilHora = this.serie(det.kwh / 31 / 24, 24, det.nome.length, 0.9);
+      const iP = perfilHora.indexOf(Math.max(...perfilHora));
+      picoTxt = 'Uso concentrado por volta das ' + String(iP).padStart(2, '0') + 'h';
+      if (det.horas >= 3) dicas.push({ t: 'Uma hora a menos por dia', v: 'economiza ' + this.brl(det.pot / 1000 * 30 * tarifa) + ' por mês' });
+      if (det.cat === 'Refrigeração') dicas.push({ t: 'Limpar a serpentina a cada 6 meses', v: 'corta até 15% do consumo deste aparelho' });
+      if (det.cat === 'Climatização') dicas.push({ t: 'Subir o termostato em 2 °C', v: 'reduz cerca de 12% sem perder conforto' });
+      if (det.cat === 'Aquecimento') dicas.push({ t: 'Trocar para posição verão', v: 'derruba a potência quase pela metade' });
+      if (!dicas.length) dicas.push({ t: 'Concentrar o uso entre 10h e 15h', v: 'aproveita o sol em vez da rede' });
+    }
+
+    return {
+      ehEquip: s.tela === 'equipamentos',
+      temDeteccoes: pend.length > 0,
+      temDetalhe: !!det,
+      semDetalhe: !det,
+      deteccoes: pend.map(x => ({
+        palpite: x.palpite, quando: x.quando,
+        resumo: this.num(x.kwh, 1) + ' kWh nesse uso · ' + x.certeza + '% de certeza',
+        confirmar: () => this.setState(st => ({
+          respondidas: { ...st.respondidas, [x.id]: 'sim' },
+          extras: st.extras.concat([{
+            id: 'det-' + x.id, perfil: st.perfil, nome: x.palpite, local: '—',
+            kwh: Math.round(x.kwh * 8), conf: 'média', cor: '#7A6BA8', cat: 'Outros',
+            pot: Math.round((x.kwh / 1.5) * 1000), horas: 1.5, fonte: 'ia', tend: 0
+          }])
+        })),
+        negar: () => this.setState(st => ({ respondidas: { ...st.respondidas, [x.id]: 'nao' } }))
+      })),
+      listaEquip: eq.map((e, i) => ({
+        pos: String(i + 1).padStart(2, '0'),
+        nome: e.nome, local: e.local, cat: e.cat,
+        kwh: this.num(e.kwh) + ' kWh',
+        reais: this.brl(e.kwh * tarifa),
+        pct: Math.round((e.kwh / d.consumo) * 100) + '%',
+        barra: 'height: 100%; border-radius: 4px; background: ' + e.cor + '; width: ' + ((e.kwh / eq[0].kwh) * 100) + '%;',
+        confCss: 'font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 20px; white-space: nowrap; background: ' + conf[e.conf].bg + '; color: ' + conf[e.conf].cor + ';',
+        confTxt: conf[e.conf].txt,
+        fonteTxt: e.fonte === 'ia' ? 'Detectado por IA' : 'Cadastrado por você',
+        tend: (e.tend > 0 ? '+' : '') + e.tend + '%',
+        tendCss: 'font-family: IBM Plex Mono, monospace; font-size: 11.5px; font-weight: 500; color: ' + (e.tend > 0 ? '#C4573C' : (e.tend < 0 ? '#2E7A5A' : '#8B8577')) + ';',
+        linhaCss: 'display: grid; grid-template-columns: 30px 1fr 118px 84px 62px; gap: 14px; align-items: center; padding: 13px 14px; border-radius: 13px; cursor: pointer; border: 1px solid ' + (s.detalhe === e.id ? '#16150F' : 'transparent') + '; background: ' + (s.detalhe === e.id ? '#fff' : 'transparent') + ';',
+        go: () => this.setState({ detalhe: s.detalhe === e.id ? null : e.id })
+      })),
+      det: det ? {
+        nome: det.nome, local: det.local, cat: det.cat,
+        kwh: this.num(det.kwh) + ' kWh', reais: this.brl(det.kwh * tarifa),
+        pct: Math.round((det.kwh / d.consumo) * 100) + '% da casa',
+        pot: this.num(det.pot) + ' W', horas: this.num(det.horas, 1) + ' h/dia',
+        conf: conf[det.conf].txt, fonte: det.fonte === 'ia' ? 'Detectado por IA' : 'Cadastrado por você',
+        pico: picoTxt,
+        corBar: 'width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0; background: ' + det.cor + ';',
+        ano: this.brl(det.kwh * tarifa * 12)
+      } : {},
+      detPerfil: perfilHora.map((v, i) => ({
+        css: 'flex: 1; border-radius: 2px 2px 0 0; background: ' + (det ? det.cor : '#ccc') + '; opacity: ' + (0.35 + 0.65 * (v / Math.max(...perfilHora))) + '; height: ' + Math.max(2, (v / Math.max(...perfilHora)) * 54) + 'px;'
+      })),
+      detDicas: dicas,
+      fecharDet: () => this.setState({ detalhe: null }),
+      irCadastro: this.ir('cadastro')
+    };
+  }
+
+  valsCadastro(d, tarifa) {
+    const s = this.state, n = s.novo;
+    const kwh = (n.pot / 1000) * n.horas * n.dias;
+    const cats = ['Climatização', 'Refrigeração', 'Aquecimento', 'Cozinha', 'Lavanderia', 'Iluminação', 'Eletrônicos', 'Outros'];
+    const comodos = s.perfil === 'negocio' ? ['Produção', 'Atendimento', 'Estoque', 'Escritório', 'Externo'] : ['Sala', 'Cozinha', 'Quarto', 'Banheiro suíte', 'Área de serviço', 'Externo'];
+    const sugestoes = [
+      { nome: 'Ar-condicionado 12.000 BTU', pot: 1200, horas: 5, cat: 'Climatização' },
+      { nome: 'Chuveiro elétrico', pot: 5500, horas: 0.6, cat: 'Aquecimento' },
+      { nome: 'Geladeira frost free', pot: 180, horas: 24, cat: 'Refrigeração' },
+      { nome: 'Máquina de lavar', pot: 900, horas: 0.9, cat: 'Lavanderia' },
+      { nome: 'Micro-ondas', pot: 1400, horas: 0.4, cat: 'Cozinha' },
+      { nome: 'Computador e monitor', pot: 190, horas: 8, cat: 'Eletrônicos' }
+    ];
+    const set = (k, v) => this.setState(st => ({ novo: { ...st.novo, [k]: v }, salvo: false }));
+    const pctTotal = Math.min(100, (kwh / d.consumo) * 100);
+
+    return {
+      ehCadastro: s.tela === 'cadastro',
+      nv: {
+        nome: n.nome, pot: n.pot, horas: n.horas, dias: n.dias, cat: n.cat, comodo: n.comodo,
+        potLabel: this.num(n.pot) + ' W', horasLabel: this.num(n.horas, 1) + ' h por dia', diasLabel: n.dias + ' dias por mês',
+        kwh: this.num(kwh, 1), custo: this.brl(kwh * tarifa),
+        ano: this.brl(kwh * tarifa * 12),
+        pctTxt: this.num(pctTotal, 1) + '% do consumo da unidade',
+        barra: 'height: 100%; border-radius: 5px; background: #EDA22B; width: ' + pctTotal + '%;',
+        podeSalvar: n.nome.trim().length > 1,
+        salvarCss: 'display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; border-radius: 13px; font-size: 14.5px; font-weight: 600; cursor: ' + (n.nome.trim().length > 1 ? 'pointer' : 'not-allowed') + '; background: ' + (n.nome.trim().length > 1 ? '#16150F' : '#DDD7C9') + '; color: ' + (n.nome.trim().length > 1 ? '#F4F1EA' : '#9C9585') + ';'
+      },
+      salvoOk: s.salvo,
+      setNome: e => set('nome', e.target.value),
+      setPot: e => set('pot', Number(e.target.value)),
+      setHoras: e => set('horas', Number(e.target.value)),
+      setDias: e => set('dias', Number(e.target.value)),
+      salvarEquip: () => {
+        if (this.state.novo.nome.trim().length < 2) return;
+        const nn = this.state.novo;
+        const cores = ['#7A6BA8', '#4E8FA8', '#6B9E8E', '#B4761B', '#C4573C'];
+        this.setState(st => ({
+          extras: st.extras.concat([{
+            id: 'x' + st.extras.length, perfil: st.perfil, nome: nn.nome, local: nn.comodo,
+            kwh: Math.round((nn.pot / 1000) * nn.horas * nn.dias), conf: 'alta',
+            cor: cores[st.extras.length % cores.length], cat: nn.cat, pot: nn.pot, horas: nn.horas, fonte: 'manual', tend: 0
+          }]),
+          salvo: true,
+          novo: { nome: '', cat: 'Climatização', pot: 1400, horas: 3, comodo: 'Sala', dias: 30 }
+        }));
+      },
+      cats: cats.map(c => ({
+        label: c,
+        go: () => set('cat', c),
+        css: 'padding: 7px 13px; border-radius: 9px; font-size: 12.5px; font-weight: 500; cursor: pointer; border: 1px solid ' + (n.cat === c ? '#16150F' : '#DDD7C9') + '; background: ' + (n.cat === c ? '#16150F' : '#fff') + '; color: ' + (n.cat === c ? '#F4F1EA' : '#4A453B') + ';'
+      })),
+      comodos: comodos.map(c => ({
+        label: c,
+        go: () => set('comodo', c),
+        css: 'padding: 7px 13px; border-radius: 9px; font-size: 12.5px; font-weight: 500; cursor: pointer; border: 1px solid ' + (n.comodo === c ? '#16150F' : '#DDD7C9') + '; background: ' + (n.comodo === c ? '#16150F' : '#fff') + '; color: ' + (n.comodo === c ? '#F4F1EA' : '#4A453B') + ';'
+      })),
+      sugestoes: sugestoes.map(g => ({
+        nome: g.nome, det: this.num(g.pot) + ' W · ' + this.num(g.horas, 1) + ' h/dia',
+        go: () => this.setState(st => ({ novo: { ...st.novo, nome: g.nome, pot: g.pot, horas: g.horas, cat: g.cat }, salvo: false }))
+      }))
+    };
+  }
+
+  valsAlertas(d, tarifa, eq) {
+    const s = this.state;
+    const meta = s.metas[s.perfil];
+    const usado = d.consumo, pct = Math.min(140, (usado / meta) * 100);
+    const projFim = Math.round(usado * 1.02);
+    const acima = projFim > meta;
+    const feed = [];
+    if (projFim > meta) feed.push({ id: 'a0', tipo: 'alto', titulo: 'Sua meta de ' + this.num(meta) + ' kWh deve estourar', quando: 'projeção de hoje', txt: 'No ritmo atual você fecha agosto com ' + this.num(projFim) + ' kWh — ' + this.num(projFim - meta) + ' kWh acima, cerca de ' + this.brl((projFim - meta) * tarifa) + ' a mais na conta. Cortar ' + this.num((projFim - meta) / 31, 1) + ' kWh por dia já resolve.' });
+    else if (meta - projFim > meta * 0.25) feed.push({ id: 'a0', tipo: 'bom', titulo: 'Meta folgada: sobram ' + this.num(meta - projFim) + ' kWh', quando: 'projeção de hoje', txt: 'Você deve fechar o mês bem abaixo do limite. Dá para apertar a meta e economizar mais — ou usar a folga para o ar-condicionado nos dias quentes.' });
+    else feed.push({ id: 'a0', tipo: 'bom', titulo: 'No caminho certo para bater a meta', quando: 'projeção de hoje', txt: 'A projeção fecha em ' + this.num(projFim) + ' kWh, dentro dos ' + this.num(meta) + ' kWh que você definiu.' });
+    feed.push(
+      { id: 'a1', tipo: 'alto', titulo: eq[0].nome + ' subiu ' + eq[0].tend + '%', quando: 'ontem, 19h', txt: 'Comparado com a média das últimas quatro semanas. São ' + this.brl(eq[0].kwh * tarifa * (eq[0].tend / 100)) + ' a mais no mês.' },
+      { id: 'a2', tipo: 'medio', titulo: 'Consumo fora do horário solar', quando: 'segunda, 21h', txt: '68% do que você gastou depois das 18h veio da rede. Antecipar a máquina de lavar para o meio-dia usaria o sol.' },
+      { id: 'a3', tipo: 'bom', titulo: 'Melhor dia de geração do mês', quando: 'sábado', txt: 'Os painéis entregaram ' + this.num(d.geracao / 31 * 1.4, 1) + ' kWh — céu limpo o dia inteiro.' }
+    );
+    const cores = { alto: { bg: '#FBECE8', bd: '#EFCFC6', cor: '#C4573C' }, medio: { bg: '#FBF0CF', bd: '#EDDCA8', cor: '#8A6A15' }, bom: { bg: '#E4F0EA', bd: '#C3DFD1', cor: '#2E7A5A' } };
+    const regrasDef = [
+      { k: 'pico', t: 'Avisar quando eu passar de 80% da meta', s: 'Notificação no app e por e-mail' },
+      { k: 'meta', t: 'Alertar aparelho com salto acima de 15%', s: 'Comparado com a média de quatro semanas' },
+      { k: 'solar', t: 'Sugerir melhor horário para usar o sol', s: 'Uma vez por dia, às 9h' },
+      { k: 'standby', t: 'Relatar consumo em standby da madrugada', s: 'Resumo semanal aos domingos' }
+    ];
+    return {
+      ehAlertas: s.tela === 'alertas',
+      al: {
+        meta: meta, metaLabel: this.num(meta) + ' kWh',
+        usado: this.num(usado) + ' kWh', pctTxt: Math.round((usado / meta) * 100) + '% da meta',
+        barra: 'height: 100%; border-radius: 7px; background: ' + (acima ? '#C4573C' : '#2E7A5A') + '; width: ' + Math.min(100, pct) + '%;',
+        marcaCss: 'position: absolute; top: -5px; bottom: -5px; width: 2px; background: #16150F; left: ' + Math.min(100, (meta / Math.max(meta, projFim)) * 100) + '%;',
+        proj: this.num(projFim) + ' kWh',
+        veredito: acima ? 'Você deve estourar a meta em ' + this.num(projFim - meta) + ' kWh' : 'No ritmo atual, você fecha o mês dentro da meta',
+        vereditoCss: 'font-size: 13.5px; font-weight: 600; margin-top: 10px; color: ' + (acima ? '#C4573C' : '#2E7A5A') + ';',
+        custoMeta: this.brl(meta * tarifa)
+      },
+      setMeta: e => { const v = Number(e.target.value); this.setState(st => ({ metas: { ...st.metas, [st.perfil]: v } })); },
+      regras: regrasDef.map(r => ({
+        t: r.t, s: r.s,
+        go: () => this.setState(st => ({ regras: { ...st.regras, [r.k]: !st.regras[r.k] } })),
+        trilho: 'width: 42px; height: 24px; border-radius: 14px; flex-shrink: 0; padding: 3px; cursor: pointer; display: flex; transition: background .18s; justify-content: ' + (s.regras[r.k] ? 'flex-end' : 'flex-start') + '; background: ' + (s.regras[r.k] ? '#2E7A5A' : '#D8D2C4') + ';',
+        bolinha: 'width: 18px; height: 18px; border-radius: 50%; background: #fff;'
+      })),
+      feed: feed.map(a => ({
+        titulo: a.titulo, quando: a.quando, txt: a.txt,
+        css: 'display: flex; gap: 13px; padding: 15px 17px; border-radius: 15px; background: ' + cores[a.tipo].bg + '; border: 1px solid ' + cores[a.tipo].bd + ';',
+        dot: 'width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; background: ' + cores[a.tipo].cor + ';'
+      }))
+    };
+  }
+
+  valsRelatorio(d, tarifa, co2, economia) {
+    const s = this.state;
+    const semSolar = Math.round(d.consumo * tarifa + 22 + d.consumo * 0.0189);
+    const comSolar = Math.round(d.daRede * tarifa + 22 + d.daRede * 0.0189);
+    const maxE = Math.max(...d.economiaMeses);
+    const mesesLbl = ['set', 'out', 'nov', 'dez', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago'];
+    return {
+      ehRelatorio: s.tela === 'relatorio',
+      rel: {
+        unidade: d.nome, distribuidora: d.distribuidora,
+        periodo: '01 a 31 de agosto de 2026',
+        semSolar: this.brl(semSolar), comSolar: this.brl(comSolar),
+        economizado: this.brl(semSolar - comSolar),
+        pctEconomia: Math.round(((semSolar - comSolar) / semSolar) * 100) + '% menor',
+        co2: this.num(co2, 1) + ' kg', arvores: Math.round(co2 / 22 * 12) + ' árvores',
+        acumulado: this.brl(d.economiaMeses.reduce((a, b) => a + b, 0)),
+        creditos: this.num(d.creditos) + ' kWh',
+        emitido: 'Emitido em 24 de agosto de 2026',
+        imprimir: () => window.print()
+      },
+      linhasFatura: [
+        { l: 'Consumo registrado no medidor', q: this.num(d.consumo) + ' kWh', v: this.brl(d.consumo * tarifa), forte: false },
+        { l: 'Energia gerada e autoconsumida', q: '− ' + this.num(d.autoconsumo) + ' kWh', v: '− ' + this.brl(d.autoconsumo * tarifa), forte: false, verde: true },
+        { l: 'Energia injetada na rede', q: '− ' + this.num(d.injetado) + ' kWh', v: '− ' + this.brl(d.injetado * d.tarifaComp), forte: false, verde: true },
+        { l: 'Bandeira amarela', q: '—', v: this.brl(d.daRede * 0.0189, 2), forte: false },
+        { l: 'Contribuição de iluminação pública', q: '—', v: this.brl(22, 2), forte: false },
+        { l: 'Total a pagar', q: this.num(d.daRede) + ' kWh da rede', v: this.brl(comSolar), forte: true }
+      ].map(x => ({
+        l: x.l, q: x.q, v: x.v,
+        css: 'display: grid; grid-template-columns: 1fr 150px 130px; gap: 12px; padding: ' + (x.forte ? '16px 0 4px' : '11px 0') + '; border-top: 1px solid ' + (x.forte ? '#16150F' : '#EFEBE1') + '; font-size: ' + (x.forte ? '15px' : '13.5px') + '; font-weight: ' + (x.forte ? '700' : '400') + '; color: ' + (x.verde ? '#2E7A5A' : '#16150F') + ';'
+      })),
+      barrasAno: d.economiaMeses.map((v, i) => ({
+        label: mesesLbl[i], valor: this.brl(v),
+        css: 'width: 100%; border-radius: 5px 5px 2px 2px; background: ' + (i === 11 ? '#EDA22B' : '#E0DACC') + '; height: ' + Math.round((v / maxE) * 92 + 8) + 'px;'
+      }))
+    };
+  }
+
+  valsConfig(d, tarifa) {
+    const s = this.state;
+    return {
+      ehConfig: s.tela === 'config',
+      cf: {
+        tarifa: tarifa, tarifaLabel: 'R$ ' + this.num(tarifa, 2).replace('.', ',') + ' / kWh',
+        tarifaComp: 'R$ ' + this.num(d.tarifaComp, 2).replace('.', ',') + ' / kWh',
+        distribuidora: d.distribuidora, unidade: d.nome, tipo: d.tipo,
+        potencia: this.num(d.potenciaKwp, 1) + ' kWp', paineis: d.paineis + ' painéis',
+        investimento: this.brl(d.investimento),
+        instalado: 'junho de 2025 · ' + d.mesesDecorridos + ' meses de operação',
+        fator: this.num(this.cfg().fatorCO2 * 1000, 1) + ' g CO₂ por kWh',
+        contaMedia: this.brl(d.consumo * tarifa)
+      },
+      setTarifa: e => this.setState({ tarifaLocal: Number(e.target.value) / 100 }),
+      tarifaSlider: Math.round(tarifa * 100),
+      resetTarifa: () => this.setState({ tarifaLocal: null })
+    };
+  }
+
+  valsMobile(d, tarifa, eq, economia, autoPct, co2) {
+    const s = this.state;
+    const sub = s.msub;
+    const tabs = [
+      { k: 'painel', label: 'Painel', icon: 'M3 13a9 9 0 0 1 18 0M12 13l4.5-4.5' },
+      { k: 'historico', label: 'Histórico', icon: 'M4 19V11M9 19V5M14 19v-6M19 19V8' },
+      { k: 'aparelhos', label: 'Aparelhos', icon: 'M9 3v6M15 3v6M6 9h12v3a6 6 0 0 1-12 0zM12 18v3' },
+      { k: 'metas', label: 'Metas', icon: 'M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6M10.5 20a2 2 0 0 0 3 0' },
+      { k: 'mais', label: 'Mais', icon: 'M5 12h.01M12 12h.01M19 12h.01' }
+    ];
+    const menu = [
+      { k: 'conta', t: 'Conta de agosto', s: 'Fatura detalhada e economia do ano', icon: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5' },
+      { k: 'cadastro', t: 'Cadastrar aparelho', s: 'Estime o consumo de algo que a IA não viu', icon: 'M12 5v14M5 12h14' },
+      { k: 'config', t: 'Configurações', s: 'Tarifa, distribuidora e sistema solar', icon: 'M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M7 15v4' }
+    ];
+    const maxH = Math.max(...d.consumoH, ...d.geracaoH) * 1.12;
+    const meta = s.metas[s.perfil];
+    const comSolar = Math.round(d.daRede * tarifa + 22 + d.daRede * 0.0189);
+    return {
+      verDesktop: () => this.setState({ vista: 'desktop', msub: null }),
+      mTabPainel: s.tab === 'painel' && !sub,
+      mTabHistorico: s.tab === 'historico' && !sub,
+      mTabAparelhos: s.tab === 'aparelhos' && !sub,
+      mTabMetas: s.tab === 'metas' && !sub,
+      mTabMais: s.tab === 'mais' && !sub,
+      mSubConta: sub === 'conta', mSubCadastro: sub === 'cadastro', mSubConfig: sub === 'config',
+      mTemVoltar: !!sub,
+      mVoltar: () => this.setState({ msub: null }),
+      mTitulo: sub
+        ? { conta: 'Conta de agosto', cadastro: 'Novo aparelho', config: 'Configurações' }[sub]
+        : { painel: 'Bom dia, Marina', historico: 'Histórico', aparelhos: 'Seus aparelhos', metas: 'Metas e alertas', mais: 'Mais' }[s.tab],
+      mMenu: menu.map(x => ({
+        t: x.t, s: x.s, icon: x.icon,
+        go: () => this.setState({ msub: x.k })
+      })),
+      mPerfis: [
+        { chave: 'residencial', nome: 'Casa das Acácias', tipo: 'Residencial · 4 pessoas' },
+        { chave: 'negocio', nome: 'Padaria Pão de Ouro', tipo: 'Pequeno negócio · Centro' }
+      ].map(p => ({
+        nome: p.nome, tipo: p.tipo,
+        go: () => this.setState({ perfil: p.chave, detalhe: null }),
+        css: 'display: flex; align-items: center; gap: 12px; padding: 13px 15px; border-radius: 15px; cursor: pointer; border: 1px solid ' + (s.perfil === p.chave ? '#16150F' : '#E3DED2') + '; background: #fff;',
+        dot: 'width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; background: ' + (s.perfil === p.chave ? '#EDA22B' : '#DDD7C9') + ';'
+      })),
+      tabs: tabs.map(t => ({
+        label: t.label, icon: t.icon,
+        go: () => this.setState({ tab: t.k, msub: null }),
+        css: 'flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 0 2px; cursor: pointer; min-width: 0; color: ' + (s.tab === t.k && !sub ? '#B4761B' : '#9C9585') + ';',
+        txt: 'font-size: 10px; font-weight: ' + (s.tab === t.k && !sub ? '600' : '500') + '; white-space: nowrap;'
+      })),
+      m: {
+        economia: this.num(economia), autoPct: autoPct + '%',
+        consumo: this.num(d.consumo), geracao: this.num(d.geracao), co2: this.num(co2, 1),
+        creditos: this.num(d.creditos), meta: this.num(meta),
+        metaBar: 'height: 100%; border-radius: 6px; background: ' + (d.consumo > meta ? '#C4573C' : '#2E7A5A') + '; width: ' + Math.min(100, (d.consumo / meta) * 100) + '%;',
+        metaPct: Math.round((d.consumo / meta) * 100) + '% da meta de ' + this.num(meta) + ' kWh',
+        conta: this.brl(comSolar),
+        perfilNome: d.nome,
+        areaSol: this.path(d.geracaoH, maxH, 320, 96, true),
+        lineSol: this.path(d.geracaoH, maxH, 320, 96),
+        lineCons: this.path(d.consumoH, maxH, 320, 96)
+      },
+      mEquip: eq.slice(0, 6).map(e => ({
+        nome: e.nome, kwh: this.num(e.kwh) + ' kWh', reais: this.brl(e.kwh * tarifa),
+        pct: Math.round((e.kwh / d.consumo) * 100) + '%',
+        barra: 'height: 100%; border-radius: 4px; background: ' + e.cor + '; width: ' + ((e.kwh / eq[0].kwh) * 100) + '%;'
+      }))
+    };
+  }
+}
+
+</script>
+</body>
+</html>
