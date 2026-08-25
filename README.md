@@ -94,7 +94,7 @@ que atrasa.
 | 0 · Fundação | Modularizar, repo, README | **Feito** |
 | 1 · Fechar o produto | CRUD completo, acessibilidade | **Feito** |
 | 2 · Credibilidade | Lei 14.300, irradiação, testes | **Feito** — falta comparar com conta real |
-| 3 · Unidade é sua | Cadastro de unidade pelo usuário | **Não feito** — próxima tarefa |
+| 3 · Unidade é sua | Cadastro de unidade pelo usuário | **Feito** |
 | 4 · Medidor de verdade | Contrato, firmware, seletor | **Software feito** — falta montar o hardware |
 | 5 · Gente de fora | Teste com 8 usuários | Protocolo pronto, falta executar |
 | 6 · Banca | Slides, ensaios, vídeo reserva | Roteiro no plano, falta ensaiar |
