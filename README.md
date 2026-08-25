@@ -58,7 +58,8 @@ virada de ano e a regra do Fio B.
 | `app/controle.js` | Eventos, rotas, o tique do medidor, avisos |
 | `testes/` | Suíte de testes do motor, roda no navegador |
 | `firmware/` | Sketch do ESP32 para o medidor físico |
-| `docs/` | Contrato de dados e protocolo de teste com usuários |
+| `docs/contrato-dados.md` | Formato da leitura e limites declarados do sensor |
+| `docs/protocolo-teste-usabilidade.md` | Roteiro do teste com 8 usuários (Sprint 5) |
 | `build.mjs` | Gera as entregas de arquivo único |
 | `Solaris.dc.html` | Design original no canvas — não editar, é a referência visual |
 
@@ -85,6 +86,18 @@ quatro arquivos pelo escopo léxico global — `motor.js` declara, os outros usa
 
 Preencha os nomes antes da primeira sprint. Uma frente sem dono é uma frente
 que atrasa.
+
+## Estado das sprints
+
+| Sprint | O que era | Situação |
+| --- | --- | --- |
+| 0 · Fundação | Modularizar, repo, README | **Feito** |
+| 1 · Fechar o produto | CRUD completo, acessibilidade | **Feito** |
+| 2 · Credibilidade | Lei 14.300, irradiação, testes | **Feito** — falta comparar com conta real |
+| 3 · Unidade é sua | Cadastro de unidade pelo usuário | **Não feito** — próxima tarefa |
+| 4 · Medidor de verdade | Contrato, firmware, seletor | **Software feito** — falta montar o hardware |
+| 5 · Gente de fora | Teste com 8 usuários | Protocolo pronto, falta executar |
+| 6 · Banca | Slides, ensaios, vídeo reserva | Roteiro no plano, falta ensaiar |
 
 ## Combinado do grupo
 
