@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Testes Solaris</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#EFEBE1;--surface:#fff;--ink:#16150F;--muted:#5F5A50;--line:#E3DED2;
+  --good:#2E7A5A;--good-bg:#E4F0EA;--bad:#C4573C;--bad-bg:#FBECE8;--sun:#EDA22B;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;padding:40px 24px 80px;background:var(--ground);color:var(--ink);
+  font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;line-height:1.55;
+}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:34px;letter-spacing:-1.3px;margin:0}
+.sub{color:var(--muted);margin:8px 0 26px;font-size:14.5px}
+.resumo{
+  border-radius:14px;padding:16px 20px;font-size:16px;margin-bottom:26px;
+  border:1px solid var(--line);background:var(--surface);
+}
+.resumo b{font-family:'Bricolage Grotesque',sans-serif;font-size:20px}
+.resumo.bom{background:var(--good-bg);border-color:#C3DFD1;color:#235C44}
+.resumo.ruim{background:var(--bad-bg);border-color:#EFCFC6;color:#8A3A25}
+.resumo span{font-weight:600}
+section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:12px}
+h2{
+  font-family:'Bricolage Grotesque',sans-serif;font-size:15px;font-weight:700;margin:0 0 10px;
+  display:flex;justify-content:space-between;align-items:baseline;letter-spacing:-.3px;
+}
+h2 span{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:400;color:var(--muted)}
+.caso{display:flex;gap:10px;align-items:flex-start;padding:5px 0;font-size:13.5px}
+.marca{font-family:'IBM Plex Mono',monospace;flex-shrink:0;width:14px;font-weight:500}
+.caso.ok .marca{color:var(--good)}
+.caso.falhou{color:var(--bad);font-weight:500}
+.caso.falhou .marca{color:var(--bad)}
+.caso em{display:block;font-style:normal;font-family:'IBM Plex Mono',monospace;font-size:12px;
+  color:#8A3A25;background:var(--bad-bg);padding:6px 9px;border-radius:7px;margin-top:5px}
+footer{margin-top:26px;color:var(--muted);font-size:12.5px}
+code{font-family:'IBM Plex Mono',monospace;background:#F7F4EC;padding:2px 6px;border-radius:5px;border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Testes do motor</h1>
+  <p class="sub">Suíte do Solaris. Roda direto no navegador, sem instalar nada — se algo ficar vermelho, não abra pull request.</p>
+  <div id="saida"></div>
+  <footer>Para rodar de novo, recarregue a página. Os testes ficam em <code>testes/testes.js</code>.</footer>
+</div>
+
+<script src="../app/motor.js"></script>
+<script src="../app/telas.js"></script>
+<script src="../app/celular.js"></script>
+<script src="../app/controle.js"></script>
+<script src="testes.js"></script>
+</body>
+</html>

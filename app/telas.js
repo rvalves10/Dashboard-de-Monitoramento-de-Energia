@@ -520,7 +520,7 @@ function vRelatorio() {
   const faturado = Math.max(l.rede - l.usado, 0);
   const cobrado = Math.max(faturado, 0);
   const bandeira = l.rede * 0.0189;
-  const total = cobrado * t + bandeira + u.ilum;
+  const total = cobrado * t + bandeira + u.ilum + l.fioB;
   const semSolar = Math.max(l.cons, 0) * t + l.cons * 0.0189 + u.ilum;
   const arv = Math.round(v.co2 / 22 * 12);
 
@@ -529,6 +529,7 @@ function vRelatorio() {
     ['Energia gerada e autoconsumida', '− ' + nf(l.auto) + ' kWh', '− ' + brl(l.auto * t), 'credit'],
     ['Energia injetada na rede', '− ' + nf(l.inj) + ' kWh', '− ' + brl(l.inj * u.tarifaComp), 'credit'],
     ['Créditos usados neste mês', '− ' + nf(l.usado) + ' kWh', '− ' + brl(l.usado * t), 'credit'],
+    ['Fio B sobre energia compensada (Lei 14.300)', pct(l.percFioB * 100) + ' de ' + brl(u.fioB, 2) + '/kWh', brl(l.fioB, 2), ''],
     ['Bandeira amarela', '—', brl(bandeira, 2), ''],
     ['Contribuição de iluminação pública', '—', brl(u.ilum, 2), ''],
     ['Total a pagar', nf(faturado) + ' kWh faturados', brl(total), 'total']
@@ -587,8 +588,14 @@ function vConfig() {
     kv('Tarifa de compensação (injetado)', 'R$ ' + nf(u.tarifaComp, 2) + ' / kWh', true) +
     kv('Distribuidora', esc(u.distribuidora)) +
     kv('Consumo mínimo faturado', nf(u.minFatura) + ' kWh', true) +
+    kv('Componente TUSD Fio B', 'R$ ' + nf(u.fioB, 2) + ' / kWh', true) +
     kv('Fator de emissão da rede', nf(86.1, 1) + ' g CO₂ por kWh', true) +
-    '</dl></section>' +
+    '</dl>' +
+    '<div class="softbox">' + (v.direitoAdquirido
+      ? 'Sistema conectado antes de 07/01/2023: mantém <b>compensação integral</b> até 2045 pela regra de transição da Lei 14.300.'
+      : 'Pela <b>Lei 14.300/2022</b>, este sistema paga <b>' + pct(v.percFioB * 100) + '</b> do Fio B sobre a energia compensada em ' + v.y +
+      '. O degrau sobe até 2028 — no total já foram <b>' + brl(v.fioBTotal) + '</b> desde a entrada em operação.') +
+    '</div></section>' +
 
     '<section class="card s6" style="padding:24px 26px 26px"><h2>Unidade e sistema solar</h2>' +
     '<dl class="kvs" style="margin-top:18px">' +
@@ -600,6 +607,17 @@ function vConfig() {
     kv('Em operação desde', MESES[inicio.getMonth()] + ' de ' + inicio.getFullYear() + ' · ' + u.mesesOperacao + ' meses') +
     '</dl>' +
     '<div class="softbox">Com a tarifa atual, sua conta média sem geração solar seria <b>' + brl(v.semSolarProj) + '</b> por mês. Com os painéis, a projeção é <b>' + brl(v.contaProj) + '</b>.</div>' +
+    '<div class="' + (v.desempenho < 85 ? 'note note--bad' : 'note note--good') + '" style="margin-top:12px">' +
+    '<span class="note-dot"></span><div>' +
+    '<div class="note-t">Saúde do sistema: ' + pct(v.desempenho) + ' do esperado para este telhado</div>' +
+    '<div class="note-s">Em ' + MESES[v.m] + ' a irradiação da região é ' + nf(IRRADIACAO_SP[v.m], 1) +
+    ' kWh/m² por dia, o que daria ' + nf(v.potencial) + ' kWh num telhado ideal. O seu (' + esc(u.condicaoTelhado) +
+    ') aproveita ' + pct(v.aproveitaTelhado) + ' disso, então o esperado são ' + nf(v.esperada) + ' kWh — e ele entregou ' +
+    nf(v.cheio.tg) + '. ' +
+    (v.desempenho < 85
+      ? 'Abaixo do esperado: costuma ser sujeira nos módulos ou queda de rendimento do inversor.'
+      : 'Dentro do esperado para as condições da instalação.') +
+    '</div></div></div>' +
     '<hr class="rule" style="margin:22px 0 14px">' +
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">' +
     '<div style="font-size:12.5px;color:var(--faint);max-width:44ch">Aparelhos cadastrados, metas e tarifa ficam salvos neste navegador.</div>' +

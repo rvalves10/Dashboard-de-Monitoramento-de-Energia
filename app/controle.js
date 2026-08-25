@@ -399,6 +399,9 @@ function tiqueLento() {
 
 /* ---------- partida ---------- */
 function iniciar() {
+  /* a suíte de testes carrega os mesmos scripts sem a casca da página:
+     sem #root não há app para subir, só as funções para exercitar */
+  if (!$('#root')) return;
   carregar();
   if (!UNIDADES[S.perfil]) S.perfil = 'residencial';
   if (!TELAS[S.tela]) S.tela = 'painel';

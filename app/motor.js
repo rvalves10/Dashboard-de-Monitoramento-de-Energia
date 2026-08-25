@@ -48,11 +48,31 @@ function suave(chave, i, passo) {
 /* ---------- unidades ---------- */
 const LAT = -23.55 * Math.PI / 180; /* São Paulo */
 
+/* Lei 14.300/2022 — marco legal da geração distribuída.
+   Sistemas conectados até 06/01/2023 mantêm compensação integral até 2045
+   ("direito adquirido"). Os conectados a partir de 07/01/2023 pagam um
+   percentual crescente da componente TUSD Fio B sobre a energia compensada. */
+const CORTE_DIREITO_ADQUIRIDO = new Date(2023, 0, 6);
+const ESCADA_FIO_B = { 2023: .15, 2024: .30, 2025: .45, 2026: .60, 2027: .75, 2028: .90 };
+function percentualFioB(ano, direitoAdquirido) {
+  if (direitoAdquirido || ano <= 2022) return 0;
+  return ESCADA_FIO_B[ano] !== undefined ? ESCADA_FIO_B[ano] : 1;
+}
+
+/* Irradiação global horizontal média, kWh/m² por dia, mês a mês.
+   ATENÇÃO DO GRUPO: estes valores são um perfil típico do interior de São
+   Paulo e precisam ser conferidos no Atlas Brasileiro de Energia Solar
+   (INPE/LABREN) para a cidade real do projeto antes da banca. É o único
+   número do motor que vem de fora — troque aqui e o resto se ajusta. */
+const IRRADIACAO_SP = [5.9, 5.9, 5.2, 4.7, 4.0, 3.7, 3.9, 4.7, 4.8, 5.3, 5.8, 6.1];
+const RAZAO_DESEMPENHO = 0.78; /* perdas de inversor, cabos, temperatura e sujeira */
+
 const UNIDADES = {
   residencial: {
     chave: 'residencial', nome: 'Casa das Acácias', tipo: 'Residencial · 4 pessoas', curto: 'Residencial',
-    distribuidora: 'Enel SP', tarifa: 0.92, tarifaComp: 0.79, ilum: 22, minFatura: 50,
+    distribuidora: 'Enel SP', tarifa: 0.92, tarifaComp: 0.79, fioB: 0.26, ilum: 22, minFatura: 50,
     potenciaKwp: 4.4, paineis: 10, investimento: 18400, mesesOperacao: 14,
+    fatorInstalacao: 0.58, condicaoTelhado: 'telhado a oeste, sombra do prédio vizinho até as 9h',
     consumoMes: 320, geracaoMes: 285, metaPadrao: 300,
     consumoH: [.22, .20, .19, .19, .21, .30, .66, .88, .54, .37, .33, .35, .47, .51, .54, .57, .63, .76, .98, 1.12, .96, .70, .44, .27],
     semana: [1.13, .95, .95, .95, .95, .97, 1.10],
@@ -77,8 +97,9 @@ const UNIDADES = {
   },
   negocio: {
     chave: 'negocio', nome: 'Padaria Pão de Ouro', tipo: 'Pequeno negócio · Centro', curto: 'Pequeno negócio',
-    distribuidora: 'Enel SP', tarifa: 0.78, tarifaComp: 0.66, ilum: 58, minFatura: 100,
+    distribuidora: 'Enel SP', tarifa: 0.78, tarifaComp: 0.66, fioB: 0.22, ilum: 58, minFatura: 100,
     potenciaKwp: 18.6, paineis: 42, investimento: 96000, mesesOperacao: 22,
+    fatorInstalacao: 0.55, condicaoTelhado: 'duas águas com inclinação baixa, caixa d’água sombreia parte da tarde',
     consumoMes: 1840, geracaoMes: 1150, metaPadrao: 1700,
     consumoH: [1.4, 1.3, 1.3, 2.9, 4.6, 5.2, 4.1, 3.4, 3.1, 3.0, 2.9, 3.2, 3.4, 3.1, 2.6, 2.3, 2.1, 1.9, 1.8, 1.7, 1.6, 1.5, 1.5, 1.4],
     semana: [.52, 1.04, 1.04, 1.04, 1.05, 1.08, 1.06],
@@ -223,6 +244,28 @@ function ate(md, horas) {
   return r;
 }
 
+/* data em que a unidade entrou em operação, deduzida dos meses de operação */
+function inicioOperacao(chave) {
+  const u = UNIDADES[chave], d = agora();
+  return new Date(d.getFullYear(), d.getMonth() - (u.mesesOperacao - 1), 1);
+}
+function temDireitoAdquirido(chave) {
+  return inicioOperacao(chave) <= CORTE_DIREITO_ADQUIRIDO;
+}
+/* Dois patamares diferentes, e a distinção importa:
+   - potencial da região: o que um telhado ideal (voltado ao norte, sem sombra)
+     entregaria com essa potência instalada;
+   - esperado: o que ESTE telhado entrega, dada orientação e sombreamento.
+   Comparar a geração real contra o esperado mede saúde operacional (sujeira,
+   inversor, falha). Comparar contra o potencial mede qualidade da instalação. */
+function potencialRegiao(chave, m, nd) {
+  const u = UNIDADES[chave];
+  return u.potenciaKwp * IRRADIACAO_SP[m] * RAZAO_DESEMPENHO * nd;
+}
+function geracaoEsperada(chave, m, nd) {
+  return potencialRegiao(chave, m, nd) * UNIDADES[chave].fatorInstalacao;
+}
+
 /* ---------- livro de créditos: compensação mês a mês ---------- */
 const _cacheLedger = new Map();
 function ledger(chave, ate_y, ate_m, horasUltimo) {
@@ -231,7 +274,8 @@ function ledger(chave, ate_y, ate_m, horasUltimo) {
   const u = UNIDADES[chave];
   const fim = ate_y * 12 + ate_m;
   const ini = fim - (u.mesesOperacao - 1);
-  let creditos = 0, economiaTotal = 0;
+  const adq = temDireitoAdquirido(chave);
+  let creditos = 0, economiaTotal = 0, fioBTotal = 0;
   const linhas = [];
   for (let k = ini; k <= fim; k++) {
     const y = Math.floor(k / 12), m = k - y * 12;
@@ -242,11 +286,23 @@ function ledger(chave, ate_y, ate_m, horasUltimo) {
     const usado = Math.min(creditos, Math.max(0, p.rede - u.minFatura));
     creditos -= usado;
     const faturado = p.rede - usado;
-    const economia = p.auto * u.tarifa + p.inj * u.tarifaComp;
+
+    /* Lei 14.300: paga-se Fio B sobre a energia compensada */
+    const perc = percentualFioB(y, adq);
+    const fioB = usado * u.fioB * perc;
+    fioBTotal += fioB;
+
+    /* economia real = energia que deixou de ser comprada, menos o Fio B */
+    const economia = (p.auto + usado) * u.tarifa - fioB;
     economiaTotal += economia;
-    linhas.push({ y: y, m: m, k: k, cons: p.tc, ger: p.tg, auto: p.auto, inj: p.inj, rede: p.rede, usado: usado, faturado: faturado, economia: economia, creditos: creditos });
+
+    linhas.push({
+      y: y, m: m, k: k, cons: p.tc, ger: p.tg, auto: p.auto, inj: p.inj, rede: p.rede,
+      usado: usado, faturado: faturado, fioB: fioB, percFioB: perc,
+      economia: economia, creditos: creditos
+    });
   }
-  const r = { linhas: linhas, creditos: creditos, economiaTotal: economiaTotal };
+  const r = { linhas: linhas, creditos: creditos, economiaTotal: economiaTotal, fioBTotal: fioBTotal, direitoAdquirido: adq };
   _cacheLedger.set(ck, r);
   return r;
 }
@@ -361,15 +417,22 @@ function visao(forcar) {
   const projRede = cheio.rede;
   const projInj = cheio.inj;
 
-  const economia = mtd.auto * t + mtd.inj * u.tarifaComp;
-  const economiaCheia = cheio.auto * t + cheio.inj * u.tarifaComp;
+  const economia = atual.economia;
+  const economiaCheia = fim.economia;
   const anteriorEcon = anteriores.length ? anteriores[anteriores.length - 1].economia : economia;
 
   const bandeira = mtd.rede * 0.0189;
   const projUsado = fim.usado;
   const projFaturado = fim.faturado;
-  const contaProj = projFaturado * t + projRede * 0.0189 + u.ilum;
+  const projFioB = fim.fioB;
+  const contaProj = projFaturado * t + projRede * 0.0189 + u.ilum + projFioB;
   const semSolarProj = Math.max(projConsumo, u.minFatura) * t + projConsumo * 0.0189 + u.ilum;
+
+  /* quanto o sistema entrega em relação ao que o telhado poderia entregar */
+  const potencial = potencialRegiao(S.perfil, m, md.nd);
+  const esperada = geracaoEsperada(S.perfil, m, md.nd);
+  const desempenho = esperada > 0 ? (cheio.tg / esperada) * 100 : 0;
+  const aproveitaTelhado = potencial > 0 ? (esperada / potencial) * 100 : 0;
 
   const autoPct = mtd.tc > 0 ? (mtd.auto / mtd.tc) * 100 : 0;
   const co2 = mtd.tg * 0.0861;
@@ -378,7 +441,9 @@ function visao(forcar) {
     perfil: S.perfil, tarifa: t, data: d, y: y, m: m, nd: md.nd, hDec: hDec, fracao: fracao,
     md: md, mtd: mtd, cheio: cheio, ledger: lg, linhaAtual: atual, anteriores: anteriores,
     projConsumo: projConsumo, projGeracao: projGeracao, projRede: projRede, projInj: projInj,
-    projUsado: projUsado, projFaturado: projFaturado,
+    projUsado: projUsado, projFaturado: projFaturado, projFioB: projFioB,
+    potencial: potencial, esperada: esperada, desempenho: desempenho, aproveitaTelhado: aproveitaTelhado,
+    percFioB: fim.percFioB, direitoAdquirido: lg.direitoAdquirido, fioBTotal: lg.fioBTotal,
     economia: economia, economiaCheia: economiaCheia, anteriorEcon: anteriorEcon,
     creditos: lg.creditos, economiaTotal: lg.economiaTotal,
     bandeira: bandeira, contaProj: contaProj, semSolarProj: semSolarProj,
