@@ -622,7 +622,39 @@ function vConfig() {
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">' +
     '<div style="font-size:12.5px;color:var(--faint);max-width:44ch">Aparelhos cadastrados, metas e tarifa ficam salvos neste navegador.</div>' +
     '<button class="danger-btn" data-act="reset-tudo">Apagar meus dados</button></div>' +
-    '</section></div>';
+    '</section>' + cardFonte() + '</div>';
+}
+
+/* seletor entre simulação e medidor físico */
+function cardFonte() {
+  const f = fonteAtual();
+  const estado = {
+    simulado: ['pill--neutral', 'Simulado'],
+    medidor: ['pill--good', 'Lendo o medidor'],
+    aguardando: ['pill--bad', 'Sem resposta']
+  }[f];
+  return '<section class="card s12"><div class="card-head"><div>' +
+    '<h2>Fonte da leitura</h2>' +
+    '<div class="card-sub">O painel não sabe de onde vem o número. Trocar a fonte não muda mais nada no sistema.</div></div>' +
+    '<span class="pill ' + estado[0] + '">' + estado[1] + '</span></div>' +
+    '<div class="chips" style="margin-top:16px">' +
+    '<button class="chip" data-act="fonte" data-v="simulado" aria-pressed="' + !MEDIDOR.ativo + '">Simulação</button>' +
+    '<button class="chip" data-act="fonte" data-v="medidor" aria-pressed="' + MEDIDOR.ativo + '">Medidor físico (ESP32)</button>' +
+    '</div>' +
+    (MEDIDOR.ativo
+      ? '<div class="field"><label class="field-lbl" for="inEnd">Endereço do medidor na rede</label>' +
+      '<input class="text-in" id="inEnd" data-fid="endereco" data-in="endereco" type="text" value="' + esc(MEDIDOR.endereco) + '" ' +
+      'placeholder="192.168.4.1" autocomplete="off" spellcheck="false" style="max-width:280px"></div>' +
+      '<div style="font-size:12.5px;color:var(--faint);margin-top:12px;line-height:1.55;max-width:70ch">' +
+      (f === 'medidor'
+        ? 'Última leitura: <b class="mono" style="color:var(--ink)">' + nf(MEDIDOR.ultima, 3) + ' kW</b>, há ' +
+        nf((Date.now() - MEDIDOR.quando) / 1000, 0) + ' segundos. Só o consumo vem do sensor — a geração continua simulada, porque um sensor no quadro geral não separa as duas.'
+        : 'Sem resposta do medidor' + (MEDIDOR.erro ? ' (' + esc(MEDIDOR.erro) + ')' : '') +
+        '. Confira se o computador está na rede <b>Solaris-Medidor</b>. Depois de 15 segundos sem leitura o painel volta sozinho para a simulação, para nunca congelar numa apresentação.') +
+      '</div>'
+      : '<div style="font-size:12.5px;color:var(--faint);margin-top:12px;max-width:70ch">' +
+      'A simulação calcula tudo a partir da data, da irradiação da região e do padrão de consumo da unidade. É a fonte padrão e não depende de rede.</div>') +
+    '</section>';
 }
 function kv(k, v, mono) {
   return '<div class="kv"><dt>' + k + '</dt><dd' + (mono ? ' class="mono"' : '') + '>' + v + '</dd></div>';

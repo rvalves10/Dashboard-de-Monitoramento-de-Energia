@@ -317,7 +317,8 @@ const PADRAO = {
   tarifa: { residencial: null, negocio: null },
   extras: [], removidos: [], respondidas: {}, dispensados: [],
   novo: { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: 'Sala' },
-  editando: null, salvo: false
+  editando: null, salvo: false,
+  medidor: { ativo: false, endereco: '192.168.4.1' }
 };
 let S = JSON.parse(JSON.stringify(PADRAO));
 
@@ -469,9 +470,43 @@ function potenciaAgora() {
   const dia = v.md.dias[Math.min(d.getDate() - 1, v.md.nd - 1)];
   const hr = d.getHours(), f = d.getMinutes() / 60;
   const lerp = arr => arr[hr] * (1 - f) + arr[Math.min(23, hr + 1)] * f;
-  const c = Math.max(0.02, lerp(dia.cons) * _jitterC);
+  let c = Math.max(0.02, lerp(dia.cons) * _jitterC);
   const g = Math.max(0, lerp(dia.ger) * _jitterG);
+
+  /* Com o medidor físico ligado, o consumo passa a ser leitura real.
+     Um sensor só no quadro geral não separa geração — ela segue simulada.
+     Ver docs/contrato-dados.md. */
+  if (MEDIDOR.ativo && MEDIDOR.ultima != null && (Date.now() - MEDIDOR.quando) < MEDIDOR.limiteMs) {
+    c = MEDIDOR.ultima;
+  }
   return { cons: c, ger: g, rede: Math.max(0, c - g), inj: Math.max(0, g - c), hora: hr + f };
+}
+
+/* ---------- fonte da leitura ---------- */
+const MEDIDOR = {
+  ativo: false, endereco: '192.168.4.1', ultima: null, quando: 0,
+  limiteMs: 15000, erro: null, buscando: false
+};
+function fonteAtual() {
+  if (!MEDIDOR.ativo) return 'simulado';
+  const fresca = MEDIDOR.ultima != null && (Date.now() - MEDIDOR.quando) < MEDIDOR.limiteMs;
+  return fresca ? 'medidor' : 'aguardando';
+}
+/* Busca a leitura do ESP32. Nunca lança: se a rede cair, o app
+   simplesmente volta a mostrar o simulado. */
+function buscarMedidor() {
+  if (!MEDIDOR.ativo || MEDIDOR.buscando || typeof fetch !== 'function') return;
+  MEDIDOR.buscando = true;
+  const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+  if (ctrl) setTimeout(() => ctrl.abort(), 3000);
+  fetch('http://' + MEDIDOR.endereco + '/leitura', { signal: ctrl ? ctrl.signal : undefined, cache: 'no-store' })
+    .then(r => r.json())
+    .then(j => {
+      const kw = Number(j && j.cons);
+      if (isFinite(kw) && kw >= 0) { MEDIDOR.ultima = kw; MEDIDOR.quando = Date.now(); MEDIDOR.erro = null; }
+    })
+    .catch(e => { MEDIDOR.erro = String(e && e.message || e); })
+    .then(() => { MEDIDOR.buscando = false; });
 }
 
 /* série do período selecionado */

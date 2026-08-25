@@ -288,6 +288,13 @@ const ACOES = {
     S.regras[k] = !S.regras[k];
     salvar(); render();
   },
+  fonte: el => {
+    MEDIDOR.ativo = el.dataset.v === 'medidor';
+    MEDIDOR.ultima = null; MEDIDOR.erro = null;
+    if (MEDIDOR.ativo) { buscarMedidor(); aviso('Procurando o medidor', 'Conecte o computador na rede Solaris-Medidor. Sem resposta em 15 s, o painel volta para a simulação.', 'sun'); }
+    else aviso('Fonte: simulação', 'O painel voltou a calcular a leitura.', 'sun');
+    salvar(); render();
+  },
   imprimir: () => window.print(),
   'reset-tarifa': () => { S.tarifa[S.perfil] = null; salvar(); render(); aviso('Tarifa restaurada', 'Voltou para R$ ' + nf(unidade().tarifa, 2) + ' / kWh da ' + unidade().distribuidora + '.', 'sun'); },
   'reset-tudo': () => {
@@ -325,6 +332,7 @@ document.addEventListener('input', ev => {
   if (campo === 'pot' || campo === 'horas' || campo === 'dias') {
     S.novo[campo] = Number(el.value); S.salvo = false; syncCadastro(); salvar(); return;
   }
+  if (campo === 'endereco') { MEDIDOR.endereco = el.value.trim(); MEDIDOR.ultima = null; salvar(); return; }
   if (campo === 'meta') { S.metas[S.perfil] = Number(el.value); syncMeta(); salvar(); return; }
   if (campo === 'tarifa') { S.tarifa[S.perfil] = Number(el.value) / 100; _visao = null; syncTarifa(); salvar(); return; }
 });
@@ -371,6 +379,7 @@ window.addEventListener('resize', () => { if (modoMobile() !== _ultimoModo) rend
 let _spikeCooldown = 0, _spikeAtivo = false;
 function tique() {
   pulso();
+  buscarMedidor();
   const p = potenciaAgora();
   txt('#liveC', nf(p.cons, 2) + ' kW');
   txt('#liveG', nf(p.ger, 2) + ' kW');
@@ -403,6 +412,7 @@ function iniciar() {
      sem #root não há app para subir, só as funções para exercitar */
   if (!$('#root')) return;
   carregar();
+  if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
   if (!UNIDADES[S.perfil]) S.perfil = 'residencial';
   if (!TELAS[S.tela]) S.tela = 'painel';
   _ultimaHora = new Date().getHours();
