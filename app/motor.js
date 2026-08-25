@@ -329,6 +329,10 @@ function chaveEstado() {
   const s = (typeof sessao === 'function') ? sessao() : null;
   return CHAVE_LS + (s ? '.' + s.id : '');
 }
+function contaAtual() {
+  const s = (typeof sessao === 'function') ? sessao() : null;
+  return s ? s.id : 'visitante';
+}
 const PADRAO = {
   perfil: 'residencial', tela: 'painel', periodo: 'mes', vista: 'desktop',
   tab: 'painel', msub: null, detalhe: null,
@@ -347,11 +351,12 @@ const PADRAO = {
 };
 let S = JSON.parse(JSON.stringify(PADRAO));
 
-function carregar() {
+/* Carrega do banco. É assíncrono porque IndexedDB é assíncrono — o app
+   espera isto terminar antes de desenhar a primeira tela. */
+async function carregar() {
   try {
-    const raw = localStorage.getItem(chaveEstado());
-    if (!raw) return;
-    const o = JSON.parse(raw);
+    const o = await Banco.estado(contaAtual());
+    if (!o) return;
     Object.keys(PADRAO).forEach(k => {
       if (o[k] === undefined) return;
       if (k === 'metas' || k === 'regras' || k === 'tarifa' || k === 'novo' || k === 'respondidas') S[k] = Object.assign({}, PADRAO[k], o[k]);
@@ -364,7 +369,8 @@ let _tsave = 0;
 function salvar() {
   clearTimeout(_tsave);
   _tsave = setTimeout(() => {
-    try { localStorage.setItem(chaveEstado(), JSON.stringify(S)); } catch (e) { }
+    S.medidor = { ativo: MEDIDOR.ativo, endereco: MEDIDOR.endereco };
+    Banco.salvarEstado(contaAtual(), JSON.parse(JSON.stringify(S)));
   }, 180);
 }
 

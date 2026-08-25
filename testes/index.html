@@ -53,11 +53,27 @@ code{font-family:'IBM Plex Mono',monospace;background:#F7F4EC;padding:2px 6px;bo
   <footer>Para rodar de novo, recarregue a página. Os testes ficam em <code>testes/testes.js</code>.</footer>
 </div>
 
-<script src="../app/motor.js"></script>
-<script src="../app/login.js"></script>
-<script src="../app/telas.js"></script>
-<script src="../app/celular.js"></script>
-<script src="../app/controle.js"></script>
-<script src="testes.js"></script>
+<!-- Carrega tudo com um carimbo de tempo: a suite nunca deve rodar
+     contra codigo em cache. Sequencial, porque a ordem importa. -->
+<script>
+(function () {
+  var v = '?t=' + Date.now();
+  var arquivos = [
+    '../app/banco.js', '../app/motor.js', '../app/login.js',
+    '../app/telas.js', '../app/celular.js', '../app/controle.js', 'testes.js'
+  ];
+  (function proximo(i) {
+    if (i >= arquivos.length) return;
+    var s = document.createElement('script');
+    s.src = arquivos[i] + v;
+    s.onload = function () { proximo(i + 1); };
+    s.onerror = function () {
+      document.getElementById('saida').innerHTML =
+        '<div class="resumo ruim">Nao consegui carregar <b>' + arquivos[i] + '</b></div>';
+    };
+    document.body.appendChild(s);
+  })(0);
+})();
+</script>
 </body>
 </html>

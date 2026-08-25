@@ -432,21 +432,22 @@ grupo('Contas', () => {
   const EMAIL = '__teste__@solaris.local';
   const SENHA = 'senhaDeTeste123';
 
+  /* a conta de teste é removida do banco antes e depois, para os casos
+     não contaminarem uns aos outros nem os dados de quem estiver usando */
   async function limpo(fn) {
-    const guarda = {};
-    ['solaris.contas.v1', 'solaris.sessao.v1'].forEach(k => { guarda[k] = localStorage.getItem(k); });
+    const guardaSessao = localStorage.getItem('solaris.sessao.v1');
     const sessaoAntes = sessao();
-    try {
-      localStorage.removeItem('solaris.contas.v1');
-      localStorage.removeItem('solaris.sessao.v1');
+    const faxina = async () => {
+      await Banco.apagarConta(EMAIL);
+      await Banco.apagarEstado(EMAIL);
+      delete _contas[EMAIL];
+    };
+    try { await faxina(); sair(); await fn(); }
+    finally {
+      await faxina();
       sair();
-      await fn();
-    } finally {
-      localStorage.removeItem('solaris.v2.' + EMAIL);
-      Object.keys(guarda).forEach(k => {
-        if (guarda[k] === null) localStorage.removeItem(k); else localStorage.setItem(k, guarda[k]);
-      });
-      sair();
+      if (guardaSessao === null) localStorage.removeItem('solaris.sessao.v1');
+      else localStorage.setItem('solaris.sessao.v1', guardaSessao);
       if (sessaoAntes) carregarSessao();
     }
   }
@@ -478,9 +479,9 @@ grupo('Contas', () => {
 
   testeAsync('a senha nunca é guardada, só a derivação', () => limpo(async () => {
     await criarConta('Teste', EMAIL, SENHA);
-    const bruto = localStorage.getItem('solaris.contas.v1');
-    ok(bruto.indexOf(SENHA) < 0, 'a senha apareceu no armazenamento');
-    const c = JSON.parse(bruto)[EMAIL];
+    const c = await Banco.conta(EMAIL);
+    ok(c, 'a conta não chegou ao banco');
+    ok(JSON.stringify(c).indexOf(SENHA) < 0, 'a senha apareceu no registro gravado');
     igual(c.hash.length, 64, 'hash deveria ter 256 bits em hex');
     ok(c.salt && c.salt.length === 32, 'faltou salt');
     ok(c.metodo === 'pbkdf2' || c.metodo === 'sha256x', 'método desconhecido: ' + c.metodo);
@@ -526,11 +527,12 @@ grupo('Contas', () => {
   testeAsync('cada conta tem o seu balde de dados', () => limpo(async () => {
     await criarConta('Teste', EMAIL, SENHA);
     await entrar(EMAIL, SENHA, false);
-    igual(chaveEstado(), 'solaris.v2.' + EMAIL, 'a chave não separa por conta');
-    sair();
-    igual(chaveEstado(), 'solaris.v2', 'sem sessão deveria cair no balde neutro');
+    igual(contaAtual(), EMAIL, 'a conta ativa deveria ser a que entrou');
+    await Banco.salvarEstado(EMAIL, { marca: 'da conta' });
     entrarComoVisitante();
-    igual(chaveEstado(), 'solaris.v2.visitante', 'visitante deveria ter balde próprio');
+    igual(contaAtual(), 'visitante', 'visitante deveria ter balde próprio');
+    const doVisitante = await Banco.estado('visitante');
+    ok(!doVisitante || doVisitante.marca !== 'da conta', 'o dado da conta vazou para o visitante');
   }));
 
   testeAsync('sessão expirada é descartada', () => limpo(async () => {
@@ -562,12 +564,62 @@ grupo('Contas', () => {
   testeAsync('apagar a conta leva os dados junto', () => limpo(async () => {
     await criarConta('Teste', EMAIL, SENHA);
     await entrar(EMAIL, SENHA, false);
-    localStorage.setItem(chaveEstado(), '{"teste":1}');
-    apagarConta();
+    await Banco.salvarEstado(EMAIL, { teste: 1 });
+    await apagarConta();
     igual(contas()[EMAIL], undefined, 'a conta continuou cadastrada');
-    igual(localStorage.getItem('solaris.v2.' + EMAIL), null, 'os dados ficaram para trás');
+    igual(await Banco.conta(EMAIL), undefined, 'a conta continuou no banco');
+    igual(await Banco.estado(EMAIL), null, 'os dados ficaram para trás');
     igual(sessao(), null, 'a sessão continuou aberta');
   }));
+});
+
+/* ================= banco de dados ================= */
+grupo('Banco', () => {
+  const CONTA = '__teste_bd__';
+
+  /* assincrono de proposito: os sincronos rodam antes de Banco.iniciar() */
+  testeAsync('o banco abriu', async () => {
+    ok(Banco.pronto, 'Banco.iniciar() não rodou');
+    ok(typeof Banco.usandoIndexedDB === 'boolean', 'nao reportou qual motor esta em uso');
+  });
+
+  testeAsync('estado vai e volta inteiro', async () => {
+    const dados = { metas: { residencial: 999 }, extras: [{ nome: 'X' }], texto: 'acentuação é preservada' };
+    await Banco.salvarEstado(CONTA, dados);
+    const volta = await Banco.estado(CONTA);
+    igual(JSON.stringify(volta), JSON.stringify(dados), 'o estado voltou diferente');
+    await Banco.apagarEstado(CONTA);
+    igual(await Banco.estado(CONTA), null, 'apagar não funcionou');
+  });
+
+  testeAsync('leituras são gravadas e lidas em ordem', async () => {
+    if (!Banco.usandoIndexedDB) return; /* na reserva não há histórico */
+    await Banco.limparLeituras(CONTA);
+    await Banco.registrarLeitura(CONTA, 1.5, 0.8);
+    await Banco.registrarLeitura(CONTA, 2.5, 1.2);
+    const l = await Banco.leituras(CONTA, 0);
+    igual(l.length, 2, 'deveriam ser duas leituras');
+    ok(l[0].t <= l[1].t, 'vieram fora de ordem');
+    igual(l[0].c, 1.5); igual(l[1].g, 1.2);
+    await Banco.limparLeituras(CONTA);
+    igual((await Banco.leituras(CONTA, 0)).length, 0, 'limpar não funcionou');
+  });
+
+  testeAsync('leitura de uma conta não aparece na outra', async () => {
+    if (!Banco.usandoIndexedDB) return;
+    await Banco.limparLeituras(CONTA);
+    await Banco.limparLeituras(CONTA + '2');
+    await Banco.registrarLeitura(CONTA, 1, 1);
+    igual((await Banco.leituras(CONTA + '2', 0)).length, 0, 'vazou entre contas');
+    await Banco.limparLeituras(CONTA);
+  });
+
+  testeAsync('as estatísticas respondem', async () => {
+    const e = await Banco.estatisticas();
+    ok(e.motor === 'IndexedDB' || e.motor.indexOf('localStorage') === 0, 'motor estranho: ' + e.motor);
+    ok(typeof e.leituras === 'number', 'contagem de leituras inválida');
+    ok(e.janelaDias > 0 && e.intervaloSeg > 0, 'parâmetros de histórico zerados');
+  });
 });
 
 /* ================= execução ================= */
@@ -605,4 +657,4 @@ async function rodarAssincronos() {
 }
 
 document.getElementById('saida').innerHTML = '<div class="resumo">Rodando…</div>';
-rodarAssincronos().then(rodar);
+Banco.iniciar().then(carregarContas).then(rodarAssincronos).then(rodar);

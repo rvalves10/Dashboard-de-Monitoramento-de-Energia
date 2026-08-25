@@ -50,8 +50,9 @@ virada de ano e a regra do Fio B.
 
 | Caminho | O que é |
 | --- | --- |
-| `app/index.html` | Casca da página; carrega os cinco scripts na ordem |
+| `app/index.html` | Casca da página; carrega os seis scripts na ordem |
 | `app/estilo.css` | Sistema de design inteiro: cores, tipografia, componentes, responsivo, impressão |
+| `app/banco.js` | IndexedDB: contas, estado e o histórico do medidor |
 | `app/motor.js` | Simulação física, tarifas, compensação de créditos, estado e persistência |
 | `app/login.js` | Contas, sessão e derivação de senha — leia o cabeçalho do arquivo |
 | `app/telas.js` | As sete telas do desktop |
@@ -89,6 +90,29 @@ quatro arquivos pelo escopo léxico global — `motor.js` declara, os outros usa
 
 Preencha os nomes antes da primeira sprint. Uma frente sem dono é uma frente
 que atrasa.
+
+## Banco de dados
+
+IndexedDB — o banco que já vem no navegador. Três tabelas:
+
+| Tabela | O que guarda |
+| --- | --- |
+| `contas` | quem pode entrar (chave: e-mail) |
+| `estado` | o app de cada conta: unidades, aparelhos, metas, tarifa |
+| `leituras` | o histórico do medidor, uma linha por minuto |
+
+A tabela de leituras é a razão de existir um banco aqui. Um minuto de
+intervalo dá 1.440 linhas por dia; em uma semana são dez mil. Isso não cabe
+em `localStorage`, que é um mapa de texto com uns 5 MB no total. O histórico
+é podado depois de 7 dias.
+
+Configurações mostra o estado do banco ao vivo: quantas leituras, quanto
+espaço, e um gráfico das últimas duas horas gravadas — dados que vieram do
+banco, não da simulação.
+
+Se o IndexedDB não abrir (navegador antigo, algum modo privado), tudo cai
+sozinho para `localStorage` e o app continua funcionando; só o histórico
+minuto a minuto deixa de ser gravado, e a tela avisa.
 
 ## Sobre o login (opcional)
 

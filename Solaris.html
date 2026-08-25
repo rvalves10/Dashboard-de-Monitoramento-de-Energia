@@ -57,6 +57,11 @@
   --r-lg:20px; --r-md:15px; --r-sm:11px;
   --shadow:0 1px 3px rgba(22,21,15,.08);
   --shadow-lift:0 14px 40px -18px rgba(22,21,15,.42);
+  /* elevacao em tres degraus: repouso, destaque e flutuante */
+  --elev-1:0 1px 2px rgba(22,21,15,.035), 0 3px 8px -2px rgba(22,21,15,.05);
+  --elev-2:0 2px 4px rgba(22,21,15,.04), 0 10px 26px -8px rgba(22,21,15,.11);
+  --elev-3:0 18px 48px -16px rgba(22,21,15,.26), 0 2px 6px rgba(22,21,15,.05);
+  --anel-sol:0 0 0 1px rgba(237,162,43,.28);
 
   --f-display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
   --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
@@ -71,6 +76,9 @@ body{
   font-family:var(--f-body);font-size:14px;line-height:1.45;
   -webkit-font-smoothing:antialiased;
   overflow-x:hidden;
+  /* leve calor no papel, mais claro em cima; some no modo celular e na impressao */
+  background-image:radial-gradient(1200px 620px at 62% -12%, rgba(255,252,244,.85), transparent 62%);
+  background-attachment:fixed;
 }
 h1,h2,h3{margin:0;font-family:var(--f-display);text-wrap:balance}
 button{font:inherit;color:inherit;background:none;border:0;margin:0;padding:0;cursor:pointer;text-align:left}
@@ -172,12 +180,15 @@ svg{display:block}
   border:1px solid var(--line-2);background:var(--surface);font-size:12.5px;font-weight:600;color:var(--ink-2);
   transition:border-color .15s,color .15s;
 }
-.ghost-btn:hover{border-color:var(--ink);color:var(--ink)}
+.ghost-btn:hover{border-color:var(--ink);color:var(--ink);box-shadow:var(--elev-1)}
+.ghost-btn:active{transform:translateY(1px)}
 .dark-btn{
   display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 15px;border-radius:11px;
   background:var(--dark);color:var(--on-dark);font-size:13px;font-weight:600;transition:background .15s,opacity .15s;
 }
-.dark-btn:hover{background:var(--dark-2)}
+.dark-btn{box-shadow:var(--elev-1)}
+.dark-btn:hover{background:var(--dark-2);box-shadow:var(--elev-2)}
+.dark-btn:active:not([disabled]){transform:translateY(1px);box-shadow:var(--elev-1)}
 .dark-btn[disabled]{background:var(--line-2);color:#9C9585;cursor:not-allowed}
 .link-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--sun-deep);transition:color .15s}
 .link-btn:hover{color:var(--sun-deeper)}
@@ -188,9 +199,22 @@ svg{display:block}
 .s6{grid-column:span 6}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}
 .stack{display:flex;flex-direction:column;gap:16px}
 
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px 26px}
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px 26px;
+  box-shadow:var(--elev-1);
+  transition:box-shadow .22s cubic-bezier(.4,0,.2,1),border-color .22s,transform .22s cubic-bezier(.4,0,.2,1);
+}
 .card--tight{padding:18px 20px 16px;border-radius:18px}
-.card--dark{background:var(--dark);color:var(--on-dark);border-color:transparent;position:relative;overflow:hidden}
+.card--dark{
+  background:linear-gradient(158deg,#1B1A12 0%,var(--dark) 46%,#121108 100%);
+  color:var(--on-dark);border-color:transparent;position:relative;overflow:hidden;
+  box-shadow:var(--elev-3);
+}
+/* fio de luz na borda de cima, que da volume ao cartao escuro */
+.card--dark::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(245,194,91,.42),transparent);
+}
 .card h2{font-weight:600;font-size:19px;letter-spacing:-.5px}
 .card-sub{font-size:12.5px;color:var(--faint);margin-top:4px}
 .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
@@ -207,7 +231,8 @@ svg{display:block}
 .pill--neutral{background:var(--ground);color:var(--faint)}
 .pill--ia{display:inline-flex;align-items:center;gap:4px;background:#F0E9DA;color:#99722A;font-size:10.5px;letter-spacing:.3px;padding:3px 8px;border-radius:20px;font-weight:600}
 
-.big{font-family:var(--f-display);font-weight:700;letter-spacing:-1.3px;line-height:1}
+.big{font-family:var(--f-display);font-weight:700;letter-spacing:-1.3px;line-height:1;
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
 .big-30{font-size:30px;letter-spacing:-1.2px}
 .big-32{font-size:32px}
 .big-34{font-size:34px;letter-spacing:-1.5px}
@@ -284,7 +309,8 @@ svg{display:block}
 .hbars{display:flex;align-items:flex-end;gap:4px;margin-top:22px}
 .hbar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;cursor:default}
 .hbar-pair{display:flex;align-items:flex-end;gap:2px;height:150px;width:100%}
-.hbar-pair i{display:block;width:100%;border-radius:3px 3px 0 0;transition:height .45s cubic-bezier(.4,0,.2,1),opacity .15s}
+.hbar-pair i{display:block;width:100%;border-radius:3px 3px 0 0;transition:height .45s cubic-bezier(.4,0,.2,1),opacity .15s;
+  background-image:linear-gradient(180deg,rgba(255,255,255,.2),transparent 55%)}
 .hbar-c{background:var(--grid)}
 .hbar-g{background:var(--sun)}
 .hbar:hover .hbar-pair i{opacity:.78}
@@ -293,7 +319,8 @@ svg{display:block}
 
 .compare-lbl{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-bottom:7px}
 .track{height:12px;background:#F4F1EA;border-radius:6px;overflow:hidden}
-.track i{display:block;height:100%;border-radius:6px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.track i{display:block;height:100%;border-radius:6px;transition:width .6s cubic-bezier(.4,0,.2,1);
+  background-image:linear-gradient(180deg,rgba(255,255,255,.22),transparent 62%)}
 
 .note{display:flex;gap:13px;padding:14px 16px;border-radius:14px}
 .note-dot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex-shrink:0}
@@ -311,11 +338,13 @@ svg{display:block}
 
 /* ---------- para onde vai a energia ---------- */
 .mixbar{display:flex;height:13px;border-radius:7px;overflow:hidden;margin-top:18px;gap:2px}
-.mixbar i{display:block;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.mixbar i{display:block;transition:width .5s cubic-bezier(.4,0,.2,1);
+  background-image:linear-gradient(180deg,rgba(255,255,255,.26),transparent 70%)}
 .mixbar i:hover{filter:brightness(1.12)}
 .toplist{display:flex;flex-direction:column;gap:2px;margin-top:16px}
 .toprow{display:flex;align-items:center;gap:13px;width:100%;padding:9px 10px;border-radius:11px;transition:background .13s}
 .toprow:hover{background:var(--ground-2)}
+.toprow:active{transform:scale(.995)}
 .toprow-bar{width:10px;height:34px;border-radius:5px;flex-shrink:0}
 .toprow-name{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .toprow-sub{font-size:11.5px;color:var(--faint)}
@@ -330,13 +359,14 @@ svg{display:block}
   width:100%;padding:13px 14px;border-radius:13px;border:1px solid transparent;transition:background .13s,border-color .13s;
 }
 .eq-row:hover{background:var(--ground-2)}
-.eq-row[aria-expanded="true"]{background:var(--surface);border-color:var(--ink)}
+.eq-row[aria-expanded="true"]{background:var(--surface);border-color:var(--ink);box-shadow:var(--elev-1)}
 .eq-pos{font-family:var(--f-mono);font-size:12px;color:var(--fainter)}
 .eq-name{display:flex;align-items:center;gap:8px;min-width:0}
 .eq-name b{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .eq-meta{font-size:11.5px;color:var(--faint);margin-top:2px}
 .eq-track{height:8px;background:#F4F1EA;border-radius:4px;overflow:hidden}
-.eq-track i{display:block;height:100%;border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.eq-track i{display:block;height:100%;border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1);
+  background-image:linear-gradient(180deg,rgba(255,255,255,.24),transparent 60%)}
 .eq-pct{font-size:11px;color:var(--faint);margin-top:4px}
 .eq-kwh{font-family:var(--f-mono);font-size:13.5px;font-weight:500;font-variant-numeric:tabular-nums}
 .eq-cash{font-size:11px;color:var(--faint)}
@@ -406,12 +436,14 @@ input[type=range]{width:100%;margin:10px 0 0;accent-color:var(--sun);cursor:poin
 .saved{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12.5px;color:var(--good-on-dark)}
 .preset{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px 11px;border-radius:11px;transition:background .13s}
 .preset:hover{background:var(--ground-2)}
+.preset:active{transform:scale(.995)}
 .preset-n{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .preset-d{font-size:11.5px;color:var(--faint);margin-top:2px}
 
 /* ---------- alertas ---------- */
 .goal-track{position:relative;height:14px;background:#F4F1EA;border-radius:7px;margin-top:22px}
-.goal-fill{height:100%;border-radius:7px;transition:width .5s cubic-bezier(.4,0,.2,1),background .3s}
+.goal-fill{height:100%;border-radius:7px;transition:width .5s cubic-bezier(.4,0,.2,1),background .3s;
+  background-image:linear-gradient(180deg,rgba(255,255,255,.24),transparent 60%)}
 .goal-mark{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);border-radius:1px}
 .goal-mark::after{content:attr(data-l);position:absolute;top:-19px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--faint);white-space:nowrap;font-family:var(--f-mono)}
 .rule-row{display:flex;align-items:center;gap:14px;width:100%;padding:12px 10px;border-radius:12px;transition:background .13s}
@@ -483,7 +515,7 @@ input[type=range]{width:100%;margin:10px 0 0;accent-color:var(--sun);cursor:poin
   border:1px solid var(--line-2);background:var(--surface);transition:border-color .13s,background .13s;
 }
 .opt:hover{border-color:var(--faint)}
-.opt[aria-pressed="true"]{border-color:var(--ink);background:var(--ground-2)}
+.opt[aria-pressed="true"]{border-color:var(--ink);background:var(--ground-2);box-shadow:var(--elev-1)}
 .opt-t{display:block;font-size:13.5px;font-weight:600}
 .opt-d{display:block;font-size:12px;color:var(--muted);margin-top:4px;line-height:1.45}
 
@@ -493,8 +525,10 @@ input[type=range]{width:100%;margin:10px 0 0;accent-color:var(--sun);cursor:poin
 /* ---------- toasts ---------- */
 .toasts{position:fixed;right:20px;bottom:20px;z-index:200;display:flex;flex-direction:column;gap:10px;max-width:min(360px,calc(100vw - 40px))}
 .toast{
-  display:flex;gap:11px;background:var(--dark);color:var(--on-dark);border-radius:14px;padding:13px 15px;
-  box-shadow:var(--shadow-lift);animation:slidein .32s cubic-bezier(.16,1,.3,1);
+  display:flex;gap:11px;color:var(--on-dark);border-radius:14px;padding:13px 15px;
+  background:linear-gradient(158deg,#211F17,var(--dark));
+  box-shadow:var(--elev-3);animation:slidein .32s cubic-bezier(.16,1,.3,1);
+  border:1px solid rgba(244,241,234,.09);
 }
 .toast.out{animation:slideout .28s ease forwards}
 .toast-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;background:var(--sun)}
@@ -582,7 +616,8 @@ body.vista-celular{background:var(--dark)}
 .mob-rowline:first-child{border-top:0}
 .mob-rowline span:first-child{color:var(--muted)}
 .mob-menu{display:flex;align-items:center;gap:13px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 15px;transition:border-color .15s}
-.mob-menu:hover{border-color:var(--ink)}
+.mob-menu{box-shadow:var(--elev-1)}
+.mob-menu:hover{border-color:var(--ink);box-shadow:var(--elev-2)}
 .mob-menu-ic{width:36px;height:36px;border-radius:12px;background:var(--ground-2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .mob-menu-t{font-size:13.5px;font-weight:600}
 .mob-menu-s{font-size:11.5px;color:var(--faint);margin-top:2px}
@@ -677,8 +712,14 @@ body.vista-login{background:var(--dark)}
   background:radial-gradient(circle,rgba(237,162,43,.26),transparent 68%);animation:pulse 7s ease-in-out infinite;
 }
 .auth-cx{
-  position:relative;width:100%;max-width:404px;background:var(--ground);border-radius:24px;
-  padding:32px 34px 26px;box-shadow:var(--shadow-lift);
+  position:relative;width:100%;max-width:404px;border-radius:24px;
+  padding:32px 34px 26px;
+  background:linear-gradient(168deg,#F5F2EA,var(--ground) 58%);
+  box-shadow:0 40px 90px -30px rgba(0,0,0,.6), 0 0 0 1px rgba(244,241,234,.1);
+}
+.auth-cx::before{
+  content:"";position:absolute;left:24px;right:24px;top:0;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);
 }
 .auth-marca{display:flex;align-items:center;gap:12px}
 .auth-ic{
@@ -769,6 +810,31 @@ body.vista-login{background:var(--dark)}
   .auth-cx{max-width:none;border-radius:20px;padding:26px 22px 22px}
 }
 
+
+/* ============================================================
+   BANCO DE DADOS
+   ============================================================ */
+.bd-grade{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}
+@media(max-width:900px){.bd-grade{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.bd-cel{background:var(--ground-2);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.bd-k{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--fainter);font-weight:600}
+.bd-v{font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:-1px;margin-top:7px;
+  line-height:1;font-variant-numeric:tabular-nums}
+.bd-s{font-size:11.5px;color:var(--faint);margin-top:5px;line-height:1.4}
+
+.bd-graf{margin-top:18px}
+.bd-graf-t{font-size:12.5px;color:var(--muted)}
+.bd-pe{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:10px;
+  font-size:11.5px;color:var(--faint)}
+.bd-pe code{font-family:var(--f-mono);font-size:11px;background:var(--ground-2);
+  padding:2px 6px;border-radius:5px;border:1px solid var(--line)}
+.bd-vazio{background:var(--ground-2);border:1px dashed var(--line-2);border-radius:14px;
+  padding:20px 22px;font-size:13px;color:var(--muted);line-height:1.55;margin-top:6px}
+
+/* o fundo com gradiente nao faz sentido nestes dois contextos */
+body.vista-celular,body.vista-login{background-image:none}
+@media print{ body{background-image:none} .card{box-shadow:none} }
+
 </style>
 </head>
 <body>
@@ -782,6 +848,287 @@ body.vista-login{background:var(--dark)}
   </div>
 </noscript>
 <script>
+/* ===== banco.js ===== */
+/* ============================================================
+   SOLARIS — banco de dados
+
+   IndexedDB: o banco que já vem no navegador. Transacional, indexado,
+   assíncrono e sem limite prático de tamanho — diferente do localStorage,
+   que é um mapa de texto com uns 5 MB no total.
+
+   Três tabelas:
+     contas    quem pode entrar (id = e-mail)
+     estado    o app de cada conta (unidades, aparelhos, metas, tarifa)
+     leituras  o histórico do medidor, uma linha por minuto
+
+   A tabela de leituras é a razão de existir um banco aqui. Guardar o
+   medidor minuto a minuto dá 1.440 linhas por dia; em uma semana são
+   dez mil. Isso não cabe em localStorage, e é exatamente o tipo de dado
+   que um sistema de monitoramento precisa acumular.
+
+   Se o IndexedDB não estiver disponível (navegador antigo, modo privado
+   em alguns casos), tudo cai de volta para localStorage sozinho. O app
+   nunca deixa de abrir por causa do banco.
+   ============================================================ */
+'use strict';
+
+const BD_NOME = 'solaris';
+const BD_VERSAO = 1;
+const DIAS_HISTORICO = 7;      /* leituras mais velhas que isso são podadas */
+const INTERVALO_LEITURA = 60;  /* segundos entre gravações */
+
+let _bd = null;
+let _bdFalhou = false;
+
+function temIndexedDB() {
+  try { return typeof indexedDB !== 'undefined' && indexedDB !== null; } catch (e) { return false; }
+}
+
+function abrirBanco() {
+  if (_bd) return Promise.resolve(_bd);
+  if (_bdFalhou || !temIndexedDB()) return Promise.resolve(null);
+
+  return new Promise(resolve => {
+    let pedido;
+    try { pedido = indexedDB.open(BD_NOME, BD_VERSAO); }
+    catch (e) { _bdFalhou = true; return resolve(null); }
+
+    /* se o navegador travar a abertura (modo privado do Firefox, por
+       exemplo), não deixamos o app pendurado esperando */
+    const desistir = setTimeout(() => { _bdFalhou = true; resolve(null); }, 3000);
+
+    pedido.onupgradeneeded = ev => {
+      const bd = ev.target.result;
+      if (!bd.objectStoreNames.contains('contas')) {
+        bd.createObjectStore('contas', { keyPath: 'id' });
+      }
+      if (!bd.objectStoreNames.contains('estado')) {
+        bd.createObjectStore('estado', { keyPath: 'conta' });
+      }
+      if (!bd.objectStoreNames.contains('leituras')) {
+        const s = bd.createObjectStore('leituras', { keyPath: 'id', autoIncrement: true });
+        s.createIndex('porConta', ['conta', 't']);
+        s.createIndex('porTempo', 't');
+      }
+    };
+    pedido.onsuccess = () => { clearTimeout(desistir); _bd = pedido.result; resolve(_bd); };
+    pedido.onerror = () => { clearTimeout(desistir); _bdFalhou = true; resolve(null); };
+    pedido.onblocked = () => { clearTimeout(desistir); _bdFalhou = true; resolve(null); };
+  });
+}
+
+/* envelopa uma transação numa promise, sempre resolvendo:
+   uma falha de banco nunca deve derrubar a tela */
+function transacao(tabela, modo, fn) {
+  return abrirBanco().then(bd => {
+    if (!bd) return null;
+    return new Promise(resolve => {
+      let resultado = null;
+      let t;
+      try { t = bd.transaction(tabela, modo); }
+      catch (e) { return resolve(null); }
+      t.oncomplete = () => resolve(resultado);
+      t.onerror = () => resolve(null);
+      t.onabort = () => resolve(null);
+      try {
+        const pedido = fn(t.objectStore(tabela));
+        if (pedido) pedido.onsuccess = () => { resultado = pedido.result; };
+      } catch (e) { resolve(null); }
+    });
+  });
+}
+
+const bdLer = (tabela, chave) => transacao(tabela, 'readonly', s => s.get(chave));
+const bdTodos = tabela => transacao(tabela, 'readonly', s => s.getAll());
+const bdGravar = (tabela, valor) => transacao(tabela, 'readwrite', s => s.put(valor));
+const bdApagar = (tabela, chave) => transacao(tabela, 'readwrite', s => s.delete(chave));
+const bdContar = tabela => transacao(tabela, 'readonly', s => s.count());
+
+/* ---------- reserva em localStorage ----------
+   Mesma interface, para o app não precisar saber qual dos dois está
+   respondendo. Só entra em ação se o IndexedDB não abrir. */
+const PREFIXO_RESERVA = 'solaris.bd.';
+function reservaLer(tabela, chave) {
+  try { const r = localStorage.getItem(PREFIXO_RESERVA + tabela + '.' + chave); return r ? JSON.parse(r) : undefined; }
+  catch (e) { return undefined; }
+}
+function reservaGravar(tabela, chave, valor) {
+  try { localStorage.setItem(PREFIXO_RESERVA + tabela + '.' + chave, JSON.stringify(valor)); } catch (e) { }
+}
+function reservaApagar(tabela, chave) {
+  try { localStorage.removeItem(PREFIXO_RESERVA + tabela + '.' + chave); } catch (e) { }
+}
+function reservaTodos(tabela) {
+  const fora = [], p = PREFIXO_RESERVA + tabela + '.';
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf(p) === 0) fora.push(JSON.parse(localStorage.getItem(k)));
+    }
+  } catch (e) { }
+  return fora;
+}
+
+/* ---------- API que o resto do app usa ---------- */
+
+const Banco = {
+  pronto: false,
+  usandoIndexedDB: false,
+
+  async iniciar() {
+    const bd = await abrirBanco();
+    this.usandoIndexedDB = !!bd;
+    this.pronto = true;
+    await this.migrarDoLocalStorage();
+    await this.podarLeituras();
+    return this.usandoIndexedDB;
+  },
+
+  /* contas */
+  async contas() {
+    if (!this.usandoIndexedDB) return reservaTodos('contas');
+    return (await bdTodos('contas')) || [];
+  },
+  async conta(id) {
+    if (!this.usandoIndexedDB) return reservaLer('contas', id);
+    return await bdLer('contas', id);
+  },
+  async salvarConta(c) {
+    if (!this.usandoIndexedDB) return reservaGravar('contas', c.id, c);
+    return await bdGravar('contas', c);
+  },
+  async apagarConta(id) {
+    if (!this.usandoIndexedDB) return reservaApagar('contas', id);
+    return await bdApagar('contas', id);
+  },
+
+  /* estado do app, um por conta */
+  async estado(conta) {
+    const r = this.usandoIndexedDB ? await bdLer('estado', conta) : reservaLer('estado', conta);
+    return r ? r.dados : null;
+  },
+  async salvarEstado(conta, dados) {
+    const reg = { conta: conta, dados: dados, em: Date.now() };
+    if (!this.usandoIndexedDB) return reservaGravar('estado', conta, reg);
+    return await bdGravar('estado', reg);
+  },
+  async apagarEstado(conta) {
+    if (!this.usandoIndexedDB) return reservaApagar('estado', conta);
+    return await bdApagar('estado', conta);
+  },
+
+  /* leituras do medidor — só no IndexedDB, é o que justifica o banco */
+  async registrarLeitura(conta, cons, ger) {
+    if (!this.usandoIndexedDB) return null;
+    return await transacao('leituras', 'readwrite', s => s.add({
+      conta: conta, t: Date.now(),
+      c: Math.round(cons * 1000) / 1000,
+      g: Math.round(ger * 1000) / 1000
+    }));
+  },
+
+  /* últimas leituras de uma conta, da mais antiga para a mais nova */
+  async leituras(conta, desdeMs, limite) {
+    if (!this.usandoIndexedDB) return [];
+    const bd = await abrirBanco();
+    if (!bd) return [];
+    const inicio = desdeMs || (Date.now() - 2 * 3600000);
+    return new Promise(resolve => {
+      const fora = [];
+      let t;
+      try { t = bd.transaction('leituras', 'readonly'); } catch (e) { return resolve([]); }
+      const faixa = IDBKeyRange.bound([conta, inicio], [conta, Date.now() + 1]);
+      const cur = t.objectStore('leituras').index('porConta').openCursor(faixa);
+      cur.onsuccess = ev => {
+        const c = ev.target.result;
+        if (!c || (limite && fora.length >= limite)) return resolve(fora);
+        fora.push(c.value);
+        c.continue();
+      };
+      cur.onerror = () => resolve(fora);
+      t.onerror = () => resolve(fora);
+    });
+  },
+
+  async contarLeituras() {
+    if (!this.usandoIndexedDB) return 0;
+    return (await bdContar('leituras')) || 0;
+  },
+
+  /* poda o que passou da janela de histórico */
+  async podarLeituras() {
+    if (!this.usandoIndexedDB) return 0;
+    const bd = await abrirBanco();
+    if (!bd) return 0;
+    const corte = Date.now() - DIAS_HISTORICO * 86400000;
+    return new Promise(resolve => {
+      let n = 0, t;
+      try { t = bd.transaction('leituras', 'readwrite'); } catch (e) { return resolve(0); }
+      const cur = t.objectStore('leituras').index('porTempo').openCursor(IDBKeyRange.upperBound(corte));
+      cur.onsuccess = ev => {
+        const c = ev.target.result;
+        if (!c) return;
+        c.delete(); n++; c.continue();
+      };
+      t.oncomplete = () => resolve(n);
+      t.onerror = () => resolve(n);
+    });
+  },
+
+  async limparLeituras(conta) {
+    if (!this.usandoIndexedDB) return 0;
+    const linhas = await this.leituras(conta, 0);
+    for (const l of linhas) await bdApagar('leituras', l.id);
+    return linhas.length;
+  },
+
+  /* ---------- migração ----------
+     Traz o que estava em localStorage e marca para não repetir. */
+  async migrarDoLocalStorage() {
+    let marca;
+    try { marca = localStorage.getItem('solaris.migrado.v1'); } catch (e) { return; }
+    if (marca) return;
+
+    try {
+      /* contas */
+      const raw = localStorage.getItem('solaris.contas.v1');
+      if (raw) {
+        const todas = JSON.parse(raw);
+        for (const id of Object.keys(todas)) await this.salvarConta(todas[id]);
+      }
+      /* estados: solaris.v2, solaris.v2.<conta> */
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k || k.indexOf('solaris.v2') !== 0) continue;
+        const conta = k === 'solaris.v2' ? 'visitante' : k.slice('solaris.v2.'.length);
+        const dados = JSON.parse(localStorage.getItem(k));
+        const jaTem = await this.estado(conta);
+        if (!jaTem) await this.salvarEstado(conta, dados);
+      }
+      localStorage.setItem('solaris.migrado.v1', String(Date.now()));
+    } catch (e) { /* migração é conveniência, não pode quebrar a abertura */ }
+  },
+
+  /* números para mostrar em Configurações */
+  async estatisticas() {
+    const nContas = (await this.contas()).length;
+    const nLeituras = await this.contarLeituras();
+    let bytes = null;
+    try {
+      if (navigator.storage && navigator.storage.estimate) {
+        const e = await navigator.storage.estimate();
+        bytes = e.usage || null;
+      }
+    } catch (e) { }
+    return {
+      motor: this.usandoIndexedDB ? 'IndexedDB' : 'localStorage (reserva)',
+      contas: nContas, leituras: nLeituras, bytes: bytes,
+      janelaDias: DIAS_HISTORICO, intervaloSeg: INTERVALO_LEITURA
+    };
+  }
+};
+
+
 /* ===== motor.js ===== */
 /* ============================================================
    SOLARIS — motor
@@ -1114,6 +1461,10 @@ function chaveEstado() {
   const s = (typeof sessao === 'function') ? sessao() : null;
   return CHAVE_LS + (s ? '.' + s.id : '');
 }
+function contaAtual() {
+  const s = (typeof sessao === 'function') ? sessao() : null;
+  return s ? s.id : 'visitante';
+}
 const PADRAO = {
   perfil: 'residencial', tela: 'painel', periodo: 'mes', vista: 'desktop',
   tab: 'painel', msub: null, detalhe: null,
@@ -1132,11 +1483,12 @@ const PADRAO = {
 };
 let S = JSON.parse(JSON.stringify(PADRAO));
 
-function carregar() {
+/* Carrega do banco. É assíncrono porque IndexedDB é assíncrono — o app
+   espera isto terminar antes de desenhar a primeira tela. */
+async function carregar() {
   try {
-    const raw = localStorage.getItem(chaveEstado());
-    if (!raw) return;
-    const o = JSON.parse(raw);
+    const o = await Banco.estado(contaAtual());
+    if (!o) return;
     Object.keys(PADRAO).forEach(k => {
       if (o[k] === undefined) return;
       if (k === 'metas' || k === 'regras' || k === 'tarifa' || k === 'novo' || k === 'respondidas') S[k] = Object.assign({}, PADRAO[k], o[k]);
@@ -1149,7 +1501,8 @@ let _tsave = 0;
 function salvar() {
   clearTimeout(_tsave);
   _tsave = setTimeout(() => {
-    try { localStorage.setItem(chaveEstado(), JSON.stringify(S)); } catch (e) { }
+    S.medidor = { ativo: MEDIDOR.ativo, endereco: MEDIDOR.endereco };
+    Banco.salvarEstado(contaAtual(), JSON.parse(JSON.stringify(S)));
   }, 180);
 }
 
@@ -1694,7 +2047,17 @@ function lerJSON(chave, padrao) {
 function gravarJSON(chave, v) {
   try { localStorage.setItem(chave, JSON.stringify(v)); return true; } catch (e) { return false; }
 }
-function contas() { return lerJSON(CHAVE_CONTAS, {}); }
+/* Espelho em memória das contas. O banco é assíncrono, mas a tela precisa
+   saber sincronamente se existe conta — então carregamos uma vez na
+   abertura e mantemos o espelho junto com o banco. */
+let _contas = {};
+function contas() { return _contas; }
+async function carregarContas() {
+  const lista = await Banco.contas();
+  _contas = {};
+  lista.forEach(c => { _contas[c.id] = c; });
+  return _contas;
+}
 function normalizarEmail(e) { return String(e || '').trim().toLowerCase(); }
 
 let SESSAO = null;
@@ -1725,7 +2088,8 @@ async function criarConta(nome, email, senha) {
     id: e, nome: String(nome).trim(), email: e,
     salt: salt, hash: d.valor, metodo: d.metodo, criadoEm: Date.now()
   };
-  if (!gravarJSON(CHAVE_CONTAS, todas)) throw new Error('Este navegador bloqueou o armazenamento local. Saia do modo anônimo e tente de novo.');
+  _contas = todas;
+  await Banco.salvarConta(todas[e]);
   return todas[e];
 }
 
@@ -1767,15 +2131,16 @@ async function trocarSenha(senhaAtual, senhaNova) {
   const salt = saltAleatorio();
   const d = await derivar(senhaNova, salt);
   c.salt = salt; c.hash = d.valor; c.metodo = d.metodo;
-  gravarJSON(CHAVE_CONTAS, todas);
+  await Banco.salvarConta(c);
 }
 
-function apagarConta() {
+async function apagarConta() {
   if (!SESSAO || ehVisitante()) return;
-  const todas = contas();
-  delete todas[SESSAO.id];
-  gravarJSON(CHAVE_CONTAS, todas);
-  try { localStorage.removeItem('solaris.v2.' + SESSAO.id); } catch (e) { }
+  const id = SESSAO.id;
+  delete _contas[id];
+  await Banco.apagarConta(id);
+  await Banco.apagarEstado(id);
+  await Banco.limparLeituras(id);
   sair();
 }
 
@@ -1783,26 +2148,14 @@ function apagarConta() {
    Dois casos em que os dados ficariam órfãos e o usuário acharia que
    perdeu tudo. Os dois são resolvidos calados. */
 
-/* antes de existir login, o estado morava na chave sem sufixo */
-function adotarDadosAntigos() {
-  try {
-    const antigo = localStorage.getItem(CHAVE_LS);
-    const alvo = CHAVE_LS + '.visitante';
-    if (antigo && !localStorage.getItem(alvo)) localStorage.setItem(alvo, antigo);
-  } catch (e) { }
-}
-
 /* quem brincou como visitante e depois criou conta leva o que fez junto */
-function migrarDoVisitante(destinoId) {
-  try {
-    const origem = CHAVE_LS + '.visitante';
-    const destino = CHAVE_LS + '.' + destinoId;
-    const dados = localStorage.getItem(origem);
-    if (!dados || localStorage.getItem(destino)) return false;
-    localStorage.setItem(destino, dados);
-    localStorage.removeItem(origem);
-    return true;
-  } catch (e) { return false; }
+async function migrarDoVisitante(destinoId) {
+  const dados = await Banco.estado('visitante');
+  if (!dados) return false;
+  if (await Banco.estado(destinoId)) return false;
+  await Banco.salvarEstado(destinoId, dados);
+  await Banco.apagarEstado('visitante');
+  return true;
 }
 
 /* ---------- tela de login ---------- */
@@ -1891,12 +2244,13 @@ async function enviarLogin(ev) {
   try {
     let migrou = false;
     if (criar) {
+      const eraVisitante = ehVisitante();
       const c = await criarConta(nome, email, senha);
-      migrou = ehVisitante() && migrarDoVisitante(c.id);
+      if (eraVisitante) migrou = await migrarDoVisitante(c.id);
       await entrar(email, senha, true);
     } else await entrar(email, senha, manter);
     ocupado = false;
-    aoEntrar(migrou);
+    await aoEntrar(migrou);
   } catch (e) {
     ocupado = false;
     erroLogin = e.message || 'Não deu para continuar.';
@@ -2576,7 +2930,18 @@ function vConfig() {
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">' +
     '<div style="font-size:12.5px;color:var(--faint);max-width:44ch">Aparelhos cadastrados, metas e tarifa ficam salvos neste navegador.</div>' +
     '<button class="danger-btn" data-act="reset-tudo">Apagar meus dados</button></div>' +
-    '</section>' + cardUnidades() + cardFonte() + '</div>';
+    '</section>' + cardUnidades() + cardFonte() + cardBanco() + '</div>';
+}
+
+/* estado do banco de dados — preenchido de forma assíncrona depois do render */
+function cardBanco() {
+  return '<section class="card s12" id="cardBanco">' +
+    '<div class="card-head"><div><h2>Banco de dados</h2>' +
+    '<div class="card-sub">O histórico do medidor é gravado minuto a minuto — é o que não caberia em armazenamento simples</div></div>' +
+    '<span class="pill pill--neutral" id="bancoMotor">carregando…</span></div>' +
+    '<div class="bd-grade" id="bancoNumeros"></div>' +
+    '<div class="bd-graf" id="bancoGrafico"></div>' +
+    '</section>';
 }
 
 /* unidades criadas pelo usuário */
@@ -3026,7 +3391,61 @@ function render() {
     }
   }
   ligarGraficos();
+  preencherCardBanco();
   atualizarHash();
+}
+
+/* O cartão do banco depende de consultas assíncronas, então ele nasce
+   vazio no render e se preenche logo depois. */
+async function preencherCardBanco() {
+  if (!$('#cardBanco')) return;
+  const est = await Banco.estatisticas();
+  const motor = $('#bancoMotor');
+  if (motor) {
+    motor.textContent = est.motor;
+    motor.className = 'pill ' + (Banco.usandoIndexedDB ? 'pill--good' : 'pill--warn');
+  }
+
+  const tamanho = est.bytes ? (est.bytes > 1048576
+    ? nf(est.bytes / 1048576, 1) + ' MB' : nf(est.bytes / 1024) + ' KB') : '\u2014';
+  const numeros = [
+    ['Leituras gravadas', nf(est.leituras), 'uma por minuto, \u00faltimos ' + est.janelaDias + ' dias'],
+    ['Contas', nf(est.contas), est.contas === 1 ? 'cadastrada neste navegador' : 'cadastradas neste navegador'],
+    ['Espa\u00e7o em disco', tamanho, 'estimado pelo navegador'],
+    ['Tabelas', '3', 'contas, estado e leituras']
+  ];
+  const g = $('#bancoNumeros');
+  if (g) g.innerHTML = numeros.map(n =>
+    '<div class="bd-cel"><div class="bd-k">' + n[0] + '</div>' +
+    '<div class="bd-v">' + n[1] + '</div>' +
+    '<div class="bd-s">' + n[2] + '</div></div>').join('');
+
+  const alvo = $('#bancoGrafico');
+  if (!alvo) return;
+  if (!Banco.usandoIndexedDB) {
+    alvo.innerHTML = '<div class="bd-vazio">Este navegador n\u00e3o liberou o IndexedDB, ent\u00e3o o sistema est\u00e1 usando o armazenamento simples como reserva. Tudo funciona, mas o hist\u00f3rico minuto a minuto n\u00e3o \u00e9 gravado.</div>';
+    return;
+  }
+  const linhas = await Banco.leituras(contaAtual(), Date.now() - 2 * 3600000);
+  if (linhas.length < 2) {
+    alvo.innerHTML = '<div class="bd-vazio">O banco come\u00e7a a gravar assim que o painel fica aberto \u2014 uma leitura por minuto. Volte aqui daqui a pouco e o gr\u00e1fico aparece.' +
+      (linhas.length ? ' J\u00e1 h\u00e1 ' + linhas.length + ' leitura registrada.' : '') + '</div>';
+    return;
+  }
+  const maxV = Math.max.apply(null, linhas.map(l => Math.max(l.c, l.g))) * 1.1 || 1;
+  const W = 720, H = 90;
+  const cam = arr => caminho(arr, maxV, W, H);
+  const c0 = new Date(linhas[0].t), c1 = new Date(linhas[linhas.length - 1].t);
+  const hhmm = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  alvo.innerHTML =
+    '<div class="bd-graf-t">' + linhas.length + ' leituras reais do banco \u00b7 ' + hhmm(c0) + ' at\u00e9 ' + hhmm(c1) + '</div>' +
+    '<svg viewBox="0 0 720 96" preserveAspectRatio="none" style="width:100%;height:96px;margin-top:10px">' +
+    '<path d="' + caminho(linhas.map(l => l.g), maxV, W, H, true) + '" fill="rgba(237,162,43,.16)"/>' +
+    '<path d="' + cam(linhas.map(l => l.g)) + '" fill="none" stroke="#EDA22B" stroke-width="2" stroke-linejoin="round"/>' +
+    '<path d="' + cam(linhas.map(l => l.c)) + '" fill="none" stroke="#3E4C7A" stroke-width="1.8" stroke-linejoin="round"/>' +
+    '</svg>' +
+    '<div class="bd-pe"><span>Cada ponto \u00e9 uma linha na tabela <code>leituras</code></span>' +
+    '<button class="danger-btn" data-act="limpar-leituras">Apagar hist\u00f3rico</button></div>';
 }
 
 /* ---------- gráficos interativos ---------- */
@@ -3342,6 +3761,12 @@ const ACOES = {
     entrarComoVisitante();
     aoEntrar();
   },
+  'limpar-leituras': async () => {
+    if (!window.confirm('Apagar o hist\u00f3rico de leituras desta conta? O painel continua funcionando \u2014 s\u00f3 o registro minuto a minuto some.')) return;
+    const n = await Banco.limparLeituras(contaAtual());
+    render();
+    aviso('Hist\u00f3rico apagado', n + ' leituras removidas do banco.', 'bad');
+  },
   imprimir: () => window.print(),
   'reset-tarifa': () => { S.tarifa[S.perfil] = null; salvar(); render(); aviso('Tarifa restaurada', 'Voltou para R$ ' + nf(unidade().tarifa, 2) + ' / kWh da ' + unidade().distribuidora + '.', 'sun'); },
   'reset-tudo': () => {
@@ -3441,6 +3866,7 @@ function tique() {
   if (!sessao()) return;
   pulso();
   buscarMedidor();
+  gravarLeitura();
   const p = potenciaAgora();
   txt('#liveC', nf(p.cons, 2) + ' kW');
   txt('#liveG', nf(p.ger, 2) + ' kW');
@@ -3460,6 +3886,17 @@ function tique() {
   }
   _spikeAtivo = emSurto;
 }
+/* uma linha por minuto no banco: e o historico que localStorage nao aguenta */
+let _ultimaGravacao = 0;
+async function gravarLeitura() {
+  if (!sessao() || !Banco.usandoIndexedDB) return;
+  const agoraMs = Date.now();
+  if (agoraMs - _ultimaGravacao < 60000) return;
+  _ultimaGravacao = agoraMs;
+  const p = potenciaAgora();
+  await Banco.registrarLeitura(contaAtual(), p.cons, p.ger);
+}
+
 let _ultimaHora = -1;
 function tiqueLento() {
   if (!sessao()) return;
@@ -3477,10 +3914,10 @@ function iniciarRelogios() {
 }
 
 /* chamado quando uma sessão acabou de ser aberta */
-function aoEntrar(migrou) {
+async function aoEntrar(migrou) {
   document.body.classList.remove('vista-login');
   S = JSON.parse(JSON.stringify(PADRAO));
-  carregar();
+  await carregar();
   if (!uni(S.perfil)) S.perfil = 'residencial';
   if (!TELAS[S.tela]) S.tela = 'painel';
   if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
@@ -3497,14 +3934,16 @@ function aoEntrar(migrou) {
 }
 
 /* ---------- partida ---------- */
-function iniciar() {
+async function iniciar() {
   /* a suíte de testes carrega os mesmos scripts sem a casca da página:
      sem #root não há app para subir, só as funções para exercitar */
   if (!$('#root')) return;
+  await Banco.iniciar();
+  await carregarContas();
   /* Site normal: abre direto no painel. Sem sessão, entra como visitante
      e o login fica disponível no menu para quem quiser conta própria. */
-  if (!carregarSessao()) { adotarDadosAntigos(); entrarComoVisitante(); }
-  carregar();
+  if (!carregarSessao()) entrarComoVisitante();
+  await carregar();
   if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
   if (!uni(S.perfil)) S.perfil = 'residencial';
   if (!TELAS[S.tela]) S.tela = 'painel';

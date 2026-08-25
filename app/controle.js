@@ -43,7 +43,61 @@ function render() {
     }
   }
   ligarGraficos();
+  preencherCardBanco();
   atualizarHash();
+}
+
+/* O cartão do banco depende de consultas assíncronas, então ele nasce
+   vazio no render e se preenche logo depois. */
+async function preencherCardBanco() {
+  if (!$('#cardBanco')) return;
+  const est = await Banco.estatisticas();
+  const motor = $('#bancoMotor');
+  if (motor) {
+    motor.textContent = est.motor;
+    motor.className = 'pill ' + (Banco.usandoIndexedDB ? 'pill--good' : 'pill--warn');
+  }
+
+  const tamanho = est.bytes ? (est.bytes > 1048576
+    ? nf(est.bytes / 1048576, 1) + ' MB' : nf(est.bytes / 1024) + ' KB') : '\u2014';
+  const numeros = [
+    ['Leituras gravadas', nf(est.leituras), 'uma por minuto, \u00faltimos ' + est.janelaDias + ' dias'],
+    ['Contas', nf(est.contas), est.contas === 1 ? 'cadastrada neste navegador' : 'cadastradas neste navegador'],
+    ['Espa\u00e7o em disco', tamanho, 'estimado pelo navegador'],
+    ['Tabelas', '3', 'contas, estado e leituras']
+  ];
+  const g = $('#bancoNumeros');
+  if (g) g.innerHTML = numeros.map(n =>
+    '<div class="bd-cel"><div class="bd-k">' + n[0] + '</div>' +
+    '<div class="bd-v">' + n[1] + '</div>' +
+    '<div class="bd-s">' + n[2] + '</div></div>').join('');
+
+  const alvo = $('#bancoGrafico');
+  if (!alvo) return;
+  if (!Banco.usandoIndexedDB) {
+    alvo.innerHTML = '<div class="bd-vazio">Este navegador n\u00e3o liberou o IndexedDB, ent\u00e3o o sistema est\u00e1 usando o armazenamento simples como reserva. Tudo funciona, mas o hist\u00f3rico minuto a minuto n\u00e3o \u00e9 gravado.</div>';
+    return;
+  }
+  const linhas = await Banco.leituras(contaAtual(), Date.now() - 2 * 3600000);
+  if (linhas.length < 2) {
+    alvo.innerHTML = '<div class="bd-vazio">O banco come\u00e7a a gravar assim que o painel fica aberto \u2014 uma leitura por minuto. Volte aqui daqui a pouco e o gr\u00e1fico aparece.' +
+      (linhas.length ? ' J\u00e1 h\u00e1 ' + linhas.length + ' leitura registrada.' : '') + '</div>';
+    return;
+  }
+  const maxV = Math.max.apply(null, linhas.map(l => Math.max(l.c, l.g))) * 1.1 || 1;
+  const W = 720, H = 90;
+  const cam = arr => caminho(arr, maxV, W, H);
+  const c0 = new Date(linhas[0].t), c1 = new Date(linhas[linhas.length - 1].t);
+  const hhmm = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  alvo.innerHTML =
+    '<div class="bd-graf-t">' + linhas.length + ' leituras reais do banco \u00b7 ' + hhmm(c0) + ' at\u00e9 ' + hhmm(c1) + '</div>' +
+    '<svg viewBox="0 0 720 96" preserveAspectRatio="none" style="width:100%;height:96px;margin-top:10px">' +
+    '<path d="' + caminho(linhas.map(l => l.g), maxV, W, H, true) + '" fill="rgba(237,162,43,.16)"/>' +
+    '<path d="' + cam(linhas.map(l => l.g)) + '" fill="none" stroke="#EDA22B" stroke-width="2" stroke-linejoin="round"/>' +
+    '<path d="' + cam(linhas.map(l => l.c)) + '" fill="none" stroke="#3E4C7A" stroke-width="1.8" stroke-linejoin="round"/>' +
+    '</svg>' +
+    '<div class="bd-pe"><span>Cada ponto \u00e9 uma linha na tabela <code>leituras</code></span>' +
+    '<button class="danger-btn" data-act="limpar-leituras">Apagar hist\u00f3rico</button></div>';
 }
 
 /* ---------- gráficos interativos ---------- */
@@ -359,6 +413,12 @@ const ACOES = {
     entrarComoVisitante();
     aoEntrar();
   },
+  'limpar-leituras': async () => {
+    if (!window.confirm('Apagar o hist\u00f3rico de leituras desta conta? O painel continua funcionando \u2014 s\u00f3 o registro minuto a minuto some.')) return;
+    const n = await Banco.limparLeituras(contaAtual());
+    render();
+    aviso('Hist\u00f3rico apagado', n + ' leituras removidas do banco.', 'bad');
+  },
   imprimir: () => window.print(),
   'reset-tarifa': () => { S.tarifa[S.perfil] = null; salvar(); render(); aviso('Tarifa restaurada', 'Voltou para R$ ' + nf(unidade().tarifa, 2) + ' / kWh da ' + unidade().distribuidora + '.', 'sun'); },
   'reset-tudo': () => {
@@ -458,6 +518,7 @@ function tique() {
   if (!sessao()) return;
   pulso();
   buscarMedidor();
+  gravarLeitura();
   const p = potenciaAgora();
   txt('#liveC', nf(p.cons, 2) + ' kW');
   txt('#liveG', nf(p.ger, 2) + ' kW');
@@ -477,6 +538,17 @@ function tique() {
   }
   _spikeAtivo = emSurto;
 }
+/* uma linha por minuto no banco: e o historico que localStorage nao aguenta */
+let _ultimaGravacao = 0;
+async function gravarLeitura() {
+  if (!sessao() || !Banco.usandoIndexedDB) return;
+  const agoraMs = Date.now();
+  if (agoraMs - _ultimaGravacao < 60000) return;
+  _ultimaGravacao = agoraMs;
+  const p = potenciaAgora();
+  await Banco.registrarLeitura(contaAtual(), p.cons, p.ger);
+}
+
 let _ultimaHora = -1;
 function tiqueLento() {
   if (!sessao()) return;
@@ -494,10 +566,10 @@ function iniciarRelogios() {
 }
 
 /* chamado quando uma sessão acabou de ser aberta */
-function aoEntrar(migrou) {
+async function aoEntrar(migrou) {
   document.body.classList.remove('vista-login');
   S = JSON.parse(JSON.stringify(PADRAO));
-  carregar();
+  await carregar();
   if (!uni(S.perfil)) S.perfil = 'residencial';
   if (!TELAS[S.tela]) S.tela = 'painel';
   if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
@@ -514,14 +586,16 @@ function aoEntrar(migrou) {
 }
 
 /* ---------- partida ---------- */
-function iniciar() {
+async function iniciar() {
   /* a suíte de testes carrega os mesmos scripts sem a casca da página:
      sem #root não há app para subir, só as funções para exercitar */
   if (!$('#root')) return;
+  await Banco.iniciar();
+  await carregarContas();
   /* Site normal: abre direto no painel. Sem sessão, entra como visitante
      e o login fica disponível no menu para quem quiser conta própria. */
-  if (!carregarSessao()) { adotarDadosAntigos(); entrarComoVisitante(); }
-  carregar();
+  if (!carregarSessao()) entrarComoVisitante();
+  await carregar();
   if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
   if (!uni(S.perfil)) S.perfil = 'residencial';
   if (!TELAS[S.tela]) S.tela = 'painel';

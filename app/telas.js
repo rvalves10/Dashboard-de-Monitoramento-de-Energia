@@ -649,7 +649,18 @@ function vConfig() {
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">' +
     '<div style="font-size:12.5px;color:var(--faint);max-width:44ch">Aparelhos cadastrados, metas e tarifa ficam salvos neste navegador.</div>' +
     '<button class="danger-btn" data-act="reset-tudo">Apagar meus dados</button></div>' +
-    '</section>' + cardUnidades() + cardFonte() + '</div>';
+    '</section>' + cardUnidades() + cardFonte() + cardBanco() + '</div>';
+}
+
+/* estado do banco de dados — preenchido de forma assíncrona depois do render */
+function cardBanco() {
+  return '<section class="card s12" id="cardBanco">' +
+    '<div class="card-head"><div><h2>Banco de dados</h2>' +
+    '<div class="card-sub">O histórico do medidor é gravado minuto a minuto — é o que não caberia em armazenamento simples</div></div>' +
+    '<span class="pill pill--neutral" id="bancoMotor">carregando…</span></div>' +
+    '<div class="bd-grade" id="bancoNumeros"></div>' +
+    '<div class="bd-graf" id="bancoGrafico"></div>' +
+    '</section>';
 }
 
 /* unidades criadas pelo usuário */

@@ -134,7 +134,17 @@ function lerJSON(chave, padrao) {
 function gravarJSON(chave, v) {
   try { localStorage.setItem(chave, JSON.stringify(v)); return true; } catch (e) { return false; }
 }
-function contas() { return lerJSON(CHAVE_CONTAS, {}); }
+/* Espelho em memória das contas. O banco é assíncrono, mas a tela precisa
+   saber sincronamente se existe conta — então carregamos uma vez na
+   abertura e mantemos o espelho junto com o banco. */
+let _contas = {};
+function contas() { return _contas; }
+async function carregarContas() {
+  const lista = await Banco.contas();
+  _contas = {};
+  lista.forEach(c => { _contas[c.id] = c; });
+  return _contas;
+}
 function normalizarEmail(e) { return String(e || '').trim().toLowerCase(); }
 
 let SESSAO = null;
@@ -165,7 +175,8 @@ async function criarConta(nome, email, senha) {
     id: e, nome: String(nome).trim(), email: e,
     salt: salt, hash: d.valor, metodo: d.metodo, criadoEm: Date.now()
   };
-  if (!gravarJSON(CHAVE_CONTAS, todas)) throw new Error('Este navegador bloqueou o armazenamento local. Saia do modo anônimo e tente de novo.');
+  _contas = todas;
+  await Banco.salvarConta(todas[e]);
   return todas[e];
 }
 
@@ -207,15 +218,16 @@ async function trocarSenha(senhaAtual, senhaNova) {
   const salt = saltAleatorio();
   const d = await derivar(senhaNova, salt);
   c.salt = salt; c.hash = d.valor; c.metodo = d.metodo;
-  gravarJSON(CHAVE_CONTAS, todas);
+  await Banco.salvarConta(c);
 }
 
-function apagarConta() {
+async function apagarConta() {
   if (!SESSAO || ehVisitante()) return;
-  const todas = contas();
-  delete todas[SESSAO.id];
-  gravarJSON(CHAVE_CONTAS, todas);
-  try { localStorage.removeItem('solaris.v2.' + SESSAO.id); } catch (e) { }
+  const id = SESSAO.id;
+  delete _contas[id];
+  await Banco.apagarConta(id);
+  await Banco.apagarEstado(id);
+  await Banco.limparLeituras(id);
   sair();
 }
 
@@ -223,26 +235,14 @@ function apagarConta() {
    Dois casos em que os dados ficariam órfãos e o usuário acharia que
    perdeu tudo. Os dois são resolvidos calados. */
 
-/* antes de existir login, o estado morava na chave sem sufixo */
-function adotarDadosAntigos() {
-  try {
-    const antigo = localStorage.getItem(CHAVE_LS);
-    const alvo = CHAVE_LS + '.visitante';
-    if (antigo && !localStorage.getItem(alvo)) localStorage.setItem(alvo, antigo);
-  } catch (e) { }
-}
-
 /* quem brincou como visitante e depois criou conta leva o que fez junto */
-function migrarDoVisitante(destinoId) {
-  try {
-    const origem = CHAVE_LS + '.visitante';
-    const destino = CHAVE_LS + '.' + destinoId;
-    const dados = localStorage.getItem(origem);
-    if (!dados || localStorage.getItem(destino)) return false;
-    localStorage.setItem(destino, dados);
-    localStorage.removeItem(origem);
-    return true;
-  } catch (e) { return false; }
+async function migrarDoVisitante(destinoId) {
+  const dados = await Banco.estado('visitante');
+  if (!dados) return false;
+  if (await Banco.estado(destinoId)) return false;
+  await Banco.salvarEstado(destinoId, dados);
+  await Banco.apagarEstado('visitante');
+  return true;
 }
 
 /* ---------- tela de login ---------- */
@@ -331,12 +331,13 @@ async function enviarLogin(ev) {
   try {
     let migrou = false;
     if (criar) {
+      const eraVisitante = ehVisitante();
       const c = await criarConta(nome, email, senha);
-      migrou = ehVisitante() && migrarDoVisitante(c.id);
+      if (eraVisitante) migrou = await migrarDoVisitante(c.id);
       await entrar(email, senha, true);
     } else await entrar(email, senha, manter);
     ocupado = false;
-    aoEntrar(migrou);
+    await aoEntrar(migrou);
   } catch (e) {
     ocupado = false;
     erroLogin = e.message || 'Não deu para continuar.';
