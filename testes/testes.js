@@ -310,6 +310,117 @@ grupo('Fatura', () => {
   });
 });
 
+/* ================= unidades do usuário ================= */
+grupo('Unidades', () => {
+
+  const RASCUNHO = {
+    chave: 'teste-un', nome: 'Casa de Teste', arquetipo: 'casaVazia', telhado: 'bom',
+    distribuidora: 'CPFL', tarifa: 1.05, consumoMes: 450,
+    potenciaKwp: 4.5, paineis: 11, investimento: 22000, mesesOperacao: 18
+  };
+  function comUnidade(fn) {
+    const antesU = S.unidades, antesP = S.perfil;
+    S.unidades = [RASCUNHO];
+    S.perfil = RASCUNHO.chave;
+    S.metas[RASCUNHO.chave] = 420;
+    _visao = null; _cacheMes.clear(); _cacheLedger.clear();
+    try { return fn(); } finally {
+      S.unidades = antesU; S.perfil = antesP;
+      delete S.metas[RASCUNHO.chave];
+      _visao = null; _cacheMes.clear(); _cacheLedger.clear();
+    }
+  }
+
+  teste('número em português: vírgula decimal e ponto de milhar', () => {
+    igual(numeroBR('1,05'), 1.05);
+    igual(numeroBR('1.05'), 1.05);
+    igual(numeroBR('26.000'), 26000);
+    igual(numeroBR('1.234,56'), 1234.56);
+    igual(numeroBR('1.000.000'), 1000000);
+    igual(numeroBR(''), 0);
+    igual(numeroBR('abc'), 0);
+  });
+
+  teste('a unidade montada tem todos os campos que o motor usa', () => {
+    const u = montarUnidade(RASCUNHO);
+    ['nome', 'tipo', 'curto', 'distribuidora', 'tarifa', 'tarifaComp', 'fioB', 'ilum',
+      'minFatura', 'potenciaKwp', 'paineis', 'investimento', 'mesesOperacao',
+      'fatorInstalacao', 'consumoMes', 'geracaoMes', 'metaPadrao', 'consumoH',
+      'semana', 'comodos', 'equipamentos', 'deteccoes'].forEach(k => {
+        ok(u[k] !== undefined && u[k] !== null, 'faltou o campo ' + k);
+      });
+    igual(u.consumoH.length, 24, 'curva horária incompleta');
+    igual(u.semana.length, 7, 'fatores de semana incompletos');
+  });
+
+  teste('a geração é calculada, não digitada', () => {
+    const u = montarUnidade(RASCUNHO);
+    const irr = soma(IRRADIACAO_SP) / 12;
+    perto(u.geracaoMes, RASCUNHO.potenciaKwp * irr * RAZAO_DESEMPENHO * 0.80 * 30, 0.5);
+  });
+
+  teste('telhado melhor gera mais que telhado pior', () => {
+    const bom = montarUnidade(Object.assign({}, RASCUNHO, { telhado: 'ideal' }));
+    const ruim = montarUnidade(Object.assign({}, RASCUNHO, { telhado: 'ruim' }));
+    ok(bom.geracaoMes > ruim.geracaoMes * 1.5, 'a condição do telhado não mudou nada');
+  });
+
+  teste('cada arquétipo tem curva de 24 horas e shares somando menos de 1', () => {
+    Object.keys(ARQUETIPOS).forEach(k => {
+      const a = ARQUETIPOS[k];
+      igual(a.consumoH.length, 24, k + ': curva incompleta');
+      igual(a.semana.length, 7, k + ': semana incompleta');
+      const s = soma(a.equipamentos.map(e => e.share));
+      ok(s > 0.8 && s < 1, k + ': shares somam ' + s.toFixed(3) + ', deveria sobrar algo para Não identificado');
+    });
+  });
+
+  teste('unidade criada aparece na lista e é selecionável', () => {
+    comUnidade(() => {
+      ok(chavesUnidades().indexOf(RASCUNHO.chave) >= 0, 'não entrou na lista');
+      igual(unidade().nome, 'Casa de Teste');
+    });
+  });
+
+  teste('o ranking fecha com o medidor na unidade criada', () => {
+    comUnidade(() => {
+      perto(soma(aparelhos().map(e => e.kwh)), visao().projConsumo, 0.5);
+    });
+  });
+
+  teste('nenhuma tela quebra com a unidade criada', () => {
+    comUnidade(() => {
+      ['painel', 'historico', 'equipamentos', 'cadastro', 'alertas', 'relatorio', 'config', 'unidade'].forEach(tela => {
+        const antes = S.tela; S.tela = tela;
+        try {
+          const html = corpoDesktop();
+          ok(html.length > 1500, tela + ': html curto');
+          ok(!/undefined|NaN|\[object/.test(html), tela + ': valor inválido no html');
+        } finally { S.tela = antes; }
+      });
+    });
+  });
+
+  teste('a unidade criada respeita a Lei 14.300 pela data de ligação', () => {
+    em(2026, 7, 24, 14, 0, () => {
+      const antesU = S.unidades, antesP = S.perfil;
+      /* 18 meses atrás de ago/2026 = mar/2025, depois do corte: paga */
+      S.unidades = [RASCUNHO]; S.perfil = RASCUNHO.chave; _visao = null; _cacheLedger.clear();
+      igual(temDireitoAdquirido(RASCUNHO.chave), false, 'ligada em 2025 deveria pagar');
+      /* 60 meses atrás = 2021, antes do corte: não paga */
+      S.unidades = [Object.assign({}, RASCUNHO, { mesesOperacao: 60 })];
+      _visao = null; _cacheLedger.clear();
+      igual(temDireitoAdquirido(RASCUNHO.chave), true, 'ligada em 2021 tem direito adquirido');
+      S.unidades = antesU; S.perfil = antesP; _visao = null; _cacheLedger.clear();
+    });
+  });
+
+  teste('unidade de demonstração não pode ser removida por engano', () => {
+    ok(!UNIDADES_BASE.residencial.propria, 'a de demo não deveria ser marcada como própria');
+    ok(montarUnidade(RASCUNHO).propria === true, 'a do usuário deveria ser marcada como própria');
+  });
+});
+
 /* ================= execução ================= */
 function rodar() {
   const alvo = document.getElementById('saida');

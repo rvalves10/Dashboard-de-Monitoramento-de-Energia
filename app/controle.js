@@ -13,6 +13,7 @@ function corpoDesktop() {
   else if (S.tela === 'cadastro') tela = vCadastro();
   else if (S.tela === 'alertas') tela = vAlertas();
   else if (S.tela === 'relatorio') tela = vRelatorio();
+  else if (S.tela === 'unidade') tela = vUnidade();
   else tela = vConfig();
   return '<div class="app">' + vRail() + '<main class="main" id="conteudo" tabindex="-1">' + vTopbar() + '<div class="page">' + tela + '</div></main></div>';
 }
@@ -167,6 +168,23 @@ function syncMeta() {
     f.style.background = v.projConsumo > meta ? 'var(--bad)' : 'var(--good)';
   }
 }
+function syncUnidade() {
+  if (!$('#pvGer')) return;
+  const n = S.nova, p = previaUnidade();
+  txt('#pvGer', nf(p.geracao));
+  txt('#pvExpl', nf(p.telhado.fator * 100) + '% do sol da região, com ' + nf(n.potenciaKwp, 1) + ' kWp instalados');
+  txt('#pvCob', textoCobertura(p, n));
+  const b = $('#pvBar'); if (b) b.style.width = clamp(p.cobertura, 0, 100) + '%';
+  const c = $('#pvConta');
+  if (c) c.innerHTML = 'Sem os painéis, sua conta seria cerca de <b style="color:var(--on-dark)">' + brl(p.contaSem) + '</b> por mês.';
+  const btn = $('[data-act="salvar-unidade"]');
+  if (btn) {
+    const pode = n.nome.trim().length > 1 && n.potenciaKwp > 0 && n.consumoMes > 0;
+    btn.disabled = !pode;
+    btn.style.background = pode ? 'var(--on-dark)' : '';
+    btn.style.color = pode ? 'var(--dark)' : '';
+  }
+}
 function syncTarifa() { txt('#tarLbl', 'R$ ' + nf(tarifaAtual(), 2) + ' / kWh'); }
 
 /* ---------- ações ---------- */
@@ -176,9 +194,9 @@ const ACOES = {
   nav: el => irPara(el.dataset.tela),
   unit: el => {
     S.perfil = el.dataset.unit; S.detalhe = null; S.salvo = false;
-    S.novo.comodo = UNIDADES[S.perfil].comodos[0];
+    S.novo.comodo = uni(S.perfil).comodos[0];
     _visao = null; salvar(); render();
-    aviso('Unidade trocada', UNIDADES[S.perfil].nome + ' · ' + UNIDADES[S.perfil].tipo, 'sun');
+    aviso('Unidade trocada', uni(S.perfil).nome + ' · ' + uni(S.perfil).tipo, 'sun');
   },
   periodo: el => { S.periodo = el.dataset.p; salvar(); render(); },
   mobile: () => { S.vista = 'mobile'; S.tab = 'painel'; S.msub = null; salvar(); render(); },
@@ -226,7 +244,7 @@ const ACOES = {
     if (!e || e.sintetico) return;
     S.editando = e.id;
     S.novo = {
-      nome: e.nome, cat: e.cat, comodo: e.local === '—' ? UNIDADES[S.perfil].comodos[0] : e.local,
+      nome: e.nome, cat: e.cat, comodo: e.local === '—' ? uni(S.perfil).comodos[0] : e.local,
       pot: Math.round(clamp(e.pot || 1000, 20, 12000)),
       horas: Math.round(clamp(e.horas || 1, 0.1, 24) * 10) / 10,
       dias: Math.round(clamp(e.dias || 30, 1, 31))
@@ -236,7 +254,7 @@ const ACOES = {
   },
   'cancelar-edicao': () => {
     S.editando = null; S.salvo = false;
-    S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: UNIDADES[S.perfil].comodos[0] };
+    S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: uni(S.perfil).comodos[0] };
     salvar(); render();
   },
   salvar: () => {
@@ -263,7 +281,7 @@ const ACOES = {
         }, campos)]);
       }
       S.editando = null; S.salvo = false; S.detalhe = null;
-      S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: UNIDADES[S.perfil].comodos[0] };
+      S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: uni(S.perfil).comodos[0] };
       S.tela = 'equipamentos'; S.msub = null;
       salvar(); render();
       aviso(campos.nome + ' atualizado', nf(kwh, 1) + ' kWh por mês · ' + brl(kwh * tarifaAtual()) + ' na conta.', 'good');
@@ -275,9 +293,39 @@ const ACOES = {
       cor: CORES_EXTRA[S.extras.length % CORES_EXTRA.length]
     }, campos)]);
     S.salvo = true;
-    S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: UNIDADES[S.perfil].comodos[0] };
+    S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: uni(S.perfil).comodos[0] };
     salvar(); render();
     aviso(campos.nome + ' cadastrado', nf(kwh, 1) + ' kWh por mês · ' + brl(kwh * tarifaAtual()) + ' na conta.', 'good');
+  },
+  'nova-arq': el => { S.nova.arquetipo = el.dataset.v; salvar(); render(); },
+  'nova-telhado': el => { S.nova.telhado = el.dataset.v; salvar(); render(); },
+  'salvar-unidade': () => {
+    const n = S.nova;
+    if (n.nome.trim().length < 2 || !(n.potenciaKwp > 0) || !(n.consumoMes > 0)) return;
+    const chave = 'u' + Date.now().toString(36);
+    S.unidades = (S.unidades || []).concat([Object.assign({}, n, { chave: chave, nome: n.nome.trim() })]);
+    const u = uni(chave);
+    S.metas[chave] = u.metaPadrao;
+    S.tarifa[chave] = null;
+    S.perfil = chave; S.tela = 'painel'; S.detalhe = null;
+    S.nova = JSON.parse(JSON.stringify(PADRAO.nova));
+    _visao = null; _cacheLedger.clear();
+    salvar(); render();
+    aviso(u.nome + ' criada', 'Gerando ' + nf(u.geracaoMes) + ' kWh/mês para um consumo de ' + nf(u.consumoMes) + ' kWh. O painel já está mostrando ela.', 'good');
+  },
+  'remover-unidade': el => {
+    const chave = el.dataset.chave;
+    const alvo = uni(chave);
+    if (!alvo) return;
+    if (!window.confirm('Remover a unidade "' + alvo.nome + '" e tudo que foi cadastrado nela?')) return;
+    S.unidades = (S.unidades || []).filter(x => x.chave !== chave);
+    S.extras = S.extras.filter(x => x.perfil !== chave);
+    S.removidos = S.removidos.filter(x => x.indexOf(chave + ':') !== 0);
+    delete S.metas[chave]; delete S.tarifa[chave];
+    if (S.perfil === chave) S.perfil = 'residencial';
+    _visao = null; _cacheLedger.clear();
+    salvar(); render();
+    aviso(alvo.nome + ' removida', 'A unidade e os aparelhos dela saíram do sistema.', 'bad');
   },
   'alerta-dispensar': el => {
     S.dispensados = S.dispensados.concat([el.dataset.chave]);
@@ -331,6 +379,19 @@ document.addEventListener('input', ev => {
   if (campo === 'nome') { S.novo.nome = el.value; S.salvo = false; syncCadastro(); salvar(); return; }
   if (campo === 'pot' || campo === 'horas' || campo === 'dias') {
     S.novo[campo] = Number(el.value); S.salvo = false; syncCadastro(); salvar(); return;
+  }
+  const CAMPOS_UNIDADE = {
+    unNome: ['nome', 'texto'], unDistribuidora: ['distribuidora', 'texto'],
+    unConsumo: ['consumoMes', 'num'], unTarifa: ['tarifa', 'num'],
+    unPotencia: ['potenciaKwp', 'num'], unPaineis: ['paineis', 'int'],
+    unInvestimento: ['investimento', 'num'], unMeses: ['mesesOperacao', 'int']
+  };
+  if (CAMPOS_UNIDADE[campo]) {
+    const def = CAMPOS_UNIDADE[campo];
+    S.nova[def[0]] = def[1] === 'texto' ? el.value
+      : def[1] === 'int' ? Math.max(0, Math.round(numeroBR(el.value)))
+        : Math.max(0, numeroBR(el.value));
+    syncUnidade(); salvar(); return;
   }
   if (campo === 'endereco') { MEDIDOR.endereco = el.value.trim(); MEDIDOR.ultima = null; salvar(); return; }
   if (campo === 'meta') { S.metas[S.perfil] = Number(el.value); syncMeta(); salvar(); return; }
@@ -413,7 +474,7 @@ function iniciar() {
   if (!$('#root')) return;
   carregar();
   if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
-  if (!UNIDADES[S.perfil]) S.perfil = 'residencial';
+  if (!uni(S.perfil)) S.perfil = 'residencial';
   if (!TELAS[S.tela]) S.tela = 'painel';
   _ultimaHora = new Date().getHours();
   lerHash();

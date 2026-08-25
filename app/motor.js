@@ -24,6 +24,21 @@ const DIA3 = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 const DIAF = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 const diasNoMes = (y, m) => new Date(y, m + 1, 0).getDate();
 
+/* Lê número digitado em português. O ponto é ambíguo: em "1.05" é decimal,
+   em "26.000" é milhar. A regra que resolve:
+   - se há vírgula, ela é o decimal e todo ponto é milhar;
+   - sem vírgula, pontos só são milhar quando separam grupos de três dígitos. */
+function numeroBR(txt) {
+  const t = String(txt == null ? '' : txt).trim().replace(/\s/g, '');
+  if (!t) return 0;
+  let limpo;
+  if (t.indexOf(',') >= 0) limpo = t.replace(/\./g, '').replace(',', '.');
+  else if (/^-?\d{1,3}(\.\d{3})+$/.test(t)) limpo = t.replace(/\./g, '');
+  else limpo = t;
+  const n = Number(limpo);
+  return isFinite(n) ? n : 0;
+}
+
 /* ruído semeado — o mesmo dia sempre gera o mesmo tempo */
 function semente(str) {
   let h = 2166136261;
@@ -67,7 +82,7 @@ function percentualFioB(ano, direitoAdquirido) {
 const IRRADIACAO_SP = [5.9, 5.9, 5.2, 4.7, 4.0, 3.7, 3.9, 4.7, 4.8, 5.3, 5.8, 6.1];
 const RAZAO_DESEMPENHO = 0.78; /* perdas de inversor, cabos, temperatura e sujeira */
 
-const UNIDADES = {
+const UNIDADES_BASE = {
   residencial: {
     chave: 'residencial', nome: 'Casa das Acácias', tipo: 'Residencial · 4 pessoas', curto: 'Residencial',
     distribuidora: 'Enel SP', tarifa: 0.92, tarifaComp: 0.79, fioB: 0.26, ilum: 22, minFatura: 50,
@@ -180,7 +195,7 @@ const _cacheMes = new Map();
 function mesSimulado(chave, y, m) {
   const ck = chave + '|' + y + '|' + m;
   if (_cacheMes.has(ck)) return _cacheMes.get(ck);
-  const u = UNIDADES[chave], nd = diasNoMes(y, m);
+  const u = uni(chave), nd = diasNoMes(y, m);
 
   const sazG = 1 + 0.19 * Math.cos(2 * Math.PI * (m - 11) / 12);
   const sazC = 1 + 0.15 * Math.cos(2 * Math.PI * m / 12);
@@ -246,7 +261,7 @@ function ate(md, horas) {
 
 /* data em que a unidade entrou em operação, deduzida dos meses de operação */
 function inicioOperacao(chave) {
-  const u = UNIDADES[chave], d = agora();
+  const u = uni(chave), d = agora();
   return new Date(d.getFullYear(), d.getMonth() - (u.mesesOperacao - 1), 1);
 }
 function temDireitoAdquirido(chave) {
@@ -259,11 +274,11 @@ function temDireitoAdquirido(chave) {
    Comparar a geração real contra o esperado mede saúde operacional (sujeira,
    inversor, falha). Comparar contra o potencial mede qualidade da instalação. */
 function potencialRegiao(chave, m, nd) {
-  const u = UNIDADES[chave];
+  const u = uni(chave);
   return u.potenciaKwp * IRRADIACAO_SP[m] * RAZAO_DESEMPENHO * nd;
 }
 function geracaoEsperada(chave, m, nd) {
-  return potencialRegiao(chave, m, nd) * UNIDADES[chave].fatorInstalacao;
+  return potencialRegiao(chave, m, nd) * uni(chave).fatorInstalacao;
 }
 
 /* ---------- livro de créditos: compensação mês a mês ---------- */
@@ -271,7 +286,7 @@ const _cacheLedger = new Map();
 function ledger(chave, ate_y, ate_m, horasUltimo) {
   const ck = chave + '|' + ate_y + '|' + ate_m + '|' + (horasUltimo == null ? 'cheio' : Math.floor(horasUltimo));
   if (_cacheLedger.has(ck)) return _cacheLedger.get(ck);
-  const u = UNIDADES[chave];
+  const u = uni(chave);
   const fim = ate_y * 12 + ate_m;
   const ini = fim - (u.mesesOperacao - 1);
   const adq = temDireitoAdquirido(chave);
@@ -315,7 +330,12 @@ const PADRAO = {
   metas: { residencial: 300, negocio: 1700 },
   regras: { meta: true, salto: true, solar: true, standby: false },
   tarifa: { residencial: null, negocio: null },
-  extras: [], removidos: [], respondidas: {}, dispensados: [],
+  extras: [], removidos: [], respondidas: {}, dispensados: [], unidades: [],
+  nova: {
+    nome: '', arquetipo: 'casaVazia', telhado: 'bom', distribuidora: '',
+    tarifa: 0.92, consumoMes: 300, potenciaKwp: 4.0, paineis: 9,
+    investimento: 17000, mesesOperacao: 12
+  },
   novo: { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: 'Sala' },
   editando: null, salvo: false,
   medidor: { ativo: false, endereco: '192.168.4.1' }
@@ -344,7 +364,126 @@ function salvar() {
 }
 
 /* ---------- visão consolidada ---------- */
-function unidade() { return UNIDADES[S.perfil]; }
+function unidade() { return uni(S.perfil); }
+
+/* ---------- unidades criadas pelo usuário ----------
+   As duas de demonstração ficam em UNIDADES_BASE. As do usuário vivem no
+   estado e são montadas a partir de um arquétipo de consumo: ninguém vai
+   digitar 24 valores horários, mas quase todo mundo sabe dizer se a casa
+   fica vazia de dia. */
+
+const ARQUETIPOS = {
+  casaVazia: {
+    rotulo: 'Casa vazia durante o dia',
+    desc: 'Todo mundo sai para trabalhar ou estudar. O gasto se concentra cedo e à noite, quando o sol já foi.',
+    tipo: 'Residencial', minFatura: 50, ilum: 22,
+    consumoH: [.22, .20, .19, .19, .21, .30, .66, .88, .54, .37, .33, .35, .47, .51, .54, .57, .63, .76, .98, 1.12, .96, .70, .44, .27],
+    semana: [1.13, .95, .95, .95, .95, .97, 1.10],
+    comodos: ['Sala', 'Cozinha', 'Quarto', 'Banheiro', 'Área de serviço', 'Externo'],
+    equipamentos: [
+      { id: 'ar', nome: 'Ar-condicionado', local: 'Quarto', cat: 'Climatização', pot: 1200, share: .26, cor: '#3E4C7A', conf: 'média', tend: 6 },
+      { id: 'chu', nome: 'Chuveiro elétrico', local: 'Banheiro', cat: 'Aquecimento', pot: 5500, share: .20, cor: '#C4573C', conf: 'alta', tend: 0 },
+      { id: 'gel', nome: 'Geladeira', local: 'Cozinha', cat: 'Refrigeração', pot: 180, share: .16, cor: '#2E7A5A', conf: 'alta', tend: 1 },
+      { id: 'lav', nome: 'Máquina de lavar', local: 'Área de serviço', cat: 'Lavanderia', pot: 900, share: .09, cor: '#7A6BA8', conf: 'média', tend: 0 },
+      { id: 'coz', nome: 'Forno e micro-ondas', local: 'Cozinha', cat: 'Cozinha', pot: 1400, share: .07, cor: '#B4761B', conf: 'média', tend: 0 },
+      { id: 'luz', nome: 'Iluminação', local: 'Casa toda', cat: 'Iluminação', pot: 190, share: .06, cor: '#EDA22B', conf: 'média', tend: 0 },
+      { id: 'tv', nome: 'TV e eletrônicos', local: 'Sala', cat: 'Eletrônicos', pot: 130, share: .06, cor: '#8B8577', conf: 'baixa', tend: 2 }
+    ]
+  },
+  casaCheia: {
+    rotulo: 'Casa com gente o dia todo',
+    desc: 'Home office, crianças ou aposentados. O consumo se espalha pelo dia, e por isso aproveita bem mais o sol.',
+    tipo: 'Residencial', minFatura: 50, ilum: 22,
+    consumoH: [.28, .24, .22, .22, .24, .34, .62, .80, .72, .68, .66, .74, .82, .78, .72, .74, .80, .92, 1.06, 1.14, 1.00, .78, .52, .34],
+    semana: [1.06, .98, .98, .98, .98, 1.00, 1.04],
+    comodos: ['Sala', 'Cozinha', 'Quarto', 'Escritório', 'Banheiro', 'Área de serviço', 'Externo'],
+    equipamentos: [
+      { id: 'ar', nome: 'Ar-condicionado', local: 'Sala', cat: 'Climatização', pot: 1400, share: .24, cor: '#3E4C7A', conf: 'média', tend: 8 },
+      { id: 'chu', nome: 'Chuveiro elétrico', local: 'Banheiro', cat: 'Aquecimento', pot: 5500, share: .16, cor: '#C4573C', conf: 'alta', tend: 0 },
+      { id: 'gel', nome: 'Geladeira', local: 'Cozinha', cat: 'Refrigeração', pot: 200, share: .15, cor: '#2E7A5A', conf: 'alta', tend: 1 },
+      { id: 'pc', nome: 'Computadores e monitores', local: 'Escritório', cat: 'Eletrônicos', pot: 260, share: .13, cor: '#4E8FA8', conf: 'média', tend: 4 },
+      { id: 'coz', nome: 'Cozinha elétrica', local: 'Cozinha', cat: 'Cozinha', pot: 1400, share: .10, cor: '#B4761B', conf: 'média', tend: 0 },
+      { id: 'lav', nome: 'Lavanderia', local: 'Área de serviço', cat: 'Lavanderia', pot: 900, share: .08, cor: '#7A6BA8', conf: 'média', tend: 0 },
+      { id: 'luz', nome: 'Iluminação', local: 'Casa toda', cat: 'Iluminação', pot: 210, share: .07, cor: '#EDA22B', conf: 'média', tend: 0 }
+    ]
+  },
+  comercioManha: {
+    rotulo: 'Comércio que abre de madrugada',
+    desc: 'Padaria, açougue, lanchonete. O pico vem antes de o sol nascer, então boa parte do gasto ainda depende da rede.',
+    tipo: 'Pequeno negócio', minFatura: 100, ilum: 58,
+    consumoH: [1.4, 1.3, 1.3, 2.9, 4.6, 5.2, 4.1, 3.4, 3.1, 3.0, 2.9, 3.2, 3.4, 3.1, 2.6, 2.3, 2.1, 1.9, 1.8, 1.7, 1.6, 1.5, 1.5, 1.4],
+    semana: [.52, 1.04, 1.04, 1.04, 1.05, 1.08, 1.06],
+    comodos: ['Produção', 'Atendimento', 'Estoque', 'Escritório', 'Externo'],
+    equipamentos: [
+      { id: 'forno', nome: 'Forno', local: 'Produção', cat: 'Cozinha', pot: 12000, share: .28, cor: '#C4573C', conf: 'alta', tend: 2 },
+      { id: 'refri', nome: 'Câmara fria', local: 'Estoque', cat: 'Refrigeração', pot: 2200, share: .23, cor: '#4E8FA8', conf: 'alta', tend: 5 },
+      { id: 'ar', nome: 'Ar-condicionado do salão', local: 'Atendimento', cat: 'Climatização', pot: 5300, share: .16, cor: '#3E4C7A', conf: 'alta', tend: 9 },
+      { id: 'exp', nome: 'Expositores refrigerados', local: 'Atendimento', cat: 'Refrigeração', pot: 900, share: .13, cor: '#2E7A5A', conf: 'alta', tend: 1 },
+      { id: 'maq', nome: 'Máquinas de produção', local: 'Produção', cat: 'Cozinha', pot: 3000, share: .08, cor: '#7A6BA8', conf: 'média', tend: 0 },
+      { id: 'luz', nome: 'Iluminação', local: 'Loja toda', cat: 'Iluminação', pot: 640, share: .07, cor: '#EDA22B', conf: 'média', tend: 0 }
+    ]
+  },
+  comercioDia: {
+    rotulo: 'Comércio em horário comercial',
+    desc: 'Loja ou escritório das 8h às 18h. É o melhor caso para solar: o consumo cai quase todo dentro da janela de geração.',
+    tipo: 'Pequeno negócio', minFatura: 100, ilum: 58,
+    consumoH: [.5, .45, .45, .45, .5, .7, 1.4, 2.6, 3.6, 4.0, 4.2, 4.3, 4.0, 4.2, 4.3, 4.1, 3.7, 3.0, 1.8, 1.0, .8, .7, .6, .55],
+    semana: [.35, 1.10, 1.10, 1.10, 1.10, 1.12, .85],
+    comodos: ['Atendimento', 'Escritório', 'Estoque', 'Copa', 'Externo'],
+    equipamentos: [
+      { id: 'ar', nome: 'Ar-condicionado', local: 'Atendimento', cat: 'Climatização', pot: 7000, share: .34, cor: '#3E4C7A', conf: 'alta', tend: 7 },
+      { id: 'luz', nome: 'Iluminação', local: 'Loja toda', cat: 'Iluminação', pot: 900, share: .19, cor: '#EDA22B', conf: 'alta', tend: 0 },
+      { id: 'pc', nome: 'Computadores e terminais', local: 'Escritório', cat: 'Eletrônicos', pot: 600, share: .17, cor: '#4E8FA8', conf: 'média', tend: 3 },
+      { id: 'refri', nome: 'Refrigeração', local: 'Copa', cat: 'Refrigeração', pot: 400, share: .12, cor: '#2E7A5A', conf: 'média', tend: 1 },
+      { id: 'copa', nome: 'Copa e cafeteira', local: 'Copa', cat: 'Cozinha', pot: 1500, share: .08, cor: '#B4761B', conf: 'baixa', tend: 0 },
+      { id: 'div', nome: 'Equipamentos diversos', local: 'Externo', cat: 'Outros', pot: 500, share: .05, cor: '#6B9E8E', conf: 'baixa', tend: 0 }
+    ]
+  }
+};
+
+/* condição do telhado -> quanto do potencial da região ele aproveita */
+const TELHADOS = [
+  { k: 'ideal', rotulo: 'Voltado ao norte, sem sombra', fator: 0.95 },
+  { k: 'bom', rotulo: 'Boa orientação, sombra leve', fator: 0.80 },
+  { k: 'medio', rotulo: 'Leste ou oeste, alguma sombra', fator: 0.65 },
+  { k: 'ruim', rotulo: 'Pouca inclinação ou sombra boa parte do dia', fator: 0.50 }
+];
+
+/* Monta uma unidade completa a partir do que o usuário informou.
+   O que dá para calcular, é calculado: geração vem da irradiação da região,
+   da potência instalada e da condição do telhado — não se pergunta. */
+function montarUnidade(f) {
+  const a = ARQUETIPOS[f.arquetipo] || ARQUETIPOS.casaVazia;
+  const telhado = TELHADOS.filter(t => t.k === f.telhado)[0] || TELHADOS[1];
+  const irradiacaoMedia = soma(IRRADIACAO_SP) / 12;
+  const geracaoMes = f.potenciaKwp * irradiacaoMedia * RAZAO_DESEMPENHO * telhado.fator * 30;
+
+  return {
+    chave: f.chave, propria: true, arquetipo: f.arquetipo,
+    nome: f.nome, tipo: a.tipo + ' · ' + a.rotulo.toLowerCase(), curto: a.tipo,
+    distribuidora: f.distribuidora || 'Não informada',
+    tarifa: f.tarifa, tarifaComp: +(f.tarifa * 0.86).toFixed(3), fioB: +(f.tarifa * 0.28).toFixed(3),
+    ilum: a.ilum, minFatura: a.minFatura,
+    potenciaKwp: f.potenciaKwp, paineis: f.paineis, investimento: f.investimento,
+    mesesOperacao: Math.max(1, f.mesesOperacao),
+    fatorInstalacao: telhado.fator, condicaoTelhado: telhado.rotulo.toLowerCase(),
+    consumoMes: f.consumoMes, geracaoMes: geracaoMes,
+    metaPadrao: Math.round(f.consumoMes * 0.92),
+    consumoH: a.consumoH.slice(), semana: a.semana.slice(), comodos: a.comodos.slice(),
+    equipamentos: a.equipamentos.map(e => Object.assign({}, e, { fonte: 'ia' })),
+    deteccoes: []
+  };
+}
+
+function unidadesProprias() { return (S.unidades || []).map(montarUnidade); }
+function uni(chave) {
+  if (UNIDADES_BASE[chave]) return UNIDADES_BASE[chave];
+  const f = (S.unidades || []).filter(x => x.chave === chave)[0];
+  return f ? montarUnidade(f) : null;
+}
+function chavesUnidades() {
+  return Object.keys(UNIDADES_BASE).concat((S.unidades || []).map(x => x.chave));
+}
 function tarifaAtual() { const u = unidade(); return S.tarifa[S.perfil] != null ? S.tarifa[S.perfil] : u.tarifa; }
 
 function agora() { return new Date(); }

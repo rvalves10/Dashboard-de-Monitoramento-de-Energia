@@ -151,8 +151,8 @@ function mMais() {
     '<span class="mob-menu-ic">' + ico(x.icon, 17, 'var(--sun-deep)', 1.9) + '</span>' +
     '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + x.t + '</span>' +
     '<span class="mob-menu-s" style="display:block">' + x.s + '</span></span>' + ico(IC.chevron, 15, '#B9B2A2', 2.2) + '</button>').join('');
-  const uns = Object.keys(UNIDADES).map(k => {
-    const u = UNIDADES[k], at = S.perfil === k;
+  const uns = chavesUnidades().map(k => {
+    const u = uni(k), at = S.perfil === k;
     return '<button class="mob-menu" data-act="unit" data-unit="' + k + '" style="border-color:' + (at ? 'var(--ink)' : 'var(--line)') + '">' +
       '<span style="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:' + (at ? 'var(--sun)' : 'var(--line-2)') + '"></span>' +
       '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + esc(u.nome) + '</span>' +

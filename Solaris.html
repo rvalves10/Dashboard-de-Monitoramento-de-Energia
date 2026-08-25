@@ -466,6 +466,27 @@ input[type=range]{width:100%;margin:10px 0 0;accent-color:var(--sun);cursor:poin
 .kvs{display:flex;flex-direction:column;gap:13px;margin:0}
 .softbox{background:var(--ground-2);border-radius:14px;padding:15px 17px;margin-top:20px;font-size:12.5px;color:var(--muted);line-height:1.5}
 .softbox b{color:var(--ink);font-weight:600}
+.unit--nova{color:var(--on-dark-faint);border:1px dashed rgba(244,241,234,.2);margin-top:4px;justify-content:center;gap:7px}
+.unit--nova:hover{color:var(--on-dark);border-color:rgba(244,241,234,.45)}
+.unit--nova .unit-name{font-weight:600;font-size:12px}
+
+.un-list{display:flex;flex-direction:column;gap:2px;margin-top:14px}
+.un-row{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;transition:background .13s}
+.un-row:hover{background:var(--ground-2)}
+.un-row>span:first-child{flex:1;min-width:0}
+.un-meta{display:block;font-size:11.5px;color:var(--faint);margin-top:2px}
+
+.dica{font-size:11.5px;color:var(--faint);margin-top:5px;line-height:1.45;max-width:56ch}
+.opts{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.opt{
+  display:block;width:100%;padding:13px 15px;border-radius:13px;text-align:left;
+  border:1px solid var(--line-2);background:var(--surface);transition:border-color .13s,background .13s;
+}
+.opt:hover{border-color:var(--faint)}
+.opt[aria-pressed="true"]{border-color:var(--ink);background:var(--ground-2)}
+.opt-t{display:block;font-size:13.5px;font-weight:600}
+.opt-d{display:block;font-size:12px;color:var(--muted);margin-top:4px;line-height:1.45}
+
 .danger-btn{font-size:12.5px;font-weight:600;color:var(--bad);transition:color .15s}
 .danger-btn:hover{color:#8A3A25}
 
@@ -681,6 +702,21 @@ const DIA3 = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 const DIAF = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 const diasNoMes = (y, m) => new Date(y, m + 1, 0).getDate();
 
+/* Lê número digitado em português. O ponto é ambíguo: em "1.05" é decimal,
+   em "26.000" é milhar. A regra que resolve:
+   - se há vírgula, ela é o decimal e todo ponto é milhar;
+   - sem vírgula, pontos só são milhar quando separam grupos de três dígitos. */
+function numeroBR(txt) {
+  const t = String(txt == null ? '' : txt).trim().replace(/\s/g, '');
+  if (!t) return 0;
+  let limpo;
+  if (t.indexOf(',') >= 0) limpo = t.replace(/\./g, '').replace(',', '.');
+  else if (/^-?\d{1,3}(\.\d{3})+$/.test(t)) limpo = t.replace(/\./g, '');
+  else limpo = t;
+  const n = Number(limpo);
+  return isFinite(n) ? n : 0;
+}
+
 /* ruído semeado — o mesmo dia sempre gera o mesmo tempo */
 function semente(str) {
   let h = 2166136261;
@@ -724,7 +760,7 @@ function percentualFioB(ano, direitoAdquirido) {
 const IRRADIACAO_SP = [5.9, 5.9, 5.2, 4.7, 4.0, 3.7, 3.9, 4.7, 4.8, 5.3, 5.8, 6.1];
 const RAZAO_DESEMPENHO = 0.78; /* perdas de inversor, cabos, temperatura e sujeira */
 
-const UNIDADES = {
+const UNIDADES_BASE = {
   residencial: {
     chave: 'residencial', nome: 'Casa das Acácias', tipo: 'Residencial · 4 pessoas', curto: 'Residencial',
     distribuidora: 'Enel SP', tarifa: 0.92, tarifaComp: 0.79, fioB: 0.26, ilum: 22, minFatura: 50,
@@ -837,7 +873,7 @@ const _cacheMes = new Map();
 function mesSimulado(chave, y, m) {
   const ck = chave + '|' + y + '|' + m;
   if (_cacheMes.has(ck)) return _cacheMes.get(ck);
-  const u = UNIDADES[chave], nd = diasNoMes(y, m);
+  const u = uni(chave), nd = diasNoMes(y, m);
 
   const sazG = 1 + 0.19 * Math.cos(2 * Math.PI * (m - 11) / 12);
   const sazC = 1 + 0.15 * Math.cos(2 * Math.PI * m / 12);
@@ -903,7 +939,7 @@ function ate(md, horas) {
 
 /* data em que a unidade entrou em operação, deduzida dos meses de operação */
 function inicioOperacao(chave) {
-  const u = UNIDADES[chave], d = agora();
+  const u = uni(chave), d = agora();
   return new Date(d.getFullYear(), d.getMonth() - (u.mesesOperacao - 1), 1);
 }
 function temDireitoAdquirido(chave) {
@@ -916,11 +952,11 @@ function temDireitoAdquirido(chave) {
    Comparar a geração real contra o esperado mede saúde operacional (sujeira,
    inversor, falha). Comparar contra o potencial mede qualidade da instalação. */
 function potencialRegiao(chave, m, nd) {
-  const u = UNIDADES[chave];
+  const u = uni(chave);
   return u.potenciaKwp * IRRADIACAO_SP[m] * RAZAO_DESEMPENHO * nd;
 }
 function geracaoEsperada(chave, m, nd) {
-  return potencialRegiao(chave, m, nd) * UNIDADES[chave].fatorInstalacao;
+  return potencialRegiao(chave, m, nd) * uni(chave).fatorInstalacao;
 }
 
 /* ---------- livro de créditos: compensação mês a mês ---------- */
@@ -928,7 +964,7 @@ const _cacheLedger = new Map();
 function ledger(chave, ate_y, ate_m, horasUltimo) {
   const ck = chave + '|' + ate_y + '|' + ate_m + '|' + (horasUltimo == null ? 'cheio' : Math.floor(horasUltimo));
   if (_cacheLedger.has(ck)) return _cacheLedger.get(ck);
-  const u = UNIDADES[chave];
+  const u = uni(chave);
   const fim = ate_y * 12 + ate_m;
   const ini = fim - (u.mesesOperacao - 1);
   const adq = temDireitoAdquirido(chave);
@@ -972,7 +1008,12 @@ const PADRAO = {
   metas: { residencial: 300, negocio: 1700 },
   regras: { meta: true, salto: true, solar: true, standby: false },
   tarifa: { residencial: null, negocio: null },
-  extras: [], removidos: [], respondidas: {}, dispensados: [],
+  extras: [], removidos: [], respondidas: {}, dispensados: [], unidades: [],
+  nova: {
+    nome: '', arquetipo: 'casaVazia', telhado: 'bom', distribuidora: '',
+    tarifa: 0.92, consumoMes: 300, potenciaKwp: 4.0, paineis: 9,
+    investimento: 17000, mesesOperacao: 12
+  },
   novo: { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: 'Sala' },
   editando: null, salvo: false,
   medidor: { ativo: false, endereco: '192.168.4.1' }
@@ -1001,7 +1042,126 @@ function salvar() {
 }
 
 /* ---------- visão consolidada ---------- */
-function unidade() { return UNIDADES[S.perfil]; }
+function unidade() { return uni(S.perfil); }
+
+/* ---------- unidades criadas pelo usuário ----------
+   As duas de demonstração ficam em UNIDADES_BASE. As do usuário vivem no
+   estado e são montadas a partir de um arquétipo de consumo: ninguém vai
+   digitar 24 valores horários, mas quase todo mundo sabe dizer se a casa
+   fica vazia de dia. */
+
+const ARQUETIPOS = {
+  casaVazia: {
+    rotulo: 'Casa vazia durante o dia',
+    desc: 'Todo mundo sai para trabalhar ou estudar. O gasto se concentra cedo e à noite, quando o sol já foi.',
+    tipo: 'Residencial', minFatura: 50, ilum: 22,
+    consumoH: [.22, .20, .19, .19, .21, .30, .66, .88, .54, .37, .33, .35, .47, .51, .54, .57, .63, .76, .98, 1.12, .96, .70, .44, .27],
+    semana: [1.13, .95, .95, .95, .95, .97, 1.10],
+    comodos: ['Sala', 'Cozinha', 'Quarto', 'Banheiro', 'Área de serviço', 'Externo'],
+    equipamentos: [
+      { id: 'ar', nome: 'Ar-condicionado', local: 'Quarto', cat: 'Climatização', pot: 1200, share: .26, cor: '#3E4C7A', conf: 'média', tend: 6 },
+      { id: 'chu', nome: 'Chuveiro elétrico', local: 'Banheiro', cat: 'Aquecimento', pot: 5500, share: .20, cor: '#C4573C', conf: 'alta', tend: 0 },
+      { id: 'gel', nome: 'Geladeira', local: 'Cozinha', cat: 'Refrigeração', pot: 180, share: .16, cor: '#2E7A5A', conf: 'alta', tend: 1 },
+      { id: 'lav', nome: 'Máquina de lavar', local: 'Área de serviço', cat: 'Lavanderia', pot: 900, share: .09, cor: '#7A6BA8', conf: 'média', tend: 0 },
+      { id: 'coz', nome: 'Forno e micro-ondas', local: 'Cozinha', cat: 'Cozinha', pot: 1400, share: .07, cor: '#B4761B', conf: 'média', tend: 0 },
+      { id: 'luz', nome: 'Iluminação', local: 'Casa toda', cat: 'Iluminação', pot: 190, share: .06, cor: '#EDA22B', conf: 'média', tend: 0 },
+      { id: 'tv', nome: 'TV e eletrônicos', local: 'Sala', cat: 'Eletrônicos', pot: 130, share: .06, cor: '#8B8577', conf: 'baixa', tend: 2 }
+    ]
+  },
+  casaCheia: {
+    rotulo: 'Casa com gente o dia todo',
+    desc: 'Home office, crianças ou aposentados. O consumo se espalha pelo dia, e por isso aproveita bem mais o sol.',
+    tipo: 'Residencial', minFatura: 50, ilum: 22,
+    consumoH: [.28, .24, .22, .22, .24, .34, .62, .80, .72, .68, .66, .74, .82, .78, .72, .74, .80, .92, 1.06, 1.14, 1.00, .78, .52, .34],
+    semana: [1.06, .98, .98, .98, .98, 1.00, 1.04],
+    comodos: ['Sala', 'Cozinha', 'Quarto', 'Escritório', 'Banheiro', 'Área de serviço', 'Externo'],
+    equipamentos: [
+      { id: 'ar', nome: 'Ar-condicionado', local: 'Sala', cat: 'Climatização', pot: 1400, share: .24, cor: '#3E4C7A', conf: 'média', tend: 8 },
+      { id: 'chu', nome: 'Chuveiro elétrico', local: 'Banheiro', cat: 'Aquecimento', pot: 5500, share: .16, cor: '#C4573C', conf: 'alta', tend: 0 },
+      { id: 'gel', nome: 'Geladeira', local: 'Cozinha', cat: 'Refrigeração', pot: 200, share: .15, cor: '#2E7A5A', conf: 'alta', tend: 1 },
+      { id: 'pc', nome: 'Computadores e monitores', local: 'Escritório', cat: 'Eletrônicos', pot: 260, share: .13, cor: '#4E8FA8', conf: 'média', tend: 4 },
+      { id: 'coz', nome: 'Cozinha elétrica', local: 'Cozinha', cat: 'Cozinha', pot: 1400, share: .10, cor: '#B4761B', conf: 'média', tend: 0 },
+      { id: 'lav', nome: 'Lavanderia', local: 'Área de serviço', cat: 'Lavanderia', pot: 900, share: .08, cor: '#7A6BA8', conf: 'média', tend: 0 },
+      { id: 'luz', nome: 'Iluminação', local: 'Casa toda', cat: 'Iluminação', pot: 210, share: .07, cor: '#EDA22B', conf: 'média', tend: 0 }
+    ]
+  },
+  comercioManha: {
+    rotulo: 'Comércio que abre de madrugada',
+    desc: 'Padaria, açougue, lanchonete. O pico vem antes de o sol nascer, então boa parte do gasto ainda depende da rede.',
+    tipo: 'Pequeno negócio', minFatura: 100, ilum: 58,
+    consumoH: [1.4, 1.3, 1.3, 2.9, 4.6, 5.2, 4.1, 3.4, 3.1, 3.0, 2.9, 3.2, 3.4, 3.1, 2.6, 2.3, 2.1, 1.9, 1.8, 1.7, 1.6, 1.5, 1.5, 1.4],
+    semana: [.52, 1.04, 1.04, 1.04, 1.05, 1.08, 1.06],
+    comodos: ['Produção', 'Atendimento', 'Estoque', 'Escritório', 'Externo'],
+    equipamentos: [
+      { id: 'forno', nome: 'Forno', local: 'Produção', cat: 'Cozinha', pot: 12000, share: .28, cor: '#C4573C', conf: 'alta', tend: 2 },
+      { id: 'refri', nome: 'Câmara fria', local: 'Estoque', cat: 'Refrigeração', pot: 2200, share: .23, cor: '#4E8FA8', conf: 'alta', tend: 5 },
+      { id: 'ar', nome: 'Ar-condicionado do salão', local: 'Atendimento', cat: 'Climatização', pot: 5300, share: .16, cor: '#3E4C7A', conf: 'alta', tend: 9 },
+      { id: 'exp', nome: 'Expositores refrigerados', local: 'Atendimento', cat: 'Refrigeração', pot: 900, share: .13, cor: '#2E7A5A', conf: 'alta', tend: 1 },
+      { id: 'maq', nome: 'Máquinas de produção', local: 'Produção', cat: 'Cozinha', pot: 3000, share: .08, cor: '#7A6BA8', conf: 'média', tend: 0 },
+      { id: 'luz', nome: 'Iluminação', local: 'Loja toda', cat: 'Iluminação', pot: 640, share: .07, cor: '#EDA22B', conf: 'média', tend: 0 }
+    ]
+  },
+  comercioDia: {
+    rotulo: 'Comércio em horário comercial',
+    desc: 'Loja ou escritório das 8h às 18h. É o melhor caso para solar: o consumo cai quase todo dentro da janela de geração.',
+    tipo: 'Pequeno negócio', minFatura: 100, ilum: 58,
+    consumoH: [.5, .45, .45, .45, .5, .7, 1.4, 2.6, 3.6, 4.0, 4.2, 4.3, 4.0, 4.2, 4.3, 4.1, 3.7, 3.0, 1.8, 1.0, .8, .7, .6, .55],
+    semana: [.35, 1.10, 1.10, 1.10, 1.10, 1.12, .85],
+    comodos: ['Atendimento', 'Escritório', 'Estoque', 'Copa', 'Externo'],
+    equipamentos: [
+      { id: 'ar', nome: 'Ar-condicionado', local: 'Atendimento', cat: 'Climatização', pot: 7000, share: .34, cor: '#3E4C7A', conf: 'alta', tend: 7 },
+      { id: 'luz', nome: 'Iluminação', local: 'Loja toda', cat: 'Iluminação', pot: 900, share: .19, cor: '#EDA22B', conf: 'alta', tend: 0 },
+      { id: 'pc', nome: 'Computadores e terminais', local: 'Escritório', cat: 'Eletrônicos', pot: 600, share: .17, cor: '#4E8FA8', conf: 'média', tend: 3 },
+      { id: 'refri', nome: 'Refrigeração', local: 'Copa', cat: 'Refrigeração', pot: 400, share: .12, cor: '#2E7A5A', conf: 'média', tend: 1 },
+      { id: 'copa', nome: 'Copa e cafeteira', local: 'Copa', cat: 'Cozinha', pot: 1500, share: .08, cor: '#B4761B', conf: 'baixa', tend: 0 },
+      { id: 'div', nome: 'Equipamentos diversos', local: 'Externo', cat: 'Outros', pot: 500, share: .05, cor: '#6B9E8E', conf: 'baixa', tend: 0 }
+    ]
+  }
+};
+
+/* condição do telhado -> quanto do potencial da região ele aproveita */
+const TELHADOS = [
+  { k: 'ideal', rotulo: 'Voltado ao norte, sem sombra', fator: 0.95 },
+  { k: 'bom', rotulo: 'Boa orientação, sombra leve', fator: 0.80 },
+  { k: 'medio', rotulo: 'Leste ou oeste, alguma sombra', fator: 0.65 },
+  { k: 'ruim', rotulo: 'Pouca inclinação ou sombra boa parte do dia', fator: 0.50 }
+];
+
+/* Monta uma unidade completa a partir do que o usuário informou.
+   O que dá para calcular, é calculado: geração vem da irradiação da região,
+   da potência instalada e da condição do telhado — não se pergunta. */
+function montarUnidade(f) {
+  const a = ARQUETIPOS[f.arquetipo] || ARQUETIPOS.casaVazia;
+  const telhado = TELHADOS.filter(t => t.k === f.telhado)[0] || TELHADOS[1];
+  const irradiacaoMedia = soma(IRRADIACAO_SP) / 12;
+  const geracaoMes = f.potenciaKwp * irradiacaoMedia * RAZAO_DESEMPENHO * telhado.fator * 30;
+
+  return {
+    chave: f.chave, propria: true, arquetipo: f.arquetipo,
+    nome: f.nome, tipo: a.tipo + ' · ' + a.rotulo.toLowerCase(), curto: a.tipo,
+    distribuidora: f.distribuidora || 'Não informada',
+    tarifa: f.tarifa, tarifaComp: +(f.tarifa * 0.86).toFixed(3), fioB: +(f.tarifa * 0.28).toFixed(3),
+    ilum: a.ilum, minFatura: a.minFatura,
+    potenciaKwp: f.potenciaKwp, paineis: f.paineis, investimento: f.investimento,
+    mesesOperacao: Math.max(1, f.mesesOperacao),
+    fatorInstalacao: telhado.fator, condicaoTelhado: telhado.rotulo.toLowerCase(),
+    consumoMes: f.consumoMes, geracaoMes: geracaoMes,
+    metaPadrao: Math.round(f.consumoMes * 0.92),
+    consumoH: a.consumoH.slice(), semana: a.semana.slice(), comodos: a.comodos.slice(),
+    equipamentos: a.equipamentos.map(e => Object.assign({}, e, { fonte: 'ia' })),
+    deteccoes: []
+  };
+}
+
+function unidadesProprias() { return (S.unidades || []).map(montarUnidade); }
+function uni(chave) {
+  if (UNIDADES_BASE[chave]) return UNIDADES_BASE[chave];
+  const f = (S.unidades || []).filter(x => x.chave === chave)[0];
+  return f ? montarUnidade(f) : null;
+}
+function chavesUnidades() {
+  return Object.keys(UNIDADES_BASE).concat((S.unidades || []).map(x => x.chave));
+}
 function tarifaAtual() { const u = unidade(); return S.tarifa[S.perfil] != null ? S.tarifa[S.perfil] : u.tarifa; }
 
 function agora() { return new Date(); }
@@ -1329,7 +1489,8 @@ const TELAS = {
   painel: ['', 'Painel'], historico: ['Comparativos', 'Histórico'],
   equipamentos: ['Desagregação por IA', 'Seus aparelhos'], cadastro: ['Novo aparelho', 'Cadastrar consumo'],
   alertas: ['Regras e limites', 'Alertas e metas'], relatorio: ['Fechamento do mês', 'Relatório mensal'],
-  config: ['Unidade e tarifa', 'Configurações']
+  config: ['Unidade e tarifa', 'Configurações'],
+  unidade: ['Nova unidade', 'Cadastrar unidade']
 };
 const NAV = [
   { k: 'painel', label: 'Painel', icon: IC.painel },
@@ -1363,8 +1524,8 @@ function vRail() {
       (n_ ? '<span class="badge">' + n_ + '<span class="sr"> pendências</span></span>' : '') +
       '</button>';
   }).join('');
-  const units = Object.keys(UNIDADES).map(k => {
-    const u = UNIDADES[k];
+  const units = chavesUnidades().map(k => {
+    const u = uni(k);
     return '<button class="unit" data-act="unit" data-unit="' + k + '" aria-pressed="' + (S.perfil === k) + '">' +
       '<span class="unit-dot"></span><span style="min-width:0"><span class="unit-name" style="display:block">' + esc(u.nome) + '</span>' +
       '<span class="unit-type" style="display:block">' + esc(u.curto) + '</span></span></button>';
@@ -1381,7 +1542,9 @@ function vRail() {
     '<div class="meter-row"><span>Gerando</span><span class="meter-val" id="liveG">' + nf(p.ger, 2) + ' kW</span></div>' +
     '</div><div class="meter-bar"><span id="liveBar" style="width:' + clamp((p.ger / Math.max(p.cons, .001)) * 100, 0, 100) + '%"></span></div>' +
     '<div class="meter-note" id="liveNote">' + textoMedidor(p) + '</div></div>' +
-    '<div class="unitbox"><div class="unitbox-title">Unidade</div><div style="display:flex;flex-direction:column;gap:4px">' + units + '</div></div>' +
+    '<div class="unitbox"><div class="unitbox-title">Unidade</div><div style="display:flex;flex-direction:column;gap:4px">' + units +
+    '<button class="unit unit--nova" data-act="nav" data-tela="unidade">' + ico(IC.mais, 13, 'currentColor', 2.4) +
+    '<span class="unit-name">Nova unidade</span></button></div></div>' +
     '</div></aside>';
 }
 function textoMedidor(p) {
@@ -1910,7 +2073,28 @@ function vConfig() {
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">' +
     '<div style="font-size:12.5px;color:var(--faint);max-width:44ch">Aparelhos cadastrados, metas e tarifa ficam salvos neste navegador.</div>' +
     '<button class="danger-btn" data-act="reset-tudo">Apagar meus dados</button></div>' +
-    '</section>' + cardFonte() + '</div>';
+    '</section>' + cardUnidades() + cardFonte() + '</div>';
+}
+
+/* unidades criadas pelo usuário */
+function cardUnidades() {
+  const proprias = S.unidades || [];
+  const linhas = proprias.length
+    ? proprias.map(f => {
+      const u = montarUnidade(f);
+      return '<div class="un-row">' +
+        '<span style="min-width:0"><b style="font-size:13.5px">' + esc(u.nome) + '</b>' +
+        '<span class="un-meta">' + esc(u.tipo) + ' · ' + nf(u.potenciaKwp, 1) + ' kWp · ' + nf(u.consumoMes) + ' kWh/mês</span></span>' +
+        (S.perfil === f.chave ? '<span class="pill pill--good">Em uso</span>' : '') +
+        '<button class="eq-kill" style="opacity:1" data-act="remover-unidade" data-chave="' + f.chave + '" ' +
+        'aria-label="Remover ' + esc(u.nome) + '">' + ico(IC.lixo, 15, 'currentColor', 1.8) + '</button></div>';
+    }).join('')
+    : '<div style="font-size:13px;color:var(--faint);margin-top:10px;max-width:60ch">' +
+      'Você ainda não cadastrou nenhuma. As duas que aparecem no menu são exemplos que vêm com o sistema.</div>';
+  return '<section class="card s6"><div class="card-head"><div><h2>Suas unidades</h2>' +
+    '<div class="card-sub">Cadastre a sua casa ou o seu comércio para ver os números reais</div></div>' +
+    '<button class="dark-btn" data-act="nav" data-tela="unidade">' + ico(IC.mais, 13, 'currentColor', 2.6) + 'Nova unidade</button></div>' +
+    '<div class="un-list">' + linhas + '</div></section>';
 }
 
 /* seletor entre simulação e medidor físico */
@@ -1921,7 +2105,7 @@ function cardFonte() {
     medidor: ['pill--good', 'Lendo o medidor'],
     aguardando: ['pill--bad', 'Sem resposta']
   }[f];
-  return '<section class="card s12"><div class="card-head"><div>' +
+  return '<section class="card s6"><div class="card-head"><div>' +
     '<h2>Fonte da leitura</h2>' +
     '<div class="card-sub">O painel não sabe de onde vem o número. Trocar a fonte não muda mais nada no sistema.</div></div>' +
     '<span class="pill ' + estado[0] + '">' + estado[1] + '</span></div>' +
@@ -1946,6 +2130,106 @@ function cardFonte() {
 }
 function kv(k, v, mono) {
   return '<div class="kv"><dt>' + k + '</dt><dd' + (mono ? ' class="mono"' : '') + '>' + v + '</dd></div>';
+}
+
+/* ---------- cadastrar unidade ---------- */
+function previaUnidade() {
+  const n = S.nova;
+  const a = ARQUETIPOS[n.arquetipo], tel = TELHADOS.filter(t => t.k === n.telhado)[0] || TELHADOS[1];
+  const irr = soma(IRRADIACAO_SP) / 12;
+  const geracao = n.potenciaKwp * irr * RAZAO_DESEMPENHO * tel.fator * 30;
+  const cobertura = n.consumoMes > 0 ? clamp((geracao / n.consumoMes) * 100, 0, 999) : 0;
+  const contaSem = n.consumoMes * n.tarifa + n.consumoMes * 0.0189 + a.ilum;
+  return { arquetipo: a, telhado: tel, geracao: geracao, cobertura: cobertura, contaSem: contaSem };
+}
+
+function textoCobertura(p, n) {
+  const base = 'Cobre ' + pct(p.cobertura) + ' de um consumo de ' + nf(n.consumoMes) + ' kWh';
+  if (p.cobertura > 130) return base + ' — sistema bem maior que o consumo, o excedente vira crédito e pode nunca ser usado';
+  if (p.cobertura < 40 && n.potenciaKwp > 0) return base + ' — sistema pequeno para esse consumo';
+  return base;
+}
+
+function vUnidade() {
+  const n = S.nova, p = previaUnidade();
+  const pode = n.nome.trim().length > 1 && n.potenciaKwp > 0 && n.consumoMes > 0;
+
+  const arqs = Object.keys(ARQUETIPOS).map(k => {
+    const a = ARQUETIPOS[k], at = n.arquetipo === k;
+    return '<button class="opt" data-act="nova-arq" data-v="' + k + '" aria-pressed="' + at + '">' +
+      '<span class="opt-t">' + a.rotulo + '</span>' +
+      '<span class="opt-d">' + a.desc + '</span></button>';
+  }).join('');
+
+  const tels = TELHADOS.map(t => '<button class="chip" data-act="nova-telhado" data-v="' + t.k + '" ' +
+    'aria-pressed="' + (n.telhado === t.k) + '">' + t.rotulo + '</button>').join('');
+
+  /* Sempre type=text: input[type=number] recusa vírgula decimal, e em
+     português a vírgula é o separador natural. O parse aceita as duas. */
+  const campo = (id, rot, dica, valor, num) =>
+    '<div class="field"><label class="field-lbl" for="' + id + '">' + rot + '</label>' +
+    '<input class="text-in" id="' + id + '" data-fid="' + id + '" data-in="' + id + '" type="text" ' +
+    (num ? 'inputmode="decimal" ' : '') +
+    'value="' + esc(num ? (valor % 1 === 0 ? nf(valor) : String(valor).replace('.', ',')) : valor) + '" autocomplete="off" style="max-width:320px">' +
+    (dica ? '<div class="dica">' + dica + '</div>' : '') + '</div>';
+
+  const form = '<section class="card s7" style="padding:24px 28px 28px">' +
+    '<h2>Sua unidade</h2>' +
+    '<div class="card-sub">Só o que está na sua conta de luz e na nota do instalador. O resto o sistema calcula.</div>' +
+
+    campo('unNome', 'Nome da unidade', 'Como você quer ver no menu — “Minha casa”, “Loja do centro”.', n.nome) +
+
+    '<div class="field"><span class="field-lbl">Como a energia é usada</span>' +
+    '<div class="dica">Isso define a curva de consumo hora a hora, sem você digitar 24 números.</div>' +
+    '<div class="opts">' + arqs + '</div></div>' +
+
+    '<div class="field"><span class="field-lbl">Condição do telhado</span>' +
+    '<div class="dica">Determina quanto do sol da região os painéis conseguem aproveitar.</div>' +
+    '<div class="chips">' + tels + '</div></div>' +
+
+    '<hr class="rule" style="margin:24px 0 4px">' +
+    '<div class="eyebrow-sm" style="margin-bottom:4px">Da sua conta de luz</div>' +
+    campo('unConsumo', 'Consumo médio por mês (kWh)', 'Pegue a média dos últimos 12 meses — costuma vir num gráfico na própria conta.', n.consumoMes, true) +
+    campo('unTarifa', 'Tarifa (R$ por kWh)', 'Divida o valor total pela quantidade de kWh, ou procure por “tarifa” na conta.', n.tarifa, true) +
+    campo('unDistribuidora', 'Distribuidora', '', n.distribuidora) +
+
+    '<hr class="rule" style="margin:24px 0 4px">' +
+    '<div class="eyebrow-sm" style="margin-bottom:4px">Do seu sistema solar</div>' +
+    campo('unPotencia', 'Potência instalada (kWp)', 'Está na nota do instalador. Some a potência dos painéis e divida por mil.', n.potenciaKwp, true) +
+    campo('unPaineis', 'Quantidade de painéis', '', n.paineis, true) +
+    campo('unInvestimento', 'Quanto custou (R$)', 'Usado só para calcular em quanto tempo o sistema se paga.', n.investimento, true) +
+    campo('unMeses', 'Há quantos meses está ligado', 'Define se você tem direito adquirido pela Lei 14.300 e o histórico que o sistema monta.', n.mesesOperacao, true) +
+    '</section>';
+
+  const previa = '<section class="card card--dark" style="padding:24px 26px 26px">' +
+    '<div class="eyebrow" style="font-size:12px;color:var(--on-dark-soft)">O que o sistema vai calcular</div>' +
+    '<div style="display:flex;align-items:baseline;gap:8px;margin-top:12px">' +
+    '<span class="big big-46" id="pvGer">' + nf(p.geracao) + '</span>' +
+    '<span style="font-size:15px;color:var(--on-dark-soft)">kWh gerados por mês</span></div>' +
+    '<div style="font-size:13px;color:var(--on-dark-soft);margin-top:6px" id="pvExpl">' +
+    nf(p.telhado.fator * 100) + '% do sol da região, com ' + nf(n.potenciaKwp, 1) + ' kWp instalados</div>' +
+    '<div class="est-bar"><i id="pvBar" style="width:' + clamp(p.cobertura, 0, 100) + '%"></i></div>' +
+    '<div style="font-size:12px;color:var(--on-dark-soft);margin-top:8px" id="pvCob">' + textoCobertura(p, n) + '</div>' +
+    '<hr style="border:0;height:1px;background:rgba(244,241,234,.14);margin:18px 0 14px">' +
+    '<div style="font-size:13px;color:var(--on-dark-soft);line-height:1.55" id="pvConta">' +
+    'Sem os painéis, sua conta seria cerca de <b style="color:var(--on-dark)">' + brl(p.contaSem) + '</b> por mês.</div>' +
+    '<button class="dark-btn" data-act="salvar-unidade" style="width:100%;height:46px;margin-top:20px;border-radius:13px;font-size:14.5px;' +
+    (pode ? 'background:var(--on-dark);color:var(--dark)' : '') + '"' + (pode ? '' : ' disabled') + '>' +
+    ico(IC.mais, 15, 'currentColor', 2.4) + 'Criar unidade</button>' +
+    (pode ? '' : '<div style="font-size:12px;color:var(--on-dark-soft);margin-top:10px">Falta o nome, a potência ou o consumo.</div>') +
+    '</section>';
+
+  const ajuda = '<section class="card" style="padding:20px 22px 22px">' +
+    '<div class="eyebrow" style="font-size:12px">Como o cálculo funciona</div>' +
+    '<div style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:10px">' +
+    'A geração não é chute nem um número que você digita: vem da irradiação média da região (' +
+    nf(soma(IRRADIACAO_SP) / 12, 1) + ' kWh/m² por dia), da potência que você informou, de ' +
+    pct(RAZAO_DESEMPENHO * 100) + ' de rendimento típico do inversor e da condição do telhado.' +
+    '<br><br>O consumo hora a hora vem do arquétipo escolhido, ajustado para bater com a média mensal da sua conta. ' +
+    'Depois disso o sistema calcula sozinho autoconsumo, injeção, créditos e Fio B.' +
+    '</div></section>';
+
+  return '<div class="grid12 enter">' + form + '<div class="s5 stack">' + previa + ajuda + '</div></div>';
 }
 
 
@@ -2103,8 +2387,8 @@ function mMais() {
     '<span class="mob-menu-ic">' + ico(x.icon, 17, 'var(--sun-deep)', 1.9) + '</span>' +
     '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + x.t + '</span>' +
     '<span class="mob-menu-s" style="display:block">' + x.s + '</span></span>' + ico(IC.chevron, 15, '#B9B2A2', 2.2) + '</button>').join('');
-  const uns = Object.keys(UNIDADES).map(k => {
-    const u = UNIDADES[k], at = S.perfil === k;
+  const uns = chavesUnidades().map(k => {
+    const u = uni(k), at = S.perfil === k;
     return '<button class="mob-menu" data-act="unit" data-unit="' + k + '" style="border-color:' + (at ? 'var(--ink)' : 'var(--line)') + '">' +
       '<span style="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:' + (at ? 'var(--sun)' : 'var(--line-2)') + '"></span>' +
       '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + esc(u.nome) + '</span>' +
@@ -2195,6 +2479,7 @@ function corpoDesktop() {
   else if (S.tela === 'cadastro') tela = vCadastro();
   else if (S.tela === 'alertas') tela = vAlertas();
   else if (S.tela === 'relatorio') tela = vRelatorio();
+  else if (S.tela === 'unidade') tela = vUnidade();
   else tela = vConfig();
   return '<div class="app">' + vRail() + '<main class="main" id="conteudo" tabindex="-1">' + vTopbar() + '<div class="page">' + tela + '</div></main></div>';
 }
@@ -2349,6 +2634,23 @@ function syncMeta() {
     f.style.background = v.projConsumo > meta ? 'var(--bad)' : 'var(--good)';
   }
 }
+function syncUnidade() {
+  if (!$('#pvGer')) return;
+  const n = S.nova, p = previaUnidade();
+  txt('#pvGer', nf(p.geracao));
+  txt('#pvExpl', nf(p.telhado.fator * 100) + '% do sol da região, com ' + nf(n.potenciaKwp, 1) + ' kWp instalados');
+  txt('#pvCob', textoCobertura(p, n));
+  const b = $('#pvBar'); if (b) b.style.width = clamp(p.cobertura, 0, 100) + '%';
+  const c = $('#pvConta');
+  if (c) c.innerHTML = 'Sem os painéis, sua conta seria cerca de <b style="color:var(--on-dark)">' + brl(p.contaSem) + '</b> por mês.';
+  const btn = $('[data-act="salvar-unidade"]');
+  if (btn) {
+    const pode = n.nome.trim().length > 1 && n.potenciaKwp > 0 && n.consumoMes > 0;
+    btn.disabled = !pode;
+    btn.style.background = pode ? 'var(--on-dark)' : '';
+    btn.style.color = pode ? 'var(--dark)' : '';
+  }
+}
 function syncTarifa() { txt('#tarLbl', 'R$ ' + nf(tarifaAtual(), 2) + ' / kWh'); }
 
 /* ---------- ações ---------- */
@@ -2358,9 +2660,9 @@ const ACOES = {
   nav: el => irPara(el.dataset.tela),
   unit: el => {
     S.perfil = el.dataset.unit; S.detalhe = null; S.salvo = false;
-    S.novo.comodo = UNIDADES[S.perfil].comodos[0];
+    S.novo.comodo = uni(S.perfil).comodos[0];
     _visao = null; salvar(); render();
-    aviso('Unidade trocada', UNIDADES[S.perfil].nome + ' · ' + UNIDADES[S.perfil].tipo, 'sun');
+    aviso('Unidade trocada', uni(S.perfil).nome + ' · ' + uni(S.perfil).tipo, 'sun');
   },
   periodo: el => { S.periodo = el.dataset.p; salvar(); render(); },
   mobile: () => { S.vista = 'mobile'; S.tab = 'painel'; S.msub = null; salvar(); render(); },
@@ -2408,7 +2710,7 @@ const ACOES = {
     if (!e || e.sintetico) return;
     S.editando = e.id;
     S.novo = {
-      nome: e.nome, cat: e.cat, comodo: e.local === '—' ? UNIDADES[S.perfil].comodos[0] : e.local,
+      nome: e.nome, cat: e.cat, comodo: e.local === '—' ? uni(S.perfil).comodos[0] : e.local,
       pot: Math.round(clamp(e.pot || 1000, 20, 12000)),
       horas: Math.round(clamp(e.horas || 1, 0.1, 24) * 10) / 10,
       dias: Math.round(clamp(e.dias || 30, 1, 31))
@@ -2418,7 +2720,7 @@ const ACOES = {
   },
   'cancelar-edicao': () => {
     S.editando = null; S.salvo = false;
-    S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: UNIDADES[S.perfil].comodos[0] };
+    S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: uni(S.perfil).comodos[0] };
     salvar(); render();
   },
   salvar: () => {
@@ -2445,7 +2747,7 @@ const ACOES = {
         }, campos)]);
       }
       S.editando = null; S.salvo = false; S.detalhe = null;
-      S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: UNIDADES[S.perfil].comodos[0] };
+      S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: uni(S.perfil).comodos[0] };
       S.tela = 'equipamentos'; S.msub = null;
       salvar(); render();
       aviso(campos.nome + ' atualizado', nf(kwh, 1) + ' kWh por mês · ' + brl(kwh * tarifaAtual()) + ' na conta.', 'good');
@@ -2457,9 +2759,39 @@ const ACOES = {
       cor: CORES_EXTRA[S.extras.length % CORES_EXTRA.length]
     }, campos)]);
     S.salvo = true;
-    S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: UNIDADES[S.perfil].comodos[0] };
+    S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: uni(S.perfil).comodos[0] };
     salvar(); render();
     aviso(campos.nome + ' cadastrado', nf(kwh, 1) + ' kWh por mês · ' + brl(kwh * tarifaAtual()) + ' na conta.', 'good');
+  },
+  'nova-arq': el => { S.nova.arquetipo = el.dataset.v; salvar(); render(); },
+  'nova-telhado': el => { S.nova.telhado = el.dataset.v; salvar(); render(); },
+  'salvar-unidade': () => {
+    const n = S.nova;
+    if (n.nome.trim().length < 2 || !(n.potenciaKwp > 0) || !(n.consumoMes > 0)) return;
+    const chave = 'u' + Date.now().toString(36);
+    S.unidades = (S.unidades || []).concat([Object.assign({}, n, { chave: chave, nome: n.nome.trim() })]);
+    const u = uni(chave);
+    S.metas[chave] = u.metaPadrao;
+    S.tarifa[chave] = null;
+    S.perfil = chave; S.tela = 'painel'; S.detalhe = null;
+    S.nova = JSON.parse(JSON.stringify(PADRAO.nova));
+    _visao = null; _cacheLedger.clear();
+    salvar(); render();
+    aviso(u.nome + ' criada', 'Gerando ' + nf(u.geracaoMes) + ' kWh/mês para um consumo de ' + nf(u.consumoMes) + ' kWh. O painel já está mostrando ela.', 'good');
+  },
+  'remover-unidade': el => {
+    const chave = el.dataset.chave;
+    const alvo = uni(chave);
+    if (!alvo) return;
+    if (!window.confirm('Remover a unidade "' + alvo.nome + '" e tudo que foi cadastrado nela?')) return;
+    S.unidades = (S.unidades || []).filter(x => x.chave !== chave);
+    S.extras = S.extras.filter(x => x.perfil !== chave);
+    S.removidos = S.removidos.filter(x => x.indexOf(chave + ':') !== 0);
+    delete S.metas[chave]; delete S.tarifa[chave];
+    if (S.perfil === chave) S.perfil = 'residencial';
+    _visao = null; _cacheLedger.clear();
+    salvar(); render();
+    aviso(alvo.nome + ' removida', 'A unidade e os aparelhos dela saíram do sistema.', 'bad');
   },
   'alerta-dispensar': el => {
     S.dispensados = S.dispensados.concat([el.dataset.chave]);
@@ -2513,6 +2845,19 @@ document.addEventListener('input', ev => {
   if (campo === 'nome') { S.novo.nome = el.value; S.salvo = false; syncCadastro(); salvar(); return; }
   if (campo === 'pot' || campo === 'horas' || campo === 'dias') {
     S.novo[campo] = Number(el.value); S.salvo = false; syncCadastro(); salvar(); return;
+  }
+  const CAMPOS_UNIDADE = {
+    unNome: ['nome', 'texto'], unDistribuidora: ['distribuidora', 'texto'],
+    unConsumo: ['consumoMes', 'num'], unTarifa: ['tarifa', 'num'],
+    unPotencia: ['potenciaKwp', 'num'], unPaineis: ['paineis', 'int'],
+    unInvestimento: ['investimento', 'num'], unMeses: ['mesesOperacao', 'int']
+  };
+  if (CAMPOS_UNIDADE[campo]) {
+    const def = CAMPOS_UNIDADE[campo];
+    S.nova[def[0]] = def[1] === 'texto' ? el.value
+      : def[1] === 'int' ? Math.max(0, Math.round(numeroBR(el.value)))
+        : Math.max(0, numeroBR(el.value));
+    syncUnidade(); salvar(); return;
   }
   if (campo === 'endereco') { MEDIDOR.endereco = el.value.trim(); MEDIDOR.ultima = null; salvar(); return; }
   if (campo === 'meta') { S.metas[S.perfil] = Number(el.value); syncMeta(); salvar(); return; }
@@ -2595,7 +2940,7 @@ function iniciar() {
   if (!$('#root')) return;
   carregar();
   if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
-  if (!UNIDADES[S.perfil]) S.perfil = 'residencial';
+  if (!uni(S.perfil)) S.perfil = 'residencial';
   if (!TELAS[S.tela]) S.tela = 'painel';
   _ultimaHora = new Date().getHours();
   lerHash();

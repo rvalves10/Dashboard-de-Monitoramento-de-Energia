@@ -41,7 +41,8 @@ const TELAS = {
   painel: ['', 'Painel'], historico: ['Comparativos', 'Histórico'],
   equipamentos: ['Desagregação por IA', 'Seus aparelhos'], cadastro: ['Novo aparelho', 'Cadastrar consumo'],
   alertas: ['Regras e limites', 'Alertas e metas'], relatorio: ['Fechamento do mês', 'Relatório mensal'],
-  config: ['Unidade e tarifa', 'Configurações']
+  config: ['Unidade e tarifa', 'Configurações'],
+  unidade: ['Nova unidade', 'Cadastrar unidade']
 };
 const NAV = [
   { k: 'painel', label: 'Painel', icon: IC.painel },
@@ -75,8 +76,8 @@ function vRail() {
       (n_ ? '<span class="badge">' + n_ + '<span class="sr"> pendências</span></span>' : '') +
       '</button>';
   }).join('');
-  const units = Object.keys(UNIDADES).map(k => {
-    const u = UNIDADES[k];
+  const units = chavesUnidades().map(k => {
+    const u = uni(k);
     return '<button class="unit" data-act="unit" data-unit="' + k + '" aria-pressed="' + (S.perfil === k) + '">' +
       '<span class="unit-dot"></span><span style="min-width:0"><span class="unit-name" style="display:block">' + esc(u.nome) + '</span>' +
       '<span class="unit-type" style="display:block">' + esc(u.curto) + '</span></span></button>';
@@ -93,7 +94,9 @@ function vRail() {
     '<div class="meter-row"><span>Gerando</span><span class="meter-val" id="liveG">' + nf(p.ger, 2) + ' kW</span></div>' +
     '</div><div class="meter-bar"><span id="liveBar" style="width:' + clamp((p.ger / Math.max(p.cons, .001)) * 100, 0, 100) + '%"></span></div>' +
     '<div class="meter-note" id="liveNote">' + textoMedidor(p) + '</div></div>' +
-    '<div class="unitbox"><div class="unitbox-title">Unidade</div><div style="display:flex;flex-direction:column;gap:4px">' + units + '</div></div>' +
+    '<div class="unitbox"><div class="unitbox-title">Unidade</div><div style="display:flex;flex-direction:column;gap:4px">' + units +
+    '<button class="unit unit--nova" data-act="nav" data-tela="unidade">' + ico(IC.mais, 13, 'currentColor', 2.4) +
+    '<span class="unit-name">Nova unidade</span></button></div></div>' +
     '</div></aside>';
 }
 function textoMedidor(p) {
@@ -622,7 +625,28 @@ function vConfig() {
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">' +
     '<div style="font-size:12.5px;color:var(--faint);max-width:44ch">Aparelhos cadastrados, metas e tarifa ficam salvos neste navegador.</div>' +
     '<button class="danger-btn" data-act="reset-tudo">Apagar meus dados</button></div>' +
-    '</section>' + cardFonte() + '</div>';
+    '</section>' + cardUnidades() + cardFonte() + '</div>';
+}
+
+/* unidades criadas pelo usuário */
+function cardUnidades() {
+  const proprias = S.unidades || [];
+  const linhas = proprias.length
+    ? proprias.map(f => {
+      const u = montarUnidade(f);
+      return '<div class="un-row">' +
+        '<span style="min-width:0"><b style="font-size:13.5px">' + esc(u.nome) + '</b>' +
+        '<span class="un-meta">' + esc(u.tipo) + ' · ' + nf(u.potenciaKwp, 1) + ' kWp · ' + nf(u.consumoMes) + ' kWh/mês</span></span>' +
+        (S.perfil === f.chave ? '<span class="pill pill--good">Em uso</span>' : '') +
+        '<button class="eq-kill" style="opacity:1" data-act="remover-unidade" data-chave="' + f.chave + '" ' +
+        'aria-label="Remover ' + esc(u.nome) + '">' + ico(IC.lixo, 15, 'currentColor', 1.8) + '</button></div>';
+    }).join('')
+    : '<div style="font-size:13px;color:var(--faint);margin-top:10px;max-width:60ch">' +
+      'Você ainda não cadastrou nenhuma. As duas que aparecem no menu são exemplos que vêm com o sistema.</div>';
+  return '<section class="card s6"><div class="card-head"><div><h2>Suas unidades</h2>' +
+    '<div class="card-sub">Cadastre a sua casa ou o seu comércio para ver os números reais</div></div>' +
+    '<button class="dark-btn" data-act="nav" data-tela="unidade">' + ico(IC.mais, 13, 'currentColor', 2.6) + 'Nova unidade</button></div>' +
+    '<div class="un-list">' + linhas + '</div></section>';
 }
 
 /* seletor entre simulação e medidor físico */
@@ -633,7 +657,7 @@ function cardFonte() {
     medidor: ['pill--good', 'Lendo o medidor'],
     aguardando: ['pill--bad', 'Sem resposta']
   }[f];
-  return '<section class="card s12"><div class="card-head"><div>' +
+  return '<section class="card s6"><div class="card-head"><div>' +
     '<h2>Fonte da leitura</h2>' +
     '<div class="card-sub">O painel não sabe de onde vem o número. Trocar a fonte não muda mais nada no sistema.</div></div>' +
     '<span class="pill ' + estado[0] + '">' + estado[1] + '</span></div>' +
@@ -658,4 +682,104 @@ function cardFonte() {
 }
 function kv(k, v, mono) {
   return '<div class="kv"><dt>' + k + '</dt><dd' + (mono ? ' class="mono"' : '') + '>' + v + '</dd></div>';
+}
+
+/* ---------- cadastrar unidade ---------- */
+function previaUnidade() {
+  const n = S.nova;
+  const a = ARQUETIPOS[n.arquetipo], tel = TELHADOS.filter(t => t.k === n.telhado)[0] || TELHADOS[1];
+  const irr = soma(IRRADIACAO_SP) / 12;
+  const geracao = n.potenciaKwp * irr * RAZAO_DESEMPENHO * tel.fator * 30;
+  const cobertura = n.consumoMes > 0 ? clamp((geracao / n.consumoMes) * 100, 0, 999) : 0;
+  const contaSem = n.consumoMes * n.tarifa + n.consumoMes * 0.0189 + a.ilum;
+  return { arquetipo: a, telhado: tel, geracao: geracao, cobertura: cobertura, contaSem: contaSem };
+}
+
+function textoCobertura(p, n) {
+  const base = 'Cobre ' + pct(p.cobertura) + ' de um consumo de ' + nf(n.consumoMes) + ' kWh';
+  if (p.cobertura > 130) return base + ' — sistema bem maior que o consumo, o excedente vira crédito e pode nunca ser usado';
+  if (p.cobertura < 40 && n.potenciaKwp > 0) return base + ' — sistema pequeno para esse consumo';
+  return base;
+}
+
+function vUnidade() {
+  const n = S.nova, p = previaUnidade();
+  const pode = n.nome.trim().length > 1 && n.potenciaKwp > 0 && n.consumoMes > 0;
+
+  const arqs = Object.keys(ARQUETIPOS).map(k => {
+    const a = ARQUETIPOS[k], at = n.arquetipo === k;
+    return '<button class="opt" data-act="nova-arq" data-v="' + k + '" aria-pressed="' + at + '">' +
+      '<span class="opt-t">' + a.rotulo + '</span>' +
+      '<span class="opt-d">' + a.desc + '</span></button>';
+  }).join('');
+
+  const tels = TELHADOS.map(t => '<button class="chip" data-act="nova-telhado" data-v="' + t.k + '" ' +
+    'aria-pressed="' + (n.telhado === t.k) + '">' + t.rotulo + '</button>').join('');
+
+  /* Sempre type=text: input[type=number] recusa vírgula decimal, e em
+     português a vírgula é o separador natural. O parse aceita as duas. */
+  const campo = (id, rot, dica, valor, num) =>
+    '<div class="field"><label class="field-lbl" for="' + id + '">' + rot + '</label>' +
+    '<input class="text-in" id="' + id + '" data-fid="' + id + '" data-in="' + id + '" type="text" ' +
+    (num ? 'inputmode="decimal" ' : '') +
+    'value="' + esc(num ? (valor % 1 === 0 ? nf(valor) : String(valor).replace('.', ',')) : valor) + '" autocomplete="off" style="max-width:320px">' +
+    (dica ? '<div class="dica">' + dica + '</div>' : '') + '</div>';
+
+  const form = '<section class="card s7" style="padding:24px 28px 28px">' +
+    '<h2>Sua unidade</h2>' +
+    '<div class="card-sub">Só o que está na sua conta de luz e na nota do instalador. O resto o sistema calcula.</div>' +
+
+    campo('unNome', 'Nome da unidade', 'Como você quer ver no menu — “Minha casa”, “Loja do centro”.', n.nome) +
+
+    '<div class="field"><span class="field-lbl">Como a energia é usada</span>' +
+    '<div class="dica">Isso define a curva de consumo hora a hora, sem você digitar 24 números.</div>' +
+    '<div class="opts">' + arqs + '</div></div>' +
+
+    '<div class="field"><span class="field-lbl">Condição do telhado</span>' +
+    '<div class="dica">Determina quanto do sol da região os painéis conseguem aproveitar.</div>' +
+    '<div class="chips">' + tels + '</div></div>' +
+
+    '<hr class="rule" style="margin:24px 0 4px">' +
+    '<div class="eyebrow-sm" style="margin-bottom:4px">Da sua conta de luz</div>' +
+    campo('unConsumo', 'Consumo médio por mês (kWh)', 'Pegue a média dos últimos 12 meses — costuma vir num gráfico na própria conta.', n.consumoMes, true) +
+    campo('unTarifa', 'Tarifa (R$ por kWh)', 'Divida o valor total pela quantidade de kWh, ou procure por “tarifa” na conta.', n.tarifa, true) +
+    campo('unDistribuidora', 'Distribuidora', '', n.distribuidora) +
+
+    '<hr class="rule" style="margin:24px 0 4px">' +
+    '<div class="eyebrow-sm" style="margin-bottom:4px">Do seu sistema solar</div>' +
+    campo('unPotencia', 'Potência instalada (kWp)', 'Está na nota do instalador. Some a potência dos painéis e divida por mil.', n.potenciaKwp, true) +
+    campo('unPaineis', 'Quantidade de painéis', '', n.paineis, true) +
+    campo('unInvestimento', 'Quanto custou (R$)', 'Usado só para calcular em quanto tempo o sistema se paga.', n.investimento, true) +
+    campo('unMeses', 'Há quantos meses está ligado', 'Define se você tem direito adquirido pela Lei 14.300 e o histórico que o sistema monta.', n.mesesOperacao, true) +
+    '</section>';
+
+  const previa = '<section class="card card--dark" style="padding:24px 26px 26px">' +
+    '<div class="eyebrow" style="font-size:12px;color:var(--on-dark-soft)">O que o sistema vai calcular</div>' +
+    '<div style="display:flex;align-items:baseline;gap:8px;margin-top:12px">' +
+    '<span class="big big-46" id="pvGer">' + nf(p.geracao) + '</span>' +
+    '<span style="font-size:15px;color:var(--on-dark-soft)">kWh gerados por mês</span></div>' +
+    '<div style="font-size:13px;color:var(--on-dark-soft);margin-top:6px" id="pvExpl">' +
+    nf(p.telhado.fator * 100) + '% do sol da região, com ' + nf(n.potenciaKwp, 1) + ' kWp instalados</div>' +
+    '<div class="est-bar"><i id="pvBar" style="width:' + clamp(p.cobertura, 0, 100) + '%"></i></div>' +
+    '<div style="font-size:12px;color:var(--on-dark-soft);margin-top:8px" id="pvCob">' + textoCobertura(p, n) + '</div>' +
+    '<hr style="border:0;height:1px;background:rgba(244,241,234,.14);margin:18px 0 14px">' +
+    '<div style="font-size:13px;color:var(--on-dark-soft);line-height:1.55" id="pvConta">' +
+    'Sem os painéis, sua conta seria cerca de <b style="color:var(--on-dark)">' + brl(p.contaSem) + '</b> por mês.</div>' +
+    '<button class="dark-btn" data-act="salvar-unidade" style="width:100%;height:46px;margin-top:20px;border-radius:13px;font-size:14.5px;' +
+    (pode ? 'background:var(--on-dark);color:var(--dark)' : '') + '"' + (pode ? '' : ' disabled') + '>' +
+    ico(IC.mais, 15, 'currentColor', 2.4) + 'Criar unidade</button>' +
+    (pode ? '' : '<div style="font-size:12px;color:var(--on-dark-soft);margin-top:10px">Falta o nome, a potência ou o consumo.</div>') +
+    '</section>';
+
+  const ajuda = '<section class="card" style="padding:20px 22px 22px">' +
+    '<div class="eyebrow" style="font-size:12px">Como o cálculo funciona</div>' +
+    '<div style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:10px">' +
+    'A geração não é chute nem um número que você digita: vem da irradiação média da região (' +
+    nf(soma(IRRADIACAO_SP) / 12, 1) + ' kWh/m² por dia), da potência que você informou, de ' +
+    pct(RAZAO_DESEMPENHO * 100) + ' de rendimento típico do inversor e da condição do telhado.' +
+    '<br><br>O consumo hora a hora vem do arquétipo escolhido, ajustado para bater com a média mensal da sua conta. ' +
+    'Depois disso o sistema calcula sozinho autoconsumo, injeção, créditos e Fio B.' +
+    '</div></section>';
+
+  return '<div class="grid12 enter">' + form + '<div class="s5 stack">' + previa + ajuda + '</div></div>';
 }
