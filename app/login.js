@@ -14,6 +14,11 @@
 
    Num produto real a verificação aconteceria no servidor, e o hash nunca
    sairia de lá. Isso está dito na própria tela de login, de propósito.
+
+   O login NÃO bloqueia o acesso: o site abre direto no painel, em modo
+   visitante. Criar conta é opcional e serve para separar dados de quem
+   divide o mesmo navegador. Virar app com conta obrigatória é assunto
+   de uma fase futura do projeto.
    ============================================================ */
 'use strict';
 
@@ -214,7 +219,35 @@ function apagarConta() {
   sair();
 }
 
+/* ---------- migração de dados ----------
+   Dois casos em que os dados ficariam órfãos e o usuário acharia que
+   perdeu tudo. Os dois são resolvidos calados. */
+
+/* antes de existir login, o estado morava na chave sem sufixo */
+function adotarDadosAntigos() {
+  try {
+    const antigo = localStorage.getItem(CHAVE_LS);
+    const alvo = CHAVE_LS + '.visitante';
+    if (antigo && !localStorage.getItem(alvo)) localStorage.setItem(alvo, antigo);
+  } catch (e) { }
+}
+
+/* quem brincou como visitante e depois criou conta leva o que fez junto */
+function migrarDoVisitante(destinoId) {
+  try {
+    const origem = CHAVE_LS + '.visitante';
+    const destino = CHAVE_LS + '.' + destinoId;
+    const dados = localStorage.getItem(origem);
+    if (!dados || localStorage.getItem(destino)) return false;
+    localStorage.setItem(destino, dados);
+    localStorage.removeItem(origem);
+    return true;
+  } catch (e) { return false; }
+}
+
 /* ---------- tela de login ---------- */
+function temSessaoAtiva() { return !!SESSAO; }
+
 let modoLogin = 'entrar';   /* entrar | criar */
 let erroLogin = '';
 let ocupado = false;
@@ -226,6 +259,9 @@ function vLogin() {
   return '<div class="auth">' +
     '<div class="auth-glow"></div>' +
     '<div class="auth-cx">' +
+    (temSessaoAtiva() ? '<button class="auth-voltar" data-act="auth-voltar">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>' +
+      'Voltar para o painel</button>' : '') +
 
     '<div class="auth-marca">' +
     '<span class="auth-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16150F" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M22 12h-2.4M4.4 12H2M19.07 4.93l-1.7 1.7M6.63 17.37l-1.7 1.7M19.07 19.07l-1.7-1.7M6.63 6.63l-1.7-1.7"/></svg></span>' +
@@ -233,7 +269,7 @@ function vLogin() {
 
     '<h1 class="auth-t">' + (criar ? 'Criar sua conta' : 'Entrar') + '</h1>' +
     '<p class="auth-d">' + (criar
-      ? 'Cada conta guarda as próprias unidades, aparelhos e metas neste navegador.'
+      ? 'Opcional. Serve para separar seus dados de quem mais usa este navegador — unidades, aparelhos e metas ficam só na sua conta.'
       : 'Use a conta que você criou neste navegador.') + '</p>' +
 
     '<form class="auth-form" id="formLogin" autocomplete="on">' +
@@ -261,8 +297,12 @@ function vLogin() {
     '</div>' +
 
     '<div class="auth-ou"><span>ou</span></div>' +
-    '<button class="auth-visitante" data-act="auth-visitante">Entrar como visitante</button>' +
-    '<div class="auth-visitante-d">Para demonstração. Os dados ficam num espaço separado e qualquer pessoa neste computador enxerga.</div>' +
+    '<button class="auth-visitante" data-act="auth-voltar">' + (temSessaoAtiva()
+      ? 'Voltar para o painel'
+      : 'Continuar sem conta') + '</button>' +
+    '<div class="auth-visitante-d">' + (temSessaoAtiva()
+      ? 'Você já está usando o Solaris. Entrar só troca de conta.'
+      : 'O painel funciona sem cadastro. Os dados ficam neste navegador e qualquer pessoa que usar este computador enxerga.') + '</div>' +
 
     '<div class="auth-aviso">' +
     '<b>Sobre a segurança deste login</b>' +
@@ -289,10 +329,14 @@ async function enviarLogin(ev) {
 
   ocupado = true; erroLogin = ''; renderLogin();
   try {
-    if (criar) { await criarConta(nome, email, senha); await entrar(email, senha, true); }
-    else await entrar(email, senha, manter);
+    let migrou = false;
+    if (criar) {
+      const c = await criarConta(nome, email, senha);
+      migrou = ehVisitante() && migrarDoVisitante(c.id);
+      await entrar(email, senha, true);
+    } else await entrar(email, senha, manter);
     ocupado = false;
-    aoEntrar();
+    aoEntrar(migrou);
   } catch (e) {
     ocupado = false;
     erroLogin = e.message || 'Não deu para continuar.';

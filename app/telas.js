@@ -104,10 +104,19 @@ function cardConta() {
   const s = sessao();
   if (!s) return '';
   const inicial = (s.nome || '?').trim().charAt(0).toUpperCase();
+  if (ehVisitante()) {
+    return '<button class="conta conta--entrar" data-act="auth-abrir">' +
+      '<span class="conta-av conta-av--vis">' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>' +
+      '<span class="conta-txt"><span class="conta-nome">Entrar</span>' +
+      '<span class="conta-mail">Opcional · salvar em conta própria</span></span>' +
+      '</button>';
+  }
   return '<div class="conta">' +
-    '<span class="conta-av' + (ehVisitante() ? ' conta-av--vis' : '') + '">' + esc(inicial) + '</span>' +
+    '<span class="conta-av">' + esc(inicial) + '</span>' +
     '<span class="conta-txt"><span class="conta-nome">' + esc(s.nome) + '</span>' +
-    '<span class="conta-mail">' + esc(s.email || 'modo demonstração') + '</span></span>' +
+    '<span class="conta-mail">' + esc(s.email) + '</span></span>' +
     '<button class="conta-sair" data-act="sair" title="Sair da conta" aria-label="Sair da conta">' +
     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
     '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>' +

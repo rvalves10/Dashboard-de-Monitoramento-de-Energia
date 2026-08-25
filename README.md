@@ -90,9 +90,13 @@ quatro arquivos pelo escopo léxico global — `motor.js` declara, os outros usa
 Preencha os nomes antes da primeira sprint. Uma frente sem dono é uma frente
 que atrasa.
 
-## Sobre o login
+## Sobre o login (opcional)
 
-Existe tela de entrada com contas separadas, mas **isto não é segurança contra
+O site abre direto no painel, em modo visitante — o login nao bloqueia nada. Criar conta e opcional e serve para separar dados de quem divide o mesmo navegador. Conta obrigatoria fica para quando o projeto virar app.
+
+Quando alguem cria conta depois de mexer como visitante, o que ele fez vai junto.
+
+O login existe e funciona, mas **isto não é segurança contra
 quem tem acesso ao computador**. O app roda sem servidor: quem abrir o DevTools
 lê o armazenamento local. O que o login entrega de verdade:
 

@@ -737,6 +737,15 @@ body.vista-login{background:var(--dark)}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .conta-sair{color:var(--on-dark-faint);padding:5px;border-radius:8px;flex-shrink:0;transition:color .15s,background .15s}
 .conta-sair:hover{color:var(--on-dark);background:rgba(244,241,234,.1)}
+.conta--entrar{width:100%;text-align:left;transition:background .15s,border-color .15s}
+.conta--entrar:hover{background:rgba(244,241,234,.1);border-color:rgba(244,241,234,.24)}
+.conta--entrar .conta-nome{color:var(--sun-lite)}
+
+.auth-voltar{
+  display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;
+  color:var(--sun-deep);margin-bottom:16px;transition:color .15s;
+}
+.auth-voltar:hover{color:var(--sun-deeper)}
 
 @media (max-width:1040px){
   .conta{justify-content:center;padding:8px}

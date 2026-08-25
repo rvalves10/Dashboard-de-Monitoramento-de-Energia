@@ -347,14 +347,17 @@ const ACOES = {
     salvar(); render();
   },
   'auth-modo': el => { modoLogin = el.dataset.v; erroLogin = ''; renderLogin(); },
-  'auth-visitante': () => { entrarComoVisitante(); aoEntrar(); },
+  'auth-abrir': () => { modoLogin = 'entrar'; erroLogin = ''; renderLogin(); },
+  'auth-voltar': () => {
+    if (!sessao()) { entrarComoVisitante(); aoEntrar(); return; }
+    document.body.classList.remove('vista-login');
+    render();
+  },
   sair: () => {
     if (!window.confirm('Sair da conta? Seus dados continuam salvos neste navegador.')) return;
     sair();
-    S = JSON.parse(JSON.stringify(PADRAO));
-    _visao = null; _cacheLedger.clear();
-    modoLogin = 'entrar'; erroLogin = '';
-    renderLogin();
+    entrarComoVisitante();
+    aoEntrar();
   },
   imprimir: () => window.print(),
   'reset-tarifa': () => { S.tarifa[S.perfil] = null; salvar(); render(); aviso('Tarifa restaurada', 'Voltou para R$ ' + nf(unidade().tarifa, 2) + ' / kWh da ' + unidade().distribuidora + '.', 'sun'); },
@@ -491,7 +494,7 @@ function iniciarRelogios() {
 }
 
 /* chamado quando uma sessão acabou de ser aberta */
-function aoEntrar() {
+function aoEntrar(migrou) {
   document.body.classList.remove('vista-login');
   S = JSON.parse(JSON.stringify(PADRAO));
   carregar();
@@ -501,9 +504,13 @@ function aoEntrar() {
   _visao = null; _cacheLedger.clear();
   render();
   const s = sessao();
-  aviso('Bem-vindo, ' + s.nome.split(' ')[0],
-    ehVisitante() ? 'Modo visitante: os dados ficam num espaço separado neste navegador.'
-      : 'Medidor conectado · ' + nf(visao().mtd.tc) + ' kWh no mês até agora.', 'good');
+  if (ehVisitante()) {
+    aviso('Medidor conectado', nf(visao().mtd.tc) + ' kWh no mês até agora. Criar conta é opcional — serve para separar seus dados de quem mais usa este navegador.', 'good');
+  } else {
+    aviso('Bem-vindo, ' + s.nome.split(' ')[0],
+      migrou ? 'O que você fez como visitante veio junto para a sua conta.'
+        : 'Medidor conectado · ' + nf(visao().mtd.tc) + ' kWh no mês até agora.', 'good');
+  }
 }
 
 /* ---------- partida ---------- */
@@ -511,7 +518,9 @@ function iniciar() {
   /* a suíte de testes carrega os mesmos scripts sem a casca da página:
      sem #root não há app para subir, só as funções para exercitar */
   if (!$('#root')) return;
-  if (!carregarSessao()) { modoLogin = 'entrar'; renderLogin(); iniciarRelogios(); return; }
+  /* Site normal: abre direto no painel. Sem sessão, entra como visitante
+     e o login fica disponível no menu para quem quiser conta própria. */
+  if (!carregarSessao()) { adotarDadosAntigos(); entrarComoVisitante(); }
   carregar();
   if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
   if (!uni(S.perfil)) S.perfil = 'residencial';

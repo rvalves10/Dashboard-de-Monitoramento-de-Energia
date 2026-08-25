@@ -159,10 +159,18 @@ function mMais() {
       '<span class="mob-menu-s" style="display:block">' + esc(u.tipo) + '</span></span></button>';
   }).join('');
   const s = sessao();
-  const conta = '<div class="mob-card" style="display:flex;align-items:center;gap:12px">' +
-    '<span class="conta-av' + (ehVisitante() ? ' conta-av--vis' : '') + '">' + esc((s.nome || '?').charAt(0).toUpperCase()) + '</span>' +
+  const conta = ehVisitante()
+    ? '<button class="mob-menu" data-act="auth-abrir">' +
+    '<span class="conta-av conta-av--vis">' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>' +
+    '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">Entrar</span>' +
+    '<span class="mob-menu-s" style="display:block">Opcional · salvar em conta própria</span></span>' +
+    ico(IC.chevron, 15, '#B9B2A2', 2.2) + '</button>'
+    : '<div class="mob-card" style="display:flex;align-items:center;gap:12px">' +
+    '<span class="conta-av">' + esc((s.nome || '?').charAt(0).toUpperCase()) + '</span>' +
     '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + esc(s.nome) + '</span>' +
-    '<span class="mob-menu-s" style="display:block">' + esc(s.email || 'modo demonstração') + '</span></span>' +
+    '<span class="mob-menu-s" style="display:block">' + esc(s.email) + '</span></span>' +
     '<button class="link-btn" data-act="sair">Sair</button></div>';
   return '<div class="mob-col">' + conta + menu +
     '<div class="eyebrow-sm" style="margin-top:10px">Trocar de unidade</div>' + uns + '</div>';

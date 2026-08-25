@@ -750,6 +750,15 @@ body.vista-login{background:var(--dark)}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .conta-sair{color:var(--on-dark-faint);padding:5px;border-radius:8px;flex-shrink:0;transition:color .15s,background .15s}
 .conta-sair:hover{color:var(--on-dark);background:rgba(244,241,234,.1)}
+.conta--entrar{width:100%;text-align:left;transition:background .15s,border-color .15s}
+.conta--entrar:hover{background:rgba(244,241,234,.1);border-color:rgba(244,241,234,.24)}
+.conta--entrar .conta-nome{color:var(--sun-lite)}
+
+.auth-voltar{
+  display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;
+  color:var(--sun-deep);margin-bottom:16px;transition:color .15s;
+}
+.auth-voltar:hover{color:var(--sun-deeper)}
 
 @media (max-width:1040px){
   .conta{justify-content:center;padding:8px}
@@ -1565,6 +1574,11 @@ function saudacao() {
 
    Num produto real a verificação aconteceria no servidor, e o hash nunca
    sairia de lá. Isso está dito na própria tela de login, de propósito.
+
+   O login NÃO bloqueia o acesso: o site abre direto no painel, em modo
+   visitante. Criar conta é opcional e serve para separar dados de quem
+   divide o mesmo navegador. Virar app com conta obrigatória é assunto
+   de uma fase futura do projeto.
    ============================================================ */
 'use strict';
 
@@ -1765,7 +1779,35 @@ function apagarConta() {
   sair();
 }
 
+/* ---------- migração de dados ----------
+   Dois casos em que os dados ficariam órfãos e o usuário acharia que
+   perdeu tudo. Os dois são resolvidos calados. */
+
+/* antes de existir login, o estado morava na chave sem sufixo */
+function adotarDadosAntigos() {
+  try {
+    const antigo = localStorage.getItem(CHAVE_LS);
+    const alvo = CHAVE_LS + '.visitante';
+    if (antigo && !localStorage.getItem(alvo)) localStorage.setItem(alvo, antigo);
+  } catch (e) { }
+}
+
+/* quem brincou como visitante e depois criou conta leva o que fez junto */
+function migrarDoVisitante(destinoId) {
+  try {
+    const origem = CHAVE_LS + '.visitante';
+    const destino = CHAVE_LS + '.' + destinoId;
+    const dados = localStorage.getItem(origem);
+    if (!dados || localStorage.getItem(destino)) return false;
+    localStorage.setItem(destino, dados);
+    localStorage.removeItem(origem);
+    return true;
+  } catch (e) { return false; }
+}
+
 /* ---------- tela de login ---------- */
+function temSessaoAtiva() { return !!SESSAO; }
+
 let modoLogin = 'entrar';   /* entrar | criar */
 let erroLogin = '';
 let ocupado = false;
@@ -1777,6 +1819,9 @@ function vLogin() {
   return '<div class="auth">' +
     '<div class="auth-glow"></div>' +
     '<div class="auth-cx">' +
+    (temSessaoAtiva() ? '<button class="auth-voltar" data-act="auth-voltar">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>' +
+      'Voltar para o painel</button>' : '') +
 
     '<div class="auth-marca">' +
     '<span class="auth-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16150F" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M22 12h-2.4M4.4 12H2M19.07 4.93l-1.7 1.7M6.63 17.37l-1.7 1.7M19.07 19.07l-1.7-1.7M6.63 6.63l-1.7-1.7"/></svg></span>' +
@@ -1784,7 +1829,7 @@ function vLogin() {
 
     '<h1 class="auth-t">' + (criar ? 'Criar sua conta' : 'Entrar') + '</h1>' +
     '<p class="auth-d">' + (criar
-      ? 'Cada conta guarda as próprias unidades, aparelhos e metas neste navegador.'
+      ? 'Opcional. Serve para separar seus dados de quem mais usa este navegador — unidades, aparelhos e metas ficam só na sua conta.'
       : 'Use a conta que você criou neste navegador.') + '</p>' +
 
     '<form class="auth-form" id="formLogin" autocomplete="on">' +
@@ -1812,8 +1857,12 @@ function vLogin() {
     '</div>' +
 
     '<div class="auth-ou"><span>ou</span></div>' +
-    '<button class="auth-visitante" data-act="auth-visitante">Entrar como visitante</button>' +
-    '<div class="auth-visitante-d">Para demonstração. Os dados ficam num espaço separado e qualquer pessoa neste computador enxerga.</div>' +
+    '<button class="auth-visitante" data-act="auth-voltar">' + (temSessaoAtiva()
+      ? 'Voltar para o painel'
+      : 'Continuar sem conta') + '</button>' +
+    '<div class="auth-visitante-d">' + (temSessaoAtiva()
+      ? 'Você já está usando o Solaris. Entrar só troca de conta.'
+      : 'O painel funciona sem cadastro. Os dados ficam neste navegador e qualquer pessoa que usar este computador enxerga.') + '</div>' +
 
     '<div class="auth-aviso">' +
     '<b>Sobre a segurança deste login</b>' +
@@ -1840,10 +1889,14 @@ async function enviarLogin(ev) {
 
   ocupado = true; erroLogin = ''; renderLogin();
   try {
-    if (criar) { await criarConta(nome, email, senha); await entrar(email, senha, true); }
-    else await entrar(email, senha, manter);
+    let migrou = false;
+    if (criar) {
+      const c = await criarConta(nome, email, senha);
+      migrou = ehVisitante() && migrarDoVisitante(c.id);
+      await entrar(email, senha, true);
+    } else await entrar(email, senha, manter);
     ocupado = false;
-    aoEntrar();
+    aoEntrar(migrou);
   } catch (e) {
     ocupado = false;
     erroLogin = e.message || 'Não deu para continuar.';
@@ -1978,10 +2031,19 @@ function cardConta() {
   const s = sessao();
   if (!s) return '';
   const inicial = (s.nome || '?').trim().charAt(0).toUpperCase();
+  if (ehVisitante()) {
+    return '<button class="conta conta--entrar" data-act="auth-abrir">' +
+      '<span class="conta-av conta-av--vis">' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>' +
+      '<span class="conta-txt"><span class="conta-nome">Entrar</span>' +
+      '<span class="conta-mail">Opcional · salvar em conta própria</span></span>' +
+      '</button>';
+  }
   return '<div class="conta">' +
-    '<span class="conta-av' + (ehVisitante() ? ' conta-av--vis' : '') + '">' + esc(inicial) + '</span>' +
+    '<span class="conta-av">' + esc(inicial) + '</span>' +
     '<span class="conta-txt"><span class="conta-nome">' + esc(s.nome) + '</span>' +
-    '<span class="conta-mail">' + esc(s.email || 'modo demonstração') + '</span></span>' +
+    '<span class="conta-mail">' + esc(s.email) + '</span></span>' +
     '<button class="conta-sair" data-act="sair" title="Sair da conta" aria-label="Sair da conta">' +
     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
     '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>' +
@@ -2836,10 +2898,18 @@ function mMais() {
       '<span class="mob-menu-s" style="display:block">' + esc(u.tipo) + '</span></span></button>';
   }).join('');
   const s = sessao();
-  const conta = '<div class="mob-card" style="display:flex;align-items:center;gap:12px">' +
-    '<span class="conta-av' + (ehVisitante() ? ' conta-av--vis' : '') + '">' + esc((s.nome || '?').charAt(0).toUpperCase()) + '</span>' +
+  const conta = ehVisitante()
+    ? '<button class="mob-menu" data-act="auth-abrir">' +
+    '<span class="conta-av conta-av--vis">' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>' +
+    '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">Entrar</span>' +
+    '<span class="mob-menu-s" style="display:block">Opcional · salvar em conta própria</span></span>' +
+    ico(IC.chevron, 15, '#B9B2A2', 2.2) + '</button>'
+    : '<div class="mob-card" style="display:flex;align-items:center;gap:12px">' +
+    '<span class="conta-av">' + esc((s.nome || '?').charAt(0).toUpperCase()) + '</span>' +
     '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + esc(s.nome) + '</span>' +
-    '<span class="mob-menu-s" style="display:block">' + esc(s.email || 'modo demonstração') + '</span></span>' +
+    '<span class="mob-menu-s" style="display:block">' + esc(s.email) + '</span></span>' +
     '<button class="link-btn" data-act="sair">Sair</button></div>';
   return '<div class="mob-col">' + conta + menu +
     '<div class="eyebrow-sm" style="margin-top:10px">Trocar de unidade</div>' + uns + '</div>';
@@ -3260,14 +3330,17 @@ const ACOES = {
     salvar(); render();
   },
   'auth-modo': el => { modoLogin = el.dataset.v; erroLogin = ''; renderLogin(); },
-  'auth-visitante': () => { entrarComoVisitante(); aoEntrar(); },
+  'auth-abrir': () => { modoLogin = 'entrar'; erroLogin = ''; renderLogin(); },
+  'auth-voltar': () => {
+    if (!sessao()) { entrarComoVisitante(); aoEntrar(); return; }
+    document.body.classList.remove('vista-login');
+    render();
+  },
   sair: () => {
     if (!window.confirm('Sair da conta? Seus dados continuam salvos neste navegador.')) return;
     sair();
-    S = JSON.parse(JSON.stringify(PADRAO));
-    _visao = null; _cacheLedger.clear();
-    modoLogin = 'entrar'; erroLogin = '';
-    renderLogin();
+    entrarComoVisitante();
+    aoEntrar();
   },
   imprimir: () => window.print(),
   'reset-tarifa': () => { S.tarifa[S.perfil] = null; salvar(); render(); aviso('Tarifa restaurada', 'Voltou para R$ ' + nf(unidade().tarifa, 2) + ' / kWh da ' + unidade().distribuidora + '.', 'sun'); },
@@ -3404,7 +3477,7 @@ function iniciarRelogios() {
 }
 
 /* chamado quando uma sessão acabou de ser aberta */
-function aoEntrar() {
+function aoEntrar(migrou) {
   document.body.classList.remove('vista-login');
   S = JSON.parse(JSON.stringify(PADRAO));
   carregar();
@@ -3414,9 +3487,13 @@ function aoEntrar() {
   _visao = null; _cacheLedger.clear();
   render();
   const s = sessao();
-  aviso('Bem-vindo, ' + s.nome.split(' ')[0],
-    ehVisitante() ? 'Modo visitante: os dados ficam num espaço separado neste navegador.'
-      : 'Medidor conectado · ' + nf(visao().mtd.tc) + ' kWh no mês até agora.', 'good');
+  if (ehVisitante()) {
+    aviso('Medidor conectado', nf(visao().mtd.tc) + ' kWh no mês até agora. Criar conta é opcional — serve para separar seus dados de quem mais usa este navegador.', 'good');
+  } else {
+    aviso('Bem-vindo, ' + s.nome.split(' ')[0],
+      migrou ? 'O que você fez como visitante veio junto para a sua conta.'
+        : 'Medidor conectado · ' + nf(visao().mtd.tc) + ' kWh no mês até agora.', 'good');
+  }
 }
 
 /* ---------- partida ---------- */
@@ -3424,7 +3501,9 @@ function iniciar() {
   /* a suíte de testes carrega os mesmos scripts sem a casca da página:
      sem #root não há app para subir, só as funções para exercitar */
   if (!$('#root')) return;
-  if (!carregarSessao()) { modoLogin = 'entrar'; renderLogin(); iniciarRelogios(); return; }
+  /* Site normal: abre direto no painel. Sem sessão, entra como visitante
+     e o login fica disponível no menu para quem quiser conta própria. */
+  if (!carregarSessao()) { adotarDadosAntigos(); entrarComoVisitante(); }
   carregar();
   if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
   if (!uni(S.perfil)) S.perfil = 'residencial';
