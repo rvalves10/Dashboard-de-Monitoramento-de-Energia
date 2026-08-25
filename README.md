@@ -50,7 +50,7 @@ virada de ano e a regra do Fio B.
 
 | Caminho | O que é |
 | --- | --- |
-| `app/index.html` | Casca da página; carrega os quatro scripts na ordem |
+| `app/index.html` | Casca da página; carrega os cinco scripts na ordem |
 | `app/estilo.css` | Sistema de design inteiro: cores, tipografia, componentes, responsivo, impressão |
 | `app/motor.js` | Simulação física, tarifas, compensação de créditos, estado e persistência |
 | `app/login.js` | Contas, sessão e derivação de senha — leia o cabeçalho do arquivo |
@@ -92,9 +92,11 @@ que atrasa.
 
 ## Sobre o login (opcional)
 
-O site abre direto no painel, em modo visitante — o login nao bloqueia nada. Criar conta e opcional e serve para separar dados de quem divide o mesmo navegador. Conta obrigatoria fica para quando o projeto virar app.
+O site abre direto no painel, em modo visitante — o login não bloqueia nada.
+Criar conta é opcional e serve para separar dados de quem divide o mesmo
+navegador. Conta obrigatória fica para quando o projeto virar app.
 
-Quando alguem cria conta depois de mexer como visitante, o que ele fez vai junto.
+Quem cria conta depois de ter mexido como visitante leva junto o que fez.
 
 O login existe e funciona, mas **isto não é segurança contra
 quem tem acesso ao computador**. O app roda sem servidor: quem abrir o DevTools
@@ -111,12 +113,21 @@ Num produto real a verificação aconteceria no servidor e o hash nunca sairia
 de lá. Isso está escrito na própria tela de login, de propósito — é melhor
 declarar a limitação do que ser pego por ela na banca.
 
+## Impressão do relatório
+
+A tela de Relatório imprime limpa: `Ctrl+P` esconde o menu lateral, a barra
+do topo, o botão de imprimir e os avisos flutuantes, e mostra o cabeçalho
+com a marca. As colunas empilham em largura cheia.
+
+Conferido gerando o PDF pelo Chrome em modo headless e medindo as regras
+aplicadas ao vivo — não é só CSS escrito no escuro.
+
 ## Estado das sprints
 
 | Sprint | O que era | Situação |
 | --- | --- | --- |
 | 0 · Fundação | Modularizar, repo, README | **Feito** |
-| 1 · Fechar o produto | CRUD completo, acessibilidade | **Feito** |
+| 1 · Fechar o produto | CRUD completo, acessibilidade, impressão | **Feito** |
 | 2 · Credibilidade | Lei 14.300, irradiação, testes | **Feito** — falta comparar com conta real |
 | 3 · Unidade é sua | Cadastro de unidade pelo usuário | **Feito** |
 | 4 · Medidor de verdade | Contrato, firmware, seletor | **Software feito** — falta montar o hardware |
