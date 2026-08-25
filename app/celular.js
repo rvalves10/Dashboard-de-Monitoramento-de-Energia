@@ -43,8 +43,8 @@ function vMobile() {
     '<div class="phone"><div class="phone-island"></div><div class="phone-home"></div><div class="phone-screen"><div class="mob">' +
     '<div class="mob-head">' +
     (sub ? '<button class="mob-back" data-act="mback">' + ico(IC.volta, 14, 'currentColor', 2.4) + 'Voltar</button>' : '') +
-    '<div class="mob-unit">' + esc(u.nome) + '</div><div class="mob-title">' + esc(titulo) + '</div></div>' +
-    '<div class="mob-body">' + corpo + '</div>' +
+    '<div class="mob-unit">' + esc(u.nome) + '</div><h1 class="mob-title">' + esc(titulo) + '</h1></div>' +
+    '<div class="mob-body" id="conteudo" tabindex="-1">' + corpo + '</div>' +
     '<nav class="mob-tabs" aria-label="Seções">' + tabs + '</nav>' +
     '</div></div></div></div>';
 }

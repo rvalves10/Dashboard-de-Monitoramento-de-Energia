@@ -24,9 +24,9 @@
   --dark-2:#211F17;
   --ink:#16150F;
   --ink-2:#4A453B;
-  --muted:#6B665C;
-  --faint:#8B8577;
-  --fainter:#A9A395;
+  --muted:#5F5A50;
+  --faint:#6B665C;
+  --fainter:#7A7467;
   --line:#E3DED2;
   --line-2:#DDD7C9;
   --on-dark:#F4F1EA;
@@ -78,6 +78,14 @@ input{font:inherit;color:inherit}
 svg{display:block}
 [hidden]{display:none !important}
 :focus-visible{outline:2px solid var(--sun-deep);outline-offset:2px;border-radius:6px}
+.pular{
+  position:absolute;left:12px;top:-64px;z-index:300;
+  background:var(--dark);color:var(--on-dark);padding:11px 18px;border-radius:11px;
+  font-size:13.5px;font-weight:600;text-decoration:none;transition:top .18s;
+}
+.pular:focus{top:12px}
+#conteudo:focus{outline:none}
+.chart:focus-visible,.hbars:focus-visible{outline:2px solid var(--sun-deep);outline-offset:4px;border-radius:10px}
 
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -426,6 +434,12 @@ input[type=range]{width:100%;margin:10px 0 0;accent-color:var(--sun);cursor:poin
 .feed-t b{font-size:14px;font-weight:600}
 .feed-t span{font-size:11.5px;color:var(--faint)}
 .feed-x{font-size:13px;color:var(--ink-2);margin-top:4px;line-height:1.5;max-width:78ch}
+.feed-close{
+  flex-shrink:0;align-self:flex-start;padding:5px;border-radius:8px;color:var(--faint);
+  opacity:.55;transition:opacity .13s,background .13s,color .13s;
+}
+.feed-item:hover .feed-close,.feed-close:focus-visible{opacity:1}
+.feed-close:hover{background:rgba(22,21,15,.07);color:var(--ink)}
 
 /* ---------- relatorio ---------- */
 .inv-head,.inv-row{display:grid;grid-template-columns:1fr 150px 130px;gap:12px}
@@ -902,9 +916,9 @@ const PADRAO = {
   metas: { residencial: 300, negocio: 1700 },
   regras: { meta: true, salto: true, solar: true, standby: false },
   tarifa: { residencial: null, negocio: null },
-  extras: [], removidos: [], respondidas: {},
+  extras: [], removidos: [], respondidas: {}, dispensados: [],
   novo: { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: 'Sala' },
-  salvo: false, visto: false
+  editando: null, salvo: false
 };
 let S = JSON.parse(JSON.stringify(PADRAO));
 
@@ -1147,7 +1161,18 @@ function alertas() {
   }
   const melhor = v.md.dias.slice(0, Math.ceil(v.hDec / 24)).slice().sort((a, b) => b.tg - a.tg)[0];
   if (melhor) out.push({ id: 'melhor', tipo: 'bom', titulo: 'Melhor dia de geração do mês', quando: 'dia ' + melhor.dia, txt: 'Os painéis entregaram ' + nf(melhor.tg, 1) + ' kWh — céu limpo praticamente o dia inteiro.' });
-  return out;
+
+  /* dispensar vale pelo dia: amanhã o alerta volta se a situação continuar */
+  return out.map(a => Object.assign(a, { chave: chaveDispensa(a.id) }))
+    .filter(a => S.dispensados.indexOf(a.chave) < 0);
+}
+function chaveDispensa(id) {
+  const d = agora();
+  return S.perfil + ':' + id + ':' + d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+}
+/* quantos alertas graves estão de pé — vira o contador do menu */
+function alertasGraves() {
+  return alertas().filter(a => a.tipo === 'alto').length;
 }
 
 function deteccoesPendentes() {
@@ -1189,7 +1214,8 @@ const IC = {
   desktop: 'M8 21h8',
   volta: 'M15 6l-6 6 6 6',
   chevron: 'M9 6l6 6-6 6',
-  lixo: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3'
+  lixo: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
+  lapis: 'M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM14 6l4 4'
 };
 function ico(d, sz, cor, sw) {
   return '<svg width="' + (sz || 16) + '" height="' + (sz || 16) + '" viewBox="0 0 24 24" fill="none" stroke="' + (cor || 'currentColor') + '" stroke-width="' + (sw || 1.8) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"/></svg>';
@@ -1226,13 +1252,15 @@ const PRESETS = [
 /* ---------- casca desktop ---------- */
 function vRail() {
   const pend = deteccoesPendentes().length;
+  const graves = alertasGraves();
   const p = potenciaAgora();
   const nav = NAV.map(n => {
     const at = S.tela === n.k;
+    const n_ = n.k === 'equipamentos' ? pend : n.k === 'alertas' ? graves : 0;
     return '<button class="nav-item" data-act="nav" data-tela="' + n.k + '"' + (at ? ' aria-current="page"' : '') + '>' +
       ico(n.icon, 18, 'currentColor', 1.7) +
       '<span class="nav-label">' + n.label + '</span>' +
-      (n.k === 'equipamentos' && pend ? '<span class="badge">' + pend + '</span>' : '') +
+      (n_ ? '<span class="badge">' + n_ + '<span class="sr"> pendências</span></span>' : '') +
       '</button>';
   }).join('');
   const units = Object.keys(UNIDADES).map(k => {
@@ -1386,7 +1414,12 @@ function graficoDia(dia, v) {
     '<div class="card-sub">Onde o sol cobre e onde a rede entra · a linha pontilhada vertical é agora</div></div>' +
     '<div class="legend"><span><i class="swatch" style="background:var(--sun)"></i>Geração solar</span>' +
     '<span><i class="swatch" style="background:var(--grid)"></i>Consumo</span></div></div>' +
-    '<div class="chart" id="chartDia" data-max="' + max + '"><svg viewBox="0 0 720 215" role="img" aria-label="Curva de geração e consumo de hoje">' +
+    '<div class="chart" id="chartDia" data-max="' + max + '" tabindex="0" role="img" ' +
+    'aria-label="Curva de hoje. Geração máxima ' + nf(Math.max.apply(null, dia.ger), 2) + ' quilowatts por volta das ' +
+    dia.ger.indexOf(Math.max.apply(null, dia.ger)) + ' horas. Consumo máximo ' + nf(Math.max.apply(null, dia.cons), 2) +
+    ' quilowatts por volta das ' + dia.cons.indexOf(Math.max.apply(null, dia.cons)) + ' horas. ' +
+    'Use as setas para percorrer hora a hora.">' +
+    '<svg viewBox="0 0 720 215" aria-hidden="true">' +
     '<defs><linearGradient id="gSol" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EDA22B" stop-opacity="0.28"/><stop offset="100%" stop-color="#EDA22B" stop-opacity="0"/></linearGradient></defs>' +
     grade +
     '<path d="' + caminho(dia.ger, max, W, H, true) + '" fill="url(#gSol)"/>' +
@@ -1443,7 +1476,11 @@ function vHistorico() {
     '<div class="card-sub">A faixa fina embaixo mostra se o sol cobriu o gasto daquele ' + s.unidade + '</div></div>' +
     '<div class="legend"><span><i class="swatch swatch--sq" style="background:var(--grid)"></i>Consumo</span>' +
     '<span><i class="swatch swatch--sq" style="background:var(--sun)"></i>Geração</span></div></div>' +
-    '<div class="chart" style="margin-top:0"><div class="hbars" id="hbars">' + barras + '</div><div class="tip" id="tipHist"></div></div>' +
+    '<div class="chart" style="margin-top:0">' +
+    '<div class="hbars" id="hbars" tabindex="0" role="img" aria-label="' + esc(s.rotulo) +
+    '. Consumo total ' + nf(tC, 1) + ' quilowatt-hora, geração ' + nf(tG, 1) +
+    '. Use as setas para percorrer cada ' + s.unidade + '.">' + barras + '</div>' +
+    '<div class="tip" id="tipHist"></div></div>' +
     '</section>' + tiles + cmp + dest + '</div>';
 }
 function blocoCmp(lbl, val, atual, ant, cor) {
@@ -1533,6 +1570,8 @@ function cardDetalhe(e, total, t) {
     '<div style="flex:1;min-width:0"><div class="det-name">' + esc(e.nome) + '</div>' +
     '<div class="det-loc">' + esc(e.local) + ' · ' + esc(e.cat) + '</div></div>' +
     '<button class="det-x" data-act="det-fechar" aria-label="Fechar detalhe">' + ico(IC.x, 16, 'currentColor', 2.2) + '</button></div>' +
+    (e.sintetico ? '' : '<button class="link-btn" style="margin-top:14px" data-act="eq-editar" data-id="' + e.id + '">' +
+      ico(IC.lapis, 13, 'currentColor', 2) + (e.fonte === 'ia' ? 'Corrigir a estimativa da IA' : 'Editar este aparelho') + '</button>') +
     '<div style="display:flex;align-items:baseline;gap:8px;margin-top:18px"><span class="big big-34">' + brl(e.reais) + '</span>' +
     '<span style="font-size:13px;color:var(--faint)">por mês · ' + nf(e.kwh) + ' kWh</span></div>' +
     '<div style="font-size:12.5px;color:var(--faint);margin-top:5px">' + pct((e.kwh / total) * 100) + ' da unidade · ' + brl(e.reais * 12) + ' por ano</div>' +
@@ -1568,8 +1607,12 @@ function vCadastro() {
     '<span class="preset-d" style="display:block">' + nf(p.pot) + ' W · ' + nf(p.horas, 1) + ' h/dia</span></span>' +
     ico(IC.chevron, 14, '#B9B2A2', 2.2) + '</button>').join('');
 
-  const form = '<section class="card s7" style="padding:24px 28px 28px"><h2>Descreva o aparelho</h2>' +
-    '<div class="card-sub">A IA já estima quase tudo sozinha. Cadastre o que ela não reconhece ou o que você quer acompanhar de perto.</div>' +
+  const editando = !!S.editando;
+  const form = '<section class="card s7" style="padding:24px 28px 28px">' +
+    '<h2>' + (editando ? 'Editar aparelho' : 'Descreva o aparelho') + '</h2>' +
+    '<div class="card-sub">' + (editando
+      ? 'Ajuste os valores e salve. Se este aparelho era uma estimativa da IA, ele passa a valer como cadastro seu.'
+      : 'A IA já estima quase tudo sozinha. Cadastre o que ela não reconhece ou o que você quer acompanhar de perto.') + '</div>' +
     '<div class="field"><label class="field-lbl" for="inNome">Nome</label>' +
     '<input class="text-in" id="inNome" data-fid="nome" data-in="nome" type="text" value="' + esc(n.nome) + '" placeholder="Ex.: Ar-condicionado do quarto" autocomplete="off"></div>' +
     '<div class="field"><span class="field-lbl">Categoria</span><div class="chips">' + cats + '</div></div>' +
@@ -1591,7 +1634,9 @@ function vCadastro() {
     '<div style="font-size:12px;color:var(--on-dark-soft);margin-top:8px" id="estPct">' + textoEstimativa(e) + '</div>' +
     '<button class="dark-btn" data-act="salvar" style="width:100%;height:46px;margin-top:18px;border-radius:13px;font-size:14.5px;' +
     (pode ? 'background:var(--on-dark);color:var(--dark)' : '') + '"' + (pode ? '' : ' disabled') + '>' +
-    ico(IC.mais, 15, 'currentColor', 2.4) + 'Adicionar aos meus aparelhos</button>' +
+    ico(editando ? IC.check : IC.mais, 15, 'currentColor', 2.4) +
+    (editando ? 'Salvar alterações' : 'Adicionar aos meus aparelhos') + '</button>' +
+    (editando ? '<button class="link-btn" style="margin-top:12px;color:var(--on-dark-soft)" data-act="cancelar-edicao">Cancelar edição</button>' : '') +
     (S.salvo ? '<div class="saved">' + ico(IC.check, 14, 'currentColor', 2.6) + 'Aparelho cadastrado e já no ranking</div>' : '') +
     '</section>';
 
@@ -1625,9 +1670,15 @@ function vAlertas() {
     '<span class="rule-s" style="display:block">' + r[2] + '</span></span>' +
     '<span class="tog" role="switch" aria-checked="' + !!S.regras[r[0]] + '" aria-pressed="' + !!S.regras[r[0]] + '"><i></i></span></button>').join('');
 
-  const feed = alertas().map(a => '<div class="feed-item feed-item--' + a.tipo + '"><span class="feed-dot"></span>' +
-    '<div style="flex:1;min-width:0"><div class="feed-t"><b>' + esc(a.titulo) + '</b><span>' + esc(a.quando) + '</span></div>' +
-    '<div class="feed-x">' + esc(a.txt) + '</div></div></div>').join('');
+  const lista = alertas();
+  const feed = lista.length
+    ? lista.map(a => '<div class="feed-item feed-item--' + a.tipo + '"><span class="feed-dot"></span>' +
+      '<div style="flex:1;min-width:0"><div class="feed-t"><b>' + esc(a.titulo) + '</b><span>' + esc(a.quando) + '</span></div>' +
+      '<div class="feed-x">' + esc(a.txt) + '</div></div>' +
+      '<button class="feed-close" data-act="alerta-dispensar" data-chave="' + esc(a.chave) + '" ' +
+      'aria-label="Dispensar: ' + esc(a.titulo) + '">' + ico(IC.x, 14, 'currentColor', 2.2) + '</button></div>').join('')
+    : '<div class="empty" style="padding:26px"><div class="empty-t">Nenhum alerta de pé</div>' +
+      '<div class="empty-s">Você dispensou tudo por hoje. Os que continuarem valendo voltam amanhã.</div></div>';
 
   return '<div class="grid12 enter">' +
     '<section class="card s7" style="padding:24px 28px 26px"><div class="card-head"><div><h2>Meta do mês</h2>' +
@@ -1794,8 +1845,8 @@ function vMobile() {
     '<div class="phone"><div class="phone-island"></div><div class="phone-home"></div><div class="phone-screen"><div class="mob">' +
     '<div class="mob-head">' +
     (sub ? '<button class="mob-back" data-act="mback">' + ico(IC.volta, 14, 'currentColor', 2.4) + 'Voltar</button>' : '') +
-    '<div class="mob-unit">' + esc(u.nome) + '</div><div class="mob-title">' + esc(titulo) + '</div></div>' +
-    '<div class="mob-body">' + corpo + '</div>' +
+    '<div class="mob-unit">' + esc(u.nome) + '</div><h1 class="mob-title">' + esc(titulo) + '</h1></div>' +
+    '<div class="mob-body" id="conteudo" tabindex="-1">' + corpo + '</div>' +
     '<nav class="mob-tabs" aria-label="Seções">' + tabs + '</nav>' +
     '</div></div></div></div>';
 }
@@ -1995,7 +2046,7 @@ function corpoDesktop() {
   else if (S.tela === 'alertas') tela = vAlertas();
   else if (S.tela === 'relatorio') tela = vRelatorio();
   else tela = vConfig();
-  return '<div class="app">' + vRail() + '<main class="main">' + vTopbar() + '<div class="page">' + tela + '</div></main></div>';
+  return '<div class="app">' + vRail() + '<main class="main" id="conteudo" tabindex="-1">' + vTopbar() + '<div class="page">' + tela + '</div></main></div>';
 }
 
 let _ultimoModo = null;
@@ -2024,39 +2075,84 @@ function render() {
 }
 
 /* ---------- gráficos interativos ---------- */
+/* Gráficos respondem a mouse, toque e teclado.
+   pointermove cobre mouse e dedo de uma vez; as setas percorrem os pontos
+   e o texto do balão é anunciado por leitor de tela via aria-live. */
 function ligarGraficos() {
   const c = $('#chartDia');
   if (c) {
     const tip = $('#tipDia'), v = visao();
     const dia = v.md.dias[v.data.getDate() - 1];
-    const mover = ev => {
-      const r = c.getBoundingClientRect();
-      const x = clamp((ev.clientX - r.left) / r.width, 0, 1);
-      const i = Math.round(x * 23);
+    let i = -1;
+    const mostrar = k => {
+      i = clamp(k, 0, 23);
       tip.innerHTML = String(i).padStart(2, '0') + 'h<br>Sol <b>' + nf(dia.ger[i], 2) + ' kW</b> · Consumo <i>' + nf(dia.cons[i], 2) + ' kW</i>';
       tip.style.left = (i / 23) * 100 + '%';
       tip.style.top = '10px';
       tip.classList.add('on');
+      anunciar(String(i).padStart(2, '0') + ' horas. Geração ' + nf(dia.ger[i], 2) + ' quilowatts. Consumo ' + nf(dia.cons[i], 2) + ' quilowatts.');
     };
-    c.addEventListener('mousemove', mover);
-    c.addEventListener('mouseleave', () => tip.classList.remove('on'));
+    const esconder = () => { tip.classList.remove('on'); i = -1; };
+    c.addEventListener('pointermove', ev => {
+      const r = c.getBoundingClientRect();
+      mostrar(Math.round(clamp((ev.clientX - r.left) / r.width, 0, 1) * 23));
+    });
+    c.addEventListener('pointerleave', esconder);
+    c.addEventListener('blur', esconder);
+    c.addEventListener('keydown', ev => {
+      const base = i < 0 ? Math.round(v.hDec - (v.data.getDate() - 1) * 24) : i;
+      if (ev.key === 'ArrowRight') { ev.preventDefault(); mostrar(base + 1); }
+      else if (ev.key === 'ArrowLeft') { ev.preventDefault(); mostrar(base - 1); }
+      else if (ev.key === 'Home') { ev.preventDefault(); mostrar(0); }
+      else if (ev.key === 'End') { ev.preventDefault(); mostrar(23); }
+      else if (ev.key === 'Escape') esconder();
+    });
   }
+
   const hb = $('#hbars');
   if (hb) {
     const tip = $('#tipHist'), s = seriePeriodo();
-    hb.addEventListener('mousemove', ev => {
-      const alvo = ev.target.closest ? ev.target.closest('.hbar') : null;
-      if (!alvo) { tip.classList.remove('on'); return; }
-      const i = +alvo.dataset.i;
-      const saldo = s.ger[i] - s.cons[i];
-      tip.innerHTML = esc(s.nomes[i]) + '<br>Consumo <i>' + nf(s.cons[i], 1) + ' kWh</i> · Geração <b>' + nf(s.ger[i], 1) + ' kWh</b><br>Saldo ' + sinal(saldo, 1) + ' kWh';
+    let j = -1;
+    const mostrar = k => {
+      j = clamp(k, 0, s.cons.length - 1);
+      const alvo = hb.children[j];
+      if (!alvo) return;
+      const saldo = s.ger[j] - s.cons[j];
+      tip.innerHTML = esc(s.nomes[j]) + '<br>Consumo <i>' + nf(s.cons[j], 1) + ' kWh</i> · Geração <b>' + nf(s.ger[j], 1) + ' kWh</b><br>Saldo ' + sinal(saldo, 1) + ' kWh';
       const r = hb.getBoundingClientRect(), rb = alvo.getBoundingClientRect();
       tip.style.left = (rb.left - r.left + rb.width / 2) + 'px';
       tip.style.top = '18px';
       tip.classList.add('on');
+      anunciar(s.nomes[j] + '. Consumo ' + nf(s.cons[j], 1) + ' quilowatt-hora. Geração ' + nf(s.ger[j], 1) + '. Saldo ' + sinal(saldo, 1) + '.');
+    };
+    const esconder = () => { tip.classList.remove('on'); j = -1; };
+    hb.addEventListener('pointermove', ev => {
+      const alvo = ev.target.closest ? ev.target.closest('.hbar') : null;
+      if (!alvo) { esconder(); return; }
+      mostrar(+alvo.dataset.i);
     });
-    hb.addEventListener('mouseleave', () => tip.classList.remove('on'));
+    hb.addEventListener('pointerleave', esconder);
+    hb.addEventListener('blur', esconder);
+    hb.addEventListener('keydown', ev => {
+      if (ev.key === 'ArrowRight') { ev.preventDefault(); mostrar(j < 0 ? 0 : j + 1); }
+      else if (ev.key === 'ArrowLeft') { ev.preventDefault(); mostrar(j < 0 ? s.cons.length - 1 : j - 1); }
+      else if (ev.key === 'Home') { ev.preventDefault(); mostrar(0); }
+      else if (ev.key === 'End') { ev.preventDefault(); mostrar(s.cons.length - 1); }
+      else if (ev.key === 'Escape') esconder();
+    });
   }
+}
+
+/* região viva única, para leitor de tela ler o ponto sob o cursor */
+let _anuncio = null;
+function anunciar(txt) {
+  if (!_anuncio) {
+    _anuncio = document.createElement('div');
+    _anuncio.className = 'sr';
+    _anuncio.setAttribute('aria-live', 'polite');
+    document.body.appendChild(_anuncio);
+  }
+  _anuncio.textContent = txt;
 }
 
 /* ---------- avisos ---------- */
@@ -2157,19 +2253,67 @@ const ACOES = {
     S.novo = Object.assign({}, S.novo, { nome: p.nome, pot: p.pot, horas: p.horas, cat: p.cat });
     S.salvo = false; salvar(); render();
   },
+  'eq-editar': el => {
+    const e = aparelhos().filter(x => x.id === el.dataset.id)[0];
+    if (!e || e.sintetico) return;
+    S.editando = e.id;
+    S.novo = {
+      nome: e.nome, cat: e.cat, comodo: e.local === '—' ? UNIDADES[S.perfil].comodos[0] : e.local,
+      pot: Math.round(clamp(e.pot || 1000, 20, 12000)),
+      horas: Math.round(clamp(e.horas || 1, 0.1, 24) * 10) / 10,
+      dias: Math.round(clamp(e.dias || 30, 1, 31))
+    };
+    S.salvo = false; S.tela = 'cadastro'; S.msub = 'cadastro';
+    salvar(); render();
+  },
+  'cancelar-edicao': () => {
+    S.editando = null; S.salvo = false;
+    S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: UNIDADES[S.perfil].comodos[0] };
+    salvar(); render();
+  },
   salvar: () => {
     const n = S.novo;
     if (n.nome.trim().length < 2) return;
     const kwh = (n.pot / 1000) * n.horas * n.dias;
-    S.extras = S.extras.concat([{
-      id: 'x' + Date.now().toString(36), perfil: S.perfil, nome: n.nome.trim(), local: n.comodo,
-      cat: n.cat, pot: n.pot, horas: n.horas, dias: n.dias,
-      cor: CORES_EXTRA[S.extras.length % CORES_EXTRA.length], conf: 'alta', fonte: 'manual', tend: 0
-    }]);
+    const campos = {
+      nome: n.nome.trim(), local: n.comodo, cat: n.cat,
+      pot: n.pot, horas: n.horas, dias: n.dias, conf: 'alta', fonte: 'manual', tend: 0
+    };
+
+    if (S.editando) {
+      const alvo = S.editando;
+      const jaExtra = S.extras.filter(x => x.perfil === S.perfil && x.id === alvo)[0];
+      if (jaExtra) {
+        S.extras = S.extras.map(x => (x.perfil === S.perfil && x.id === alvo) ? Object.assign({}, x, campos) : x);
+      } else {
+        /* era estimativa da IA: some do catálogo e vira cadastro seu, guardando a cor */
+        const orig = unidade().equipamentos.filter(x => x.id === alvo)[0];
+        S.removidos = S.removidos.concat([S.perfil + ':' + alvo]);
+        S.extras = S.extras.concat([Object.assign({
+          id: 'x' + Date.now().toString(36), perfil: S.perfil,
+          cor: orig ? orig.cor : CORES_EXTRA[S.extras.length % CORES_EXTRA.length]
+        }, campos)]);
+      }
+      S.editando = null; S.salvo = false; S.detalhe = null;
+      S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: UNIDADES[S.perfil].comodos[0] };
+      S.tela = 'equipamentos'; S.msub = null;
+      salvar(); render();
+      aviso(campos.nome + ' atualizado', nf(kwh, 1) + ' kWh por mês · ' + brl(kwh * tarifaAtual()) + ' na conta.', 'good');
+      return;
+    }
+
+    S.extras = S.extras.concat([Object.assign({
+      id: 'x' + Date.now().toString(36), perfil: S.perfil,
+      cor: CORES_EXTRA[S.extras.length % CORES_EXTRA.length]
+    }, campos)]);
     S.salvo = true;
     S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: UNIDADES[S.perfil].comodos[0] };
     salvar(); render();
-    aviso(n.nome.trim() + ' cadastrado', nf(kwh, 1) + ' kWh por mês · ' + brl(kwh * tarifaAtual()) + ' na conta.', 'good');
+    aviso(campos.nome + ' cadastrado', nf(kwh, 1) + ' kWh por mês · ' + brl(kwh * tarifaAtual()) + ' na conta.', 'good');
+  },
+  'alerta-dispensar': el => {
+    S.dispensados = S.dispensados.concat([el.dataset.chave]);
+    salvar(); render();
   },
   regra: el => {
     const k = el.dataset.k;

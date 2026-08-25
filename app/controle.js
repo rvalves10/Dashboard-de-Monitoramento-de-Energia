@@ -14,7 +14,7 @@ function corpoDesktop() {
   else if (S.tela === 'alertas') tela = vAlertas();
   else if (S.tela === 'relatorio') tela = vRelatorio();
   else tela = vConfig();
-  return '<div class="app">' + vRail() + '<main class="main">' + vTopbar() + '<div class="page">' + tela + '</div></main></div>';
+  return '<div class="app">' + vRail() + '<main class="main" id="conteudo" tabindex="-1">' + vTopbar() + '<div class="page">' + tela + '</div></main></div>';
 }
 
 let _ultimoModo = null;
@@ -43,39 +43,84 @@ function render() {
 }
 
 /* ---------- gráficos interativos ---------- */
+/* Gráficos respondem a mouse, toque e teclado.
+   pointermove cobre mouse e dedo de uma vez; as setas percorrem os pontos
+   e o texto do balão é anunciado por leitor de tela via aria-live. */
 function ligarGraficos() {
   const c = $('#chartDia');
   if (c) {
     const tip = $('#tipDia'), v = visao();
     const dia = v.md.dias[v.data.getDate() - 1];
-    const mover = ev => {
-      const r = c.getBoundingClientRect();
-      const x = clamp((ev.clientX - r.left) / r.width, 0, 1);
-      const i = Math.round(x * 23);
+    let i = -1;
+    const mostrar = k => {
+      i = clamp(k, 0, 23);
       tip.innerHTML = String(i).padStart(2, '0') + 'h<br>Sol <b>' + nf(dia.ger[i], 2) + ' kW</b> · Consumo <i>' + nf(dia.cons[i], 2) + ' kW</i>';
       tip.style.left = (i / 23) * 100 + '%';
       tip.style.top = '10px';
       tip.classList.add('on');
+      anunciar(String(i).padStart(2, '0') + ' horas. Geração ' + nf(dia.ger[i], 2) + ' quilowatts. Consumo ' + nf(dia.cons[i], 2) + ' quilowatts.');
     };
-    c.addEventListener('mousemove', mover);
-    c.addEventListener('mouseleave', () => tip.classList.remove('on'));
+    const esconder = () => { tip.classList.remove('on'); i = -1; };
+    c.addEventListener('pointermove', ev => {
+      const r = c.getBoundingClientRect();
+      mostrar(Math.round(clamp((ev.clientX - r.left) / r.width, 0, 1) * 23));
+    });
+    c.addEventListener('pointerleave', esconder);
+    c.addEventListener('blur', esconder);
+    c.addEventListener('keydown', ev => {
+      const base = i < 0 ? Math.round(v.hDec - (v.data.getDate() - 1) * 24) : i;
+      if (ev.key === 'ArrowRight') { ev.preventDefault(); mostrar(base + 1); }
+      else if (ev.key === 'ArrowLeft') { ev.preventDefault(); mostrar(base - 1); }
+      else if (ev.key === 'Home') { ev.preventDefault(); mostrar(0); }
+      else if (ev.key === 'End') { ev.preventDefault(); mostrar(23); }
+      else if (ev.key === 'Escape') esconder();
+    });
   }
+
   const hb = $('#hbars');
   if (hb) {
     const tip = $('#tipHist'), s = seriePeriodo();
-    hb.addEventListener('mousemove', ev => {
-      const alvo = ev.target.closest ? ev.target.closest('.hbar') : null;
-      if (!alvo) { tip.classList.remove('on'); return; }
-      const i = +alvo.dataset.i;
-      const saldo = s.ger[i] - s.cons[i];
-      tip.innerHTML = esc(s.nomes[i]) + '<br>Consumo <i>' + nf(s.cons[i], 1) + ' kWh</i> · Geração <b>' + nf(s.ger[i], 1) + ' kWh</b><br>Saldo ' + sinal(saldo, 1) + ' kWh';
+    let j = -1;
+    const mostrar = k => {
+      j = clamp(k, 0, s.cons.length - 1);
+      const alvo = hb.children[j];
+      if (!alvo) return;
+      const saldo = s.ger[j] - s.cons[j];
+      tip.innerHTML = esc(s.nomes[j]) + '<br>Consumo <i>' + nf(s.cons[j], 1) + ' kWh</i> · Geração <b>' + nf(s.ger[j], 1) + ' kWh</b><br>Saldo ' + sinal(saldo, 1) + ' kWh';
       const r = hb.getBoundingClientRect(), rb = alvo.getBoundingClientRect();
       tip.style.left = (rb.left - r.left + rb.width / 2) + 'px';
       tip.style.top = '18px';
       tip.classList.add('on');
+      anunciar(s.nomes[j] + '. Consumo ' + nf(s.cons[j], 1) + ' quilowatt-hora. Geração ' + nf(s.ger[j], 1) + '. Saldo ' + sinal(saldo, 1) + '.');
+    };
+    const esconder = () => { tip.classList.remove('on'); j = -1; };
+    hb.addEventListener('pointermove', ev => {
+      const alvo = ev.target.closest ? ev.target.closest('.hbar') : null;
+      if (!alvo) { esconder(); return; }
+      mostrar(+alvo.dataset.i);
     });
-    hb.addEventListener('mouseleave', () => tip.classList.remove('on'));
+    hb.addEventListener('pointerleave', esconder);
+    hb.addEventListener('blur', esconder);
+    hb.addEventListener('keydown', ev => {
+      if (ev.key === 'ArrowRight') { ev.preventDefault(); mostrar(j < 0 ? 0 : j + 1); }
+      else if (ev.key === 'ArrowLeft') { ev.preventDefault(); mostrar(j < 0 ? s.cons.length - 1 : j - 1); }
+      else if (ev.key === 'Home') { ev.preventDefault(); mostrar(0); }
+      else if (ev.key === 'End') { ev.preventDefault(); mostrar(s.cons.length - 1); }
+      else if (ev.key === 'Escape') esconder();
+    });
   }
+}
+
+/* região viva única, para leitor de tela ler o ponto sob o cursor */
+let _anuncio = null;
+function anunciar(txt) {
+  if (!_anuncio) {
+    _anuncio = document.createElement('div');
+    _anuncio.className = 'sr';
+    _anuncio.setAttribute('aria-live', 'polite');
+    document.body.appendChild(_anuncio);
+  }
+  _anuncio.textContent = txt;
 }
 
 /* ---------- avisos ---------- */
@@ -176,19 +221,67 @@ const ACOES = {
     S.novo = Object.assign({}, S.novo, { nome: p.nome, pot: p.pot, horas: p.horas, cat: p.cat });
     S.salvo = false; salvar(); render();
   },
+  'eq-editar': el => {
+    const e = aparelhos().filter(x => x.id === el.dataset.id)[0];
+    if (!e || e.sintetico) return;
+    S.editando = e.id;
+    S.novo = {
+      nome: e.nome, cat: e.cat, comodo: e.local === '—' ? UNIDADES[S.perfil].comodos[0] : e.local,
+      pot: Math.round(clamp(e.pot || 1000, 20, 12000)),
+      horas: Math.round(clamp(e.horas || 1, 0.1, 24) * 10) / 10,
+      dias: Math.round(clamp(e.dias || 30, 1, 31))
+    };
+    S.salvo = false; S.tela = 'cadastro'; S.msub = 'cadastro';
+    salvar(); render();
+  },
+  'cancelar-edicao': () => {
+    S.editando = null; S.salvo = false;
+    S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: UNIDADES[S.perfil].comodos[0] };
+    salvar(); render();
+  },
   salvar: () => {
     const n = S.novo;
     if (n.nome.trim().length < 2) return;
     const kwh = (n.pot / 1000) * n.horas * n.dias;
-    S.extras = S.extras.concat([{
-      id: 'x' + Date.now().toString(36), perfil: S.perfil, nome: n.nome.trim(), local: n.comodo,
-      cat: n.cat, pot: n.pot, horas: n.horas, dias: n.dias,
-      cor: CORES_EXTRA[S.extras.length % CORES_EXTRA.length], conf: 'alta', fonte: 'manual', tend: 0
-    }]);
+    const campos = {
+      nome: n.nome.trim(), local: n.comodo, cat: n.cat,
+      pot: n.pot, horas: n.horas, dias: n.dias, conf: 'alta', fonte: 'manual', tend: 0
+    };
+
+    if (S.editando) {
+      const alvo = S.editando;
+      const jaExtra = S.extras.filter(x => x.perfil === S.perfil && x.id === alvo)[0];
+      if (jaExtra) {
+        S.extras = S.extras.map(x => (x.perfil === S.perfil && x.id === alvo) ? Object.assign({}, x, campos) : x);
+      } else {
+        /* era estimativa da IA: some do catálogo e vira cadastro seu, guardando a cor */
+        const orig = unidade().equipamentos.filter(x => x.id === alvo)[0];
+        S.removidos = S.removidos.concat([S.perfil + ':' + alvo]);
+        S.extras = S.extras.concat([Object.assign({
+          id: 'x' + Date.now().toString(36), perfil: S.perfil,
+          cor: orig ? orig.cor : CORES_EXTRA[S.extras.length % CORES_EXTRA.length]
+        }, campos)]);
+      }
+      S.editando = null; S.salvo = false; S.detalhe = null;
+      S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: UNIDADES[S.perfil].comodos[0] };
+      S.tela = 'equipamentos'; S.msub = null;
+      salvar(); render();
+      aviso(campos.nome + ' atualizado', nf(kwh, 1) + ' kWh por mês · ' + brl(kwh * tarifaAtual()) + ' na conta.', 'good');
+      return;
+    }
+
+    S.extras = S.extras.concat([Object.assign({
+      id: 'x' + Date.now().toString(36), perfil: S.perfil,
+      cor: CORES_EXTRA[S.extras.length % CORES_EXTRA.length]
+    }, campos)]);
     S.salvo = true;
     S.novo = { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: UNIDADES[S.perfil].comodos[0] };
     salvar(); render();
-    aviso(n.nome.trim() + ' cadastrado', nf(kwh, 1) + ' kWh por mês · ' + brl(kwh * tarifaAtual()) + ' na conta.', 'good');
+    aviso(campos.nome + ' cadastrado', nf(kwh, 1) + ' kWh por mês · ' + brl(kwh * tarifaAtual()) + ' na conta.', 'good');
+  },
+  'alerta-dispensar': el => {
+    S.dispensados = S.dispensados.concat([el.dataset.chave]);
+    salvar(); render();
   },
   regra: el => {
     const k = el.dataset.k;

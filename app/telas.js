@@ -26,7 +26,8 @@ const IC = {
   desktop: 'M8 21h8',
   volta: 'M15 6l-6 6 6 6',
   chevron: 'M9 6l6 6-6 6',
-  lixo: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3'
+  lixo: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
+  lapis: 'M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM14 6l4 4'
 };
 function ico(d, sz, cor, sw) {
   return '<svg width="' + (sz || 16) + '" height="' + (sz || 16) + '" viewBox="0 0 24 24" fill="none" stroke="' + (cor || 'currentColor') + '" stroke-width="' + (sw || 1.8) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"/></svg>';
@@ -63,13 +64,15 @@ const PRESETS = [
 /* ---------- casca desktop ---------- */
 function vRail() {
   const pend = deteccoesPendentes().length;
+  const graves = alertasGraves();
   const p = potenciaAgora();
   const nav = NAV.map(n => {
     const at = S.tela === n.k;
+    const n_ = n.k === 'equipamentos' ? pend : n.k === 'alertas' ? graves : 0;
     return '<button class="nav-item" data-act="nav" data-tela="' + n.k + '"' + (at ? ' aria-current="page"' : '') + '>' +
       ico(n.icon, 18, 'currentColor', 1.7) +
       '<span class="nav-label">' + n.label + '</span>' +
-      (n.k === 'equipamentos' && pend ? '<span class="badge">' + pend + '</span>' : '') +
+      (n_ ? '<span class="badge">' + n_ + '<span class="sr"> pendências</span></span>' : '') +
       '</button>';
   }).join('');
   const units = Object.keys(UNIDADES).map(k => {
@@ -223,7 +226,12 @@ function graficoDia(dia, v) {
     '<div class="card-sub">Onde o sol cobre e onde a rede entra · a linha pontilhada vertical é agora</div></div>' +
     '<div class="legend"><span><i class="swatch" style="background:var(--sun)"></i>Geração solar</span>' +
     '<span><i class="swatch" style="background:var(--grid)"></i>Consumo</span></div></div>' +
-    '<div class="chart" id="chartDia" data-max="' + max + '"><svg viewBox="0 0 720 215" role="img" aria-label="Curva de geração e consumo de hoje">' +
+    '<div class="chart" id="chartDia" data-max="' + max + '" tabindex="0" role="img" ' +
+    'aria-label="Curva de hoje. Geração máxima ' + nf(Math.max.apply(null, dia.ger), 2) + ' quilowatts por volta das ' +
+    dia.ger.indexOf(Math.max.apply(null, dia.ger)) + ' horas. Consumo máximo ' + nf(Math.max.apply(null, dia.cons), 2) +
+    ' quilowatts por volta das ' + dia.cons.indexOf(Math.max.apply(null, dia.cons)) + ' horas. ' +
+    'Use as setas para percorrer hora a hora.">' +
+    '<svg viewBox="0 0 720 215" aria-hidden="true">' +
     '<defs><linearGradient id="gSol" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EDA22B" stop-opacity="0.28"/><stop offset="100%" stop-color="#EDA22B" stop-opacity="0"/></linearGradient></defs>' +
     grade +
     '<path d="' + caminho(dia.ger, max, W, H, true) + '" fill="url(#gSol)"/>' +
@@ -280,7 +288,11 @@ function vHistorico() {
     '<div class="card-sub">A faixa fina embaixo mostra se o sol cobriu o gasto daquele ' + s.unidade + '</div></div>' +
     '<div class="legend"><span><i class="swatch swatch--sq" style="background:var(--grid)"></i>Consumo</span>' +
     '<span><i class="swatch swatch--sq" style="background:var(--sun)"></i>Geração</span></div></div>' +
-    '<div class="chart" style="margin-top:0"><div class="hbars" id="hbars">' + barras + '</div><div class="tip" id="tipHist"></div></div>' +
+    '<div class="chart" style="margin-top:0">' +
+    '<div class="hbars" id="hbars" tabindex="0" role="img" aria-label="' + esc(s.rotulo) +
+    '. Consumo total ' + nf(tC, 1) + ' quilowatt-hora, geração ' + nf(tG, 1) +
+    '. Use as setas para percorrer cada ' + s.unidade + '.">' + barras + '</div>' +
+    '<div class="tip" id="tipHist"></div></div>' +
     '</section>' + tiles + cmp + dest + '</div>';
 }
 function blocoCmp(lbl, val, atual, ant, cor) {
@@ -370,6 +382,8 @@ function cardDetalhe(e, total, t) {
     '<div style="flex:1;min-width:0"><div class="det-name">' + esc(e.nome) + '</div>' +
     '<div class="det-loc">' + esc(e.local) + ' · ' + esc(e.cat) + '</div></div>' +
     '<button class="det-x" data-act="det-fechar" aria-label="Fechar detalhe">' + ico(IC.x, 16, 'currentColor', 2.2) + '</button></div>' +
+    (e.sintetico ? '' : '<button class="link-btn" style="margin-top:14px" data-act="eq-editar" data-id="' + e.id + '">' +
+      ico(IC.lapis, 13, 'currentColor', 2) + (e.fonte === 'ia' ? 'Corrigir a estimativa da IA' : 'Editar este aparelho') + '</button>') +
     '<div style="display:flex;align-items:baseline;gap:8px;margin-top:18px"><span class="big big-34">' + brl(e.reais) + '</span>' +
     '<span style="font-size:13px;color:var(--faint)">por mês · ' + nf(e.kwh) + ' kWh</span></div>' +
     '<div style="font-size:12.5px;color:var(--faint);margin-top:5px">' + pct((e.kwh / total) * 100) + ' da unidade · ' + brl(e.reais * 12) + ' por ano</div>' +
@@ -405,8 +419,12 @@ function vCadastro() {
     '<span class="preset-d" style="display:block">' + nf(p.pot) + ' W · ' + nf(p.horas, 1) + ' h/dia</span></span>' +
     ico(IC.chevron, 14, '#B9B2A2', 2.2) + '</button>').join('');
 
-  const form = '<section class="card s7" style="padding:24px 28px 28px"><h2>Descreva o aparelho</h2>' +
-    '<div class="card-sub">A IA já estima quase tudo sozinha. Cadastre o que ela não reconhece ou o que você quer acompanhar de perto.</div>' +
+  const editando = !!S.editando;
+  const form = '<section class="card s7" style="padding:24px 28px 28px">' +
+    '<h2>' + (editando ? 'Editar aparelho' : 'Descreva o aparelho') + '</h2>' +
+    '<div class="card-sub">' + (editando
+      ? 'Ajuste os valores e salve. Se este aparelho era uma estimativa da IA, ele passa a valer como cadastro seu.'
+      : 'A IA já estima quase tudo sozinha. Cadastre o que ela não reconhece ou o que você quer acompanhar de perto.') + '</div>' +
     '<div class="field"><label class="field-lbl" for="inNome">Nome</label>' +
     '<input class="text-in" id="inNome" data-fid="nome" data-in="nome" type="text" value="' + esc(n.nome) + '" placeholder="Ex.: Ar-condicionado do quarto" autocomplete="off"></div>' +
     '<div class="field"><span class="field-lbl">Categoria</span><div class="chips">' + cats + '</div></div>' +
@@ -428,7 +446,9 @@ function vCadastro() {
     '<div style="font-size:12px;color:var(--on-dark-soft);margin-top:8px" id="estPct">' + textoEstimativa(e) + '</div>' +
     '<button class="dark-btn" data-act="salvar" style="width:100%;height:46px;margin-top:18px;border-radius:13px;font-size:14.5px;' +
     (pode ? 'background:var(--on-dark);color:var(--dark)' : '') + '"' + (pode ? '' : ' disabled') + '>' +
-    ico(IC.mais, 15, 'currentColor', 2.4) + 'Adicionar aos meus aparelhos</button>' +
+    ico(editando ? IC.check : IC.mais, 15, 'currentColor', 2.4) +
+    (editando ? 'Salvar alterações' : 'Adicionar aos meus aparelhos') + '</button>' +
+    (editando ? '<button class="link-btn" style="margin-top:12px;color:var(--on-dark-soft)" data-act="cancelar-edicao">Cancelar edição</button>' : '') +
     (S.salvo ? '<div class="saved">' + ico(IC.check, 14, 'currentColor', 2.6) + 'Aparelho cadastrado e já no ranking</div>' : '') +
     '</section>';
 
@@ -462,9 +482,15 @@ function vAlertas() {
     '<span class="rule-s" style="display:block">' + r[2] + '</span></span>' +
     '<span class="tog" role="switch" aria-checked="' + !!S.regras[r[0]] + '" aria-pressed="' + !!S.regras[r[0]] + '"><i></i></span></button>').join('');
 
-  const feed = alertas().map(a => '<div class="feed-item feed-item--' + a.tipo + '"><span class="feed-dot"></span>' +
-    '<div style="flex:1;min-width:0"><div class="feed-t"><b>' + esc(a.titulo) + '</b><span>' + esc(a.quando) + '</span></div>' +
-    '<div class="feed-x">' + esc(a.txt) + '</div></div></div>').join('');
+  const lista = alertas();
+  const feed = lista.length
+    ? lista.map(a => '<div class="feed-item feed-item--' + a.tipo + '"><span class="feed-dot"></span>' +
+      '<div style="flex:1;min-width:0"><div class="feed-t"><b>' + esc(a.titulo) + '</b><span>' + esc(a.quando) + '</span></div>' +
+      '<div class="feed-x">' + esc(a.txt) + '</div></div>' +
+      '<button class="feed-close" data-act="alerta-dispensar" data-chave="' + esc(a.chave) + '" ' +
+      'aria-label="Dispensar: ' + esc(a.titulo) + '">' + ico(IC.x, 14, 'currentColor', 2.2) + '</button></div>').join('')
+    : '<div class="empty" style="padding:26px"><div class="empty-t">Nenhum alerta de pé</div>' +
+      '<div class="empty-s">Você dispensou tudo por hoje. Os que continuarem valendo voltam amanhã.</div></div>';
 
   return '<div class="grid12 enter">' +
     '<section class="card s7" style="padding:24px 28px 26px"><div class="card-head"><div><h2>Meta do mês</h2>' +

@@ -259,9 +259,9 @@ const PADRAO = {
   metas: { residencial: 300, negocio: 1700 },
   regras: { meta: true, salto: true, solar: true, standby: false },
   tarifa: { residencial: null, negocio: null },
-  extras: [], removidos: [], respondidas: {},
+  extras: [], removidos: [], respondidas: {}, dispensados: [],
   novo: { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: 'Sala' },
-  salvo: false, visto: false
+  editando: null, salvo: false
 };
 let S = JSON.parse(JSON.stringify(PADRAO));
 
@@ -504,7 +504,18 @@ function alertas() {
   }
   const melhor = v.md.dias.slice(0, Math.ceil(v.hDec / 24)).slice().sort((a, b) => b.tg - a.tg)[0];
   if (melhor) out.push({ id: 'melhor', tipo: 'bom', titulo: 'Melhor dia de geração do mês', quando: 'dia ' + melhor.dia, txt: 'Os painéis entregaram ' + nf(melhor.tg, 1) + ' kWh — céu limpo praticamente o dia inteiro.' });
-  return out;
+
+  /* dispensar vale pelo dia: amanhã o alerta volta se a situação continuar */
+  return out.map(a => Object.assign(a, { chave: chaveDispensa(a.id) }))
+    .filter(a => S.dispensados.indexOf(a.chave) < 0);
+}
+function chaveDispensa(id) {
+  const d = agora();
+  return S.perfil + ':' + id + ':' + d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+}
+/* quantos alertas graves estão de pé — vira o contador do menu */
+function alertasGraves() {
+  return alertas().filter(a => a.tipo === 'alto').length;
 }
 
 function deteccoesPendentes() {
