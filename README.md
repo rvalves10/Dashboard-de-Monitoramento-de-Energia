@@ -61,6 +61,8 @@ virada de ano e a regra do Fio B.
 | `docs/contrato-dados.md` | Formato da leitura e limites declarados do sensor |
 | `docs/protocolo-teste-usabilidade.md` | Roteiro do teste com 8 usuários (Sprint 5) |
 | `build.mjs` | Gera as entregas de arquivo único |
+| `Banca-Solaris.html` | Deck da apresentação: setas navegam, `N` abre as notas, `T` zera o cronômetro |
+| `Plano-UPX-Solaris.html` | Plano de 14 semanas, riscos e banco de perguntas |
 | `Solaris.dc.html` | Design original no canvas — não editar, é a referência visual |
 
 ### Por que scripts clássicos e não módulos
@@ -97,7 +99,7 @@ que atrasa.
 | 3 · Unidade é sua | Cadastro de unidade pelo usuário | **Feito** |
 | 4 · Medidor de verdade | Contrato, firmware, seletor | **Software feito** — falta montar o hardware |
 | 5 · Gente de fora | Teste com 8 usuários | Protocolo pronto, falta executar |
-| 6 · Banca | Slides, ensaios, vídeo reserva | Roteiro no plano, falta ensaiar |
+| 6 · Banca | Slides, ensaios, vídeo reserva | **Deck pronto** — falta preencher validação e ensaiar |
 
 ## Combinado do grupo
 

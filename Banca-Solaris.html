@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banca Solaris</title>
+<meta name="theme-color" content="#16150F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#EFEBE1; --ground-2:#F7F4EC; --surface:#FFFFFF;
+  --dark:#16150F; --ink:#16150F; --ink-2:#4A453B;
+  --muted:#5F5A50; --faint:#6B665C; --fainter:#7A7467;
+  --line:#E3DED2; --line-2:#DDD7C9;
+  --on-dark:#F4F1EA; --on-dark-soft:#A79F8E; --on-dark-faint:#8E887A;
+  --sun:#EDA22B; --sun-lite:#F5C25B; --sun-deep:#B4761B;
+  --grid:#3E4C7A; --good:#2E7A5A; --good-bg:#E4F0EA;
+  --warn:#8A6A15; --warn-bg:#FBF0CF; --bad:#C4573C; --bad-bg:#FBECE8;
+  --violet:#7A6BA8;
+  --f-display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
+  --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#0C0B08}
+body{font-family:var(--f-body);color:var(--ink);-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;font-family:var(--f-display);text-wrap:balance}
+p{margin:0}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+:focus-visible{outline:2px solid var(--sun);outline-offset:3px;border-radius:6px}
+
+/* ---------- palco ---------- */
+#palco{position:fixed;inset:0;display:grid;place-items:center}
+#slide{
+  width:1280px;height:720px;transform-origin:center;
+  background:var(--ground);color:var(--ink);position:relative;overflow:hidden;
+  box-shadow:0 30px 90px -30px rgba(0,0,0,.8);
+}
+.s{position:absolute;inset:0;padding:74px 86px;display:none;flex-direction:column}
+.s.on{display:flex;animation:entra .32s cubic-bezier(.16,1,.3,1)}
+@keyframes entra{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.s--dark{background:var(--dark);color:var(--on-dark)}
+.s--dark .kicker{color:var(--sun-lite)}
+.s--dark .lede{color:var(--on-dark-soft)}
+
+.kicker{font-size:15px;text-transform:uppercase;letter-spacing:1.8px;color:var(--sun-deep);font-weight:600}
+.s h2{font-size:56px;font-weight:700;letter-spacing:-2px;line-height:1.03;margin-top:16px}
+.s h3{font-size:30px;font-weight:600;letter-spacing:-.9px}
+.lede{font-size:22px;line-height:1.5;color:var(--muted);max-width:44ch;margin-top:20px}
+.grow{flex:1}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+.glow{position:absolute;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(237,162,43,.32),transparent 68%)}
+
+/* capa */
+.capa{justify-content:center}
+.capa .marca{display:flex;align-items:center;gap:16px}
+.capa .marca-ic{width:56px;height:56px;border-radius:17px;background:linear-gradient(150deg,var(--sun-lite),#E08A18);
+  display:grid;place-items:center;flex-shrink:0}
+.capa h1{font-size:108px;font-weight:800;letter-spacing:-4.5px;line-height:.92;margin-top:26px}
+.capa .sub{font-size:25px;color:var(--on-dark-soft);margin-top:18px;max-width:40ch;line-height:1.45}
+.capa .rodape{display:flex;gap:34px;margin-top:52px;font-size:15px;color:var(--on-dark-faint)}
+.capa .rodape b{display:block;color:var(--on-dark);font-weight:600;font-size:16px;margin-top:5px}
+
+/* numerão */
+.numerao{font-family:var(--f-display);font-weight:800;letter-spacing:-6px;line-height:.86;font-size:170px}
+.numerao--sun{color:var(--sun)}
+.unid{font-size:34px;font-weight:400;letter-spacing:-1px;color:var(--on-dark-soft)}
+
+/* colunas */
+.duas{display:grid;grid-template-columns:1fr 1fr;gap:44px;flex:1;align-items:center}
+.tres{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:34px}
+.cartao{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:26px 28px}
+.s--dark .cartao{background:rgba(244,241,234,.06);border-color:rgba(244,241,234,.13)}
+.cartao .t{font-size:19px;font-weight:700;letter-spacing:-.4px;font-family:var(--f-display)}
+.cartao .d{font-size:15.5px;color:var(--muted);margin-top:9px;line-height:1.5}
+.s--dark .cartao .d{color:var(--on-dark-soft)}
+.cartao .n{font-family:var(--f-display);font-weight:700;font-size:46px;letter-spacing:-2px;line-height:1}
+
+/* listas */
+.lista{display:flex;flex-direction:column;gap:16px;margin-top:26px}
+.item{display:flex;gap:15px;align-items:flex-start;font-size:20px;line-height:1.45}
+.item .mk{width:26px;height:26px;border-radius:9px;background:var(--sun);color:var(--dark);
+  display:grid;place-items:center;flex-shrink:0;font-family:var(--f-mono);font-size:13px;font-weight:600;margin-top:2px}
+.item .mk--ok{background:var(--good);color:#fff}
+.item b{font-weight:600}
+.item span{color:var(--muted)}
+.s--dark .item span{color:var(--on-dark-soft)}
+
+/* demo */
+.demo{border:2px dashed var(--sun);border-radius:24px;padding:40px 44px;background:rgba(237,162,43,.07);
+  display:flex;flex-direction:column;justify-content:center;flex:1;margin-top:24px}
+.demo .rot{font-size:15px;text-transform:uppercase;letter-spacing:2px;color:var(--sun-deep);font-weight:700}
+.demo .acao{font-size:44px;font-weight:700;font-family:var(--f-display);letter-spacing:-1.6px;margin-top:14px;line-height:1.1}
+.demo .diz{font-size:19px;color:var(--muted);margin-top:18px;line-height:1.5;max-width:52ch}
+.demo .plano-b{font-size:15px;color:var(--bad);margin-top:20px;font-weight:600}
+
+/* preencher */
+.vago{
+  display:inline-flex;align-items:baseline;gap:8px;border:2px dashed var(--sun-deep);border-radius:12px;
+  padding:4px 14px;color:var(--sun-deep);font-family:var(--f-mono);font-size:.62em;font-weight:500;
+  letter-spacing:0;background:rgba(237,162,43,.09);
+}
+.s--dark .vago{color:var(--sun-lite);border-color:var(--sun-lite)}
+
+/* citação */
+.citacao{font-family:var(--f-display);font-size:38px;font-weight:600;letter-spacing:-1.3px;line-height:1.25;
+  border-left:5px solid var(--sun);padding-left:28px;margin-top:10px}
+.citacao + .autor{font-size:17px;color:var(--faint);margin-top:18px;padding-left:33px}
+
+/* tabela */
+table{width:100%;border-collapse:collapse;font-size:18px;margin-top:24px}
+th{text-align:left;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--fainter);
+  font-weight:700;padding:10px 14px;border-bottom:2px solid var(--line)}
+td{padding:13px 14px;border-bottom:1px solid var(--line)}
+.s--dark th{color:var(--on-dark-faint);border-color:rgba(244,241,234,.18)}
+.s--dark td{border-color:rgba(244,241,234,.1)}
+
+.selo{display:inline-block;font-size:14px;font-weight:700;padding:5px 13px;border-radius:20px;letter-spacing:.3px}
+.selo--good{background:var(--good-bg);color:var(--good)}
+.selo--warn{background:var(--warn-bg);color:var(--warn)}
+.selo--bad{background:var(--bad-bg);color:var(--bad)}
+.s--dark .selo--good{background:rgba(46,122,90,.25);color:#7FDCAE}
+
+/* anexo */
+.s--anexo{background:var(--ground-2)}
+.s--anexo .kicker{color:var(--violet)}
+.perg{font-family:var(--f-display);font-size:34px;font-weight:700;letter-spacing:-1.2px;line-height:1.2}
+.resp{font-size:20px;line-height:1.55;color:var(--ink-2);margin-top:24px;max-width:62ch}
+.resp b{font-weight:600;color:var(--ink)}
+
+/* rodapé do slide */
+.pe{position:absolute;left:86px;right:86px;bottom:34px;display:flex;justify-content:space-between;
+  align-items:center;font-size:13px;color:var(--fainter);letter-spacing:.4px}
+.s--dark .pe{color:var(--on-dark-faint)}
+.pe .n{font-family:var(--f-mono)}
+
+/* ---------- controles ---------- */
+#barra{position:fixed;left:0;right:0;bottom:0;height:3px;background:rgba(244,241,234,.14);z-index:60}
+#barra i{display:block;height:100%;background:var(--sun);transition:width .3s cubic-bezier(.4,0,.2,1)}
+#hud{
+  position:fixed;top:16px;right:18px;display:flex;gap:8px;align-items:center;z-index:60;
+  font-size:12.5px;font-family:var(--f-mono);
+}
+.hud-b{
+  background:rgba(244,241,234,.1);color:#D9D3C6;border-radius:9px;padding:7px 11px;
+  backdrop-filter:blur(8px);transition:background .15s,color .15s;
+}
+.hud-b:hover{background:rgba(244,241,234,.2);color:#fff}
+#relogio.atrasado{background:rgba(196,87,60,.9);color:#fff}
+#relogio.perto{background:rgba(237,162,43,.9);color:#16150F}
+
+#notas{
+  position:fixed;left:0;right:0;bottom:0;max-height:42vh;overflow-y:auto;z-index:70;
+  background:rgba(12,11,8,.97);color:#E4DFD2;padding:22px 30px 26px;
+  border-top:2px solid var(--sun);transform:translateY(101%);transition:transform .26s cubic-bezier(.16,1,.3,1);
+  backdrop-filter:blur(10px);
+}
+#notas.on{transform:none}
+#notas h4{font-family:var(--f-display);font-size:15px;letter-spacing:.4px;color:var(--sun-lite);
+  text-transform:uppercase;margin:0 0 12px}
+#notas .fala{font-size:17px;line-height:1.6;max-width:100ch}
+#notas .fala b{color:#fff}
+#notas ul{margin:12px 0 0;padding-left:20px;font-size:15px;line-height:1.6;color:#B8B2A4}
+#notas li{margin:4px 0}
+#notas .alvo{font-family:var(--f-mono);font-size:13px;color:var(--sun-lite);margin-top:12px}
+
+#ajuda{
+  position:fixed;inset:0;background:rgba(12,11,8,.94);z-index:90;display:none;place-items:center;
+  color:#E4DFD2;backdrop-filter:blur(6px);
+}
+#ajuda.on{display:grid}
+#ajuda .cx{max-width:520px}
+#ajuda h3{font-size:30px;color:#fff;letter-spacing:-1px}
+#ajuda dl{display:grid;grid-template-columns:auto 1fr;gap:12px 22px;margin-top:26px;font-size:16px}
+#ajuda dt{font-family:var(--f-mono);color:var(--sun-lite)}
+#ajuda dd{margin:0;color:#B8B2A4}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important;transition-duration:.001ms !important}
+}
+
+/* ---------- impressão: plano B em PDF ---------- */
+@media print{
+  @page{size:1280px 720px;margin:0}
+  html,body{overflow:visible;background:#fff;height:auto}
+  #palco{position:static;display:block}
+  #slide{width:1280px;height:720px;box-shadow:none;transform:none !important}
+  .s{display:flex !important;position:relative;page-break-after:always;break-after:page;animation:none}
+  #hud,#barra,#notas,#ajuda{display:none !important}
+}
+</style>
+</head>
+<body>
+
+<div id="palco">
+  <div id="slide">
+
+    <!-- 1 -->
+    <section class="s s--dark on" data-t="0" data-titulo="Capa">
+      <span class="glow" style="width:620px;height:620px;top:-220px;right:-160px"></span>
+      <div class="capa" style="display:flex;flex-direction:column;justify-content:center;flex:1;position:relative">
+        <div class="marca">
+          <span class="marca-ic">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#16150F" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M22 12h-2.4M4.4 12H2M19.07 4.93l-1.7 1.7M6.63 17.37l-1.7 1.7M19.07 19.07l-1.7-1.7M6.63 6.63l-1.7-1.7"/></svg>
+          </span>
+          <span class="kicker">Projeto de UPX</span>
+        </div>
+        <h1>Solaris</h1>
+        <p class="sub">Monitoramento de energia solar que mostra para onde vai cada quilowatt — e quanto ele custa.</p>
+        <div class="rodape">
+          <div>Equipe<b><span class="vago">preencher: nomes</span></b></div>
+          <div>Semestre<b>2026 · 2º</b></div>
+          <div>ODS<b>7 · 12</b></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="s" data-t="10" data-titulo="O problema">
+      <span class="kicker">O problema</span>
+      <h2>Todo mês chega uma conta<br>que ninguém sabe explicar.</h2>
+      <div class="tres">
+        <div class="cartao">
+          <div class="t">Você paga</div>
+          <div class="d">Um valor único, fechado, depois que o mês já acabou. Sem como agir.</div>
+        </div>
+        <div class="cartao">
+          <div class="t">Você não sabe</div>
+          <div class="d">Qual aparelho puxou o gasto, nem quanto o sol realmente cobriu.</div>
+        </div>
+        <div class="cartao">
+          <div class="t">E com painéis</div>
+          <div class="d">Fica pior: a conta some, mas ninguém consegue dizer se o sistema está bem.</div>
+        </div>
+      </div>
+      <div class="grow"></div>
+      <p class="lede" style="max-width:64ch">Quem instalou energia solar tem um ativo de dezenas de milhares de reais no telhado — e nenhuma forma simples de saber se ele está entregando o que prometeu.</p>
+      <div class="pe"><span>Solaris · UPX 2026</span><span class="n">02</span></div>
+    </section>
+
+    <!-- 3 -->
+    <section class="s s--dark" data-t="45" data-titulo="DEMO · abrir">
+      <span class="kicker">Demonstração ao vivo</span>
+      <div class="demo" style="border-color:var(--sun-lite);background:rgba(237,162,43,.1)">
+        <div class="rot" style="color:var(--sun-lite)">Agora, na tela</div>
+        <div class="acao">Abrir o Solaris.<br>O medidor já está pulsando.</div>
+        <div class="diz" style="color:var(--on-dark-soft)">Não explique a interface. Fique quieto três segundos e deixe os números se mexerem sozinhos. Depois fale por cima deles.</div>
+        <div class="plano-b" style="color:#E9A392">Plano B: se algo travar, apertar <b>Esc</b> e usar o vídeo de 90 s.</div>
+      </div>
+      <div class="pe"><span>Solaris · UPX 2026</span><span class="n">03</span></div>
+    </section>
+
+    <!-- 4 -->
+    <section class="s s--dark" data-t="120" data-titulo="DEMO · carga real">
+      <span class="kicker">Demonstração ao vivo</span>
+      <div class="demo" style="border-color:var(--violet);background:rgba(122,107,168,.14)">
+        <div class="rot" style="color:#B9AEDA">Hardware</div>
+        <div class="acao">Ligar a carga na tomada<br>instrumentada.</div>
+        <div class="diz" style="color:var(--on-dark-soft)">O ESP32 lê a corrente com um sensor que abraça o fio por fora. A curva sobe na tela em menos de três segundos. É o momento em que o projeto deixa de ser software.</div>
+        <div class="plano-b" style="color:#E9A392">Plano B: se o medidor não responder, trocar de unidade e mostrar a padaria — o app volta sozinho para simulado.</div>
+      </div>
+      <div class="pe"><span>Solaris · UPX 2026</span><span class="n">04</span></div>
+    </section>
+
+    <!-- 5 -->
+    <section class="s" data-t="195" data-titulo="DEMO · desagregação">
+      <span class="kicker">Demonstração ao vivo</span>
+      <h2>Para onde vai sua energia</h2>
+      <div class="duas" style="margin-top:26px">
+        <div>
+          <div class="lista">
+            <div class="item"><span class="mk">1</span><div><b>Ranking por aparelho</b><br><span>Estimado do padrão do medidor, sem sensor em cada tomada.</span></div></div>
+            <div class="item"><span class="mk">2</span><div><b>A soma fecha com a leitura</b><br><span>Sempre. É teste automatizado, não coincidência.</span></div></div>
+            <div class="item"><span class="mk">3</span><div><b>Você corrige a IA</b><br><span>Discordou da estimativa? Edita, e ela vira cadastro seu.</span></div></div>
+          </div>
+        </div>
+        <div class="cartao" style="background:var(--warn-bg);border-color:#EDDCA8">
+          <div class="t" style="color:var(--warn)">Diga o limite antes que perguntem</div>
+          <div class="d" style="color:#6E5512">“É estimativa a partir do padrão de consumo do medidor, não medição individual. Para medir aparelho por aparelho seria preciso um sensor em cada tomada — e aí o custo do sistema inviabiliza o produto.”</div>
+        </div>
+      </div>
+      <div class="pe"><span>Solaris · UPX 2026</span><span class="n">05</span></div>
+    </section>
+
+    <!-- 6 -->
+    <section class="s s--dark" data-t="270" data-titulo="Como os números nascem">
+      <span class="glow" style="width:520px;height:520px;bottom:-260px;left:-140px"></span>
+      <span class="kicker">A pergunta que derruba projetos</span>
+      <h2 style="font-size:48px">De onde vêm esses números?</h2>
+      <div class="tres" style="margin-top:26px;position:relative">
+        <div class="cartao" style="padding:20px 22px">
+          <div class="t" style="color:var(--sun-lite);font-size:18px">O sol</div>
+          <div class="d" style="font-size:14.5px;margin-top:7px">Declinação solar pela data. A janela de luz encurta no inverno sozinha — nada é digitado.</div>
+        </div>
+        <div class="cartao" style="padding:20px 22px">
+          <div class="t" style="color:var(--sun-lite);font-size:18px">O tempo</div>
+          <div class="d" style="font-size:14.5px;margin-top:7px">Nuvens por ruído semeado: o mesmo dia sempre dá o mesmo céu, mas cada dia é diferente.</div>
+        </div>
+        <div class="cartao" style="padding:20px 22px">
+          <div class="t" style="color:var(--sun-lite);font-size:18px">A conta</div>
+          <div class="d" style="font-size:14.5px;margin-top:7px">Autoconsumo hora a hora, compensação da ANEEL, mínimo faturável e Fio B.</div>
+        </div>
+      </div>
+      <div class="grow"></div>
+      <div style="display:flex;gap:34px;align-items:center;position:relative">
+        <div style="flex-shrink:0">
+          <div class="numerao numerao--sun" style="font-size:96px">36</div>
+          <div style="font-size:16px;color:var(--on-dark-soft);margin-top:4px">testes automatizados</div>
+        </div>
+        <p style="font-size:19px;line-height:1.5;color:var(--on-dark-soft);max-width:50ch;margin:0">Conservação de energia hora a hora, o ranking fechando com o medidor, a escada da lei e sete datas de borda. Roda no navegador, sem instalar nada.</p>
+      </div>
+      <div class="pe"><span>Solaris · UPX 2026</span><span class="n">06</span></div>
+    </section>
+
+    <!-- 7 -->
+    <section class="s" data-t="315" data-titulo="Lei 14.300">
+      <span class="kicker">Marco legal da geração distribuída</span>
+      <h2>A Lei 14.300 está no cálculo.</h2>
+      <p class="lede">Sistemas ligados a partir de 07/01/2023 pagam Fio B sobre a energia compensada. A maioria dos simuladores de mercado ainda compensa um para um.</p>
+      <table>
+        <thead><tr><th>Ano</th><th>2023</th><th>2024</th><th>2025</th><th>2026</th><th>2027</th><th>2028</th><th>2029+</th></tr></thead>
+        <tbody><tr>
+          <td style="color:var(--faint)">% do Fio B</td>
+          <td class="mono">15%</td><td class="mono">30%</td><td class="mono">45%</td>
+          <td class="mono" style="color:var(--bad);font-weight:600">60%</td>
+          <td class="mono">75%</td><td class="mono">90%</td><td class="mono">integral</td>
+        </tr></tbody>
+      </table>
+      <div class="grow"></div>
+      <div class="cartao" style="background:var(--bad-bg);border-color:#EFCFC6">
+        <div class="t" style="color:var(--bad)">O que isso muda na prática</div>
+        <div class="d" style="color:#8A5040">Na unidade residencial do projeto, aplicar a lei derrubou a economia declarada de <b>R$ 172</b> para <b>R$ 139</b> por mês. Um simulador que ignora o Fio B promete 24% a mais de economia do que o cliente vai receber.</div>
+      </div>
+      <div class="pe"><span>Solaris · UPX 2026</span><span class="n">07</span></div>
+    </section>
+
+    <!-- 8 -->
+    <section class="s" data-t="360" data-titulo="Validação">
+      <span class="kicker">Validação</span>
+      <h2>Testamos com gente de fora.</h2>
+      <div class="tres" style="margin-top:30px">
+        <div class="cartao">
+          <div style="font-size:14px;color:var(--faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">Descobrir o vilão</div>
+          <div class="n" style="margin-top:12px"><span class="vago">__ / 8</span></div>
+          <div class="d">concluíram, mediana de <span class="vago">__ s</span></div>
+        </div>
+        <div class="cartao">
+          <div style="font-size:14px;color:var(--faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">Cadastrar aparelho</div>
+          <div class="n" style="margin-top:12px"><span class="vago">__ / 8</span></div>
+          <div class="d">concluíram, mediana de <span class="vago">__ s</span></div>
+        </div>
+        <div class="cartao">
+          <div style="font-size:14px;color:var(--faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">Prever a conta</div>
+          <div class="n" style="margin-top:12px"><span class="vago">__ / 8</span></div>
+          <div class="d">concluíram, mediana de <span class="vago">__ s</span></div>
+        </div>
+      </div>
+      <div class="grow"></div>
+      <div class="duas" style="flex:0">
+        <div>
+          <div class="citacao" style="font-size:30px"><span class="vago" style="font-size:.7em">preencher: citação de usuário</span></div>
+          <div class="autor">Participante <span class="vago" style="font-size:.9em">__</span>, teste de usabilidade</div>
+        </div>
+        <div class="cartao" style="background:var(--good-bg);border-color:#C3DFD1">
+          <div class="t" style="color:var(--good)">Contra uma conta real</div>
+          <div class="d" style="color:#3E6B57">O modelo previu <span class="vago" style="font-size:.8em">R$ __</span> para uma fatura real de <span class="vago" style="font-size:.8em">R$ __</span> — erro de <span class="vago" style="font-size:.8em">__%</span>.</div>
+        </div>
+      </div>
+      <div class="pe"><span>Solaris · UPX 2026</span><span class="n">08</span></div>
+    </section>
+
+    <!-- 9 -->
+    <section class="s s--dark" data-t="420" data-titulo="O que aprendemos">
+      <span class="glow" style="width:560px;height:560px;top:-200px;right:-180px"></span>
+      <span class="kicker">O que aprendemos</span>
+      <h2>O modelo contrariou<br>a nossa expectativa.</h2>
+      <div class="duas" style="margin-top:20px;position:relative">
+        <div>
+          <div style="display:flex;align-items:baseline;gap:14px">
+            <span class="numerao numerao--sun">36</span><span class="unid">%</span>
+          </div>
+          <div style="font-size:19px;color:var(--on-dark-soft);margin-top:10px;max-width:34ch">
+            de autossuficiência — e não os 65% que tínhamos assumido no começo.
+          </div>
+        </div>
+        <div>
+          <p style="font-size:20px;line-height:1.55;color:var(--on-dark-soft)">
+            Sem bateria, a casa gera ao meio-dia e consome à noite. O que sobra vai para a rede e volta como crédito, não como autoconsumo.
+          </p>
+          <p style="font-size:20px;line-height:1.55;color:var(--on-dark);margin-top:18px;font-weight:500">
+            Com o perfil de carga dessa casa, o teto teórico é 48%: é a fração do consumo que cai dentro da janela de sol.
+          </p>
+          <div class="selo selo--good" style="margin-top:22px">Investigar a diferença ensinou mais que o número bonito ensinaria</div>
+        </div>
+      </div>
+      <div class="pe"><span>Solaris · UPX 2026</span><span class="n">09</span></div>
+    </section>
+
+    <!-- 10 -->
+    <section class="s" data-t="465" data-titulo="Fechamento">
+      <span class="kicker">Onde chegamos</span>
+      <h2>Um produto que se explica<br>e aceita ser conferido.</h2>
+      <div class="tres" style="margin-top:32px">
+        <div class="cartao"><div class="n">7</div><div class="d" style="margin-top:6px">telas, desktop e celular, com o mesmo motor</div></div>
+        <div class="cartao"><div class="n">36</div><div class="d" style="margin-top:6px">testes automatizados, verdes</div></div>
+        <div class="cartao"><div class="n">0</div><div class="d" style="margin-top:6px">dependências: abre de um arquivo, sem servidor</div></div>
+      </div>
+      <div class="grow"></div>
+      <div class="duas" style="flex:0;align-items:end">
+        <div>
+          <h3 style="font-size:22px">O que faríamos a seguir</h3>
+          <div style="font-size:17px;color:var(--muted);margin-top:12px;line-height:1.6">
+            Segundo sensor para separar geração de consumo no hardware · expiração de créditos em 60 meses · tarifa branca · persistência em servidor para uso multiusuário.
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:15px;color:var(--faint)">Obrigado.</div>
+          <div style="font-family:var(--f-display);font-size:34px;font-weight:700;letter-spacing:-1.2px;margin-top:6px">Perguntas?</div>
+          <div style="font-size:14px;color:var(--fainter);margin-top:10px">Deixe o sistema rodando na tela</div>
+        </div>
+      </div>
+      <div class="pe"><span>Solaris · UPX 2026</span><span class="n">10</span></div>
+    </section>
+
+    <!-- Anexos -->
+    <section class="s s--anexo" data-titulo="Anexo · dado simulado">
+      <span class="kicker">Anexo · se perguntarem</span>
+      <div class="perg">“Os dados são simulados. Isso não invalida o projeto?”</div>
+      <div class="resp">
+        Não, porque a simulação é a <b>fonte</b>, não o resultado. A física entre a fonte e a tela é real: janela de luz pela declinação solar na data, autoconsumo pela sobreposição hora a hora, compensação pela regra da ANEEL com mínimo faturável e Fio B.
+        <br><br>Trocar a fonte é uma etapa isolada — foi o que fizemos com o ESP32, e o resto do sistema não precisou saber. O contrato de dados está documentado.
+      </div>
+      <div class="grow"></div>
+      <div class="pe"><span>Anexo</span><span class="n">A1</span></div>
+    </section>
+
+    <section class="s s--anexo" data-titulo="Anexo · concorrência">
+      <span class="kicker">Anexo · se perguntarem</span>
+      <div class="perg">“Qual a diferença para o app que a distribuidora já dá?”</div>
+      <div class="resp">
+        O app da distribuidora mostra o total da fatura <b>depois</b> que ela fechou. O Solaris responde três coisas que ele não responde:
+        <br><br>• <b>Qual aparelho</b> está puxando o gasto<br>
+        • <b>Quanto vai vir</b> antes de o mês fechar<br>
+        • <b>Quanto do consumo</b> o sol cobriu de fato, e se o sistema está saudável
+        <br><br>A desagregação por aparelho a partir do padrão do medidor é a parte que nenhuma distribuidora entrega.
+      </div>
+      <div class="grow"></div>
+      <div class="pe"><span>Anexo</span><span class="n">A2</span></div>
+    </section>
+
+    <section class="s s--anexo" data-titulo="Anexo · stack">
+      <span class="kicker">Anexo · se perguntarem</span>
+      <div class="perg">“Por que não usaram React, banco de dados, backend?”</div>
+      <div class="resp">
+        Escolha consciente de escopo. O sistema roda de um arquivo, sem servidor e sem instalação — a banca pode abrir no próprio computador e a demonstração não depende de rede.
+        <br><br>Um backend não apareceria na apresentação e consumiria as semanas que investimos em validar o modelo físico e testar com usuários. Se o projeto seguisse para produção, a primeira mudança seria persistência em servidor — e o motor já está isolado para permitir isso.
+      </div>
+      <div class="grow"></div>
+      <div class="pe"><span>Anexo</span><span class="n">A3</span></div>
+    </section>
+
+    <section class="s s--anexo" data-titulo="Anexo · limitações">
+      <span class="kicker">Anexo · se perguntarem</span>
+      <div class="perg">“Quais as limitações que vocês conhecem?”</div>
+      <div class="resp">
+        Dizer isto antes de ser perguntado é mais forte do que ser pego:
+        <br><br>• O sensor mede <b>potência aparente</b>, não real — faltaria medir tensão sincronizada<br>
+        • Um sensor no quadro geral <b>não separa</b> geração de consumo<br>
+        • A desagregação é <b>estimativa</b>, não medição individual<br>
+        • A irradiação usada é um perfil regional, não medida no local<br>
+        • Não modelamos expiração de créditos em 60 meses nem tarifa branca
+      </div>
+      <div class="grow"></div>
+      <div class="pe"><span>Anexo</span><span class="n">A4</span></div>
+    </section>
+
+  </div>
+</div>
+
+<div id="hud">
+  <button class="hud-b" id="relogio" title="Clique para zerar (T)">00:00</button>
+  <button class="hud-b" id="bNotas" title="Notas do apresentador (N)">Notas</button>
+  <button class="hud-b" id="bAjuda" title="Atalhos (?)">?</button>
+</div>
+<div id="barra"><i></i></div>
+
+<div id="notas" role="region" aria-label="Notas do apresentador">
+  <h4 id="notasTit">Notas</h4>
+  <div id="notasCorpo"></div>
+</div>
+
+<div id="ajuda" role="dialog" aria-label="Atalhos">
+  <div class="cx">
+    <h3>Atalhos</h3>
+    <dl>
+      <dt>→ &nbsp; espaço</dt><dd>Próximo slide</dd>
+      <dt>←</dt><dd>Slide anterior</dd>
+      <dt>N</dt><dd>Mostrar ou esconder as notas</dd>
+      <dt>T</dt><dd>Zerar o cronômetro</dd>
+      <dt>F</dt><dd>Tela cheia</dd>
+      <dt>Home / End</dt><dd>Primeiro / último slide</dd>
+      <dt>Ctrl + P</dt><dd>Exportar em PDF (plano B)</dd>
+      <dt>Esc</dt><dd>Fechar</dd>
+    </dl>
+    <p style="margin-top:26px;font-size:14px;color:#8A8478">O cronômetro fica âmbar 20 s antes do alvo do slide e vermelho quando passa. Alvo total: 8 minutos.</p>
+  </div>
+</div>
+
+<script>
+'use strict';
+const slides = Array.prototype.slice.call(document.querySelectorAll('.s'));
+const NOTAS = [
+  { f: 'Não leia o slide. Diga o nome do projeto, o de vocês, e passe.', l: ['Máximo 10 segundos aqui.'] },
+  { f: 'Abra com o problema, não com a solução. <b>“Todo mês chega uma conta que ninguém sabe explicar.”</b> Se tiverem um número de fonte confiável (EPE, ANEEL), use aqui — mas só se puder citar a fonte.', l: ['Não invente estatística: a banca pergunta a fonte.', 'Pergunta boa para a plateia: “quem aqui sabe qual aparelho mais gasta na sua casa?”'] },
+  { f: 'Abra o Solaris e <b>fique em silêncio três segundos</b>. Deixe o medidor pulsar sozinho. É o momento mais forte da apresentação e ele funciona sem narração.', l: ['Depois: aponte o consumo agora, a geração agora, e a economia do mês.', 'Não explique menu. Ninguém pergunta sobre menu.', 'Plano B: vídeo de 90 s no celular de duas pessoas.'] },
+  { f: 'Ligue a carga na tomada instrumentada. Conte enquanto sobe: <b>“o sensor abraça o fio por fora, não corta nada”</b>.', l: ['Se o ESP32 não responder, o app volta sozinho para simulado — use isso a favor: “ele foi feito para não travar”.', 'Alternativa: trocar para a padaria e mostrar outro perfil de consumo.'] },
+  { f: 'Mostre o ranking de aparelhos e <b>admita o limite antes que perguntem</b>: é estimativa a partir do padrão do medidor, não medição individual.', l: ['Clique num aparelho para abrir o detalhe com o perfil de 24 h.', 'Se sobrar tempo, mostre a edição: “discordou da IA? corrige.”'] },
+  { f: 'Esta é a defesa do projeto. Diga devagar: <b>declinação solar pela data, nuvens semeadas, compensação da ANEEL</b>. Termine nos 36 testes.', l: ['Se perguntarem sobre a irradiação: veio do Atlas do INPE para a cidade, é o único número externo do motor.', 'Ofereça: “posso abrir a suíte de testes agora se quiserem”.'] },
+  { f: 'O diferencial técnico. Poucos simuladores de mercado aplicam o Fio B. Mostre a escada e o impacto: <b>de R$ 172 para R$ 139</b>.', l: ['Se perguntarem de direito adquirido: sistemas anteriores a 07/01/2023 compensam integralmente até 2045, e o modelo trata os dois casos.'] },
+  { f: 'Números do teste de usabilidade. <b>Se a taxa de alguma tarefa for baixa, não esconda</b> — diga o que foi corrigido depois.', l: ['PREENCHER: resultados do protocolo em docs/protocolo-teste-usabilidade.md', 'PREENCHER: comparação com uma conta de luz real de alguém do grupo', 'Mostrar método vale mais que exibir três oitos.'] },
+  { f: 'O momento de honestidade intelectual. Contem que esperavam 65% e o modelo deu 36% — e que investigar a diferença foi o que ensinou.', l: ['Se perguntarem se é falha: não, é ausência de bateria. O teto físico com esse perfil é 48%.', 'É aqui que a banca percebe que vocês entenderam o que construíram.'] },
+  { f: 'Fechar em pé. Diga o que fariam a seguir — mostra que sabem onde o projeto termina. <b>Deixe o sistema rodando na tela</b> durante toda a arguição.', l: ['Não encerre com “é isso”. Encerre com “perguntas?”.'] },
+  { f: 'Anexo: só vá até aqui se perguntarem.', l: [] },
+  { f: 'Anexo: só vá até aqui se perguntarem.', l: [] },
+  { f: 'Anexo: só vá até aqui se perguntarem.', l: [] },
+  { f: 'Anexo: dizer as limitações antes de ser perguntado é mais forte.', l: [] }
+];
+
+let atual = 0, inicio = null, tick = null;
+const el = {
+  slide: document.getElementById('slide'),
+  barra: document.querySelector('#barra i'),
+  relogio: document.getElementById('relogio'),
+  notas: document.getElementById('notas'),
+  notasTit: document.getElementById('notasTit'),
+  notasCorpo: document.getElementById('notasCorpo'),
+  ajuda: document.getElementById('ajuda')
+};
+
+function escalar() {
+  const m = 28;
+  const k = Math.min((innerWidth - m * 2) / 1280, (innerHeight - m * 2) / 720);
+  el.slide.style.transform = 'scale(' + k + ')';
+}
+addEventListener('resize', escalar);
+escalar();
+
+function mostrar(i) {
+  atual = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, k) => s.classList.toggle('on', k === atual));
+  el.barra.style.width = ((atual + 1) / slides.length) * 100 + '%';
+  const n = NOTAS[atual] || { f: '', l: [] };
+  const alvo = slides[atual].getAttribute('data-t');
+  el.notasTit.textContent = (atual + 1) + '. ' + slides[atual].getAttribute('data-titulo');
+  el.notasCorpo.innerHTML =
+    '<div class="fala">' + n.f + '</div>' +
+    (n.l.length ? '<ul>' + n.l.map(x => '<li>' + x + '</li>').join('') + '</ul>' : '') +
+    (alvo !== null ? '<div class="alvo">Chegar aqui em ' + mmss(+alvo) + ' · restam ' + mmss(Math.max(0, 480 - +alvo)) + ' de apresentação</div>' : '');
+  pintarRelogio();
+}
+function mmss(s) {
+  const m = Math.floor(s / 60), r = Math.floor(s % 60);
+  return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
+}
+function decorrido() { return inicio ? (Date.now() - inicio) / 1000 : 0; }
+function pintarRelogio() {
+  const d = decorrido();
+  el.relogio.textContent = mmss(d);
+  const alvo = slides[atual].getAttribute('data-t');
+  el.relogio.classList.remove('atrasado', 'perto');
+  if (alvo === null || !inicio) return;
+  const a = +alvo;
+  if (d > a + 25) el.relogio.classList.add('atrasado');
+  else if (d > a) el.relogio.classList.add('perto');
+}
+function comecar() {
+  if (inicio) return;
+  inicio = Date.now();
+  tick = setInterval(pintarRelogio, 500);
+}
+function zerar() {
+  inicio = Date.now();
+  if (!tick) tick = setInterval(pintarRelogio, 500);
+  pintarRelogio();
+}
+
+document.addEventListener('keydown', ev => {
+  const k = ev.key;
+  if (k === 'Escape') { el.ajuda.classList.remove('on'); el.notas.classList.remove('on'); return; }
+  if (k === 'ArrowRight' || k === ' ' || k === 'PageDown') { ev.preventDefault(); comecar(); mostrar(atual + 1); }
+  else if (k === 'ArrowLeft' || k === 'PageUp') { ev.preventDefault(); mostrar(atual - 1); }
+  else if (k === 'Home') { ev.preventDefault(); mostrar(0); }
+  else if (k === 'End') { ev.preventDefault(); mostrar(slides.length - 1); }
+  else if (k.toLowerCase() === 'n') el.notas.classList.toggle('on');
+  else if (k.toLowerCase() === 't') zerar();
+  else if (k.toLowerCase() === 'f') { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); }
+  else if (k === '?') el.ajuda.classList.toggle('on');
+});
+document.getElementById('bNotas').addEventListener('click', () => el.notas.classList.toggle('on'));
+document.getElementById('bAjuda').addEventListener('click', () => el.ajuda.classList.toggle('on'));
+el.relogio.addEventListener('click', zerar);
+el.ajuda.addEventListener('click', () => el.ajuda.classList.remove('on'));
+el.slide.addEventListener('click', ev => {
+  if (ev.target.closest('#notas')) return;
+  comecar();
+  mostrar(atual + (ev.clientX < innerWidth / 2 ? -1 : 1));
+});
+
+mostrar(0);
+</script>
+</body>
+</html>
