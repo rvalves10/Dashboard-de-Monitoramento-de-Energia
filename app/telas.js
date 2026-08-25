@@ -94,11 +94,26 @@ function vRail() {
     '<div class="meter-row"><span>Gerando</span><span class="meter-val" id="liveG">' + nf(p.ger, 2) + ' kW</span></div>' +
     '</div><div class="meter-bar"><span id="liveBar" style="width:' + clamp((p.ger / Math.max(p.cons, .001)) * 100, 0, 100) + '%"></span></div>' +
     '<div class="meter-note" id="liveNote">' + textoMedidor(p) + '</div></div>' +
+    cardConta() +
     '<div class="unitbox"><div class="unitbox-title">Unidade</div><div style="display:flex;flex-direction:column;gap:4px">' + units +
     '<button class="unit unit--nova" data-act="nav" data-tela="unidade">' + ico(IC.mais, 13, 'currentColor', 2.4) +
     '<span class="unit-name">Nova unidade</span></button></div></div>' +
     '</div></aside>';
 }
+function cardConta() {
+  const s = sessao();
+  if (!s) return '';
+  const inicial = (s.nome || '?').trim().charAt(0).toUpperCase();
+  return '<div class="conta">' +
+    '<span class="conta-av' + (ehVisitante() ? ' conta-av--vis' : '') + '">' + esc(inicial) + '</span>' +
+    '<span class="conta-txt"><span class="conta-nome">' + esc(s.nome) + '</span>' +
+    '<span class="conta-mail">' + esc(s.email || 'modo demonstração') + '</span></span>' +
+    '<button class="conta-sair" data-act="sair" title="Sair da conta" aria-label="Sair da conta">' +
+    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>' +
+    '</div>';
+}
+
 function textoMedidor(p) {
   if (p.ger <= 0.02) return 'Painéis dormindo. Tudo vem da rede.';
   if (p.inj > 0.05) return 'Sobrando ' + nf(p.inj, 2) + ' kW para a rede — virando crédito.';

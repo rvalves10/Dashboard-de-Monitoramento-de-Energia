@@ -53,6 +53,7 @@ virada de ano e a regra do Fio B.
 | `app/index.html` | Casca da página; carrega os quatro scripts na ordem |
 | `app/estilo.css` | Sistema de design inteiro: cores, tipografia, componentes, responsivo, impressão |
 | `app/motor.js` | Simulação física, tarifas, compensação de créditos, estado e persistência |
+| `app/login.js` | Contas, sessão e derivação de senha — leia o cabeçalho do arquivo |
 | `app/telas.js` | As sete telas do desktop |
 | `app/celular.js` | O app de celular (mesmo motor, outra casca) |
 | `app/controle.js` | Eventos, rotas, o tique do medidor, avisos |
@@ -88,6 +89,23 @@ quatro arquivos pelo escopo léxico global — `motor.js` declara, os outros usa
 
 Preencha os nomes antes da primeira sprint. Uma frente sem dono é uma frente
 que atrasa.
+
+## Sobre o login
+
+Existe tela de entrada com contas separadas, mas **isto não é segurança contra
+quem tem acesso ao computador**. O app roda sem servidor: quem abrir o DevTools
+lê o armazenamento local. O que o login entrega de verdade:
+
+- a senha nunca é gravada — só uma derivação com salt e 150 mil iterações
+  (PBKDF2 via WebCrypto, com SHA-256 encadeado como reserva em contextos
+  sem WebCrypto);
+- cada conta tem o próprio balde de dados: unidades, aparelhos, metas e
+  tarifas não vazam de uma para outra;
+- não há recuperação de senha, porque não há servidor para enviar e-mail.
+
+Num produto real a verificação aconteceria no servidor e o hash nunca sairia
+de lá. Isso está escrito na própria tela de login, de propósito — é melhor
+declarar a limitação do que ser pego por ela na banca.
 
 ## Estado das sprints
 

@@ -158,7 +158,13 @@ function mMais() {
       '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + esc(u.nome) + '</span>' +
       '<span class="mob-menu-s" style="display:block">' + esc(u.tipo) + '</span></span></button>';
   }).join('');
-  return '<div class="mob-col">' + menu +
+  const s = sessao();
+  const conta = '<div class="mob-card" style="display:flex;align-items:center;gap:12px">' +
+    '<span class="conta-av' + (ehVisitante() ? ' conta-av--vis' : '') + '">' + esc((s.nome || '?').charAt(0).toUpperCase()) + '</span>' +
+    '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + esc(s.nome) + '</span>' +
+    '<span class="mob-menu-s" style="display:block">' + esc(s.email || 'modo demonstração') + '</span></span>' +
+    '<button class="link-btn" data-act="sair">Sair</button></div>';
+  return '<div class="mob-col">' + conta + menu +
     '<div class="eyebrow-sm" style="margin-top:10px">Trocar de unidade</div>' + uns + '</div>';
 }
 

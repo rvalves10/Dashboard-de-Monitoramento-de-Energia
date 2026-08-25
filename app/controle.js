@@ -20,6 +20,9 @@ function corpoDesktop() {
 
 let _ultimoModo = null;
 function render() {
+  /* sem sessão não existe app: a tela de login é a única coisa renderizada */
+  if (!sessao()) { renderLogin(); return; }
+  document.body.classList.remove('vista-login');
   const root = $('#root');
   const ativo = document.activeElement;
   const fid = ativo && ativo.dataset ? ativo.dataset.fid : null;
@@ -343,11 +346,21 @@ const ACOES = {
     else aviso('Fonte: simulação', 'O painel voltou a calcular a leitura.', 'sun');
     salvar(); render();
   },
+  'auth-modo': el => { modoLogin = el.dataset.v; erroLogin = ''; renderLogin(); },
+  'auth-visitante': () => { entrarComoVisitante(); aoEntrar(); },
+  sair: () => {
+    if (!window.confirm('Sair da conta? Seus dados continuam salvos neste navegador.')) return;
+    sair();
+    S = JSON.parse(JSON.stringify(PADRAO));
+    _visao = null; _cacheLedger.clear();
+    modoLogin = 'entrar'; erroLogin = '';
+    renderLogin();
+  },
   imprimir: () => window.print(),
   'reset-tarifa': () => { S.tarifa[S.perfil] = null; salvar(); render(); aviso('Tarifa restaurada', 'Voltou para R$ ' + nf(unidade().tarifa, 2) + ' / kWh da ' + unidade().distribuidora + '.', 'sun'); },
   'reset-tudo': () => {
     if (!window.confirm('Apagar aparelhos cadastrados, metas, tarifa e respostas da IA neste navegador?')) return;
-    try { localStorage.removeItem(CHAVE_LS); } catch (e) { }
+    try { localStorage.removeItem(chaveEstado()); } catch (e) { }
     S = JSON.parse(JSON.stringify(PADRAO));
     _visao = null; render();
     aviso('Dados apagados', 'O Solaris voltou ao estado inicial.', 'bad');
@@ -439,6 +452,7 @@ window.addEventListener('resize', () => { if (modoMobile() !== _ultimoModo) rend
 /* ---------- o tique ---------- */
 let _spikeCooldown = 0, _spikeAtivo = false;
 function tique() {
+  if (!sessao()) return;
   pulso();
   buscarMedidor();
   const p = potenciaAgora();
@@ -462,9 +476,34 @@ function tique() {
 }
 let _ultimaHora = -1;
 function tiqueLento() {
+  if (!sessao()) return;
   const h = new Date().getHours();
   _visao = null;
   if (h !== _ultimaHora) { _ultimaHora = h; render(); }
+}
+
+let _relogiosLigados = false;
+function iniciarRelogios() {
+  if (_relogiosLigados) return;
+  _relogiosLigados = true;
+  setInterval(tique, 2000);
+  setInterval(tiqueLento, 45000);
+}
+
+/* chamado quando uma sessão acabou de ser aberta */
+function aoEntrar() {
+  document.body.classList.remove('vista-login');
+  S = JSON.parse(JSON.stringify(PADRAO));
+  carregar();
+  if (!uni(S.perfil)) S.perfil = 'residencial';
+  if (!TELAS[S.tela]) S.tela = 'painel';
+  if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
+  _visao = null; _cacheLedger.clear();
+  render();
+  const s = sessao();
+  aviso('Bem-vindo, ' + s.nome.split(' ')[0],
+    ehVisitante() ? 'Modo visitante: os dados ficam num espaço separado neste navegador.'
+      : 'Medidor conectado · ' + nf(visao().mtd.tc) + ' kWh no mês até agora.', 'good');
 }
 
 /* ---------- partida ---------- */
@@ -472,6 +511,7 @@ function iniciar() {
   /* a suíte de testes carrega os mesmos scripts sem a casca da página:
      sem #root não há app para subir, só as funções para exercitar */
   if (!$('#root')) return;
+  if (!carregarSessao()) { modoLogin = 'entrar'; renderLogin(); iniciarRelogios(); return; }
   carregar();
   if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
   if (!uni(S.perfil)) S.perfil = 'residencial';
@@ -479,8 +519,7 @@ function iniciar() {
   _ultimaHora = new Date().getHours();
   lerHash();
   render();
-  setInterval(tique, 2000);
-  setInterval(tiqueLento, 45000);
+  iniciarRelogios();
   const v = visao();
   setTimeout(() => {
     aviso('Medidor conectado', 'Lendo ' + unidade().nome + ' em tempo real · ' + nf(v.mtd.tc) + ' kWh no mês até agora.', 'good');

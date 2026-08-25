@@ -323,7 +323,12 @@ function ledger(chave, ate_y, ate_m, horasUltimo) {
 }
 
 /* ---------- estado ---------- */
+/* cada conta tem o seu balde de dados; login.js define quem está logado */
 const CHAVE_LS = 'solaris.v2';
+function chaveEstado() {
+  const s = (typeof sessao === 'function') ? sessao() : null;
+  return CHAVE_LS + (s ? '.' + s.id : '');
+}
 const PADRAO = {
   perfil: 'residencial', tela: 'painel', periodo: 'mes', vista: 'desktop',
   tab: 'painel', msub: null, detalhe: null,
@@ -344,7 +349,7 @@ let S = JSON.parse(JSON.stringify(PADRAO));
 
 function carregar() {
   try {
-    const raw = localStorage.getItem(CHAVE_LS);
+    const raw = localStorage.getItem(chaveEstado());
     if (!raw) return;
     const o = JSON.parse(raw);
     Object.keys(PADRAO).forEach(k => {
@@ -359,7 +364,7 @@ let _tsave = 0;
 function salvar() {
   clearTimeout(_tsave);
   _tsave = setTimeout(() => {
-    try { localStorage.setItem(CHAVE_LS, JSON.stringify(S)); } catch (e) { }
+    try { localStorage.setItem(chaveEstado(), JSON.stringify(S)); } catch (e) { }
   }, 180);
 }
 

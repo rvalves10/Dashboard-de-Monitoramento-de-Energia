@@ -421,6 +421,155 @@ grupo('Unidades', () => {
   });
 });
 
+/* ================= contas e sessão ================= */
+/* Estes precisam de await, então entram numa fila separada que roda
+   depois dos síncronos. O armazenamento é salvo antes e restaurado
+   depois, para o teste nunca comer os dados de quem estiver usando. */
+const ASSINC = [];
+function testeAsync(nome, fn) { ASSINC.push({ grupo: T.grupo, nome: nome, fn: fn }); }
+
+grupo('Contas', () => {
+  const EMAIL = '__teste__@solaris.local';
+  const SENHA = 'senhaDeTeste123';
+
+  async function limpo(fn) {
+    const guarda = {};
+    ['solaris.contas.v1', 'solaris.sessao.v1'].forEach(k => { guarda[k] = localStorage.getItem(k); });
+    const sessaoAntes = sessao();
+    try {
+      localStorage.removeItem('solaris.contas.v1');
+      localStorage.removeItem('solaris.sessao.v1');
+      sair();
+      await fn();
+    } finally {
+      localStorage.removeItem('solaris.v2.' + EMAIL);
+      Object.keys(guarda).forEach(k => {
+        if (guarda[k] === null) localStorage.removeItem(k); else localStorage.setItem(k, guarda[k]);
+      });
+      sair();
+      if (sessaoAntes) carregarSessao();
+    }
+  }
+
+  teste('SHA-256 bate com os vetores conhecidos', () => {
+    igual(sha256(''), 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+    igual(sha256('abc'), 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+    igual(sha256('The quick brown fox jumps over the lazy dog'),
+      'd7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592');
+  });
+
+  teste('cada salt é diferente', () => {
+    const s = new Set();
+    for (let i = 0; i < 50; i++) s.add(saltAleatorio());
+    igual(s.size, 50, 'salt repetiu');
+    igual(saltAleatorio().length, 32, 'salt deveria ter 16 bytes em hex');
+  });
+
+  teste('comparação segura não aceita tamanhos diferentes nem valor errado', () => {
+    igual(iguaisSeguro('abc', 'abc'), true);
+    igual(iguaisSeguro('abc', 'abd'), false);
+    igual(iguaisSeguro('abc', 'abcd'), false);
+    igual(iguaisSeguro('', ''), true);
+  });
+
+  teste('e-mail é normalizado para minúsculas sem espaço', () => {
+    igual(normalizarEmail('  RICHARD@Teste.COM '), 'richard@teste.com');
+  });
+
+  testeAsync('a senha nunca é guardada, só a derivação', () => limpo(async () => {
+    await criarConta('Teste', EMAIL, SENHA);
+    const bruto = localStorage.getItem('solaris.contas.v1');
+    ok(bruto.indexOf(SENHA) < 0, 'a senha apareceu no armazenamento');
+    const c = JSON.parse(bruto)[EMAIL];
+    igual(c.hash.length, 64, 'hash deveria ter 256 bits em hex');
+    ok(c.salt && c.salt.length === 32, 'faltou salt');
+    ok(c.metodo === 'pbkdf2' || c.metodo === 'sha256x', 'método desconhecido: ' + c.metodo);
+  }));
+
+  testeAsync('a mesma senha com salts diferentes gera hashes diferentes', () => limpo(async () => {
+    const a = await derivar(SENHA, saltAleatorio());
+    const b = await derivar(SENHA, saltAleatorio());
+    ok(a.valor !== b.valor, 'o salt não está sendo usado');
+  }));
+
+  testeAsync('entra com a senha certa e recusa a errada', () => limpo(async () => {
+    await criarConta('Teste', EMAIL, SENHA);
+    sair();
+    let recusou = false;
+    try { await entrar(EMAIL, 'errada', false); } catch (e) { recusou = true; }
+    ok(recusou, 'entrou com senha errada');
+    igual(sessao(), null, 'deixou sessão aberta após falhar');
+    await entrar(EMAIL, SENHA, false);
+    ok(sessao() && sessao().id === EMAIL, 'não entrou com a senha certa');
+  }));
+
+  testeAsync('não revela se o e-mail existe', () => limpo(async () => {
+    await criarConta('Teste', EMAIL, SENHA);
+    let m1 = '', m2 = '';
+    try { await entrar(EMAIL, 'errada', false); } catch (e) { m1 = e.message; }
+    try { await entrar('naoexiste@x.com', 'errada', false); } catch (e) { m2 = e.message; }
+    igual(m1, m2, 'mensagens diferentes entregam quais e-mails existem');
+  }));
+
+  testeAsync('recusa senha curta, e-mail inválido e duplicado', () => limpo(async () => {
+    let n = 0;
+    try { await criarConta('Teste', EMAIL, '123'); } catch (e) { n++; }
+    try { await criarConta('Teste', 'sem-arroba', SENHA); } catch (e) { n++; }
+    try { await criarConta('A', EMAIL, SENHA); } catch (e) { n++; }
+    igual(n, 3, 'alguma validação passou batido');
+    await criarConta('Teste', EMAIL, SENHA);
+    let dup = false;
+    try { await criarConta('Outro', EMAIL.toUpperCase(), SENHA); } catch (e) { dup = true; }
+    ok(dup, 'aceitou o mesmo e-mail em outra caixa');
+  }));
+
+  testeAsync('cada conta tem o seu balde de dados', () => limpo(async () => {
+    await criarConta('Teste', EMAIL, SENHA);
+    await entrar(EMAIL, SENHA, false);
+    igual(chaveEstado(), 'solaris.v2.' + EMAIL, 'a chave não separa por conta');
+    sair();
+    igual(chaveEstado(), 'solaris.v2', 'sem sessão deveria cair no balde neutro');
+    entrarComoVisitante();
+    igual(chaveEstado(), 'solaris.v2.visitante', 'visitante deveria ter balde próprio');
+  }));
+
+  testeAsync('sessão expirada é descartada', () => limpo(async () => {
+    await criarConta('Teste', EMAIL, SENHA);
+    await entrar(EMAIL, SENHA, true);
+    const s = JSON.parse(localStorage.getItem('solaris.sessao.v1'));
+    ok(s.ate > Date.now(), 'sessão com manter deveria ter prazo');
+    s.ate = Date.now() - 1000;
+    localStorage.setItem('solaris.sessao.v1', JSON.stringify(s));
+    sair();
+    igual(carregarSessao(), null, 'aceitou sessão vencida');
+  }));
+
+  testeAsync('trocar a senha invalida a anterior', () => limpo(async () => {
+    await criarConta('Teste', EMAIL, SENHA);
+    await entrar(EMAIL, SENHA, false);
+    let bloqueou = false;
+    try { await trocarSenha('errada', 'novaSenha456'); } catch (e) { bloqueou = true; }
+    ok(bloqueou, 'trocou a senha sem saber a atual');
+    await trocarSenha(SENHA, 'novaSenha456');
+    sair();
+    let antigaFalha = false;
+    try { await entrar(EMAIL, SENHA, false); } catch (e) { antigaFalha = true; }
+    ok(antigaFalha, 'a senha antiga continuou valendo');
+    await entrar(EMAIL, 'novaSenha456', false);
+    ok(sessao(), 'a senha nova não funcionou');
+  }));
+
+  testeAsync('apagar a conta leva os dados junto', () => limpo(async () => {
+    await criarConta('Teste', EMAIL, SENHA);
+    await entrar(EMAIL, SENHA, false);
+    localStorage.setItem(chaveEstado(), '{"teste":1}');
+    apagarConta();
+    igual(contas()[EMAIL], undefined, 'a conta continuou cadastrada');
+    igual(localStorage.getItem('solaris.v2.' + EMAIL), null, 'os dados ficaram para trás');
+    igual(sessao(), null, 'a sessão continuou aberta');
+  }));
+});
+
 /* ================= execução ================= */
 function rodar() {
   const alvo = document.getElementById('saida');
@@ -447,4 +596,13 @@ function rodar() {
   alvo.innerHTML = html;
   document.title = (falhas ? '✕ ' : '✓ ') + (total - falhas) + '/' + total + ' — Testes Solaris';
 }
-rodar();
+
+async function rodarAssincronos() {
+  for (const a of ASSINC) {
+    try { await a.fn(); T.casos.push({ grupo: a.grupo, nome: a.nome, ok: true }); }
+    catch (e) { T.casos.push({ grupo: a.grupo, nome: a.nome, ok: false, erro: e.message }); }
+  }
+}
+
+document.getElementById('saida').innerHTML = '<div class="resumo">Rodando…</div>';
+rodarAssincronos().then(rodar);

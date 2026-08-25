@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 const raiz = dirname(fileURLToPath(import.meta.url));
 const ler = (...p) => readFileSync(join(raiz, ...p), 'utf8');
 
-const JS = ['motor.js', 'telas.js', 'celular.js', 'controle.js'];
+const JS = ['motor.js', 'login.js', 'telas.js', 'celular.js', 'controle.js'];
 const css = ler('app', 'estilo.css');
 const js = JS.map(f => '/* ===== ' + f + ' ===== */\n' + ler('app', f)).join('\n\n');
 
