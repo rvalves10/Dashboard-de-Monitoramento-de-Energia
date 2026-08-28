@@ -1,9 +1,31 @@
-/* ============================================================
-   SOLARIS — motor
-   Um medidor virtual que roda de verdade: curva solar calculada
-   pela posição do sol na data, nuvens com ruído semeado, consumo
-   hora a hora, compensação de créditos mês a mês.
-   ============================================================ */
+/* motor.js — onde os numeros nascem
+
+   Este e o coracao do projeto e a parte que a banca vai questionar. Nada
+   aqui e digitado: tudo e calculado.
+
+   O que ele faz, em ordem:
+
+   1. Descobre onde o sol esta. A declinacao solar depende da data, entao a
+      janela de luz encurta no inverno sozinha, sem ninguem mexer.
+
+   2. Poe nuvem no ceu. Um gerador de ruido com semente fixa: o dia 12 de
+      junho sempre tem o mesmo tempo, mas cada dia e diferente do outro.
+      Isso deixa a simulacao realista e reproduzivel ao mesmo tempo.
+
+   3. Cruza geracao e consumo hora a hora. O que o painel gera e a casa usa
+      na mesma hora e autoconsumo; o que sobra vai para a rede; o que falta
+      vem da rede. Somando as 24 horas sai o mes.
+
+   4. Faz a conta de luz de verdade. Compensa credito mes a mes, respeita o
+      minimo faturavel (que credito nao abate) e cobra o Fio B da Lei
+      14.300 sobre a energia compensada.
+
+   5. Reparte o consumo entre os aparelhos. Cada aparelho tem uma fatia do
+      medidor, e as horas de uso sao deduzidas dela. Por isso o ranking
+      sempre fecha com a leitura, nunca sobra nem falta.
+
+   Aqui tambem mora o estado do site (o objeto S) e a gravacao no banco.
+*/
 'use strict';
 
 /* ---------- utilidades ---------- */

@@ -1,11 +1,31 @@
+/* controle.js — quem manda no site
 
-/* ============================================================
-   SOLARIS — controle, eventos e o tique do medidor
-   ============================================================ */
+   Junta tudo: decide qual tela desenhar, escuta os cliques, cuida das
+   rotas e mantem o medidor pulsando.
+
+   Como os eventos funcionam: em vez de pendurar onclick em cada botao,
+   existe UM escutador no documento inteiro. Ele olha o data-act do que foi
+   clicado e procura a acao correspondente no objeto ACOES. Isso resolve o
+   problema de redesenhar a tela toda hora — os eventos nunca se perdem
+   porque nunca estiveram presos aos elementos.
+
+   O tique: a cada 2 segundos atualiza o medidor na tela; a cada 60 grava
+   uma leitura no banco; a cada 45 confere se virou a hora, e se virou,
+   redesenha para os numeros do mes acompanharem.
+
+   Aqui tambem estao os graficos interativos (mouse, dedo e teclado) e os
+   avisos que aparecem no canto.
+*/
+'use strict';
+
 const TELA_ORDEM = NAV.map(n => n.k);
-function modoMobile() { return S.vista === 'mobile' || window.innerWidth <= 760; }
+/* O site e responsivo: abaixo de 760px ele troca a casca por uma versao
+   de coluna unica com abas embaixo. Continua sendo o mesmo site, com o
+   mesmo motor e os mesmos dados - nao e um app separado. */
+const LARGURA_ESTREITA = 760;
+function telaEstreita() { return window.innerWidth <= LARGURA_ESTREITA; }
 
-function corpoDesktop() {
+function corpoAmplo() {
   let tela = '';
   if (S.tela === 'painel') tela = vPainel();
   else if (S.tela === 'historico') tela = vHistorico();
@@ -28,8 +48,8 @@ function render() {
   const fid = ativo && ativo.dataset ? ativo.dataset.fid : null;
   const caret = ativo && ativo.selectionStart != null ? ativo.selectionStart : null;
 
-  const mob = modoMobile();
-  root.innerHTML = mob ? vMobile() : corpoDesktop();
+  const mob = telaEstreita();
+  root.innerHTML = mob ? vMovel() : corpoAmplo();
   document.body.classList.toggle('vista-celular', mob);
   _ultimoModo = mob;
 
@@ -217,7 +237,7 @@ function syncCadastro() {
 }
 function syncMeta() {
   const v = visao(), meta = S.metas[S.perfil], t = tarifaAtual();
-  txt('#metaLbl', modoMobile() ? nf(meta) : nf(meta) + ' kWh');
+  txt('#metaLbl', telaEstreita() ? nf(meta) : nf(meta) + ' kWh');
   txt('#metaCusto', '≈ ' + brl(meta * t));
   const f = $('#metaFill');
   if (f) {
@@ -256,8 +276,6 @@ const ACOES = {
     aviso('Unidade trocada', uni(S.perfil).nome + ' · ' + uni(S.perfil).tipo, 'sun');
   },
   periodo: el => { S.periodo = el.dataset.p; salvar(); render(); },
-  mobile: () => { S.vista = 'mobile'; S.tab = 'painel'; S.msub = null; salvar(); render(); },
-  desktop: () => { S.vista = 'desktop'; S.msub = null; salvar(); render(); },
   mtab: el => { S.tab = el.dataset.k; S.msub = null; salvar(); render(); },
   msub: el => { S.msub = el.dataset.k; S.salvo = false; salvar(); render(); },
   mback: () => { S.msub = null; salvar(); render(); },
@@ -443,8 +461,7 @@ document.addEventListener('keydown', ev => {
   if (el && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); (ACOES[el.dataset.act] || function () { })(el); return; }
   if (ev.target.tagName === 'INPUT' || ev.metaKey || ev.ctrlKey || ev.altKey) return;
   if (ev.key === 'Escape') { if (S.msub) { S.msub = null; render(); } else if (S.detalhe) { S.detalhe = null; render(); } return; }
-  if (ev.key >= '1' && ev.key <= '7' && !modoMobile()) { irPara(TELA_ORDEM[+ev.key - 1]); return; }
-  if (ev.key.toLowerCase() === 'c') { S.vista = S.vista === 'mobile' ? 'desktop' : 'mobile'; S.msub = null; salvar(); render(); }
+  if (ev.key >= '1' && ev.key <= '7' && !telaEstreita()) irPara(TELA_ORDEM[+ev.key - 1]);
 });
 
 /* entradas contínuas */
@@ -481,8 +498,8 @@ document.addEventListener('change', ev => {
 
 /* ---------- hash ---------- */
 function hashAtual() {
-  return S.vista === 'mobile'
-    ? '#/celular/' + S.tab + (S.msub ? '/' + S.msub : '')
+  return telaEstreita()
+    ? '#/' + S.tab + (S.msub ? '/' + S.msub : '')
     : '#/' + S.tela;
 }
 /* alguns contextos (data:, about:) recusam mudança de hash — o app segue sem ela */
@@ -499,18 +516,25 @@ function atualizarHash() {
 function lerHash() {
   const p = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   if (!p.length) return;
-  if (p[0] === 'celular') {
-    const tab = p[1] || 'painel', sub = p[2] || null;
-    if (S.vista === 'mobile' && S.tab === tab && S.msub === sub) return;
-    S.vista = 'mobile'; S.tab = tab; S.msub = sub;
+  if (telaEstreita()) {
+    const tab = p[0], sub = p[1] || null;
+    if (S.tab === tab && S.msub === sub) return;
+    S.tab = tab; S.msub = sub;
   } else if (TELAS[p[0]]) {
-    if (S.vista === 'desktop' && S.tela === p[0]) return;
-    S.vista = 'desktop'; S.tela = p[0];
+    if (S.tela === p[0]) return;
+    S.tela = p[0];
   } else return;
   salvar(); render();
 }
 window.addEventListener('hashchange', lerHash);
-window.addEventListener('resize', () => { if (modoMobile() !== _ultimoModo) render(); });
+/* So redesenha quando a largura cruza o ponto de quebra, nao a cada pixel.
+   Escutamos os dois: resize cobre o uso normal, matchMedia cobre rotacao de
+   tela e emulacao de dispositivo, onde nem sempre chega um resize. */
+const _consultaEstreita = window.matchMedia('(max-width: ' + LARGURA_ESTREITA + 'px)');
+function aoMudarLargura() { if (telaEstreita() !== _ultimoModo) render(); }
+window.addEventListener('resize', aoMudarLargura);
+if (_consultaEstreita.addEventListener) _consultaEstreita.addEventListener('change', aoMudarLargura);
+else if (_consultaEstreita.addListener) _consultaEstreita.addListener(aoMudarLargura);
 
 /* ---------- o tique ---------- */
 let _spikeCooldown = 0, _spikeAtivo = false;

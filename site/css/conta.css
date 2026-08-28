@@ -1,0 +1,142 @@
+/* conta.css
+   Tela de entrada, cartao da conta e o painel do banco de dados.
+   Parte do sistema de design do Solaris. A ordem em que os arquivos
+   de CSS entram no index.html importa: base, componentes, telas,
+   responsivo e impressao, nessa sequencia. */
+
+/* ============================================================
+   LOGIN E CONTA
+   ============================================================ */
+body.vista-login{background:var(--dark)}
+
+.auth{
+  min-height:100vh;min-height:100dvh;background:var(--dark);
+  display:flex;align-items:center;justify-content:center;padding:40px 20px;position:relative;overflow:hidden;
+}
+.auth-glow{
+  position:absolute;top:-240px;right:-180px;width:640px;height:640px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(237,162,43,.26),transparent 68%);animation:pulse 7s ease-in-out infinite;
+}
+.auth-cx{
+  position:relative;width:100%;max-width:404px;border-radius:24px;
+  padding:32px 34px 26px;
+  background:linear-gradient(168deg,#F5F2EA,var(--ground) 58%);
+  box-shadow:0 40px 90px -30px rgba(0,0,0,.6), 0 0 0 1px rgba(244,241,234,.1);
+}
+.auth-cx::before{
+  content:"";position:absolute;left:24px;right:24px;top:0;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);
+}
+.auth-marca{display:flex;align-items:center;gap:12px}
+.auth-ic{
+  width:44px;height:44px;border-radius:14px;flex-shrink:0;display:grid;place-items:center;
+  background:linear-gradient(150deg,var(--sun-lite),#E08A18);
+}
+.auth-nome{font-family:var(--f-display);font-weight:800;font-size:21px;letter-spacing:-.5px;line-height:1}
+.auth-sub{font-size:10.5px;color:var(--faint);letter-spacing:.5px;text-transform:uppercase;margin-top:3px}
+.auth-t{font-family:var(--f-display);font-weight:700;font-size:29px;letter-spacing:-1.1px;margin:26px 0 0}
+.auth-d{font-size:13.5px;color:var(--muted);margin:8px 0 0;line-height:1.5}
+
+.auth-form{display:flex;flex-direction:column;gap:13px;margin-top:22px}
+.auth-campo{display:flex;flex-direction:column;gap:6px}
+.auth-campo span{font-size:12px;font-weight:600;color:var(--ink-2)}
+.auth-campo input{
+  height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line-2);background:#FCFBF7;
+  font-family:var(--f-body);font-size:14.5px;color:var(--ink);outline:none;transition:border-color .15s;width:100%;
+}
+.auth-campo input:focus{border-color:var(--ink)}
+.auth-campo input::placeholder{color:var(--fainter)}
+.auth-check{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--muted);cursor:pointer}
+.auth-check input{accent-color:var(--sun);width:16px;height:16px;cursor:pointer}
+
+.auth-erro{
+  background:var(--bad-bg);border:1px solid var(--bad-line);color:#8A3A25;
+  border-radius:11px;padding:10px 13px;font-size:13px;line-height:1.45;
+}
+.auth-btn{
+  height:46px;border-radius:13px;background:var(--dark);color:var(--on-dark);
+  font-size:15px;font-weight:600;transition:background .15s,opacity .15s;margin-top:3px;
+}
+.auth-btn:hover:not([disabled]){background:var(--dark-2)}
+.auth-btn[disabled]{opacity:.55;cursor:progress}
+
+.auth-alt{font-size:13.5px;color:var(--muted);margin-top:16px;text-align:center}
+.auth-alt button{color:var(--sun-deep);font-weight:600}
+.auth-alt button:hover{color:var(--sun-deeper);text-decoration:underline}
+
+.auth-ou{display:flex;align-items:center;gap:12px;margin:20px 0 14px;color:var(--fainter);font-size:11.5px}
+.auth-ou::before,.auth-ou::after{content:"";flex:1;height:1px;background:var(--line)}
+.auth-visitante{
+  width:100%;height:42px;border-radius:12px;border:1px solid var(--line-2);background:var(--surface);
+  font-size:13.5px;font-weight:600;color:var(--ink-2);transition:border-color .15s,color .15s;
+}
+.auth-visitante:hover{border-color:var(--ink);color:var(--ink)}
+.auth-visitante-d{font-size:11.5px;color:var(--faint);margin-top:8px;line-height:1.45;text-align:center}
+
+.auth-aviso{
+  background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:13px;
+  padding:13px 15px;margin-top:20px;font-size:11.5px;line-height:1.55;color:#6E5512;
+}
+.auth-aviso b{display:block;color:var(--warn);font-size:12px;margin-bottom:5px;font-weight:700}
+.auth-aviso b + *,.auth-aviso b{font-weight:700}
+.auth-rodape{font-size:11px;color:var(--fainter);text-align:center;margin-top:14px}
+
+/* cartão da conta no menu lateral */
+.conta{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:13px;
+  background:rgba(244,241,234,.06);border:1px solid rgba(244,241,234,.1)}
+.conta-av{
+  width:32px;height:32px;border-radius:11px;flex-shrink:0;display:grid;place-items:center;
+  background:linear-gradient(150deg,var(--sun-lite),#E08A18);color:var(--dark);
+  font-family:var(--f-display);font-weight:700;font-size:15px;
+}
+.conta-av--vis{background:rgba(244,241,234,.16);color:var(--on-dark-soft)}
+.conta-txt{flex:1;min-width:0}
+.conta-nome{display:block;font-size:12.5px;font-weight:600;color:var(--on-dark);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conta-mail{display:block;font-size:10.5px;color:var(--on-dark-faint);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conta-sair{color:var(--on-dark-faint);padding:5px;border-radius:8px;flex-shrink:0;transition:color .15s,background .15s}
+.conta-sair:hover{color:var(--on-dark);background:rgba(244,241,234,.1)}
+.conta--entrar{width:100%;text-align:left;transition:background .15s,border-color .15s}
+.conta--entrar:hover{background:rgba(244,241,234,.1);border-color:rgba(244,241,234,.24)}
+.conta--entrar .conta-nome{color:var(--sun-lite)}
+
+.auth-voltar{
+  display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;
+  color:var(--sun-deep);margin-bottom:16px;transition:color .15s;
+}
+.auth-voltar:hover{color:var(--sun-deeper)}
+
+@media (max-width:1040px){
+  .conta{justify-content:center;padding:8px}
+  .conta-txt{display:none}
+  .conta-sair{display:none}
+}
+@media (max-width:760px){
+  .auth-cx{max-width:none;border-radius:20px;padding:26px 22px 22px}
+}
+
+
+/* ============================================================
+   BANCO DE DADOS
+   ============================================================ */
+.bd-grade{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}
+@media(max-width:900px){.bd-grade{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.bd-cel{background:var(--ground-2);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.bd-k{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--fainter);font-weight:600}
+.bd-v{font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:-1px;margin-top:7px;
+  line-height:1;font-variant-numeric:tabular-nums}
+.bd-s{font-size:11.5px;color:var(--faint);margin-top:5px;line-height:1.4}
+
+.bd-graf{margin-top:18px}
+.bd-graf-t{font-size:12.5px;color:var(--muted)}
+.bd-pe{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:10px;
+  font-size:11.5px;color:var(--faint)}
+.bd-pe code{font-family:var(--f-mono);font-size:11px;background:var(--ground-2);
+  padding:2px 6px;border-radius:5px;border:1px solid var(--line)}
+.bd-vazio{background:var(--ground-2);border:1px dashed var(--line-2);border-radius:14px;
+  padding:20px 22px;font-size:13px;color:var(--muted);line-height:1.55;margin-top:6px}
+
+/* o fundo com gradiente nao faz sentido nestes dois contextos */
+body.vista-celular,body.vista-login{background-image:none}
+@media print{ body{background-image:none} .card{box-shadow:none} }

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solaris — prévia como aplicativo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="moldura-celular.css">
+<style>
+/* Esta página não faz parte do site. Ela existe só para mostrar como o
+   Solaris ficaria rodando como aplicativo de celular — o mesmo site,
+   dentro do desenho de um aparelho. */
+:root{
+  --dark:#16150F; --on-dark:#F4F1EA; --on-dark-soft:#A79F8E; --on-dark-faint:#8E887A;
+  --sun:#EDA22B; --sun-lite:#F5C25B;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;background:var(--dark);color:var(--on-dark);
+  font-family:'IBM Plex Sans',system-ui,sans-serif;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:26px;padding:40px 20px;position:relative;overflow-x:hidden;
+}
+.brilho{
+  position:absolute;top:-220px;right:-160px;width:620px;height:620px;border-radius:50%;
+  pointer-events:none;background:radial-gradient(circle,rgba(237,162,43,.26),transparent 68%);
+}
+.topo{text-align:center;max-width:56ch;position:relative}
+.selo{
+  display:inline-block;font-size:11px;text-transform:uppercase;letter-spacing:1.6px;
+  font-weight:700;color:var(--sun-lite);border:1px solid rgba(245,194,91,.4);
+  border-radius:20px;padding:5px 14px;
+}
+h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:34px;
+  letter-spacing:-1.4px;margin:16px 0 0}
+.topo p{color:var(--on-dark-soft);line-height:1.6;margin:12px 0 0;font-size:15px}
+.topo a{color:var(--sun-lite)}
+iframe{width:100%;height:100%;border:0;display:block;background:#EFEBE1}
+.rodape{font-size:12.5px;color:var(--on-dark-faint);text-align:center;max-width:60ch;
+  line-height:1.6;position:relative}
+@media (max-width:820px){
+  .phone{transform:scale(.8);transform-origin:top center}
+}
+</style>
+</head>
+<body>
+<span class="brilho"></span>
+
+<div class="topo">
+  <span class="selo">Fase 2 · ainda não é a entrega</span>
+  <h1>Como ficaria de aplicativo</h1>
+  <p>O que está dentro da moldura é o próprio site, sem alteração nenhuma —
+     ele já se adapta a tela estreita. Esta página serve só para enxergar o
+     resultado no formato de celular.
+     <a href="../site/index.html">Ir para o site de verdade</a>.</p>
+</div>
+
+<div class="phone">
+  <div class="phone-island"></div>
+  <div class="phone-home"></div>
+  <div class="phone-screen">
+    <iframe src="../site/index.html" title="Solaris em tela de celular" loading="lazy"></iframe>
+  </div>
+</div>
+
+<p class="rodape">
+  Virar aplicativo de verdade significaria empacotar isto como PWA ou em
+  Capacitor, e aí a conta obrigatória e a sincronização em servidor passariam
+  a fazer sentido. O plano dessa fase está em <code>LEIA-ME.md</code>, nesta
+  mesma pasta.
+</p>
+</body>
+</html>

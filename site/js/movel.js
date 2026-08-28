@@ -1,7 +1,17 @@
+/* movel.js — o mesmo site em tela estreita
 
-/* ============================================================
-   SOLARIS — app de celular
-   ============================================================ */
+   Abaixo de 760 px de largura o controle.js chama vMovel() no lugar da
+   versao ampla. Sai o menu lateral, entra coluna unica com abas embaixo.
+
+   Importante: isto NAO e um aplicativo. E o mesmo site, o mesmo motor,
+   o mesmo banco e os mesmos dados — so a casca muda. O que tem a ver com
+   virar aplicativo mora na pasta app-futuro, fora do site.
+
+   As abas sao painel, historico, aparelhos, metas e mais. Dentro de "mais"
+   estao as telas que nao cabem numa aba: conta do mes, cadastro e ajustes.
+*/
+'use strict';
+
 const MTABS = [
   { k: 'painel', label: 'Painel', icon: IC.painel },
   { k: 'historico', label: 'Histórico', icon: IC.historico },
@@ -15,7 +25,7 @@ const MMENU = [
   { k: 'config', t: 'Configurações', s: 'Tarifa, distribuidora e sistema solar', icon: IC.ajustes }
 ];
 
-function vMobile() {
+function vMovel() {
   const v = visao(), u = unidade();
   const sub = S.msub;
   const titulos = { painel: saudacao(), historico: 'Histórico', aparelhos: 'Seus aparelhos', metas: 'Metas e alertas', mais: 'Mais' };
@@ -36,17 +46,13 @@ function vMobile() {
     (S.tab === t.k && !sub ? ' aria-current="page"' : '') + '>' + ico(t.icon, 21, 'currentColor', 1.8) +
     '<span>' + t.label + '</span></button>').join('');
 
-  return '<div class="phone-stage">' +
-    '<button class="phone-back" data-act="desktop">' +
-    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="' + IC.desktop + '"/></svg>' +
-    'Voltar para o desktop</button>' +
-    '<div class="phone"><div class="phone-island"></div><div class="phone-home"></div><div class="phone-screen"><div class="mob">' +
+  return '<div class="mob">' +
     '<div class="mob-head">' +
     (sub ? '<button class="mob-back" data-act="mback">' + ico(IC.volta, 14, 'currentColor', 2.4) + 'Voltar</button>' : '') +
     '<div class="mob-unit">' + esc(u.nome) + '</div><h1 class="mob-title">' + esc(titulo) + '</h1></div>' +
     '<div class="mob-body" id="conteudo" tabindex="-1">' + corpo + '</div>' +
     '<nav class="mob-tabs" aria-label="Seções">' + tabs + '</nav>' +
-    '</div></div></div></div>';
+    '</div>';
 }
 
 function mPainel() {
@@ -158,8 +164,11 @@ function mMais() {
       '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + esc(u.nome) + '</span>' +
       '<span class="mob-menu-s" style="display:block">' + esc(u.tipo) + '</span></span></button>';
   }).join('');
-  const s = sessao();
-  const conta = ehVisitante()
+  /* sem sessao nao ha cartao de conta para mostrar. Na pratica sempre
+     existe uma (o site entra como visitante sozinho), mas a tela nao
+     pode quebrar se for chamada fora do fluxo normal. */
+  const s = sessao() || { nome: '', email: null };
+  const conta = !sessao() ? '' : ehVisitante()
     ? '<button class="mob-menu" data-act="auth-abrir">' +
     '<span class="conta-av conta-av--vis">' +
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +

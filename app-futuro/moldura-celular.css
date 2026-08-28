@@ -1,0 +1,29 @@
+/* moldura-celular.css
+   O desenho do aparelho que envolve a previa em app-futuro/previa-app.html.
+   Nao faz parte do site: e so o enquadramento para mostrar como ficaria
+   rodando como aplicativo. */
+
+.phone-stage{
+  min-height:100vh;min-height:100dvh;background:var(--dark);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:22px;padding:36px 20px;
+}
+.phone-back{
+  display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:11px;
+  border:1px solid rgba(244,241,234,.2);color:var(--on-dark-soft);font-size:13px;font-weight:600;transition:all .15s;
+}
+.phone-back:hover{color:var(--on-dark);border-color:var(--on-dark)}
+.phone{
+  width:393px;height:852px;max-height:calc(100vh - 130px);border-radius:48px;
+  background:#0A0A0A;padding:11px;box-shadow:0 0 0 2px #2B2B2B,0 34px 70px -24px rgba(0,0,0,.85);
+  position:relative;flex-shrink:0;
+}
+.phone-screen{width:100%;height:100%;border-radius:38px;overflow:hidden;position:relative;background:var(--ground)}
+.phone-island{
+  position:absolute;top:22px;left:50%;transform:translateX(-50%);
+  width:126px;height:37px;border-radius:24px;background:#000;z-index:60;pointer-events:none;
+}
+.phone-home{
+  position:absolute;bottom:9px;left:50%;transform:translateX(-50%);
+  width:139px;height:5px;border-radius:100px;background:rgba(22,21,15,.32);z-index:60;pointer-events:none;
+}
+

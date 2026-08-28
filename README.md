@@ -1,165 +1,159 @@
 # Solaris
 
-Painel de monitoramento de energia solar para residência e pequeno negócio.
+Site de monitoramento de energia solar para residência e pequeno negócio.
 Projeto de UPX.
 
-O sistema não é uma maquete: os números são calculados a partir da posição do
-sol na data, de um padrão de nuvens por dia e das regras de compensação da
-ANEEL. Um medidor virtual roda em tempo real e pode ser trocado por um sensor
-físico sem que o resto do sistema saiba a diferença.
+Mostra para onde vai cada quilowatt, quanto o sol cobriu de verdade e quanto
+vem na próxima conta — com a Lei 14.300 já dentro do cálculo.
 
 ---
 
-## Como rodar
+## Abrir
 
-Não tem instalação, não tem servidor, não tem build para desenvolver.
+**Duplo clique em `index.html`.** É só isso.
 
-```bash
-# abra este arquivo no navegador
-app/index.html
-```
+Não tem instalação, não tem `npm install`, não precisa de internet nem de
+servidor. Funciona em qualquer navegador razoavelmente atual.
 
-Duplo clique resolve. Funciona em `file://` porque os scripts são clássicos,
-não módulos ES.
+Se preferir um arquivo só para mandar por e-mail ou WhatsApp, use
+**`Solaris.html`** — é o site inteiro empacotado.
 
-## Como gerar a entrega
+## Conferir se está tudo certo
 
-O arquivo único, para enviar por e-mail ou publicar:
+Abra **`testes/index.html`** e espere alguns segundos.
+Devem aparecer **80 de 80 testes passando**, tudo verde.
 
-```bash
-node build.mjs
-```
+---
 
-Gera `Solaris.html` (documento completo, duplo clique) e
-`dist/solaris-artifact.html` (sem tags de documento, para publicar online).
+## Para a equipe: teste de campo
 
-## Como rodar os testes
+Se você chegou aqui para participar do teste de 7 a 30 dias, o roteiro está
+em **[`docs/teste-de-campo.md`](docs/teste-de-campo.md)**. Leva 5 minutos
+para começar.
 
-```bash
-# abra no navegador
-testes/index.html
-```
+## Para quem vai mexer no código
 
-Os testes checam o motor: conservação de energia hora a hora, o ranking de
-aparelhos fechando com o medidor, estabilidade da projeção do dia 1º ao 31,
-virada de ano e a regra do Fio B.
+Leia **[`MAPA-DO-PROJETO.md`](MAPA-DO-PROJETO.md)** antes de abrir qualquer
+arquivo. Explica onde fica cada coisa e por quê.
+
+---
+
+## O que o site faz
+
+**Medidor rodando ao vivo.** Um medidor virtual pulsa a cada 2 segundos. A
+curva do sol vem da declinação solar na data — a janela de luz encurta no
+inverno sozinha. As nuvens vêm de ruído semeado: o mesmo dia sempre tem o
+mesmo tempo, mas cada dia é diferente.
+
+**Desagregação por aparelho.** Estima quanto cada aparelho consome a partir
+do padrão do medidor. A soma sempre fecha com a leitura — é teste
+automatizado, não coincidência. Você pode discordar da IA e corrigir.
+
+**Conta de luz de verdade.** Compensa créditos mês a mês, respeita o mínimo
+faturável e cobra o Fio B da Lei 14.300 sobre a energia compensada. Aplicar a
+lei derrubou a economia declarada da casa de R$ 172 para R$ 139 por mês.
+
+**Cadastro da sua unidade.** Você informa o que está na conta de luz e na
+nota do instalador; o resto o sistema calcula, inclusive a geração esperada,
+a partir da irradiação da região e da condição do telhado.
+
+**Alertas que reagem ao estado real.** Meta do mês, aparelho que disparou,
+consumo fora do horário solar — tudo derivado do que está acontecendo, não
+texto fixo.
+
+**Relatório que imprime limpo.** `Ctrl+P` na tela de Relatório.
 
 ---
 
 ## Estrutura
 
-| Caminho | O que é |
-| --- | --- |
-| `app/index.html` | Casca da página; carrega os seis scripts na ordem |
-| `app/estilo.css` | Sistema de design inteiro: cores, tipografia, componentes, responsivo, impressão |
-| `app/banco.js` | IndexedDB: contas, estado e o histórico do medidor |
-| `app/motor.js` | Simulação física, tarifas, compensação de créditos, estado e persistência |
-| `app/login.js` | Contas, sessão e derivação de senha — leia o cabeçalho do arquivo |
-| `app/telas.js` | As sete telas do desktop |
-| `app/celular.js` | O app de celular (mesmo motor, outra casca) |
-| `app/controle.js` | Eventos, rotas, o tique do medidor, avisos |
-| `testes/` | Suíte de testes do motor, roda no navegador |
-| `firmware/` | Sketch do ESP32 para o medidor físico |
-| `docs/contrato-dados.md` | Formato da leitura e limites declarados do sensor |
-| `docs/protocolo-teste-usabilidade.md` | Roteiro do teste com 8 usuários (Sprint 5) |
-| `build.mjs` | Gera as entregas de arquivo único |
-| `Banca-Solaris.html` | Deck da apresentação: setas navegam, `N` abre as notas, `T` zera o cronômetro |
-| `Plano-UPX-Solaris.html` | Plano de 14 semanas, riscos e banco de perguntas |
-| `Solaris.dc.html` | Design original no canvas — não editar, é a referência visual |
+```
+Solaris/
+├── index.html          abre o site
+├── Solaris.html        o site num arquivo só (gerado pelo build)
+├── site/               ◀ o projeto: css/ e js/
+├── testes/             80 testes, rodam no navegador
+├── firmware/           código do ESP32, para quando o sensor existir
+├── app-futuro/         fase 2: o que fazer para virar aplicativo
+├── docs/               teste de campo, contrato de dados, usabilidade
+├── apresentacao/       plano do semestre e slides da banca
+├── design/             o desenho original
+└── ferramentas/        o script de build
+```
 
-### Por que scripts clássicos e não módulos
-
-Módulos ES exigem servidor HTTP por causa de CORS. Scripts clássicos abrem
-direto do disco. Como a apresentação em banca não pode depender de rede nem de
-`npm install`, essa restrição vale mais que a organização que módulos trariam.
-
-As variáveis de topo declaradas com `let` e `const` são compartilhadas entre os
-quatro arquivos pelo escopo léxico global — `motor.js` declara, os outros usam.
+Detalhe de cada arquivo em [`MAPA-DO-PROJETO.md`](MAPA-DO-PROJETO.md).
 
 ---
 
-## Frentes de trabalho
-
-| Frente | Arquivos | Responsável |
-| --- | --- | --- |
-| Motor e Dados | `app/motor.js`, `testes/` | |
-| Interface | `app/telas.js`, `app/celular.js`, `app/estilo.css` | |
-| IoT | `firmware/`, `docs/contrato-dados.md` | |
-| Qualidade | `testes/`, `docs/protocolo-teste-usabilidade.md` | |
-| Narrativa e banca | `Plano-UPX-Solaris.html` | |
-
-Preencha os nomes antes da primeira sprint. Uma frente sem dono é uma frente
-que atrasa.
-
 ## Banco de dados
 
-IndexedDB — o banco que já vem no navegador. Três tabelas:
+**IndexedDB** — o banco que já vem no navegador. Escolhemos ele porque é
+banco de verdade (transações, índices, consultas) sem exigir servidor, o que
+mantém a promessa de abrir com duplo clique.
+
+Três tabelas:
 
 | Tabela | O que guarda |
 | --- | --- |
 | `contas` | quem pode entrar (chave: e-mail) |
-| `estado` | o app de cada conta: unidades, aparelhos, metas, tarifa |
+| `estado` | o que cada conta configurou |
 | `leituras` | o histórico do medidor, uma linha por minuto |
 
-A tabela de leituras é a razão de existir um banco aqui. Um minuto de
-intervalo dá 1.440 linhas por dia; em uma semana são dez mil. Isso não cabe
-em `localStorage`, que é um mapa de texto com uns 5 MB no total. O histórico
-é podado depois de 7 dias.
+A tabela de leituras é a razão de existir um banco aqui. Uma leitura por
+minuto dá 1.440 linhas por dia e mais de dez mil por semana — isso não cabe
+em `localStorage`, que é um mapa de texto com uns 5 MB. Guardamos 7 dias.
 
-Configurações mostra o estado do banco ao vivo: quantas leituras, quanto
-espaço, e um gráfico das últimas duas horas gravadas — dados que vieram do
-banco, não da simulação.
+**Configurações → Banco de dados** mostra o estado ao vivo: quantas leituras,
+quanto espaço e um gráfico das últimas duas horas gravadas.
 
-Se o IndexedDB não abrir (navegador antigo, algum modo privado), tudo cai
-sozinho para `localStorage` e o app continua funcionando; só o histórico
-minuto a minuto deixa de ser gravado, e a tela avisa.
+Se o IndexedDB não abrir, tudo cai sozinho para `localStorage` e a tela
+avisa. O site nunca deixa de funcionar por causa do banco.
 
-## Sobre o login (opcional)
+---
 
-O site abre direto no painel, em modo visitante — o login não bloqueia nada.
-Criar conta é opcional e serve para separar dados de quem divide o mesmo
-navegador. Conta obrigatória fica para quando o projeto virar app.
+## Login (opcional)
 
-Quem cria conta depois de ter mexido como visitante leva junto o que fez.
+O site abre direto no painel, em modo visitante. Criar conta serve para
+separar dados de quem divide o mesmo navegador — não é obrigatório.
 
-O login existe e funciona, mas **isto não é segurança contra
-quem tem acesso ao computador**. O app roda sem servidor: quem abrir o DevTools
-lê o armazenamento local. O que o login entrega de verdade:
+**Isto não é segurança contra quem tem acesso ao computador.** Sem servidor,
+não existe segredo do lado do cliente. O que é real:
 
-- a senha nunca é gravada — só uma derivação com salt e 150 mil iterações
-  (PBKDF2 via WebCrypto, com SHA-256 encadeado como reserva em contextos
-  sem WebCrypto);
-- cada conta tem o próprio balde de dados: unidades, aparelhos, metas e
-  tarifas não vazam de uma para outra;
-- não há recuperação de senha, porque não há servidor para enviar e-mail.
+- a senha nunca é gravada, só uma derivação com salt e 150 mil iterações;
+- comparação em tempo constante e mesma mensagem de erro para senha errada e
+  e-mail inexistente, para não revelar quais contas existem;
+- cada conta tem seu próprio balde de dados.
 
-Num produto real a verificação aconteceria no servidor e o hash nunca sairia
-de lá. Isso está escrito na própria tela de login, de propósito — é melhor
-declarar a limitação do que ser pego por ela na banca.
+Está escrito na própria tela de login, de propósito.
 
-## Impressão do relatório
+---
 
-A tela de Relatório imprime limpa: `Ctrl+P` esconde o menu lateral, a barra
-do topo, o botão de imprimir e os avisos flutuantes, e mostra o cabeçalho
-com a marca. As colunas empilham em largura cheia.
+## Site, não aplicativo
 
-Conferido gerando o PDF pelo Chrome em modo headless e medindo as regras
-aplicadas ao vivo — não é só CSS escrito no escuro.
+Hoje o Solaris é um **site**. Ele funciona bem no celular porque é
+responsivo: abaixo de 760 px troca o menu lateral por abas embaixo. Isso é
+diferente de ser um **aplicativo**.
+
+Tudo que tem a ver com virar app está em **`app-futuro/`**, fora do site.
+Abra `app-futuro/previa-app.html` para ver como ficaria.
+
+---
 
 ## Estado das sprints
 
-| Sprint | O que era | Situação |
-| --- | --- | --- |
-| 0 · Fundação | Modularizar, repo, README | **Feito** |
-| 1 · Fechar o produto | CRUD completo, acessibilidade, impressão | **Feito** |
-| 2 · Credibilidade | Lei 14.300, irradiação, testes | **Feito** — falta comparar com conta real |
-| 3 · Unidade é sua | Cadastro de unidade pelo usuário | **Feito** |
-| 4 · Medidor de verdade | Contrato, firmware, seletor | **Software feito** — falta montar o hardware |
-| 5 · Gente de fora | Teste com 8 usuários | Protocolo pronto, falta executar |
-| 6 · Banca | Slides, ensaios, vídeo reserva | **Deck pronto** — falta preencher validação e ensaiar |
+| Sprint | Situação |
+| --- | --- |
+| 0 · Fundação | Feito |
+| 1 · Fechar o produto | Feito |
+| 2 · Credibilidade | Feito — falta comparar com uma conta real |
+| 3 · Unidade é sua | Feito |
+| 4 · Medidor de verdade | Software feito — falta montar o hardware |
+| 5 · Gente de fora | **Em andamento: teste de campo de 7 a 30 dias** |
+| 6 · Banca | Deck pronto — falta preencher validação e ensaiar |
 
 ## Combinado do grupo
 
 - Branch por frente, `main` sempre abrindo sem erro.
 - Rodar `testes/index.html` antes de abrir pull request.
-- **Congelamento na semana 13**: depois disso só entra correção de defeito.
+- `node ferramentas/build.mjs` depois de mexer em `site/`.
+- **Congelamento na semana 13**: depois disso só correção de defeito.

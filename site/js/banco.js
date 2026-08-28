@@ -1,24 +1,24 @@
-/* ============================================================
-   SOLARIS — banco de dados
+/* banco.js — o banco de dados
 
-   IndexedDB: o banco que já vem no navegador. Transacional, indexado,
-   assíncrono e sem limite prático de tamanho — diferente do localStorage,
-   que é um mapa de texto com uns 5 MB no total.
+   Usamos IndexedDB, que e o banco que ja vem dentro do navegador. Nao
+   precisa instalar nada, nao precisa de servidor, e aguenta muito mais
+   dado que o localStorage (que e so um mapa de texto com uns 5 MB).
 
-   Três tabelas:
-     contas    quem pode entrar (id = e-mail)
-     estado    o app de cada conta (unidades, aparelhos, metas, tarifa)
-     leituras  o histórico do medidor, uma linha por minuto
+   Sao tres tabelas:
+     contas    quem pode entrar. A chave e o e-mail.
+     estado    o que cada conta configurou: unidades, aparelhos, metas, tarifa.
+     leituras  o historico do medidor, uma linha por minuto.
 
-   A tabela de leituras é a razão de existir um banco aqui. Guardar o
-   medidor minuto a minuto dá 1.440 linhas por dia; em uma semana são
-   dez mil. Isso não cabe em localStorage, e é exatamente o tipo de dado
-   que um sistema de monitoramento precisa acumular.
+   A tabela de leituras e a razao de existir um banco aqui. Uma leitura por
+   minuto da 1.440 linhas por dia e mais de dez mil por semana. Isso nao cabe
+   em localStorage. Guardamos sete dias e podamos o resto sozinho.
 
-   Se o IndexedDB não estiver disponível (navegador antigo, modo privado
-   em alguns casos), tudo cai de volta para localStorage sozinho. O app
-   nunca deixa de abrir por causa do banco.
-   ============================================================ */
+   Se o IndexedDB nao abrir (navegador velho, aba anonima em alguns casos),
+   tudo cai automaticamente para localStorage e o site continua funcionando.
+   So o historico minuto a minuto deixa de existir, e a tela avisa.
+
+   Tudo aqui e assincrono, entao quase toda funcao devolve Promise.
+*/
 'use strict';
 
 const BD_NOME = 'solaris';

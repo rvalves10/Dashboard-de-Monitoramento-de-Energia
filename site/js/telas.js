@@ -1,7 +1,23 @@
+/* telas.js — as telas da versao ampla
 
-/* ============================================================
-   SOLARIS — telas
-   ============================================================ */
+   Cada tela e uma funcao que devolve HTML como texto. Nada de framework:
+   monta a string, joga no innerHTML e pronto. Para o tamanho deste projeto
+   isso e mais simples de ler e nao precisa de build.
+
+   As telas:
+     vPainel      o resumo: economia, autossuficiencia, curva do dia, conta
+     vHistorico   comparativo por dia, semana ou mes
+     vEquip       ranking de aparelhos e o detalhe de cada um
+     vCadastro    formulario de aparelho novo
+     vAlertas     meta do mes, regras de aviso e o que aconteceu
+     vRelatorio   a fatura detalhada, feita para imprimir
+     vConfig      tarifa, dados da unidade, fonte da leitura e banco
+     vUnidade     cadastrar a sua propria casa ou comercio
+
+   Os botoes nao tem onclick. Eles levam um data-act, e o controle.js
+   escuta o clique num lugar so. Assim redesenhar a tela nao perde evento.
+*/
+'use strict';
 
 const IC = {
   painel: 'M3 13a9 9 0 0 1 18 0M12 13l4.5-4.5',
@@ -142,8 +158,6 @@ function vTopbar() {
   return '<header class="topbar no-print"><div><div class="eyebrow">' + esc(kicker) + '</div><h1>' + esc(titulo) + '</h1></div>' +
     '<div class="topbar-actions">' +
     (mostraPeriodo ? '<div class="seg" role="group" aria-label="Período">' + per + '</div>' : '') +
-    '<button class="ghost-btn" data-act="mobile">' +
-    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="' + IC.celular + '"/></svg>Celular</button>' +
     '</div></header>';
 }
 
@@ -170,7 +184,10 @@ function vPainel() {
 
   const dash = Math.round((clamp(v.autoPct, 0, 100) / 100) * 351.8);
   const donut = '<section class="card s5"><div class="eyebrow" style="font-size:12px">Autossuficiência</div>' +
-    '<div class="donut-wrap"><div class="donut"><svg width="132" height="132" viewBox="0 0 132 132">' +
+    '<div class="donut-wrap"><div class="donut">' +
+    /* decorativo: a porcentagem aparece em texto logo abaixo, entao o
+       leitor de tela nao precisa atravessar o desenho */
+    '<svg width="132" height="132" viewBox="0 0 132 132" aria-hidden="true">' +
     '<circle cx="66" cy="66" r="56" fill="none" stroke="#EFEBE1" stroke-width="15"/>' +
     '<circle class="donut-ring" cx="66" cy="66" r="56" fill="none" stroke="var(--sun)" stroke-width="15" stroke-linecap="round" stroke-dasharray="' + dash + ' 351.8"/></svg>' +
     '<div class="donut-mid"><span class="donut-pct">' + pct(v.autoPct) + '</span><span class="donut-cap">do consumo</span></div></div>' +
@@ -184,7 +201,7 @@ function vPainel() {
     { l: 'Consumo do mês', v: nf(v.mtd.tc), un: 'kWh', cor: 'var(--grid)', ic: IC.raio, n: 'Média de ' + nf(v.mtd.tc / Math.max(v.mtd.dias, .1), 1) + ' kWh por dia' },
     { l: 'Geração solar', v: nf(v.mtd.tg), un: 'kWh', cor: 'var(--sun)', ic: IC.sol, n: u.paineis + ' painéis · ' + nf(u.potenciaKwp, 1) + ' kWp instalados' },
     { l: 'CO₂ evitado', v: nf(v.co2, 1), un: 'kg', cor: 'var(--good)', ic: IC.folha, n: 'Como ' + nf(v.co2 / 0.12) + ' km de carro não rodados' },
-    { l: 'Créditos na rede', v: nf(v.creditos), un: 'kWh', cor: 'var(--violet)', ic: IC.troca, n: 'Válidos por 60 meses · ' + u.distribuidora }
+    { l: 'Créditos na rede', v: nf(v.creditos), un: 'kWh', cor: 'var(--violet)', ic: IC.troca, n: 'Válidos por 60 meses · ' + esc(u.distribuidora) }
   ].map(k => '<section class="card card--tight s3"><div class="kpi-top">' + ico(k.ic, 15, k.cor, 1.9) + '<span class="kpi-lbl">' + k.l + '</span></div>' +
     '<div class="kpi-val"><span class="big big-32">' + k.v + '</span><span class="kpi-unit">' + k.un + '</span></div>' +
     '<div class="kpi-note">' + k.n + '</div></section>').join('');

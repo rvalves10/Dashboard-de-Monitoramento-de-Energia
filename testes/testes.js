@@ -262,7 +262,7 @@ grupo('Datas', () => {
       ['painel', 'historico', 'equipamentos', 'cadastro', 'alertas', 'relatorio', 'config'].forEach(tela => {
         const antes = S.tela; S.tela = tela;
         try {
-          const html = corpoDesktop();
+          const html = corpoAmplo();
           ok(html.length > 1500, d[5] + '/' + tela + ': html curto');
           ok(!/undefined|NaN|\[object/.test(html), d[5] + '/' + tela + ': valor inválido no html');
         } finally { S.tela = antes; }
@@ -393,7 +393,7 @@ grupo('Unidades', () => {
       ['painel', 'historico', 'equipamentos', 'cadastro', 'alertas', 'relatorio', 'config', 'unidade'].forEach(tela => {
         const antes = S.tela; S.tela = tela;
         try {
-          const html = corpoDesktop();
+          const html = corpoAmplo();
           ok(html.length > 1500, tela + ': html curto');
           ok(!/undefined|NaN|\[object/.test(html), tela + ': valor inválido no html');
         } finally { S.tela = antes; }
@@ -622,7 +622,343 @@ grupo('Banco', () => {
   });
 });
 
-/* ================= execução ================= */
+/* ================= texto e numeros ================= */
+grupo('Formatacao', () => {
+
+  teste('numeros saem no formato brasileiro', () => {
+    igual(nf(1234567), '1.234.567');
+    igual(nf(1234.5, 1), '1.234,5');
+    igual(nf(0.5, 2), '0,50');
+    igual(nf(0), '0');
+  });
+
+  teste('dinheiro sai com R$ e sem centavo quando nao pedimos', () => {
+    igual(brl(1234), 'R$ 1.234');
+    igual(brl(12.34, 2), 'R$ 12,34');
+  });
+
+  teste('sinal usa o menos de verdade, nao o hifen', () => {
+    ok(sinal(-5).indexOf('\u2212') === 0, 'deveria comecar com o sinal de menos tipografico');
+    igual(sinal(5), '+5');
+    igual(sinal(0), '+0');
+  });
+
+  teste('porcentagem arredonda como esperado', () => {
+    igual(pct(33.333), '33%');
+    igual(pct(33.333, 1), '33,3%');
+  });
+
+  teste('numeroBR e nf sao inversos um do outro', () => {
+    [0, 1, 1.5, 1234, 1234.56, 26000].forEach(v => {
+      const casas = v % 1 === 0 ? 0 : 2;
+      perto(numeroBR(nf(v, casas)), v, 0.01, 'ida e volta de ' + v);
+    });
+  });
+});
+
+/* ================= seguranca do que o usuario digita ================= */
+grupo('Injecao', () => {
+
+  const MALDADE = '<img src=x onerror="alert(1)">';
+
+  teste('esc neutraliza tag, aspas e ampersand', () => {
+    const r = esc(MALDADE);
+    ok(r.indexOf('<') < 0, 'sobrou < no texto escapado');
+    ok(r.indexOf('>') < 0, 'sobrou > no texto escapado');
+    ok(r.indexOf('&lt;img') === 0, 'nao escapou como esperado: ' + r);
+    igual(esc('a & b'), 'a &amp; b');
+    igual(esc("aspas ' e \""), 'aspas &#39; e &quot;');
+    igual(esc(null), '');
+    igual(esc(undefined), '');
+  });
+
+  /* O texto escapado CONTEM a palavra "onerror=" como texto comum, e isso
+     esta certo. O que importa e se o navegador cria um elemento de verdade.
+     Por isso a checagem e no DOM montado, nao na string. */
+  function viraElemento(html, seletor) {
+    const d = document.createElement('div');
+    d.innerHTML = html;
+    return d.querySelector(seletor);
+  }
+
+  teste('nome de aparelho com HTML nao vira elemento de verdade', () => {
+    const antes = S.extras, antesTela = S.tela;
+    try {
+      S.extras = [{
+        id: 'xss', perfil: 'residencial', nome: MALDADE, local: 'Sala', cat: 'Outros',
+        pot: 100, horas: 1, dias: 30, cor: '#7A6BA8', conf: 'alta', fonte: 'manual', tend: 0
+      }];
+      _visao = null; S.tela = 'equipamentos';
+      comPerfil('residencial', () => {
+        const html = corpoAmplo();
+        igual(viraElemento(html, 'img'), null, 'o navegador criou uma tag img de verdade');
+        igual(viraElemento(html, '[onerror]'), null, 'sobrou um atributo onerror ativo');
+        ok(html.indexOf('&lt;img') >= 0, 'o nome nem chegou a aparecer escapado');
+      });
+    } finally {
+      /* restaurar no finally: se a asercao falhar no meio, o estado sujo
+         nao pode vazar para os proximos testes */
+      S.extras = antes; S.tela = antesTela; _visao = null;
+    }
+  });
+
+  teste('nome de unidade com HTML tambem nao vira elemento', () => {
+    const antes = S.unidades, antesP = S.perfil, antesT = S.tela;
+    try {
+      S.unidades = [{
+        chave: 'xss-un', nome: MALDADE, arquetipo: 'casaVazia', telhado: 'bom',
+        distribuidora: MALDADE, tarifa: 1, consumoMes: 300, potenciaKwp: 4,
+        paineis: 10, investimento: 20000, mesesOperacao: 12
+      }];
+      S.perfil = 'xss-un'; S.tela = 'config'; _visao = null; _cacheLedger.clear();
+      const html = corpoAmplo();
+      igual(viraElemento(html, 'img'), null, 'o navegador criou uma tag img de verdade');
+      igual(viraElemento(html, '[onerror]'), null, 'sobrou um atributo onerror ativo');
+    } finally {
+      S.unidades = antes; S.perfil = antesP; S.tela = antesT;
+      _visao = null; _cacheLedger.clear();
+    }
+  });
+  /* Varredura completa: envenena TODO campo que o usuario consegue digitar
+     e passa por todas as telas, nas duas cascas. Este teste nasceu de um
+     furo de verdade — o nome da distribuidora aparecia sem escape no KPI
+     de creditos do painel. Sem esta varredura, so descobrimos por acaso. */
+  teste('nenhuma tela transforma texto do usuario em HTML', () => {
+    const furos = [];
+    const olhar = (rotulo, html) => {
+      const d = document.createElement('div');
+      d.innerHTML = html;
+      if (d.querySelector('img') || d.querySelector('[onerror]') || d.querySelector('script')) {
+        furos.push(rotulo);
+      }
+    };
+    const guarda = {
+      extras: JSON.parse(JSON.stringify(S.extras)),
+      unidades: JSON.parse(JSON.stringify(S.unidades)),
+      novo: JSON.parse(JSON.stringify(S.novo)),
+      nova: JSON.parse(JSON.stringify(S.nova)),
+      perfil: S.perfil, tela: S.tela, tab: S.tab, msub: S.msub, detalhe: S.detalhe
+    };
+    /* o site sempre tem sessao aberta; a varredura precisa refletir isso */
+    const sessaoAntes = sessao();
+    if (!sessaoAntes) entrarComoVisitante();
+    const TELAS_AMPLAS = ['painel', 'historico', 'equipamentos', 'cadastro',
+      'alertas', 'relatorio', 'config', 'unidade'];
+    const ABAS = ['painel', 'historico', 'aparelhos', 'metas', 'mais'];
+    const SUBS = [null, 'conta', 'cadastro', 'config'];
+
+    try {
+      /* 1. aparelho cadastrado com nome e local envenenados */
+      S.extras = [{
+        id: 'varredura', perfil: 'residencial', nome: MALDADE, local: MALDADE,
+        cat: 'Outros', pot: 100, horas: 1, dias: 30,
+        cor: '#7A6BA8', conf: 'alta', fonte: 'manual', tend: 0
+      }];
+      S.perfil = 'residencial'; S.detalhe = 'varredura'; _visao = null;
+      TELAS_AMPLAS.forEach(t => { S.tela = t; olhar('amplo/' + t, corpoAmplo()); });
+      ABAS.forEach(tab => SUBS.forEach(sub => {
+        S.tab = tab; S.msub = sub; olhar('movel/' + tab + '/' + (sub || 'raiz'), vMovel());
+      }));
+      S.msub = null;
+
+      /* 2. formularios com o campo sendo digitado agora */
+      S.novo = Object.assign({}, S.novo, { nome: MALDADE, comodo: MALDADE });
+      S.tela = 'cadastro'; olhar('cadastro em digitacao', corpoAmplo());
+      S.nova = Object.assign({}, S.nova, { nome: MALDADE, distribuidora: MALDADE });
+      S.tela = 'unidade'; olhar('unidade em digitacao', corpoAmplo());
+
+      /* 3. unidade propria com nome e distribuidora envenenados */
+      S.unidades = [{
+        chave: 'varredura-un', nome: MALDADE, arquetipo: 'casaVazia', telhado: 'bom',
+        distribuidora: MALDADE, tarifa: 1, consumoMes: 300, potenciaKwp: 4,
+        paineis: 10, investimento: 20000, mesesOperacao: 12
+      }];
+      S.perfil = 'varredura-un'; _visao = null; _cacheLedger.clear();
+      TELAS_AMPLAS.forEach(t => { S.tela = t; olhar('unidade propria/' + t, corpoAmplo()); });
+      ABAS.forEach(tab => { S.tab = tab; olhar('unidade propria movel/' + tab, vMovel()); });
+    } finally {
+      Object.keys(guarda).forEach(k => { S[k] = guarda[k]; });
+      if (!sessaoAntes) sair();
+      _visao = null; _cacheLedger.clear();
+    }
+
+    igual(furos.length, 0, 'texto do usuario virou HTML em: ' + furos.join(', '));
+  });
+});
+
+/* ================= acessibilidade ================= */
+grupo('Acessibilidade', () => {
+
+  function html(tela) {
+    const antes = S.tela; S.tela = tela;
+    try { return corpoAmplo(); } finally { S.tela = antes; }
+  }
+  function comoDOM(txt) {
+    const d = document.createElement('div');
+    d.innerHTML = txt;
+    return d;
+  }
+
+  teste('todo botao tem nome acessivel', () => {
+    ['painel', 'historico', 'equipamentos', 'cadastro', 'alertas', 'relatorio', 'config', 'unidade'].forEach(t => {
+      const d = comoDOM(html(t));
+      d.querySelectorAll('button').forEach(b => {
+        const nome = (b.textContent || '').trim() || b.getAttribute('aria-label') || '';
+        ok(nome.length > 0, t + ': existe botao sem texto nem aria-label');
+      });
+    });
+  });
+
+  teste('todo campo de formulario tem rotulo ligado', () => {
+    ['cadastro', 'unidade', 'config'].forEach(t => {
+      const d = comoDOM(html(t));
+      d.querySelectorAll('input').forEach(i => {
+        const temLabel = i.id && d.querySelector('label[for="' + i.id + '"]');
+        const dentroDeLabel = i.closest && i.closest('label');
+        const aria = i.getAttribute('aria-label');
+        ok(temLabel || dentroDeLabel || aria, t + ': input sem rotulo (' + (i.id || i.type) + ')');
+      });
+    });
+  });
+
+  teste('so existe um h1 por tela', () => {
+    ['painel', 'historico', 'relatorio'].forEach(t => {
+      const d = comoDOM(html(t));
+      igual(d.querySelectorAll('h1').length, 1, t + ': deveria ter exatamente um h1');
+    });
+  });
+
+  teste('graficos tem descricao para leitor de tela', () => {
+    const d = comoDOM(html('painel'));
+    const g = d.querySelector('#chartDia');
+    ok(g, 'grafico do dia sumiu');
+    ok((g.getAttribute('aria-label') || '').length > 40, 'faltou descricao no grafico');
+    igual(g.getAttribute('tabindex'), '0', 'grafico deveria receber foco');
+  });
+
+  teste('svg decorativo fica escondido do leitor de tela', () => {
+    const d = comoDOM(html('painel'));
+    const soltos = [...d.querySelectorAll('svg')].filter(s =>
+      !s.getAttribute('aria-hidden') && !s.getAttribute('role') && !s.getAttribute('aria-label'));
+    igual(soltos.length, 0, soltos.length + ' svg sem aria-hidden nem rotulo');
+  });
+
+  teste('o menu marca em qual pagina voce esta', () => {
+    const d = comoDOM(html('alertas'));
+    const atual = d.querySelectorAll('[aria-current="page"]');
+    igual(atual.length, 1, 'deveria haver exatamente um item marcado');
+  });
+});
+
+/* ================= estado ================= */
+grupo('Estado', () => {
+
+  teste('o estado padrao tem todos os campos que o site usa', () => {
+    ['perfil', 'tela', 'periodo', 'tab', 'msub', 'detalhe', 'metas', 'regras',
+      'tarifa', 'extras', 'removidos', 'respondidas', 'dispensados', 'unidades',
+      'novo', 'nova', 'editando', 'salvo', 'medidor'].forEach(k => {
+        ok(PADRAO[k] !== undefined, 'faltou ' + k + ' no estado padrao');
+      });
+  });
+
+  teste('o estado sobrevive a ida e volta em JSON', () => {
+    const copia = JSON.parse(JSON.stringify(S));
+    igual(typeof copia.metas, 'object');
+    igual(typeof copia.regras, 'object');
+    ok(Array.isArray(copia.extras), 'extras deveria ser lista');
+  });
+
+  testeAsync('gravar e ler o estado devolve o mesmo objeto', async () => {
+    const CONTA = '__teste_estado__';
+    const original = JSON.parse(JSON.stringify(S));
+    original.metas.residencial = 4242;
+    await Banco.salvarEstado(CONTA, original);
+    const volta = await Banco.estado(CONTA);
+    igual(volta.metas.residencial, 4242, 'a meta nao voltou igual');
+    igual(JSON.stringify(volta), JSON.stringify(original), 'o estado voltou diferente');
+    await Banco.apagarEstado(CONTA);
+  });
+
+  teste('trocar de unidade nao mistura os dados', () => {
+    const antes = JSON.stringify(S.metas);
+    S.metas.residencial = 111; S.metas.negocio = 222;
+    comPerfil('residencial', () => igual(S.metas[S.perfil], 111));
+    comPerfil('negocio', () => igual(S.metas[S.perfil], 222));
+    S.metas = JSON.parse(antes);
+  });
+});
+
+/* ================= integridade do calculo ================= */
+grupo('Integridade', () => {
+
+  teste('nenhum numero da visao e NaN ou infinito', () => {
+    ['residencial', 'negocio'].forEach(p => comPerfil(p, () => {
+      const v = visao();
+      ['projConsumo', 'projGeracao', 'projRede', 'projInj', 'economia', 'economiaCheia',
+        'creditos', 'contaProj', 'semSolarProj', 'autoPct', 'co2', 'desempenho',
+        'potencial', 'esperada', 'projFioB'].forEach(k => {
+          ok(isFinite(v[k]), p + ': ' + k + ' = ' + v[k]);
+          ok(v[k] >= 0, p + ': ' + k + ' ficou negativo (' + v[k] + ')');
+        });
+    }));
+  });
+
+  teste('a conta com sol nunca passa da conta sem sol', () => {
+    ['residencial', 'negocio'].forEach(p => comPerfil(p, () => {
+      const v = visao();
+      ok(v.contaProj <= v.semSolarProj, p + ': o solar encareceu a conta');
+    }));
+  });
+
+  teste('autoconsumo nunca passa nem do consumo nem da geracao', () => {
+    ['residencial', 'negocio'].forEach(p => comPerfil(p, () => {
+      const v = visao();
+      ok(v.mtd.auto <= v.mtd.tc + 0.01, p + ': autoconsumo maior que o consumo');
+      ok(v.mtd.auto <= v.mtd.tg + 0.01, p + ': autoconsumo maior que a geracao');
+    }));
+  });
+
+  teste('todo aparelho tem cor, categoria e consumo valido', () => {
+    ['residencial', 'negocio'].forEach(p => comPerfil(p, () => {
+      aparelhos().forEach(e => {
+        ok(/^#[0-9A-Fa-f]{6}$/.test(e.cor), p + '/' + e.nome + ': cor invalida (' + e.cor + ')');
+        ok(e.nome && e.nome.length > 1, p + ': aparelho sem nome');
+        ok(isFinite(e.kwh) && e.kwh >= 0, p + '/' + e.nome + ': kwh invalido');
+        ok(CATS.indexOf(e.cat) >= 0, p + '/' + e.nome + ': categoria desconhecida (' + e.cat + ')');
+      });
+    }));
+  });
+
+  teste('as fatias dos aparelhos somam 100 por cento', () => {
+    ['residencial', 'negocio'].forEach(p => comPerfil(p, () => {
+      const eq = aparelhos(), total = soma(eq.map(e => e.kwh));
+      const somaPct = soma(eq.map(e => (e.kwh / total) * 100));
+      perto(somaPct, 100, 0.01, p);
+    }));
+  });
+
+  teste('todo perfil horario tem 24 valores positivos', () => {
+    Object.keys(PERFIS).forEach(c => {
+      igual(PERFIS[c].length, 24, c + ': deveria ter 24 horas');
+      ok(PERFIS[c].every(v => v >= 0), c + ': tem valor negativo');
+      ok(soma(PERFIS[c]) > 0, c + ': soma zero');
+    });
+  });
+
+  teste('os alertas sempre trazem titulo, texto e tipo conhecido', () => {
+    ['residencial', 'negocio'].forEach(p => comPerfil(p, () => {
+      alertas().forEach(a => {
+        ok(a.titulo && a.titulo.length > 3, p + ': alerta sem titulo');
+        ok(a.txt && a.txt.length > 10, p + ': alerta sem texto');
+        ok(['alto', 'medio', 'bom'].indexOf(a.tipo) >= 0, p + ': tipo estranho (' + a.tipo + ')');
+        ok(a.chave && a.chave.indexOf(p) === 0, p + ': chave de dispensa errada');
+      });
+    }));
+  });
+});
+
+/* ================= execucao ================= */
+
 function rodar() {
   const alvo = document.getElementById('saida');
   const grupos = {};

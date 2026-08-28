@@ -1,25 +1,26 @@
-/* ============================================================
-   SOLARIS — contas e sessão
+/* login.js — contas e sessao
 
-   HONESTIDADE SOBRE O QUE ISTO É:
-   O Solaris roda de um arquivo, sem servidor. Então este login NÃO é
-   segurança contra alguém com acesso ao computador — quem abrir o DevTools
-   lê o armazenamento local. O que ele entrega de verdade:
+   O login e OPCIONAL. O site abre direto no painel, em modo visitante, e
+   criar conta serve para separar dados de quem divide o mesmo navegador.
 
-     - a senha nunca é guardada, nem em texto nem reversível;
-     - deriva-se uma chave com salt aleatório e muitas iterações, então
-       descobrir a senha a partir do que está salvo é caro;
-     - cada conta tem seus próprios dados: unidades, aparelhos, metas e
-       tarifas não vazam de uma para outra no mesmo navegador.
+   Sendo honesto sobre o que isto e e o que nao e:
 
-   Num produto real a verificação aconteceria no servidor, e o hash nunca
-   sairia de lá. Isso está dito na própria tela de login, de propósito.
+   NAO E seguranca contra quem tem acesso ao computador. O site roda sem
+   servidor; quem abrir o DevTools le o banco. Nao existe segredo do lado
+   do cliente, ponto.
 
-   O login NÃO bloqueia o acesso: o site abre direto no painel, em modo
-   visitante. Criar conta é opcional e serve para separar dados de quem
-   divide o mesmo navegador. Virar app com conta obrigatória é assunto
-   de uma fase futura do projeto.
-   ============================================================ */
+   E DE VERDADE:
+     - a senha nunca e gravada, nem em texto nem de forma reversivel;
+     - guardamos uma derivacao dela com salt aleatorio e 150 mil iteracoes
+       (PBKDF2 pelo WebCrypto, ou SHA-256 encadeado onde nao houver);
+     - comparacao em tempo constante, para nao vazar informacao pelo tempo;
+     - a mesma mensagem de erro para senha errada e e-mail inexistente,
+       para nao revelar quais contas existem;
+     - cada conta tem seu proprio balde de dados no banco.
+
+   Num produto de verdade isso tudo aconteceria no servidor. Esta escrito
+   na propria tela de login, de proposito.
+*/
 'use strict';
 
 const CHAVE_CONTAS = 'solaris.contas.v1';

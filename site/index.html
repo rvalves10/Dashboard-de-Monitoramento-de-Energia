@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<title>Solaris — monitoramento de energia solar</title>
+<meta name="description" content="Painel que mostra para onde vai cada quilowatt da sua casa ou do seu comércio, quanto o sol cobriu e quanto vem na próxima conta.">
+<meta name="theme-color" content="#16150F">
+<link rel="icon" href="../assets/favicon.svg">
+
+<!-- Fontes: Bricolage Grotesque para os títulos e números grandes,
+     IBM Plex Sans para o texto e IBM Plex Mono para dados tabulares. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- A ordem do CSS importa: cada arquivo pode sobrescrever o anterior.
+     base define os tokens, impressao é o último porque só vale no papel. -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/componentes.css">
+<link rel="stylesheet" href="css/telas.css">
+<link rel="stylesheet" href="css/conta.css">
+<link rel="stylesheet" href="css/movel.css">
+<link rel="stylesheet" href="css/responsivo.css">
+<link rel="stylesheet" href="css/impressao.css">
+</head>
+
+<body>
+<!-- Primeiro item que o teclado alcança: pula o menu e vai direto ao conteúdo. -->
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<!-- O site inteiro é desenhado aqui dentro pelo JavaScript. -->
+<div id="root"></div>
+
+<!-- Avisos que aparecem no canto. aria-live faz o leitor de tela anunciá-los. -->
+<div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+
+<noscript>
+  <div class="sem-js">
+    <h1>Solaris</h1>
+    <p>O painel lê o medidor em tempo real e desenha os gráficos no próprio
+       navegador, então precisa de JavaScript ativado para funcionar.</p>
+  </div>
+</noscript>
+
+<!--
+  Scripts clássicos, nesta ordem exata. Não usamos módulos ES de propósito:
+  módulo exige servidor HTTP por causa de CORS, e a gente quer que o site
+  abra com duplo clique, sem instalar nada e sem rede.
+
+  banco     abre o IndexedDB e guarda contas, estado e leituras
+  motor     a simulação física, as tarifas e a compensação de créditos
+  login     contas, sessão e derivação de senha
+  telas     as telas da versão ampla
+  movel     a mesma coisa em coluna única, para tela estreita
+  controle  eventos, rotas, o tique do medidor e os avisos
+-->
+<script src="js/banco.js"></script>
+<script src="js/motor.js"></script>
+<script src="js/login.js"></script>
+<script src="js/telas.js"></script>
+<script src="js/movel.js"></script>
+<script src="js/controle.js"></script>
+</body>
+</html>
