@@ -117,15 +117,15 @@ const UNIDADES_BASE = {
     /* share = fatia do consumo medido que a IA atribui ao aparelho.
        As horas de uso são deduzidas dela, para o ranking sempre fechar com o medidor. */
     equipamentos: [
-      { id: 'ar', nome: 'Ar-condicionado', local: 'Sala', cat: 'Climatização', pot: 1200, share: .2875, cor: '#3E4C7A', conf: 'alta', fonte: 'ia', tend: 14 },
-      { id: 'chu', nome: 'Chuveiro elétrico', local: 'Banheiro suíte', cat: 'Aquecimento', pot: 5500, share: .1906, cor: '#C4573C', conf: 'alta', fonte: 'ia', tend: -3 },
-      { id: 'gel', nome: 'Geladeira', local: 'Cozinha', cat: 'Refrigeração', pot: 180, share: .15, cor: '#2E7A5A', conf: 'alta', fonte: 'ia', tend: 2 },
-      { id: 'lav', nome: 'Máquina de lavar', local: 'Área de serviço', cat: 'Lavanderia', pot: 900, share: .0813, cor: '#7A6BA8', conf: 'média', fonte: 'ia', tend: 9 },
-      { id: 'fre', nome: 'Freezer horizontal', local: 'Área de serviço', cat: 'Refrigeração', pot: 145, share: .0656, cor: '#4E8FA8', conf: 'alta', fonte: 'manual', tend: 0 },
-      { id: 'for', nome: 'Forno e micro-ondas', local: 'Cozinha', cat: 'Cozinha', pot: 1400, share: .0563, cor: '#B4761B', conf: 'média', fonte: 'ia', tend: -6 },
-      { id: 'luz', nome: 'Iluminação', local: 'Casa toda', cat: 'Iluminação', pot: 190, share: .0469, cor: '#EDA22B', conf: 'média', fonte: 'ia', tend: -1 },
-      { id: 'tv', nome: 'TV e eletrônicos', local: 'Sala', cat: 'Eletrônicos', pot: 130, share: .0375, cor: '#8B8577', conf: 'média', fonte: 'ia', tend: 4 },
-      { id: 'bom', nome: 'Bomba d’água', local: 'Externo', cat: 'Outros', pot: 750, share: .0281, cor: '#6B9E8E', conf: 'baixa', fonte: 'ia', tend: 0 }
+      { id: 'ar', nome: 'Ar-condicionado', local: 'Sala', cat: 'Climatização', pot: 1200, share: .2875, cor: '#2A78D6', conf: 'alta', fonte: 'ia', tend: 14 },
+      { id: 'chu', nome: 'Chuveiro elétrico', local: 'Banheiro suíte', cat: 'Aquecimento', pot: 5500, share: .1906, cor: '#E34948', conf: 'alta', fonte: 'ia', tend: -3 },
+      { id: 'gel', nome: 'Geladeira', local: 'Cozinha', cat: 'Refrigeração', pot: 180, share: .15, cor: '#0F8F61', conf: 'alta', fonte: 'ia', tend: 2 },
+      { id: 'lav', nome: 'Máquina de lavar', local: 'Área de serviço', cat: 'Lavanderia', pot: 900, share: .0813, cor: '#4A3AA7', conf: 'média', fonte: 'ia', tend: 9 },
+      { id: 'fre', nome: 'Freezer horizontal', local: 'Área de serviço', cat: 'Refrigeração', pot: 145, share: .0656, cor: '#0B7FA3', conf: 'alta', fonte: 'manual', tend: 0 },
+      { id: 'for', nome: 'Forno e micro-ondas', local: 'Cozinha', cat: 'Cozinha', pot: 1400, share: .0563, cor: '#C94F7C', conf: 'média', fonte: 'ia', tend: -6 },
+      { id: 'luz', nome: 'Iluminação', local: 'Casa toda', cat: 'Iluminação', pot: 190, share: .0469, cor: '#008300', conf: 'média', fonte: 'ia', tend: -1 },
+      { id: 'tv', nome: 'TV e eletrônicos', local: 'Sala', cat: 'Eletrônicos', pot: 130, share: .0375, cor: '#5B6570', conf: 'média', fonte: 'ia', tend: 4 },
+      { id: 'bom', nome: 'Bomba d’água', local: 'Externo', cat: 'Outros', pot: 750, share: .0281, cor: '#98A0A9', conf: 'baixa', fonte: 'ia', tend: 0 }
     ],
     deteccoes: [
       { id: 'd1', palpite: 'Secadora de roupas', quando: 'terça, 21h04', kwh: 2.3, certeza: 78, pot: 1500, horas: 1.5, cat: 'Lavanderia' },
@@ -142,13 +142,13 @@ const UNIDADES_BASE = {
     semana: [.52, 1.04, 1.04, 1.04, 1.05, 1.08, 1.06],
     comodos: ['Produção', 'Atendimento', 'Estoque', 'Escritório', 'Externo'],
     equipamentos: [
-      { id: 'for', nome: 'Forno de lastro', local: 'Produção', cat: 'Cozinha', pot: 12000, share: .2761, cor: '#C4573C', conf: 'alta', fonte: 'manual', tend: 3 },
-      { id: 'cam', nome: 'Câmara fria', local: 'Estoque', cat: 'Refrigeração', pot: 2200, share: .2239, cor: '#4E8FA8', conf: 'alta', fonte: 'ia', tend: 11 },
-      { id: 'arc', nome: 'Ar-condicionado salão', local: 'Atendimento', cat: 'Climatização', pot: 5300, share: .1571, cor: '#3E4C7A', conf: 'alta', fonte: 'ia', tend: 18 },
-      { id: 'exp', nome: 'Expositores refrigerados', local: 'Atendimento', cat: 'Refrigeração', pot: 900, share: .1255, cor: '#2E7A5A', conf: 'alta', fonte: 'ia', tend: 1 },
-      { id: 'mas', nome: 'Masseira e batedeira', local: 'Produção', cat: 'Cozinha', pot: 3000, share: .0804, cor: '#7A6BA8', conf: 'média', fonte: 'ia', tend: -4 },
-      { id: 'luz', nome: 'Iluminação', local: 'Loja toda', cat: 'Iluminação', pot: 640, share: .0620, cor: '#EDA22B', conf: 'média', fonte: 'ia', tend: 0 },
-      { id: 'caf', nome: 'Cafeteira industrial', local: 'Atendimento', cat: 'Cozinha', pot: 2400, share: .0342, cor: '#B4761B', conf: 'média', fonte: 'ia', tend: 6 }
+      { id: 'for', nome: 'Forno de lastro', local: 'Produção', cat: 'Cozinha', pot: 12000, share: .2761, cor: '#E34948', conf: 'alta', fonte: 'manual', tend: 3 },
+      { id: 'cam', nome: 'Câmara fria', local: 'Estoque', cat: 'Refrigeração', pot: 2200, share: .2239, cor: '#0B7FA3', conf: 'alta', fonte: 'ia', tend: 11 },
+      { id: 'arc', nome: 'Ar-condicionado salão', local: 'Atendimento', cat: 'Climatização', pot: 5300, share: .1571, cor: '#2A78D6', conf: 'alta', fonte: 'ia', tend: 18 },
+      { id: 'exp', nome: 'Expositores refrigerados', local: 'Atendimento', cat: 'Refrigeração', pot: 900, share: .1255, cor: '#0F8F61', conf: 'alta', fonte: 'ia', tend: 1 },
+      { id: 'mas', nome: 'Masseira e batedeira', local: 'Produção', cat: 'Cozinha', pot: 3000, share: .0804, cor: '#4A3AA7', conf: 'média', fonte: 'ia', tend: -4 },
+      { id: 'luz', nome: 'Iluminação', local: 'Loja toda', cat: 'Iluminação', pot: 640, share: .0620, cor: '#008300', conf: 'média', fonte: 'ia', tend: 0 },
+      { id: 'caf', nome: 'Cafeteira industrial', local: 'Atendimento', cat: 'Cozinha', pot: 2400, share: .0342, cor: '#C94F7C', conf: 'média', fonte: 'ia', tend: 6 }
     ],
     deteccoes: [
       { id: 'd1', palpite: 'Segundo freezer no estoque', quando: 'quinta, 04h40', kwh: 6.8, certeza: 71, pot: 400, horas: 17, cat: 'Refrigeração' }
@@ -174,7 +174,16 @@ const PERFIS_NEGOCIO = {
   'Climatização': [.05, .05, .05, .1, .2, .35, .6, .9, 1.1, 1.2, 1.3, 1.35, 1.35, 1.3, 1.2, 1.05, .9, .7, .4, .2, .1, .07, .05, .05]
 };
 const CATS = ['Climatização', 'Refrigeração', 'Aquecimento', 'Cozinha', 'Lavanderia', 'Iluminação', 'Eletrônicos', 'Outros'];
-const CORES_EXTRA = ['#7A6BA8', '#4E8FA8', '#6B9E8E', '#B4761B', '#C4573C', '#3E4C7A', '#2E7A5A'];
+/* Paleta categórica dos aparelhos. A ORDEM não é enfeite: ela é o que
+   garante que duas fatias vizinhas continuem distinguíveis para quem tem
+   daltonismo. Foi conferida por script (separação CVD, piso de croma,
+   contraste com o fundo claro) — não reordene nem inclua cor nova sem
+   rodar a conferência de novo.
+
+   Nenhum aparelho é âmbar de propósito: âmbar significa geração solar no
+   site inteiro. Se um aparelho fosse âmbar, a barra de consumo pareceria
+   estar falando do sol. */
+const CORES_EXTRA = ['#0F8F61', '#2A78D6', '#C94F7C', '#4A3AA7', '#E34948', '#0B7FA3', '#008300'];
 
 function perfilCat(unidade, cat) {
   const p = (unidade.chave === 'negocio' && PERFIS_NEGOCIO[cat]) || PERFIS[cat] || PERFIS['Outros'];
@@ -418,13 +427,13 @@ const ARQUETIPOS = {
     semana: [1.13, .95, .95, .95, .95, .97, 1.10],
     comodos: ['Sala', 'Cozinha', 'Quarto', 'Banheiro', 'Área de serviço', 'Externo'],
     equipamentos: [
-      { id: 'ar', nome: 'Ar-condicionado', local: 'Quarto', cat: 'Climatização', pot: 1200, share: .26, cor: '#3E4C7A', conf: 'média', tend: 6 },
-      { id: 'chu', nome: 'Chuveiro elétrico', local: 'Banheiro', cat: 'Aquecimento', pot: 5500, share: .20, cor: '#C4573C', conf: 'alta', tend: 0 },
-      { id: 'gel', nome: 'Geladeira', local: 'Cozinha', cat: 'Refrigeração', pot: 180, share: .16, cor: '#2E7A5A', conf: 'alta', tend: 1 },
-      { id: 'lav', nome: 'Máquina de lavar', local: 'Área de serviço', cat: 'Lavanderia', pot: 900, share: .09, cor: '#7A6BA8', conf: 'média', tend: 0 },
-      { id: 'coz', nome: 'Forno e micro-ondas', local: 'Cozinha', cat: 'Cozinha', pot: 1400, share: .07, cor: '#B4761B', conf: 'média', tend: 0 },
-      { id: 'luz', nome: 'Iluminação', local: 'Casa toda', cat: 'Iluminação', pot: 190, share: .06, cor: '#EDA22B', conf: 'média', tend: 0 },
-      { id: 'tv', nome: 'TV e eletrônicos', local: 'Sala', cat: 'Eletrônicos', pot: 130, share: .06, cor: '#8B8577', conf: 'baixa', tend: 2 }
+      { id: 'ar', nome: 'Ar-condicionado', local: 'Quarto', cat: 'Climatização', pot: 1200, share: .26, cor: '#2A78D6', conf: 'média', tend: 6 },
+      { id: 'chu', nome: 'Chuveiro elétrico', local: 'Banheiro', cat: 'Aquecimento', pot: 5500, share: .20, cor: '#E34948', conf: 'alta', tend: 0 },
+      { id: 'gel', nome: 'Geladeira', local: 'Cozinha', cat: 'Refrigeração', pot: 180, share: .16, cor: '#0F8F61', conf: 'alta', tend: 1 },
+      { id: 'lav', nome: 'Máquina de lavar', local: 'Área de serviço', cat: 'Lavanderia', pot: 900, share: .09, cor: '#4A3AA7', conf: 'média', tend: 0 },
+      { id: 'coz', nome: 'Forno e micro-ondas', local: 'Cozinha', cat: 'Cozinha', pot: 1400, share: .07, cor: '#C94F7C', conf: 'média', tend: 0 },
+      { id: 'luz', nome: 'Iluminação', local: 'Casa toda', cat: 'Iluminação', pot: 190, share: .06, cor: '#008300', conf: 'média', tend: 0 },
+      { id: 'tv', nome: 'TV e eletrônicos', local: 'Sala', cat: 'Eletrônicos', pot: 130, share: .06, cor: '#5B6570', conf: 'baixa', tend: 2 }
     ]
   },
   casaCheia: {
@@ -435,13 +444,13 @@ const ARQUETIPOS = {
     semana: [1.06, .98, .98, .98, .98, 1.00, 1.04],
     comodos: ['Sala', 'Cozinha', 'Quarto', 'Escritório', 'Banheiro', 'Área de serviço', 'Externo'],
     equipamentos: [
-      { id: 'ar', nome: 'Ar-condicionado', local: 'Sala', cat: 'Climatização', pot: 1400, share: .24, cor: '#3E4C7A', conf: 'média', tend: 8 },
-      { id: 'chu', nome: 'Chuveiro elétrico', local: 'Banheiro', cat: 'Aquecimento', pot: 5500, share: .16, cor: '#C4573C', conf: 'alta', tend: 0 },
-      { id: 'gel', nome: 'Geladeira', local: 'Cozinha', cat: 'Refrigeração', pot: 200, share: .15, cor: '#2E7A5A', conf: 'alta', tend: 1 },
-      { id: 'pc', nome: 'Computadores e monitores', local: 'Escritório', cat: 'Eletrônicos', pot: 260, share: .13, cor: '#4E8FA8', conf: 'média', tend: 4 },
-      { id: 'coz', nome: 'Cozinha elétrica', local: 'Cozinha', cat: 'Cozinha', pot: 1400, share: .10, cor: '#B4761B', conf: 'média', tend: 0 },
-      { id: 'lav', nome: 'Lavanderia', local: 'Área de serviço', cat: 'Lavanderia', pot: 900, share: .08, cor: '#7A6BA8', conf: 'média', tend: 0 },
-      { id: 'luz', nome: 'Iluminação', local: 'Casa toda', cat: 'Iluminação', pot: 210, share: .07, cor: '#EDA22B', conf: 'média', tend: 0 }
+      { id: 'ar', nome: 'Ar-condicionado', local: 'Sala', cat: 'Climatização', pot: 1400, share: .24, cor: '#2A78D6', conf: 'média', tend: 8 },
+      { id: 'chu', nome: 'Chuveiro elétrico', local: 'Banheiro', cat: 'Aquecimento', pot: 5500, share: .16, cor: '#E34948', conf: 'alta', tend: 0 },
+      { id: 'gel', nome: 'Geladeira', local: 'Cozinha', cat: 'Refrigeração', pot: 200, share: .15, cor: '#0F8F61', conf: 'alta', tend: 1 },
+      { id: 'pc', nome: 'Computadores e monitores', local: 'Escritório', cat: 'Eletrônicos', pot: 260, share: .13, cor: '#0B7FA3', conf: 'média', tend: 4 },
+      { id: 'coz', nome: 'Cozinha elétrica', local: 'Cozinha', cat: 'Cozinha', pot: 1400, share: .10, cor: '#C94F7C', conf: 'média', tend: 0 },
+      { id: 'lav', nome: 'Lavanderia', local: 'Área de serviço', cat: 'Lavanderia', pot: 900, share: .08, cor: '#4A3AA7', conf: 'média', tend: 0 },
+      { id: 'luz', nome: 'Iluminação', local: 'Casa toda', cat: 'Iluminação', pot: 210, share: .07, cor: '#008300', conf: 'média', tend: 0 }
     ]
   },
   comercioManha: {
@@ -452,12 +461,12 @@ const ARQUETIPOS = {
     semana: [.52, 1.04, 1.04, 1.04, 1.05, 1.08, 1.06],
     comodos: ['Produção', 'Atendimento', 'Estoque', 'Escritório', 'Externo'],
     equipamentos: [
-      { id: 'forno', nome: 'Forno', local: 'Produção', cat: 'Cozinha', pot: 12000, share: .28, cor: '#C4573C', conf: 'alta', tend: 2 },
-      { id: 'refri', nome: 'Câmara fria', local: 'Estoque', cat: 'Refrigeração', pot: 2200, share: .23, cor: '#4E8FA8', conf: 'alta', tend: 5 },
-      { id: 'ar', nome: 'Ar-condicionado do salão', local: 'Atendimento', cat: 'Climatização', pot: 5300, share: .16, cor: '#3E4C7A', conf: 'alta', tend: 9 },
-      { id: 'exp', nome: 'Expositores refrigerados', local: 'Atendimento', cat: 'Refrigeração', pot: 900, share: .13, cor: '#2E7A5A', conf: 'alta', tend: 1 },
-      { id: 'maq', nome: 'Máquinas de produção', local: 'Produção', cat: 'Cozinha', pot: 3000, share: .08, cor: '#7A6BA8', conf: 'média', tend: 0 },
-      { id: 'luz', nome: 'Iluminação', local: 'Loja toda', cat: 'Iluminação', pot: 640, share: .07, cor: '#EDA22B', conf: 'média', tend: 0 }
+      { id: 'forno', nome: 'Forno', local: 'Produção', cat: 'Cozinha', pot: 12000, share: .28, cor: '#E34948', conf: 'alta', tend: 2 },
+      { id: 'refri', nome: 'Câmara fria', local: 'Estoque', cat: 'Refrigeração', pot: 2200, share: .23, cor: '#0B7FA3', conf: 'alta', tend: 5 },
+      { id: 'ar', nome: 'Ar-condicionado do salão', local: 'Atendimento', cat: 'Climatização', pot: 5300, share: .16, cor: '#2A78D6', conf: 'alta', tend: 9 },
+      { id: 'exp', nome: 'Expositores refrigerados', local: 'Atendimento', cat: 'Refrigeração', pot: 900, share: .13, cor: '#0F8F61', conf: 'alta', tend: 1 },
+      { id: 'maq', nome: 'Máquinas de produção', local: 'Produção', cat: 'Cozinha', pot: 3000, share: .08, cor: '#4A3AA7', conf: 'média', tend: 0 },
+      { id: 'luz', nome: 'Iluminação', local: 'Loja toda', cat: 'Iluminação', pot: 640, share: .07, cor: '#008300', conf: 'média', tend: 0 }
     ]
   },
   comercioDia: {
@@ -468,12 +477,12 @@ const ARQUETIPOS = {
     semana: [.35, 1.10, 1.10, 1.10, 1.10, 1.12, .85],
     comodos: ['Atendimento', 'Escritório', 'Estoque', 'Copa', 'Externo'],
     equipamentos: [
-      { id: 'ar', nome: 'Ar-condicionado', local: 'Atendimento', cat: 'Climatização', pot: 7000, share: .34, cor: '#3E4C7A', conf: 'alta', tend: 7 },
-      { id: 'luz', nome: 'Iluminação', local: 'Loja toda', cat: 'Iluminação', pot: 900, share: .19, cor: '#EDA22B', conf: 'alta', tend: 0 },
-      { id: 'pc', nome: 'Computadores e terminais', local: 'Escritório', cat: 'Eletrônicos', pot: 600, share: .17, cor: '#4E8FA8', conf: 'média', tend: 3 },
-      { id: 'refri', nome: 'Refrigeração', local: 'Copa', cat: 'Refrigeração', pot: 400, share: .12, cor: '#2E7A5A', conf: 'média', tend: 1 },
-      { id: 'copa', nome: 'Copa e cafeteira', local: 'Copa', cat: 'Cozinha', pot: 1500, share: .08, cor: '#B4761B', conf: 'baixa', tend: 0 },
-      { id: 'div', nome: 'Equipamentos diversos', local: 'Externo', cat: 'Outros', pot: 500, share: .05, cor: '#6B9E8E', conf: 'baixa', tend: 0 }
+      { id: 'ar', nome: 'Ar-condicionado', local: 'Atendimento', cat: 'Climatização', pot: 7000, share: .34, cor: '#2A78D6', conf: 'alta', tend: 7 },
+      { id: 'luz', nome: 'Iluminação', local: 'Loja toda', cat: 'Iluminação', pot: 900, share: .19, cor: '#008300', conf: 'alta', tend: 0 },
+      { id: 'pc', nome: 'Computadores e terminais', local: 'Escritório', cat: 'Eletrônicos', pot: 600, share: .17, cor: '#0B7FA3', conf: 'média', tend: 3 },
+      { id: 'refri', nome: 'Refrigeração', local: 'Copa', cat: 'Refrigeração', pot: 400, share: .12, cor: '#0F8F61', conf: 'média', tend: 1 },
+      { id: 'copa', nome: 'Copa e cafeteira', local: 'Copa', cat: 'Cozinha', pot: 1500, share: .08, cor: '#C94F7C', conf: 'baixa', tend: 0 },
+      { id: 'div', nome: 'Equipamentos diversos', local: 'Externo', cat: 'Outros', pot: 500, share: .05, cor: '#98A0A9', conf: 'baixa', tend: 0 }
     ]
   }
 };
@@ -574,7 +583,7 @@ function aparelhos() {
   if (nid > 0.5) {
     lista.push({
       id: 'nid', nome: 'Não identificado', local: '—', cat: 'Outros', pot: 0, horas: 0, dias: 0,
-      cor: '#C9C2B2', conf: 'baixa', fonte: 'ia', tend: 5, kwh: nid, sintetico: true
+      cor: '#C2C7CE', conf: 'baixa', fonte: 'ia', tend: 5, kwh: nid, sintetico: true
     });
   }
   lista.sort((a, b) => b.kwh - a.kwh);

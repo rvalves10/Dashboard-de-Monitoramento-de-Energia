@@ -138,8 +138,8 @@ async function preencherCardBanco() {
     '<div class="bd-graf-t">' + linhas.length + ' leituras reais do banco \u00b7 ' + hhmm(c0) + ' at\u00e9 ' + hhmm(c1) + '</div>' +
     '<svg viewBox="0 0 720 96" preserveAspectRatio="none" style="width:100%;height:96px;margin-top:10px">' +
     '<path d="' + caminho(linhas.map(l => l.g), maxV, W, H, true) + '" fill="rgba(237,162,43,.16)"/>' +
-    '<path d="' + cam(linhas.map(l => l.g)) + '" fill="none" stroke="#EDA22B" stroke-width="2" stroke-linejoin="round"/>' +
-    '<path d="' + cam(linhas.map(l => l.c)) + '" fill="none" stroke="#3E4C7A" stroke-width="1.8" stroke-linejoin="round"/>' +
+    '<path d="' + cam(linhas.map(l => l.g)) + '" fill="none" stroke="var(--sun)" stroke-width="2" stroke-linejoin="round"/>' +
+    '<path d="' + cam(linhas.map(l => l.c)) + '" fill="none" stroke="var(--grid)" stroke-width="1.8" stroke-linejoin="round"/>' +
     '</svg>' +
     '<div class="bd-pe"><span>Cada ponto \u00e9 uma linha na tabela <code>leituras</code></span>' +
     '<button class="danger-btn" data-act="limpar-leituras">Apagar hist\u00f3rico</button></div>';

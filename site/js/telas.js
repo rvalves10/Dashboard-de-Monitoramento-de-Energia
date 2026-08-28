@@ -99,12 +99,12 @@ function vRail() {
       '<span class="unit-type" style="display:block">' + esc(u.curto) + '</span></span></button>';
   }).join('');
   return '<aside class="rail">' +
-    '<div class="brand"><span class="brand-mark">' + ico(IC.sol, 19, '#16150F', 2.2) + '</span>' +
+    '<div class="brand"><span class="brand-mark">' + ico(IC.sol, 19, 'var(--n-900)', 2.2) + '</span>' +
     '<span class="brand-text"><span class="brand-name" style="display:block">Solaris</span><span class="brand-sub" style="display:block">Energia sob controle</span></span></div>' +
     '<nav class="nav" aria-label="Seções">' + nav + '</nav>' +
     '<div class="rail-spacer"></div>' +
     '<div class="rail-foot">' +
-    '<div class="meter"><div class="meter-head"><span class="live-dot"></span><span class="meter-lbl">Medidor agora</span></div>' +
+    '<div class="meter"><div class="meter-head"><span class="live-dot batendo"></span><span class="meter-lbl">Medidor agora</span></div>' +
     '<div class="meter-rows">' +
     '<div class="meter-row"><span>Consumindo</span><span class="meter-val" id="liveC">' + nf(p.cons, 2) + ' kW</span></div>' +
     '<div class="meter-row"><span>Gerando</span><span class="meter-val" id="liveG">' + nf(p.ger, 2) + ' kW</span></div>' +
@@ -155,7 +155,7 @@ function vTopbar() {
   const mostraPeriodo = S.tela === 'historico';
   const per = [['dia', 'Dia', 'D'], ['semana', 'Semana', 'S'], ['mes', 'Mês', 'M']].map(p =>
     '<button data-act="periodo" data-p="' + p[0] + '" aria-pressed="' + (S.periodo === p[0]) + '"><span class="full">' + p[1] + '</span><span class="short">' + p[2] + '</span></button>').join('');
-  return '<header class="topbar no-print"><div><div class="eyebrow">' + esc(kicker) + '</div><h1>' + esc(titulo) + '</h1></div>' +
+  return '<header class="topbar no-print"><div><h1>' + esc(titulo) + '</h1><p class="topbar-sub">' + esc(kicker) + '</p></div>' +
     '<div class="topbar-actions">' +
     (mostraPeriodo ? '<div class="seg" role="group" aria-label="Período">' + per + '</div>' : '') +
     '</div></header>';
@@ -175,7 +175,7 @@ function vPainel() {
   }).join('');
 
   const diasGratis = Math.round(v.economia / Math.max(t * (v.projConsumo / v.nd), .01));
-  const hero = '<section class="card card--dark hero s7"><span class="hero-glow"></span><div class="hero-in">' +
+  const hero = '<section class="card card--dark hero s7"><div class="hero-in">' +
     '<div class="hero-top"><span class="hero-kicker">Você economizou em ' + MESES[v.m] + '</span>' +
     '<span class="delta' + (dEcon < 0 ? ' delta--down' : '') + '">' + ico(IC.cima, 12, 'currentColor', 2.6) + sinal(dEcon, 0) + '%</span></div>' +
     '<div class="hero-money"><span class="hero-cur">R$</span><span class="big big-74" id="heroEcon">' + nf(v.economia) + '</span></div>' +
@@ -183,12 +183,12 @@ function vPainel() {
     '<div class="spark">' + spark + '</div></div></section>';
 
   const dash = Math.round((clamp(v.autoPct, 0, 100) / 100) * 351.8);
-  const donut = '<section class="card s5"><div class="eyebrow" style="font-size:12px">Autossuficiência</div>' +
+  const donut = '<section class="card s5"><h2>Autossuficiência</h2>' +
     '<div class="donut-wrap"><div class="donut">' +
     /* decorativo: a porcentagem aparece em texto logo abaixo, entao o
        leitor de tela nao precisa atravessar o desenho */
     '<svg width="132" height="132" viewBox="0 0 132 132" aria-hidden="true">' +
-    '<circle cx="66" cy="66" r="56" fill="none" stroke="#EFEBE1" stroke-width="15"/>' +
+    '<circle cx="66" cy="66" r="56" fill="none" stroke="var(--ground-2)" stroke-width="15"/>' +
     '<circle class="donut-ring" cx="66" cy="66" r="56" fill="none" stroke="var(--sun)" stroke-width="15" stroke-linecap="round" stroke-dasharray="' + dash + ' 351.8"/></svg>' +
     '<div class="donut-mid"><span class="donut-pct">' + pct(v.autoPct) + '</span><span class="donut-cap">do consumo</span></div></div>' +
     '<div class="split">' +
@@ -226,7 +226,7 @@ function vPainel() {
 
   const fech = new Date(v.y, v.m + 1, 12);
   const conta = '<section class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px">' +
-    '<span class="eyebrow" style="font-size:12px">Próxima conta</span><span class="pill pill--warn">Bandeira amarela</span></div>' +
+    '<h2>Próxima conta</h2><span class="pill pill--warn">Bandeira amarela</span></div>' +
     '<div style="display:flex;align-items:baseline;gap:8px;margin-top:10px"><span class="big big-40">' + brl(v.contaProj) + '</span>' +
     '<span style="font-size:13px;color:var(--faint)">estimado · fecha ' + fech.getDate() + ' de ' + MESES[fech.getMonth()] + '</span></div>' +
     '<hr class="rule">' +
@@ -239,10 +239,10 @@ function vPainel() {
   const mesesPay = v.economiaTotal > 0 ? Math.round(u.investimento / (v.economiaTotal / u.mesesOperacao)) : 0;
   const pbPct = clamp((v.economiaTotal / u.investimento) * 100, 0, 100);
   const payback = '<section class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px">' +
-    '<span class="eyebrow" style="font-size:12px">Retorno do investimento</span>' +
+    '<h2>Retorno do investimento</h2>' +
     '<span class="mono" style="font-size:12px;color:var(--good);font-weight:500">' + pct(pbPct) + ' pago</span></div>' +
     '<div style="height:9px;background:var(--ground);border-radius:6px;margin-top:13px;overflow:hidden">' +
-    '<div style="height:100%;border-radius:6px;background:linear-gradient(90deg,var(--sun),var(--good));width:' + pbPct + '%;transition:width .8s cubic-bezier(.4,0,.2,1)"></div></div>' +
+    '<div style="height:100%;border-radius:6px;background:var(--good);width:' + pbPct + '%;transition:width .8s cubic-bezier(.4,0,.2,1)"></div></div>' +
     '<div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--faint)">' +
     '<span>' + u.mesesOperacao + ' meses · ' + brl(v.economiaTotal) + ' economizados</span>' +
     '<span>faltam ' + nf(Math.max(0, mesesPay - u.mesesOperacao) / 12, 1) + ' anos</span></div></section>';
@@ -260,8 +260,8 @@ function linhaConta(l, v, cor) {
 function graficoDia(dia, v) {
   const max = Math.max(Math.max.apply(null, dia.cons), Math.max.apply(null, dia.ger)) * 1.15 || 1;
   const W = 720, H = 200;
-  const grade = [0, 1, 2, 3].map(i => '<g><line x1="0" y1="' + i * 50 + '" x2="720" y2="' + i * 50 + '" stroke="#EFEBE1" stroke-width="1"/>' +
-    '<text x="0" y="' + (i * 50 + 12) + '" fill="#A9A395" font-size="10" font-family="IBM Plex Mono, monospace">' + nf(max * (1 - i / 4), 1) + ' kW</text></g>').join('');
+  const grade = [0, 1, 2, 3].map(i => '<g><line x1="0" y1="' + i * 50 + '" x2="720" y2="' + i * 50 + '" stroke="var(--ground-2)" stroke-width="1"/>' +
+    '<text x="0" y="' + (i * 50 + 12) + '" fill="var(--faint)" font-size="10" font-family="IBM Plex Mono, monospace">' + nf(max * (1 - i / 4), 1) + ' kW</text></g>').join('');
   const nowX = (v.hDec - (v.data.getDate() - 1) * 24) / 23 * W;
   const hr = Math.min(23, Math.floor(v.hDec - (v.data.getDate() - 1) * 24));
   const nowY = H - (dia.ger[hr] / max) * H;
@@ -276,13 +276,13 @@ function graficoDia(dia, v) {
     ' quilowatts por volta das ' + dia.cons.indexOf(Math.max.apply(null, dia.cons)) + ' horas. ' +
     'Use as setas para percorrer hora a hora.">' +
     '<svg viewBox="0 0 720 215" aria-hidden="true">' +
-    '<defs><linearGradient id="gSol" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EDA22B" stop-opacity="0.28"/><stop offset="100%" stop-color="#EDA22B" stop-opacity="0"/></linearGradient></defs>' +
+    '<defs><linearGradient id="gSol" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--sun)" stop-opacity="0.28"/><stop offset="100%" stop-color="var(--sun)" stop-opacity="0"/></linearGradient></defs>' +
     grade +
     '<path d="' + caminho(dia.ger, max, W, H, true) + '" fill="url(#gSol)"/>' +
-    '<path d="' + caminho(dia.ger, max, W, H) + '" fill="none" stroke="#EDA22B" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>' +
-    '<path d="' + caminho(dia.cons, max, W, H) + '" fill="none" stroke="#3E4C7A" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="5 4"/>' +
+    '<path d="' + caminho(dia.ger, max, W, H) + '" fill="none" stroke="var(--sun)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>' +
+    '<path d="' + caminho(dia.cons, max, W, H) + '" fill="none" stroke="var(--grid)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="5 4"/>' +
     '<line class="now-line" x1="' + nowX.toFixed(1) + '" y1="0" x2="' + nowX.toFixed(1) + '" y2="' + H + '"/>' +
-    '<circle class="now-dot" cx="' + nowX.toFixed(1) + '" cy="' + nowY.toFixed(1) + '" r="4.5" fill="#EDA22B" stroke="#EFEBE1" stroke-width="2"/>' +
+    '<circle class="now-dot" cx="' + nowX.toFixed(1) + '" cy="' + nowY.toFixed(1) + '" r="4.5" fill="var(--sun)" stroke="var(--ground-2)" stroke-width="2"/>' +
     '</svg><div class="tip" id="tipDia"></div></div>' +
     '<div class="chart-axis">' + eixo + '</div></section>';
 }
@@ -344,7 +344,7 @@ function blocoCmp(lbl, val, atual, ant, cor) {
   return '<div><div class="compare-lbl"><span>' + lbl + '</span><span class="mono" style="color:var(--ink)">' + val + '</span></div>' +
     '<div class="track"><i style="width:' + (atual / m) * 100 + '%;background:' + cor + '"></i></div>' +
     '<div class="compare-lbl" style="margin:9px 0 7px;color:var(--fainter)"><span>Período anterior</span><span class="mono">' + nf(ant, 1) + ' kWh</span></div>' +
-    '<div class="track"><i style="width:' + (ant / m) * 100 + '%;background:#C9C2B2"></i></div></div>';
+    '<div class="track"><i style="width:' + (ant / m) * 100 + '%;background:var(--n-300)"></i></div></div>';
 }
 function notaBox(tipo, t, s) {
   return '<div class="note note--' + tipo + '"><span class="note-dot"></span><div><div class="note-t">' + esc(t) + '</div><div class="note-s">' + esc(s) + '</div></div></div>';
@@ -357,7 +357,7 @@ function vEquip() {
   const total = soma(eq.map(e => e.kwh)) || 1;
   const maxK = eq[0] ? eq[0].kwh : 1;
 
-  const det = pend.map(x => '<div class="detect"><span class="detect-ic">' + ico(IC.faisca, 17, '#F5C25B', 2) + '</span>' +
+  const det = pend.map(x => '<div class="detect"><span class="detect-ic">' + ico(IC.faisca, 17, 'var(--sun-lite)', 2) + '</span>' +
     '<div style="flex:1;min-width:200px"><div class="detect-t">Um aparelho novo apareceu no medidor — é ' + esc(x.palpite) + '?</div>' +
     '<div class="detect-s">Primeiro registro ' + esc(x.quando) + ' · ' + nf(x.kwh, 1) + ' kWh nesse uso · ' + x.certeza + '% de certeza</div></div>' +
     '<div class="detect-btns"><button class="btn-no" data-act="det-nao" data-id="' + x.id + '">Não é</button>' +
@@ -404,7 +404,7 @@ function vEquip() {
 }
 function cardVazio() {
   return '<section class="empty">' +
-    '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B9B2A2" stroke-width="1.6" stroke-linecap="round" style="margin:0 auto"><circle cx="11" cy="11" r="7"/><path d="' + IC.lupa + '"/></svg>' +
+    '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--n-400)" stroke-width="1.6" stroke-linecap="round" style="margin:0 auto"><circle cx="11" cy="11" r="7"/><path d="' + IC.lupa + '"/></svg>' +
     '<div class="empty-t">Escolha um aparelho</div>' +
     '<div class="empty-s">O detalhe mostra o horário de pico, quanto pesa no ano e o que dá para fazer a respeito.</div></section>';
 }
@@ -433,7 +433,7 @@ function cardDetalhe(e, total, t) {
     '<div style="font-size:12.5px;color:var(--faint);margin-top:5px">' + pct((e.kwh / total) * 100) + ' da unidade · ' + brl(e.reais * 12) + ' por ano</div>' +
     '<div class="det-facts"><div class="fact"><div class="fact-k">Potência</div><div class="fact-v">' + (e.pot ? nf(e.pot) + ' W' : '—') + '</div></div>' +
     '<div class="fact"><div class="fact-k">Uso estimado</div><div class="fact-v">' + (e.horas ? nf(e.horas, 1) + ' h/dia' : '—') + '</div></div></div>' +
-    '<div class="eyebrow-sm" style="margin:20px 0 9px">Perfil de uso nas 24 horas</div>' +
+    '<h3 style="margin:20px 0 9px">Perfil de uso nas 24 horas</h3>' +
     '<div class="prof">' + barras + '</div>' +
     '<div style="font-size:12px;color:var(--faint);margin-top:8px">Uso concentrado por volta das ' + String(iPico).padStart(2, '0') + 'h</div>' +
     '<hr class="rule" style="margin:18px 0 14px">' +
@@ -461,7 +461,7 @@ function vCadastro() {
   const presets = PRESETS.map((p, i) => '<button class="preset" data-act="preset" data-i="' + i + '">' +
     '<span style="min-width:0"><span class="preset-n" style="display:block">' + esc(p.nome) + '</span>' +
     '<span class="preset-d" style="display:block">' + nf(p.pot) + ' W · ' + nf(p.horas, 1) + ' h/dia</span></span>' +
-    ico(IC.chevron, 14, '#B9B2A2', 2.2) + '</button>').join('');
+    ico(IC.chevron, 14, 'var(--n-400)', 2.2) + '</button>').join('');
 
   const editando = !!S.editando;
   const form = '<section class="card s7" style="padding:24px 28px 28px">' +
@@ -481,7 +481,7 @@ function vCadastro() {
     '</div></section>';
 
   const est = '<section class="card card--dark" style="padding:24px 26px 26px">' +
-    '<div class="eyebrow" style="font-size:12px;color:var(--on-dark-soft)">Estimativa</div>' +
+    '<h2>Estimativa</h2>' +
     '<div style="display:flex;align-items:baseline;gap:8px;margin-top:12px">' +
     '<span class="big big-46" id="estKwh">' + nf(e.kwh, 1) + '</span><span style="font-size:15px;color:var(--on-dark-soft)">kWh por mês</span></div>' +
     '<div class="big" id="estCusto" style="font-weight:600;font-size:24px;color:var(--sun-lite);margin-top:10px;letter-spacing:-.8px">' + brl(e.custo) + ' por mês</div>' +
@@ -496,7 +496,7 @@ function vCadastro() {
     (S.salvo ? '<div class="saved">' + ico(IC.check, 14, 'currentColor', 2.6) + 'Aparelho cadastrado e já no ranking</div>' : '') +
     '</section>';
 
-  const mod = '<section class="card" style="padding:20px 22px 22px"><div class="eyebrow" style="font-size:12px">Começar de um modelo</div>' +
+  const mod = '<section class="card" style="padding:20px 22px 22px"><h2>Começar de um modelo</h2>' +
     '<div style="display:flex;flex-direction:column;gap:2px;margin-top:12px">' + presets + '</div></section>';
 
   return '<div class="grid12 enter">' + form + '<div class="s5 stack">' + est + mod + '</div></div>';
@@ -588,7 +588,7 @@ function vRelatorio() {
   const hoje = v.data;
   return '<div class="grid12 enter">' +
     '<section class="card s8" style="padding:30px 34px 32px">' +
-    '<div class="print-head"><span class="brand-mark" style="background:var(--dark)">' + ico(IC.sol, 17, '#EDA22B', 2.2) + '</span><b style="font-family:var(--f-display);font-size:17px">Solaris</b></div>' +
+    '<div class="print-head"><span class="brand-mark" style="background:var(--dark)">' + ico(IC.sol, 17, 'var(--sun)', 2.2) + '</span><b style="font-family:var(--f-display);font-size:17px">Solaris</b></div>' +
     '<div class="card-head"><div><div class="big" style="font-size:22px;letter-spacing:-.7px">' + esc(u.nome) + '</div>' +
     '<div class="card-sub">' + esc(u.distribuidora) + ' · 01 a ' + hoje.getDate() + ' de ' + MESES[v.m] + ' de ' + v.y + '</div></div>' +
     '<button class="ghost-btn no-print" data-act="imprimir">' + ico(IC.print, 14, 'currentColor', 1.9) + 'Imprimir</button></div>' +
@@ -602,10 +602,10 @@ function vRelatorio() {
     ' · valores estimados a partir do medidor e da tarifa cadastrada</div></section>' +
 
     '<div class="s4 stack">' +
-    '<section class="card" style="padding:20px 22px 22px"><div class="eyebrow" style="font-size:12px">Economia nos 12 meses</div>' +
+    '<section class="card" style="padding:20px 22px 22px"><h2>Economia nos 12 meses</h2>' +
     '<div class="big big-30" style="margin-top:8px">' + brl(soma(meses.map(x => x.economia))) + '</div>' +
     '<div class="ybars">' + ybars + '</div></section>' +
-    '<section class="card" style="padding:20px 22px 22px"><div class="eyebrow" style="font-size:12px">Saldo de créditos</div>' +
+    '<section class="card" style="padding:20px 22px 22px"><h2>Saldo de créditos</h2>' +
     '<div class="big big-30" style="margin-top:8px">' + nf(v.creditos) + ' kWh</div>' +
     '<div style="font-size:12.5px;color:var(--faint);margin-top:6px;line-height:1.5">' +
     (v.creditos >= 1
@@ -761,7 +761,7 @@ function vPrimeiraUnidade() {
   return '<div class="comecar">' +
     '<div class="comecar-cx">' +
       '<span class="comecar-ic">' +
-      '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#16150F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--n-900)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       '<path d="M3 11l9-8 9 8M5 9.5V21h14V9.5M9 21v-6h6v6"/></svg></span>' +
 
       '<h1>' + (primeiro ? primeiro + ', vamos' : 'Vamos') + ' come\u00e7ar<br>pela sua unidade</h1>' +
@@ -846,13 +846,13 @@ function vUnidade() {
     '<div class="chips">' + tels + '</div></div>' +
 
     '<hr class="rule" style="margin:24px 0 4px">' +
-    '<div class="eyebrow-sm" style="margin-bottom:4px">Da sua conta de luz</div>' +
+    '<h3 style="margin-bottom:4px">Da sua conta de luz</h3>' +
     campo('unConsumo', 'Consumo médio por mês (kWh)', 'Pegue a média dos últimos 12 meses — costuma vir num gráfico na própria conta.', n.consumoMes, true) +
     campo('unTarifa', 'Tarifa (R$ por kWh)', 'Divida o valor total pela quantidade de kWh, ou procure por “tarifa” na conta.', n.tarifa, true) +
     campo('unDistribuidora', 'Distribuidora', '', n.distribuidora) +
 
     '<hr class="rule" style="margin:24px 0 4px">' +
-    '<div class="eyebrow-sm" style="margin-bottom:4px">Do seu sistema solar</div>' +
+    '<h3 style="margin-bottom:4px">Do seu sistema solar</h3>' +
     campo('unPotencia', 'Potência instalada (kWp)', 'Está na nota do instalador. Some a potência dos painéis e divida por mil.', n.potenciaKwp, true) +
     campo('unPaineis', 'Quantidade de painéis', '', n.paineis, true) +
     campo('unInvestimento', 'Quanto custou (R$)', 'Usado só para calcular em quanto tempo o sistema se paga.', n.investimento, true) +
@@ -860,7 +860,7 @@ function vUnidade() {
     '</section>';
 
   const previa = '<section class="card card--dark" style="padding:24px 26px 26px">' +
-    '<div class="eyebrow" style="font-size:12px;color:var(--on-dark-soft)">O que o sistema vai calcular</div>' +
+    '<h2>O que o sistema vai calcular</h2>' +
     '<div style="display:flex;align-items:baseline;gap:8px;margin-top:12px">' +
     '<span class="big big-46" id="pvGer">' + nf(p.geracao) + '</span>' +
     '<span style="font-size:15px;color:var(--on-dark-soft)">kWh gerados por mês</span></div>' +
@@ -878,7 +878,7 @@ function vUnidade() {
     '</section>';
 
   const ajuda = '<section class="card" style="padding:20px 22px 22px">' +
-    '<div class="eyebrow" style="font-size:12px">Como o cálculo funciona</div>' +
+    '<h2>Como o cálculo funciona</h2>' +
     '<div style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:10px">' +
     'A geração não é chute nem um número que você digita: vem da irradiação média da região (' +
     nf(soma(IRRADIACAO_SP) / 12, 1) + ' kWh/m² por dia), da potência que você informou, de ' +

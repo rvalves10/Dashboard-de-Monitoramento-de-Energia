@@ -75,6 +75,45 @@ o cabeçalho antes de editar — economiza tempo.
 
 ---
 
+## As regras da aparência
+
+Não são preferências. Cada uma resolve um problema concreto, e desfazer
+qualquer uma delas traz o problema de volta.
+
+**Âmbar é geração solar.** Dentro de gráfico ou de dado, âmbar significa
+energia que veio do sol e azul-ardósia significa energia comprada da rede.
+Nenhum aparelho pode ser âmbar — se fosse, a barra de consumo pareceria
+estar falando do sol. Fora dos dados, o âmbar é a cor da marca (símbolo,
+marcador de página, botão de entrar sem conta). São dois papéis, e eles não
+se misturam na mesma peça.
+
+**A paleta dos aparelhos foi conferida por script.** A ordem em
+`CORES_EXTRA` (em `motor.js`) não é decoração: é o que garante que duas
+fatias vizinhas continuem distinguíveis para quem tem daltonismo. Foram
+conferidos separação CVD, piso de croma e contraste com o fundo claro. Se
+mexer na paleta, confira de novo antes de subir.
+
+**Ou borda, ou sombra — nunca as duas.** O cartão é definido pela borda e
+não leva sombra. Sombra fica para o que flutua de verdade: aviso, dica de
+gráfico. Borda fina somada a sombra larga é a assinatura mais reconhecível
+de tela gerada por máquina.
+
+**O título vem antes do contexto.** Nada de rotulinho em caixa-alta por
+cima do `h1`. Primeiro o título, depois a linha de contexto embaixo. Vale
+para a barra do topo, para a tela de entrada e para a versão de celular.
+
+**Nada abaixo de 12px, entrelinha 1.6 no corpo.** Os degraus de tipografia
+estão em `base.css` como `--t-*`. Use os degraus; não digite `px` solto.
+
+**Animação só em `transform` e `opacity`, e nunca partindo do zero.** A
+entrada de tela começa em 40% de opacidade de propósito: em máquina lenta,
+animação que parte do zero deixa a tela em branco bem na hora em que a
+pessoa está olhando. As barras de dados são a exceção deliberada — elas
+animam largura/altura porque `scaleX` distorceria o canto arredondado, e
+são poucas e pequenas.
+
+---
+
 ## Três decisões que parecem estranhas mas têm motivo
 
 **Não usamos framework.** Sem React, sem Vue, sem npm. As telas são funções

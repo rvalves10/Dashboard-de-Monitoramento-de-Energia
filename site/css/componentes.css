@@ -7,145 +7,156 @@
 /* ---------- casca ---------- */
 .app{display:flex;min-height:100vh;background:var(--ground)}
 
-/* O menu lateral fica fixo enquanto o conteudo rola. O gradiente sutil
-   e a sombra na borda direita separam ele do papel sem precisar de linha. */
+/* O menu lateral fica fixo enquanto o conteudo rola. Escuro chapado:
+   a separacao vem de uma linha, nao de degrade nem de sombra difusa. */
 .rail{
-  width:244px;flex-shrink:0;color:var(--on-dark);
-  background:linear-gradient(176deg,#1B1A12,var(--dark) 40%);
-  display:flex;flex-direction:column;padding:22px 0 18px;
+  width:240px;flex-shrink:0;color:var(--on-dark);
+  background:var(--dark);
+  border-right:1px solid #000;
+  display:flex;flex-direction:column;padding:var(--e5) 0 var(--e4);
   position:sticky;top:0;height:100vh;z-index:30;
-  box-shadow:1px 0 0 rgba(22,21,15,.9), 8px 0 32px -12px rgba(22,21,15,.3);
 }
-.brand{display:flex;align-items:center;gap:11px;padding:0 22px 24px}
+.brand{display:flex;align-items:center;gap:11px;padding:0 var(--e5) var(--e6)}
 .brand-mark{
-  width:34px;height:34px;border-radius:11px;flex-shrink:0;
-  background:linear-gradient(150deg,var(--sun-lite),#E08A18);
+  width:32px;height:32px;border-radius:var(--r-sm);flex-shrink:0;
+  background:var(--sun);color:var(--dark);
   display:flex;align-items:center;justify-content:center;
 }
-.brand-mark svg{animation:spin 40s linear infinite}
-.brand-name{font-family:var(--f-display);font-weight:800;font-size:19px;letter-spacing:-.4px;line-height:1}
-.brand-sub{font-size:10.5px;color:var(--on-dark-faint);letter-spacing:.5px;text-transform:uppercase;margin-top:3px}
+.brand-name{font-family:var(--f-display);font-weight:800;font-size:var(--t-lg);letter-spacing:-.02em;line-height:1}
+.brand-sub{font-size:var(--t-xs);color:var(--on-dark-faint);margin-top:2px;line-height:1.2}
 
-.nav{display:flex;flex-direction:column;gap:2px;padding:0 12px}
+.nav{display:flex;flex-direction:column;gap:1px;padding:0 var(--e3)}
 .nav-item{
-  display:flex;align-items:center;gap:11px;width:100%;
-  padding:9px 12px;border-radius:10px;font-size:13.5px;font-weight:500;
-  color:var(--on-dark-soft);transition:background .15s,color .15s;
+  display:flex;align-items:center;gap:11px;width:100%;position:relative;
+  padding:9px var(--e3);border-radius:var(--r-sm);
+  font-size:var(--t-sm);font-weight:500;
+  color:var(--on-dark-soft);transition:background .14s var(--curva),color .14s var(--curva);
 }
-.nav-item:hover{background:rgba(244,241,234,.08);color:var(--on-dark)}
-.nav-item{position:relative}
-.nav-item[aria-current="page"]{background:rgba(237,162,43,.16);color:var(--sun-lite);font-weight:600}
-/* tracinho no canto esquerdo marca onde voce esta */
+.nav-item:hover{background:rgba(242,244,246,.07);color:var(--on-dark)}
+.nav-item[aria-current="page"]{background:rgba(242,244,246,.10);color:var(--on-dark);font-weight:600}
+/* Marcador de navegacao: diz em que pagina voce esta. E o unico lugar
+   do sistema onde uma barra colorida na lateral tem funcao. */
 .nav-item[aria-current="page"]::before{
-  content:"";position:absolute;left:-12px;top:50%;transform:translateY(-50%);
-  width:3px;height:20px;border-radius:0 3px 3px 0;background:var(--sun);
+  content:"";position:absolute;left:calc(var(--e3) * -1);top:50%;transform:translateY(-50%);
+  width:3px;height:18px;border-radius:0 2px 2px 0;background:var(--sun);
 }
 .nav-item svg{flex-shrink:0}
 .nav-label{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .badge{
-  background:var(--bad);color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;
-  border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0;
+  background:var(--bad);color:#fff;font-size:var(--t-xs);font-weight:700;min-width:19px;height:19px;
+  border-radius:var(--r-pill);display:flex;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0;
 }
 
-.rail-spacer{flex:1;min-height:14px}
-.rail-foot{padding:0 12px;display:flex;flex-direction:column;gap:10px}
-.unitbox{background:rgba(244,241,234,.06);border:1px solid rgba(244,241,234,.1);border-radius:14px;padding:13px}
-.unitbox-title{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--on-dark-faint);margin-bottom:9px}
-.unit{display:flex;align-items:center;gap:10px;width:100%;padding:8px 9px;border-radius:9px;color:var(--on-dark-soft);transition:background .15s}
-.unit:hover{background:rgba(244,241,234,.1)}
-.unit[aria-pressed="true"]{background:rgba(244,241,234,.12);color:var(--on-dark)}
-.unit-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:#4A453B}
+.rail-spacer{flex:1;min-height:var(--e4)}
+.rail-foot{padding:0 var(--e3);display:flex;flex-direction:column;gap:var(--e2)}
+.unitbox{border:1px solid rgba(242,244,246,.13);border-radius:var(--r-md);padding:var(--e3)}
+.unitbox-title{font-size:var(--t-xs);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--on-dark-faint);margin-bottom:var(--e2)}
+.unit{display:flex;align-items:center;gap:var(--e2);width:100%;padding:7px var(--e2);border-radius:var(--r-xs);color:var(--on-dark-soft);transition:background .14s var(--curva)}
+.unit:hover{background:rgba(242,244,246,.09)}
+.unit[aria-pressed="true"]{background:rgba(242,244,246,.12);color:var(--on-dark)}
+.unit-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:var(--n-600)}
 .unit[aria-pressed="true"] .unit-dot{background:var(--sun)}
-.unit-name{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.unit-type{font-size:10.5px;color:var(--on-dark-faint)}
+.unit-name{font-size:var(--t-sm);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.unit-type{font-size:var(--t-xs);color:var(--on-dark-faint)}
 
-.meter{border:1px solid rgba(244,241,234,.1);border-radius:14px;padding:12px 13px 13px;background:rgba(244,241,234,.04)}
-.meter-head{display:flex;align-items:center;gap:7px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--on-dark-faint)}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--good-on-dark);flex-shrink:0;animation:beat 2.4s ease-in-out infinite}
-.meter-rows{display:flex;flex-direction:column;gap:7px;margin-top:10px}
-.meter-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--on-dark-soft)}
-.meter-val{font-family:var(--f-mono);font-size:13px;font-weight:500;color:var(--on-dark);font-variant-numeric:tabular-nums}
-.meter-bar{height:4px;border-radius:3px;background:rgba(244,241,234,.12);overflow:hidden;margin-top:10px}
-.meter-bar span{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--sun),var(--sun-lite));transition:width .9s cubic-bezier(.4,0,.2,1)}
-.meter-note{font-size:10.5px;color:var(--on-dark-faint);margin-top:8px;line-height:1.35}
+/* O medidor do menu: o unico bloco do site que muda sozinho. */
+.meter{border:1px solid rgba(242,244,246,.13);border-radius:var(--r-md);padding:var(--e3)}
+.meter-head{display:flex;align-items:center;gap:7px;font-size:var(--t-xs);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--on-dark-faint)}
+/* Pisca porque o numero ao lado esta mesmo trocando a cada 2 segundos.
+   Se o medidor parar, controle.js tira a classe e o ponto congela. */
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--good-on-dark);flex-shrink:0}
+.live-dot.batendo{animation:beat 2s var(--curva) infinite}
+.meter-rows{display:flex;flex-direction:column;gap:6px;margin-top:var(--e3)}
+.meter-row{display:flex;align-items:baseline;justify-content:space-between;gap:var(--e2);font-size:var(--t-xs);color:var(--on-dark-soft)}
+.meter-val{font-family:var(--f-mono);font-size:var(--t-sm);font-weight:500;color:var(--on-dark);font-variant-numeric:tabular-nums}
+.meter-bar{height:4px;border-radius:2px;background:rgba(242,244,246,.14);overflow:hidden;margin-top:var(--e3)}
+.meter-bar span{display:block;height:100%;background:var(--sun);transition:width .9s var(--curva)}
+.meter-note{font-size:var(--t-xs);color:var(--on-dark-faint);margin-top:var(--e2);line-height:var(--lh-snug)}
 
 /* ---------- area principal ---------- */
 .main{flex:1;min-width:0;display:flex;flex-direction:column}
 .topbar{
-  display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
-  padding:24px 34px 18px;border-bottom:1px solid var(--line);
-  background:rgba(239,235,225,.9);backdrop-filter:blur(10px);
+  display:flex;align-items:flex-end;justify-content:space-between;gap:var(--e5);flex-wrap:wrap;
+  padding:var(--e6) var(--e7) var(--e4);border-bottom:1px solid var(--line);
+  background:var(--ground);
   position:sticky;top:0;z-index:20;
 }
-.topbar h1{font-weight:700;font-size:clamp(24px,2.4vw,31px);letter-spacing:-.9px;line-height:1.05}
-.topbar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.seg{display:flex;background:#E5E0D3;border-radius:10px;padding:3px}
-.seg button{padding:6px 15px;border-radius:8px;font-size:12.5px;font-weight:600;color:#7A7466;transition:background .15s,color .15s}
-.seg button{transition:background .18s var(--curva),color .18s var(--curva),box-shadow .18s var(--curva)}
-.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--elev-1)}
+.topbar h1{font-weight:700;font-size:clamp(24px,2.2vw,27px);letter-spacing:-.025em}
+.topbar-sub{font-size:var(--t-sm);color:var(--faint);margin-top:5px}
+.topbar-actions{display:flex;align-items:center;gap:var(--e2);flex-wrap:wrap}
+
+.seg{display:flex;background:var(--ground-2);border-radius:var(--r-md);padding:3px}
+.seg button{
+  padding:6px 14px;border-radius:var(--r-sm);font-size:var(--t-sm);font-weight:600;color:var(--muted);
+  transition:background .16s var(--curva),color .16s var(--curva);
+}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink)}
 .seg button:not([aria-pressed="true"]):hover{color:var(--ink)}
 .seg .short{display:none}
-.ghost-btn{
-  display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:10px;
-  border:1px solid var(--line-2);background:var(--surface);font-size:12.5px;font-weight:600;color:var(--ink-2);
-  transition:border-color .15s,color .15s;
-}
-.ghost-btn:hover{border-color:var(--ink);color:var(--ink);box-shadow:var(--elev-1)}
-.ghost-btn:active{transform:translateY(1px)}
-.dark-btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 15px;border-radius:11px;
-  background:var(--dark);color:var(--on-dark);font-size:13px;font-weight:600;transition:background .15s,opacity .15s;
-}
-.dark-btn{box-shadow:var(--elev-1)}
-.dark-btn:hover{background:var(--dark-2);box-shadow:var(--elev-2)}
-.dark-btn:active:not([disabled]){transform:translateY(1px);box-shadow:var(--elev-1)}
-.dark-btn[disabled]{background:var(--line-2);color:#9C9585;cursor:not-allowed}
-.link-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--sun-deep);transition:color .15s}
-.link-btn:hover{color:var(--sun-deeper)}
 
-.page{padding:24px 34px 64px}
-.grid12{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;align-items:start}
+.ghost-btn{
+  display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 var(--e3);border-radius:var(--r-md);
+  border:1px solid var(--line-2);background:var(--surface);font-size:var(--t-sm);font-weight:600;color:var(--ink-2);
+  transition:border-color .14s var(--curva),color .14s var(--curva);
+}
+.ghost-btn:hover{border-color:var(--n-500);color:var(--ink)}
+.dark-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--e2);
+  height:36px;padding:0 var(--e4);border-radius:var(--r-md);
+  background:var(--dark);color:var(--on-dark);font-size:var(--t-sm);font-weight:600;
+  transition:background .14s var(--curva);
+}
+.dark-btn:hover:not([disabled]){background:var(--dark-2)}
+.dark-btn[disabled]{background:var(--n-300);color:var(--n-500);cursor:not-allowed}
+.link-btn{display:inline-flex;align-items:center;gap:5px;font-size:var(--t-sm);font-weight:600;color:var(--sun-ink);transition:color .14s var(--curva)}
+.link-btn:hover{color:var(--sun-deeper);text-decoration:underline;text-underline-offset:3px}
+
+.page{padding:var(--e6) var(--e7) var(--e8)}
+.grid12{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--e4);align-items:start}
 .s3{grid-column:span 3}.s4{grid-column:span 4}.s5{grid-column:span 5}
 .s6{grid-column:span 6}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}
-.stack{display:flex;flex-direction:column;gap:16px}
+.stack{display:flex;flex-direction:column;gap:var(--e4)}
 
+/* Cartao: a borda define a peca, sem sombra junto. Quem flutua de
+   verdade - aviso e dica - e que ganha sombra, e ai sem borda. */
 .card{
-  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px 26px;
-  box-shadow:var(--elev-1);
-  transition:box-shadow .22s cubic-bezier(.4,0,.2,1),border-color .22s,transform .22s cubic-bezier(.4,0,.2,1);
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:var(--e5) var(--e6);
+  transition:border-color .18s var(--curva);
 }
-.card--tight{padding:18px 20px 16px;border-radius:18px}
-.card--dark{
-  background:linear-gradient(158deg,#1B1A12 0%,var(--dark) 46%,#121108 100%);
-  color:var(--on-dark);border-color:transparent;position:relative;overflow:hidden;
-  box-shadow:var(--elev-3);
-}
-/* fio de luz na borda de cima, que da volume ao cartao escuro */
-.card--dark::before{
-  content:"";position:absolute;left:0;right:0;top:0;height:1px;pointer-events:none;
-  background:linear-gradient(90deg,transparent,rgba(245,194,91,.42),transparent);
-}
-.card h2{font-weight:600;font-size:19px;letter-spacing:-.5px}
-.card-sub{font-size:12.5px;color:var(--faint);margin-top:4px}
-.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
-.legend{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
-.legend span{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
-.swatch{width:14px;height:3px;border-radius:2px;flex-shrink:0}
-.swatch--sq{width:10px;height:10px;border-radius:3px}
-.rule{height:1px;background:var(--ground);border:0;margin:16px 0 13px}
+.card--tight{padding:var(--e4) var(--e5)}
+.card--dark{background:var(--dark);color:var(--on-dark);border-color:var(--dark)}
+.card--dark h2,.card--dark h3{color:var(--on-dark)}
 
-.pill{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap}
+.card h2{font-weight:700;font-size:var(--t-md);letter-spacing:-.015em}
+.card h3{font-weight:700;font-size:var(--t-base);letter-spacing:-.01em}
+.card-sub{font-size:var(--t-sm);color:var(--faint);margin-top:var(--e1);line-height:var(--lh-snug);max-width:62ch}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--e5);flex-wrap:wrap}
+.card--dark .card-sub{color:var(--on-dark-soft)}
+
+.legend{display:flex;gap:var(--e4);align-items:center;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:6px;font-size:var(--t-xs);color:var(--muted)}
+.card--dark .legend span{color:var(--on-dark-soft)}
+.swatch{width:12px;height:3px;border-radius:2px;flex-shrink:0}
+.swatch--sq{width:9px;height:9px;border-radius:2px}
+.rule{height:1px;background:var(--line);border:0;margin:var(--e5) 0 var(--e4)}
+
+.pill{font-size:var(--t-xs);font-weight:600;padding:3px var(--e2);border-radius:var(--r-pill);white-space:nowrap}
 .pill--warn{background:var(--warn-bg);color:var(--warn)}
 .pill--good{background:var(--good-bg);color:var(--good)}
 .pill--bad{background:var(--bad-bg);color:var(--bad)}
-.pill--neutral{background:var(--ground);color:var(--faint)}
-.pill--ia{display:inline-flex;align-items:center;gap:4px;background:#F0E9DA;color:#99722A;font-size:10.5px;letter-spacing:.3px;padding:3px 8px;border-radius:20px;font-weight:600}
+.pill--neutral{background:var(--ground-2);color:var(--muted)}
+.pill--ia{display:inline-flex;align-items:center;gap:4px;background:var(--sun-wash);color:var(--sun-ink);
+  font-size:var(--t-xs);padding:3px 7px;border-radius:var(--r-pill);font-weight:600}
 
-.big{font-family:var(--f-display);font-weight:700;letter-spacing:-1.3px;line-height:1;
-  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
-.big-30{font-size:30px;letter-spacing:-1.2px}
-.big-32{font-size:32px}
-.big-34{font-size:34px;letter-spacing:-1.5px}
-.big-40{font-size:40px;letter-spacing:-1.8px}
-.big-46{font-size:46px;letter-spacing:-2px}
-.big-74{font-size:74px;letter-spacing:-3.4px;line-height:.86}
+/* Numero grande. Tabular sempre: numero que troca a cada 2 segundos nao
+   pode dancar de largura enquanto voce olha. */
+.big{font-family:var(--f-display);font-weight:700;line-height:1;
+  color:var(--ink);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.card--dark .big{color:var(--on-dark)}
+.big-30{font-size:var(--t-xl);letter-spacing:-.03em}
+.big-32{font-size:var(--t-xl);letter-spacing:-.03em}
+.big-34{font-size:var(--t-2xl);letter-spacing:-.033em}
+.big-40{font-size:var(--t-2xl);letter-spacing:-.033em}
+.big-46{font-size:var(--t-3xl);letter-spacing:-.035em}
+.big-74{font-size:var(--t-4xl);letter-spacing:-.038em;line-height:.92}

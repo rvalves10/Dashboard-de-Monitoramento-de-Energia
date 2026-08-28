@@ -4,17 +4,22 @@
    de CSS entram no index.html importa: base, componentes, telas,
    responsivo e impressao, nessa sequencia. */
 
-/* ---------- impressao ---------- */
 @media print{
   @page{margin:14mm}
-  body{background:#fff}
+  body{background:#fff;color:#000;font-size:11pt;line-height:1.5}
   .rail,.topbar,.toasts,.no-print,.mob-tabs{display:none !important}
   .app{display:block}
   .page{padding:0}
-  .card{border-color:#D8D2C4;break-inside:avoid;box-shadow:none}
+  /* No papel o cartao escuro gasta tinta e piora a leitura: vira branco
+     com borda, como o resto. */
+  .card{border-color:#BBB;break-inside:avoid}
+  .card--dark,.hero,.detect{background:#fff !important;color:#000 !important;border:1px solid #BBB}
+  .card--dark h2,.card--dark h3,.card--dark .big,.hero-cur{color:#000 !important}
+  .hero-line,.hero-kicker,.card--dark .card-sub{color:#333 !important}
   .grid12{display:block}
-  .s8,.s4{width:100%}
-  .s4{margin-top:14px}
+  .s3,.s4,.s5,.s7,.s8,.s12{width:100%}
+  .s3,.s4,.s5{margin-top:10px}
   .print-head{display:flex !important}
+  a{text-decoration:none;color:#000}
 }
-.print-head{display:none;align-items:center;gap:10px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.print-head{display:none;align-items:center;gap:var(--e2);margin-bottom:var(--e5);padding-bottom:var(--e3);border-bottom:1px solid var(--line)}

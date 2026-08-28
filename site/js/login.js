@@ -274,11 +274,11 @@ function vLogin() {
      precisa saber onde entrou antes de decidir criar conta. */
   const vitrine =
     '<section class="ent-vitrine">' +
-    '<span class="ent-glow"></span>' +
+    '' +
     '<div class="ent-vitrine-in">' +
       '<div class="ent-marca">' +
         '<span class="ent-ic">' +
-        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16150F" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">' +
+        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--n-900)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">' +
         '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M22 12h-2.4M4.4 12H2M19.07 4.93l-1.7 1.7M6.63 17.37l-1.7 1.7M19.07 19.07l-1.7-1.7M6.63 6.63l-1.7-1.7"/>' +
         '</svg></span>' +
         '<div><div class="ent-nome">Solaris</div>' +
@@ -286,6 +286,7 @@ function vLogin() {
       '</div>' +
 
       '<h1 class="ent-titulo">Sua conta de luz,<br>explicada.</h1>' +
+      '<p class="ent-linha">Monitoramento de energia solar para casa e pequeno negócio, com a Lei 14.300 dentro do cálculo.</p>' +
 
       '<ul class="ent-lista">' +
         itemVitrine('M9 3v6M15 3v6M6 9h12v3a6 6 0 0 1-12 0zM12 18v3',
@@ -300,7 +301,7 @@ function vLogin() {
       '</ul>' +
 
       '<div class="ent-rodape">' +
-        '<span class="live-dot"></span>' +
+        '<span class="live-dot batendo"></span>' +
         'Medidor virtual rodando \u00b7 uma leitura por minuto gravada no banco' +
       '</div>' +
     '</div></section>';

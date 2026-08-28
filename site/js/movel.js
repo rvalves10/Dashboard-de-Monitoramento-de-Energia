@@ -49,7 +49,7 @@ function vMovel() {
   return '<div class="mob">' +
     '<div class="mob-head">' +
     (sub ? '<button class="mob-back" data-act="mback">' + ico(IC.volta, 14, 'currentColor', 2.4) + 'Voltar</button>' : '') +
-    '<div class="mob-unit">' + esc(u.nome) + '</div><h1 class="mob-title">' + esc(titulo) + '</h1></div>' +
+    '<h1 class="mob-title">' + esc(titulo) + '</h1><div class="mob-unit">' + esc(u.nome) + '</div></div>' +
     '<div class="mob-body" id="conteudo" tabindex="-1">' + corpo + '</div>' +
     '<nav class="mob-tabs" aria-label="Seções">' + tabs + '</nav>' +
     '</div>';
@@ -67,21 +67,21 @@ function mPainel() {
   ].map(t => '<div class="mob-tile"><div class="mob-tile-k">' + t[0] + '</div><div class="mob-tile-v">' + t[1] + '</div><div class="mob-tile-s">' + t[2] + '</div></div>').join('');
 
   return '<div class="mob-col">' +
-    '<div class="mob-hero"><span class="hero-glow"></span><div style="position:relative">' +
+    '<div class="mob-hero"><div style="position:relative">' +
     '<div class="mob-hero-k">Economizado em ' + MESES[v.m] + '</div>' +
     '<div class="mob-hero-v"><span class="cur">R$</span><span class="num">' + nf(v.economia) + '</span></div>' +
     '<div class="mob-hero-s">O sol cobriu ' + pct(v.autoPct) + ' do seu consumo até agora</div>' +
-    '<div class="mob-live"><span class="live-dot"></span><span>Agora: consumindo <b id="mLiveC">' + nf(p.cons, 2) + ' kW</b> · gerando <b id="mLiveG">' + nf(p.ger, 2) + ' kW</b></span></div>' +
+    '<div class="mob-live"><span class="live-dot batendo"></span><span>Agora: consumindo <b id="mLiveC">' + nf(p.cons, 2) + ' kW</b> · gerando <b id="mLiveG">' + nf(p.ger, 2) + ' kW</b></span></div>' +
     '</div></div>' +
     '<div class="mob-card"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px">' +
-    '<span class="eyebrow-sm">Hoje</span><div class="legend" style="gap:11px">' +
+    '<h2>Hoje</h2><div class="legend" style="gap:11px">' +
     '<span><i class="swatch" style="background:var(--sun)"></i>Sol</span><span><i class="swatch" style="background:var(--grid)"></i>Consumo</span></div></div>' +
     '<svg viewBox="0 0 320 100" style="width:100%;height:auto;margin-top:10px;overflow:visible">' +
-    '<defs><linearGradient id="gSolM" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EDA22B" stop-opacity="0.3"/><stop offset="100%" stop-color="#EDA22B" stop-opacity="0"/></linearGradient></defs>' +
+    '<defs><linearGradient id="gSolM" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--sun)" stop-opacity="0.3"/><stop offset="100%" stop-color="var(--sun)" stop-opacity="0"/></linearGradient></defs>' +
     '<path d="' + caminho(dia.ger, max, 320, 96, true) + '" fill="url(#gSolM)"/>' +
-    '<path d="' + caminho(dia.ger, max, 320, 96) + '" fill="none" stroke="#EDA22B" stroke-width="2.4" stroke-linejoin="round"/>' +
-    '<path d="' + caminho(dia.cons, max, 320, 96) + '" fill="none" stroke="#3E4C7A" stroke-width="2" stroke-dasharray="4 3" stroke-linejoin="round"/>' +
-    '<line x1="' + ((v.hDec - (v.data.getDate() - 1) * 24) / 23 * 320).toFixed(1) + '" y1="0" x2="' + ((v.hDec - (v.data.getDate() - 1) * 24) / 23 * 320).toFixed(1) + '" y2="96" stroke="#16150F" stroke-width="1" stroke-dasharray="3 3" opacity=".4"/>' +
+    '<path d="' + caminho(dia.ger, max, 320, 96) + '" fill="none" stroke="var(--sun)" stroke-width="2.4" stroke-linejoin="round"/>' +
+    '<path d="' + caminho(dia.cons, max, 320, 96) + '" fill="none" stroke="var(--grid)" stroke-width="2" stroke-dasharray="4 3" stroke-linejoin="round"/>' +
+    '<line x1="' + ((v.hDec - (v.data.getDate() - 1) * 24) / 23 * 320).toFixed(1) + '" y1="0" x2="' + ((v.hDec - (v.data.getDate() - 1) * 24) / 23 * 320).toFixed(1) + '" y2="96" stroke="var(--n-900)" stroke-width="1" stroke-dasharray="3 3" opacity=".4"/>' +
     '</svg></div>' +
     '<div class="mob-grid2">' + tiles + '</div></div>';
 }
@@ -129,7 +129,7 @@ function mAparelhos() {
     '<div class="eq-track" style="margin-top:9px"><i style="width:' + (e.kwh / maxK) * 100 + '%;background:' + e.cor + '"></i></div>' +
     '<div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--faint);margin-top:6px">' +
     '<span>' + nf(e.kwh) + ' kWh</span><span>' + pct((e.kwh / total) * 100) + ' do total</span></div></div>').join('');
-  return '<div class="mob-col"><div class="eyebrow-sm">Estimado por IA a partir do medidor</div>' + linhas + '</div>';
+  return '<div class="mob-col"><p class="rotulo-lc" style="margin-bottom:4px">Estimado por IA a partir do medidor</p>' + linhas + '</div>';
 }
 
 function mMetas() {
@@ -140,7 +140,7 @@ function mMetas() {
     '<div><div style="font-size:13px;font-weight:600">' + esc(a.titulo) + '</div>' +
     '<div style="font-size:12px;color:var(--ink-2);margin-top:3px;line-height:1.45">' + esc(a.txt) + '</div></div></div>').join('');
   return '<div class="mob-col"><div class="mob-card">' +
-    '<div class="eyebrow-sm">Meta do mês</div>' +
+    '<h2>Meta do mês</h2>' +
     '<div style="display:flex;align-items:baseline;gap:6px;margin-top:6px">' +
     '<span class="big" style="font-size:30px">' + nf(v.mtd.tc) + '</span>' +
     '<span style="font-size:13px;color:var(--faint)">de <b id="metaLbl">' + nf(meta) + '</b> kWh</span></div>' +
@@ -156,7 +156,7 @@ function mMais() {
   const menu = MMENU.map(x => '<button class="mob-menu" data-act="msub" data-k="' + x.k + '">' +
     '<span class="mob-menu-ic">' + ico(x.icon, 17, 'var(--sun-deep)', 1.9) + '</span>' +
     '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + x.t + '</span>' +
-    '<span class="mob-menu-s" style="display:block">' + x.s + '</span></span>' + ico(IC.chevron, 15, '#B9B2A2', 2.2) + '</button>').join('');
+    '<span class="mob-menu-s" style="display:block">' + x.s + '</span></span>' + ico(IC.chevron, 15, 'var(--n-400)', 2.2) + '</button>').join('');
   const uns = chavesUnidades().map(k => {
     const u = uni(k), at = S.perfil === k;
     return '<button class="mob-menu" data-act="unit" data-unit="' + k + '" style="border-color:' + (at ? 'var(--ink)' : 'var(--line)') + '">' +
@@ -175,14 +175,14 @@ function mMais() {
     '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>' +
     '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">Entrar</span>' +
     '<span class="mob-menu-s" style="display:block">Opcional · salvar em conta própria</span></span>' +
-    ico(IC.chevron, 15, '#B9B2A2', 2.2) + '</button>'
+    ico(IC.chevron, 15, 'var(--n-400)', 2.2) + '</button>'
     : '<div class="mob-card" style="display:flex;align-items:center;gap:12px">' +
     '<span class="conta-av">' + esc((s.nome || '?').charAt(0).toUpperCase()) + '</span>' +
     '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + esc(s.nome) + '</span>' +
     '<span class="mob-menu-s" style="display:block">' + esc(s.email) + '</span></span>' +
     '<button class="link-btn" data-act="sair">Sair</button></div>';
   return '<div class="mob-col">' + conta + menu +
-    '<div class="eyebrow-sm" style="margin-top:10px">Trocar de unidade</div>' + uns + '</div>';
+    '<h2 style="margin-top:10px">Trocar de unidade</h2>' + uns + '</div>';
 }
 
 function mConta() {
@@ -218,7 +218,7 @@ function mCadastro() {
     '<input type="range" data-fid="horas" data-in="horas" min="0.1" max="24" step="0.1" value="' + n.horas + '" aria-label="Horas por dia">' +
     '<div class="slider-head" style="margin-top:12px"><span class="field-lbl">Dias por mês</span><span class="slider-val" id="diasLbl">' + n.dias + ' dias por mês</span></div>' +
     '<input type="range" data-fid="dias" data-in="dias" min="1" max="31" step="1" value="' + n.dias + '" aria-label="Dias por mês"></div>' +
-    '<div class="mob-card"><div class="eyebrow-sm">Onde fica</div><div class="chips">' + coms + '</div></div>' +
+    '<div class="mob-card"><h3>Onde fica</h3><div class="chips">' + coms + '</div></div>' +
     '<div class="mob-hero"><div class="mob-hero-k">Estimativa</div>' +
     '<div class="mob-hero-v"><span class="num" style="font-size:36px" id="estKwh">' + nf(e.kwh, 1) + '</span><span class="cur" style="font-size:14px">kWh/mês</span></div>' +
     '<div style="font-size:17px;font-weight:600;color:var(--sun-lite);margin-top:6px" id="estCusto">' + brl(e.custo) + ' por mês</div>' +
@@ -234,7 +234,7 @@ function mCadastro() {
 function mConfig() {
   const v = visao(), u = unidade(), t = tarifaAtual();
   return '<div class="mob-col"><div class="mob-card">' +
-    '<div class="eyebrow-sm">Tarifa de energia</div>' +
+    '<h2>Tarifa de energia</h2>' +
     '<div class="big" style="font-size:30px;margin-top:6px" id="tarLbl">R$ ' + nf(t, 2) + ' / kWh</div>' +
     '<input type="range" data-fid="tarifa" data-in="tarifa" min="40" max="160" step="1" value="' + Math.round(t * 100) + '" aria-label="Tarifa">' +
     (S.tarifa[S.perfil] != null ? '<button class="link-btn" style="margin-top:8px" data-act="reset-tarifa">Voltar para a tarifa da distribuidora</button>' : '') +

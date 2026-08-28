@@ -4,46 +4,45 @@
    de CSS entram no index.html importa: base, componentes, telas,
    responsivo e impressao, nessa sequencia. */
 
-/* ---------- responsivo ---------- */
 @media (max-width:1240px){
   .s3{grid-column:span 6}
-  .s7,.s8{grid-column:span 12}
-  .s4,.s5{grid-column:span 12}
+  .s4,.s5,.s7,.s8{grid-column:span 12}
   .det-sticky{position:static !important}
   .inv-head,.inv-row{grid-template-columns:1fr 118px 108px}
-  .eq-head,.eq-row{grid-template-columns:24px minmax(0,1fr) 84px 76px 52px 28px;gap:10px}
+  .eq-head,.eq-row{grid-template-columns:24px minmax(0,1fr) 84px 76px 52px 28px;gap:var(--e2)}
+  .page,.topbar{padding-left:var(--e6);padding-right:var(--e6)}
 }
+
+/* O menu vira so icone. O rotulo sai, mas o aria-label continua no botao,
+   entao leitor de tela e navegacao por teclado nao perdem nada. */
 @media (max-width:1040px){
-  .rail{width:74px}
-  .nav-label,.brand-text,.unitbox,.meter-rows,.meter-note,.meter-bar,.meter-lbl{display:none}
-  .rail-foot{padding:0 10px}
-  .meter{padding:10px;display:flex;justify-content:center}
-  .brand{padding:0 20px 24px;justify-content:center}
+  .rail{width:72px}
+  .nav-label,.brand-text,.unitbox,.meter-rows,.meter-note,.meter-bar{display:none}
+  .rail-foot{padding:0 var(--e2)}
+  .meter{padding:var(--e2);display:flex;justify-content:center}
+  .brand{padding:0 var(--e5) var(--e6);justify-content:center}
   .nav-item{justify-content:center;padding:11px 0}
+  .nav-item[aria-current="page"]::before{left:calc(var(--e2) * -1)}
   .badge{position:absolute;transform:translate(14px,-12px)}
-  .nav-item{position:relative}
-  .page,.topbar{padding-left:20px;padding-right:20px}
   .seg .full{display:none}
   .seg .short{display:inline}
-  .seg button{padding:6px 12px}
+  .seg button{padding:6px var(--e3)}
 }
+
 @media (max-width:900px){
   .eq-head,.eq-row{grid-template-columns:minmax(0,1fr) 76px 52px 28px}
   .eq-hide{display:none}
-  .topbar h1{font-size:25px}
-  .card{padding:18px 18px}
-  .hero{padding:20px 20px 18px}
-  .big-74{font-size:56px;letter-spacing:-2.4px}
+  .card{padding:var(--e4) var(--e5)}
+  .hero{padding:var(--e5)}
+  .big-74{font-size:var(--t-3xl);letter-spacing:-.035em}
   .inv-head,.inv-row{grid-template-columns:1fr 92px}
   .inv-q{display:none}
+  .page,.topbar{padding-left:var(--e5);padding-right:var(--e5)}
 }
-/* abaixo disso o app vira app de celular de verdade */
-/* Abaixo deste ponto o JavaScript troca a casca inteira pela versao de
-   coluna unica (ver site/js/movel.js), entao aqui so sobra o que o layout
-   estreito precisa alem daquilo. */
-@media (min-width:761px){
-  .mobile-only{display:none !important}
-}
+
+/* Abaixo de 761px o JavaScript troca a casca inteira pela versao de
+   coluna unica (ver site/js/movel.js), entao aqui so sobra o que o
+   layout estreito precisa alem daquilo. */
 @media (min-width:761px){
   .mobile-only{display:none !important}
 }
