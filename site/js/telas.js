@@ -43,7 +43,8 @@ const IC = {
   volta: 'M15 6l-6 6 6 6',
   chevron: 'M9 6l6 6-6 6',
   lixo: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
-  lapis: 'M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM14 6l4 4'
+  lapis: 'M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM14 6l4 4',
+  camera: 'M3 8a2 2 0 0 1 2-2h2.5L9 4h6l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z'
 };
 function ico(d, sz, cor, sw) {
   return '<svg width="' + (sz || 16) + '" height="' + (sz || 16) + '" viewBox="0 0 24 24" fill="none" stroke="' + (cor || 'currentColor') + '" stroke-width="' + (sw || 1.8) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"/></svg>';
@@ -808,19 +809,92 @@ function textoCobertura(p, n) {
   return base;
 }
 
+/* ---------- cadastro da unidade, em tres passos ----------
+   Era um formulario unico com dez campos. Conta nova cai direto aqui, e
+   dez campos de uma vez e onde a pessoa desiste. Dividido em passos ela
+   ve o fim da tarefa, e cada passo pergunta uma coisa so:
+
+     1. o que esta na conta de luz   (da para preencher pela foto)
+     2. o que esta na nota do instalador
+     3. quais aparelhos ela realmente tem
+
+   O passo 3 existe por causa de um defeito real: a unidade nascia com os
+   aparelhos do arquetipo ja dentro, e a pessoa via "Ar-condicionado" num
+   painel que deveria ser dela. Agora nada aparece sem ela ter marcado. */
+const PASSOS_UNIDADE = [
+  { n: 1, titulo: 'Sua conta de luz', sub: 'Os números que já estão na fatura que chega todo mês.' },
+  { n: 2, titulo: 'Seu sistema solar', sub: 'O que está na nota do instalador. O resto o sistema calcula.' },
+  { n: 3, titulo: 'O que você tem ligado', sub: 'Só o que existe na sua unidade. É isso que o painel vai dividir.' }
+];
+
+function passoAtual() {
+  return clamp(Number(S.nova.passo) || 1, 1, 3);
+}
+/* Cada passo so libera o seguinte quando o que ele pede esta preenchido. */
+function passoCompleto(n) {
+  const v = S.nova;
+  if (n === 1) return v.nome.trim().length > 1 && v.consumoMes > 0 && v.tarifa > 0;
+  if (n === 2) return v.potenciaKwp > 0 && v.paineis > 0;
+  return true;
+}
+
+function trilhaPassos() {
+  const at = passoAtual();
+  return '<ol class="trilha">' + PASSOS_UNIDADE.map(p => {
+    const estado = p.n === at ? 'atual' : passoCompleto(p.n) && p.n < at ? 'feito' : 'espera';
+    /* passo ja visitado abre sempre; passo a frente so abre se o anterior fechou */
+    const podeIr = p.n <= at || passoCompleto(p.n - 1);
+    return '<li class="trilha-item trilha-item--' + estado + '">' +
+      (podeIr
+        ? '<button data-act="nova-passo" data-v="' + p.n + '"' + (p.n === at ? ' aria-current="step"' : '') + '>'
+        : '<span>') +
+      '<span class="trilha-n">' + (estado === 'feito' ? ico(IC.check, 12, 'currentColor', 3) : p.n) + '</span>' +
+      '<span class="trilha-t">' + p.titulo + '</span>' +
+      (podeIr ? '</button>' : '</span>') + '</li>';
+  }).join('') + '</ol>';
+}
+
+/* ----- bloco da foto da conta de luz ----- */
+function blocoFotoConta() {
+  const e = LEITOR || {};
+  if (e.estado === 'lendo') {
+    return '<div class="foto-cx foto-cx--lendo">' +
+      '<div class="foto-t">Lendo a sua conta… ' + nf(clamp(e.progresso || 0, 0, 100)) + '%</div>' +
+      '<div class="foto-barra"><i style="width:' + clamp(e.progresso || 0, 3, 100) + '%"></i></div>' +
+      '<div class="foto-d">' + esc(e.etapa || 'Preparando o leitor') + '</div></div>';
+  }
+  if (e.estado === 'ok') {
+    const achou = e.achados || [];
+    return '<div class="foto-cx foto-cx--ok">' +
+      '<div class="foto-t">' + ico(IC.check, 14, 'currentColor', 2.6) +
+      (achou.length
+        ? 'Preenchi ' + achou.length + (achou.length > 1 ? ' campos' : ' campo') + ' pela foto'
+        : 'Li a foto, mas não reconheci nenhum campo') + '</div>' +
+      (achou.length
+        ? '<div class="foto-d">' + achou.map(a => '<b>' + esc(a.rotulo) + ':</b> ' + esc(a.valor)).join(' · ') +
+          '<br>Confira cada um abaixo antes de continuar. Leitura de foto erra, e o cálculo inteiro depende destes números.</div>'
+        : '<div class="foto-d">Pode digitar à mão nos campos abaixo. Foto reta, sem sombra e com a fatura preenchendo a tela costuma funcionar melhor.</div>') +
+      '<label class="link-btn foto-outra" for="fotoConta">Tentar outra foto' +
+      '<input type="file" id="fotoConta" accept="image/*" data-act="foto-conta" class="sr"></label></div>';
+  }
+  if (e.estado === 'erro') {
+    return '<div class="foto-cx foto-cx--erro">' +
+      '<div class="foto-t">Não consegui ler a foto</div>' +
+      '<div class="foto-d">' + esc(e.msg || 'Tente de novo ou preencha à mão.') + '</div>' +
+      '<label class="link-btn foto-outra" for="fotoConta">Tentar de novo' +
+      '<input type="file" id="fotoConta" accept="image/*" data-act="foto-conta" class="sr"></label></div>';
+  }
+  return '<div class="foto-cx">' +
+    '<span class="foto-ic">' + ico(IC.camera, 18, 'currentColor', 1.8) + '</span>' +
+    '<span class="foto-txt"><span class="foto-t">Tem a conta de luz aí?</span>' +
+    '<span class="foto-d">Mande uma foto e eu tento preencher o consumo, a tarifa e a distribuidora para você conferir.</span></span>' +
+    '<label class="foto-btn" for="fotoConta">' + ico(IC.mais, 14, 'currentColor', 2.4) + 'Escolher foto' +
+    '<input type="file" id="fotoConta" accept="image/*" data-act="foto-conta" class="sr"></label></div>';
+}
+
 function vUnidade() {
-  const n = S.nova, p = previaUnidade();
-  const pode = n.nome.trim().length > 1 && n.potenciaKwp > 0 && n.consumoMes > 0;
-
-  const arqs = Object.keys(ARQUETIPOS).map(k => {
-    const a = ARQUETIPOS[k], at = n.arquetipo === k;
-    return '<button class="opt" data-act="nova-arq" data-v="' + k + '" aria-pressed="' + at + '">' +
-      '<span class="opt-t">' + a.rotulo + '</span>' +
-      '<span class="opt-d">' + a.desc + '</span></button>';
-  }).join('');
-
-  const tels = TELHADOS.map(t => '<button class="chip" data-act="nova-telhado" data-v="' + t.k + '" ' +
-    'aria-pressed="' + (n.telhado === t.k) + '">' + t.rotulo + '</button>').join('');
+  const n = S.nova, p = previaUnidade(), at = passoAtual();
+  const pode = passoCompleto(1) && passoCompleto(2);
 
   /* Sempre type=text: input[type=number] recusa vírgula decimal, e em
      português a vírgula é o separador natural. O parse aceita as duas. */
@@ -828,38 +902,102 @@ function vUnidade() {
     '<div class="field"><label class="field-lbl" for="' + id + '">' + rot + '</label>' +
     '<input class="text-in" id="' + id + '" data-fid="' + id + '" data-in="' + id + '" type="text" ' +
     (num ? 'inputmode="decimal" ' : '') +
-    'value="' + esc(num ? (valor % 1 === 0 ? nf(valor) : String(valor).replace('.', ',')) : valor) + '" autocomplete="off" style="max-width:320px">' +
+    'value="' + esc(num ? (valor % 1 === 0 ? nf(valor) : String(valor).replace('.', ',')) : valor) + '" autocomplete="off" style="max-width:340px">' +
     (dica ? '<div class="dica">' + dica + '</div>' : '') + '</div>';
 
+  let corpo;
+  if (at === 1) {
+    const arqs = Object.keys(ARQUETIPOS).map(k => {
+      const a = ARQUETIPOS[k];
+      return '<button class="opt" data-act="nova-arq" data-v="' + k + '" aria-pressed="' + (n.arquetipo === k) + '">' +
+        '<span class="opt-t">' + a.rotulo + '</span>' +
+        '<span class="opt-d">' + a.desc + '</span></button>';
+    }).join('');
+    corpo = blocoFotoConta() +
+      campo('unNome', 'Nome da unidade', 'Como você quer ver no menu — “Minha casa”, “Loja do centro”.', n.nome) +
+      campo('unConsumo', 'Consumo médio por mês (kWh)', 'Pegue a média dos últimos 12 meses — costuma vir num gráfico na própria conta.', n.consumoMes, true) +
+      campo('unTarifa', 'Tarifa (R$ por kWh)', 'Divida o valor total pela quantidade de kWh, ou procure por “tarifa” na conta.', n.tarifa, true) +
+      campo('unDistribuidora', 'Distribuidora', 'Quem manda a conta: Enel, CPFL, Light, Cemig…', n.distribuidora) +
+      '<div class="field"><span class="field-lbl">Como a energia é usada</span>' +
+      '<div class="dica">Isso define a curva de consumo hora a hora, sem você digitar 24 números.</div>' +
+      '<div class="opts">' + arqs + '</div></div>';
+  } else if (at === 2) {
+    const tels = TELHADOS.map(t => '<button class="chip" data-act="nova-telhado" data-v="' + t.k + '" ' +
+      'aria-pressed="' + (n.telhado === t.k) + '">' + t.rotulo + '</button>').join('');
+    corpo = '<div class="field"><span class="field-lbl">Condição do telhado</span>' +
+      '<div class="dica">Determina quanto do sol da região os painéis conseguem aproveitar.</div>' +
+      '<div class="chips">' + tels + '</div></div>' +
+      campo('unPotencia', 'Potência instalada (kWp)', 'Está na nota do instalador. Some a potência dos painéis e divida por mil.', n.potenciaKwp, true) +
+      campo('unPaineis', 'Quantidade de painéis', '', n.paineis, true) +
+      campo('unInvestimento', 'Quanto custou (R$)', 'Usado só para calcular em quanto tempo o sistema se paga.', n.investimento, true) +
+      campo('unMeses', 'Há quantos meses está ligado', 'Define se você tem direito adquirido pela Lei 14.300 e o histórico que o sistema monta.', n.mesesOperacao, true);
+  } else {
+    const opcoes = aparelhosDoArquetipo(n.arquetipo);
+    const marcados = Array.isArray(n.aparelhos) ? n.aparelhos : opcoes.map(e => e.id);
+    const itens = opcoes.map(e => {
+      const on = marcados.indexOf(e.id) >= 0;
+      return '<button class="apsel" data-act="nova-aparelho" data-v="' + esc(e.id) + '" aria-pressed="' + on + '">' +
+        '<span class="apsel-cx" aria-hidden="true">' + (on ? ico(IC.check, 12, 'currentColor', 3) : '') + '</span>' +
+        '<span class="apsel-txt"><span class="apsel-n">' + esc(e.nome) + '</span>' +
+        '<span class="apsel-d">' + esc(e.local) + ' · ' + nf(e.pot) + ' W típicos</span></span></button>';
+    }).join('');
+    corpo = '<div class="field">' +
+      '<div class="apsel-topo"><span class="field-lbl">Marque o que existe na sua unidade</span>' +
+      '<button class="link-btn" data-act="nova-aparelhos-todos">' +
+      (marcados.length === opcoes.length ? 'Desmarcar todos' : 'Marcar todos') + '</button></div>' +
+      '<div class="dica">Só o que estiver marcado aparece no painel e no ranking. O que você não marcar continua sendo medido: entra como “Não identificado”, e dá para cadastrar depois em Aparelhos.</div>' +
+      '<div class="apsel-grade">' + itens + '</div>' +
+      (marcados.length === 0
+        ? '<div class="dica" style="color:var(--warn)">Sem nenhum marcado, o painel mostra todo o consumo como não identificado. Dá para seguir assim e cadastrar depois.</div>'
+        : '') + '</div>';
+  }
+
+  const voltar = at > 1
+    ? '<button class="ghost-btn" data-act="nova-passo" data-v="' + (at - 1) + '">Voltar</button>'
+    : '';
+  const avancar = at < 3
+    ? '<button class="dark-btn" data-act="nova-passo" data-v="' + (at + 1) + '"' +
+      (passoCompleto(at) ? '' : ' disabled') + '>Continuar' + ico(IC.seta, 13, 'currentColor', 2.4) + '</button>'
+    : '<button class="dark-btn" data-act="salvar-unidade"' + (pode ? '' : ' disabled') + '>' +
+      ico(IC.check, 14, 'currentColor', 2.6) + 'Criar minha unidade</button>';
+  const falta = at < 3
+    ? (passoCompleto(at) ? '' : '<span class="passo-falta">' + (at === 1
+        ? 'Preencha o nome, o consumo e a tarifa para continuar.'
+        : 'Informe a potência e a quantidade de painéis.') + '</span>')
+    : (pode ? '' : '<span class="passo-falta">Volte e complete os passos anteriores.</span>');
+
   const form = '<section class="card s7" style="padding:24px 28px 28px">' +
-    '<h2>Sua unidade</h2>' +
-    '<div class="card-sub">Só o que está na sua conta de luz e na nota do instalador. O resto o sistema calcula.</div>' +
-
-    campo('unNome', 'Nome da unidade', 'Como você quer ver no menu — “Minha casa”, “Loja do centro”.', n.nome) +
-
-    '<div class="field"><span class="field-lbl">Como a energia é usada</span>' +
-    '<div class="dica">Isso define a curva de consumo hora a hora, sem você digitar 24 números.</div>' +
-    '<div class="opts">' + arqs + '</div></div>' +
-
-    '<div class="field"><span class="field-lbl">Condição do telhado</span>' +
-    '<div class="dica">Determina quanto do sol da região os painéis conseguem aproveitar.</div>' +
-    '<div class="chips">' + tels + '</div></div>' +
-
-    '<hr class="rule" style="margin:24px 0 4px">' +
-    '<h3 style="margin-bottom:4px">Da sua conta de luz</h3>' +
-    campo('unConsumo', 'Consumo médio por mês (kWh)', 'Pegue a média dos últimos 12 meses — costuma vir num gráfico na própria conta.', n.consumoMes, true) +
-    campo('unTarifa', 'Tarifa (R$ por kWh)', 'Divida o valor total pela quantidade de kWh, ou procure por “tarifa” na conta.', n.tarifa, true) +
-    campo('unDistribuidora', 'Distribuidora', '', n.distribuidora) +
-
-    '<hr class="rule" style="margin:24px 0 4px">' +
-    '<h3 style="margin-bottom:4px">Do seu sistema solar</h3>' +
-    campo('unPotencia', 'Potência instalada (kWp)', 'Está na nota do instalador. Some a potência dos painéis e divida por mil.', n.potenciaKwp, true) +
-    campo('unPaineis', 'Quantidade de painéis', '', n.paineis, true) +
-    campo('unInvestimento', 'Quanto custou (R$)', 'Usado só para calcular em quanto tempo o sistema se paga.', n.investimento, true) +
-    campo('unMeses', 'Há quantos meses está ligado', 'Define se você tem direito adquirido pela Lei 14.300 e o histórico que o sistema monta.', n.mesesOperacao, true) +
+    trilhaPassos() +
+    '<h2 style="margin-top:22px">' + PASSOS_UNIDADE[at - 1].titulo + '</h2>' +
+    '<div class="card-sub">' + PASSOS_UNIDADE[at - 1].sub + '</div>' +
+    corpo +
+    '<div class="passo-nav">' + voltar + '<div class="passo-nav-fim">' + falta + avancar + '</div></div>' +
     '</section>';
 
-  const previa = '<section class="card card--dark" style="padding:24px 26px 26px">' +
+  return '<div class="grid12 enter">' + form + '<div class="s5 stack">' + previaCard(n, p, at) + ajudaCard(at) + '</div></div>';
+}
+
+/* A prévia muda de foco conforme o passo: nos dois primeiros o que importa
+   é a geração; no terceiro, quanto do consumo os aparelhos marcados
+   conseguem explicar. */
+function previaCard(n, p, at) {
+  if (at === 3) {
+    const opcoes = aparelhosDoArquetipo(n.arquetipo);
+    const marcados = Array.isArray(n.aparelhos) ? n.aparelhos : opcoes.map(e => e.id);
+    const a = ARQUETIPOS[n.arquetipo] || ARQUETIPOS.casaVazia;
+    const coberto = soma(a.equipamentos.filter(e => marcados.indexOf(e.id) >= 0).map(e => e.share)) * 100;
+    return '<section class="card card--dark" style="padding:24px 26px 26px">' +
+      '<h2>O que o painel vai explicar</h2>' +
+      '<div style="display:flex;align-items:baseline;gap:8px;margin-top:12px">' +
+      '<span class="big big-46">' + nf(coberto) + '</span>' +
+      '<span style="font-size:15px;color:var(--on-dark-soft)">% do seu consumo</span></div>' +
+      '<div class="est-bar"><i style="width:' + clamp(coberto, 0, 100) + '%"></i></div>' +
+      '<div style="font-size:13px;color:var(--on-dark-soft);margin-top:12px;line-height:1.55">' +
+      marcados.length + ' de ' + opcoes.length + ' aparelhos marcados. Os ' +
+      nf(Math.max(0, 100 - coberto)) + '% restantes aparecem como <b style="color:var(--on-dark)">Não identificado</b> ' +
+      'até você cadastrar o que falta.</div></section>';
+  }
+  return '<section class="card card--dark" style="padding:24px 26px 26px">' +
     '<h2>O que o sistema vai calcular</h2>' +
     '<div style="display:flex;align-items:baseline;gap:8px;margin-top:12px">' +
     '<span class="big big-46" id="pvGer">' + nf(p.geracao) + '</span>' +
@@ -868,16 +1006,24 @@ function vUnidade() {
     nf(p.telhado.fator * 100) + '% do sol da região, com ' + nf(n.potenciaKwp, 1) + ' kWp instalados</div>' +
     '<div class="est-bar"><i id="pvBar" style="width:' + clamp(p.cobertura, 0, 100) + '%"></i></div>' +
     '<div style="font-size:12px;color:var(--on-dark-soft);margin-top:8px" id="pvCob">' + textoCobertura(p, n) + '</div>' +
-    '<hr style="border:0;height:1px;background:rgba(244,241,234,.14);margin:18px 0 14px">' +
+    '<hr style="border:0;height:1px;background:rgba(242,244,246,.14);margin:18px 0 14px">' +
     '<div style="font-size:13px;color:var(--on-dark-soft);line-height:1.55" id="pvConta">' +
     'Sem os painéis, sua conta seria cerca de <b style="color:var(--on-dark)">' + brl(p.contaSem) + '</b> por mês.</div>' +
-    '<button class="dark-btn" data-act="salvar-unidade" style="width:100%;height:46px;margin-top:20px;border-radius:13px;font-size:14.5px;' +
-    (pode ? 'background:var(--on-dark);color:var(--dark)' : '') + '"' + (pode ? '' : ' disabled') + '>' +
-    ico(IC.mais, 15, 'currentColor', 2.4) + 'Criar unidade</button>' +
-    (pode ? '' : '<div style="font-size:12px;color:var(--on-dark-soft);margin-top:10px">Falta o nome, a potência ou o consumo.</div>') +
     '</section>';
+}
 
-  const ajuda = '<section class="card" style="padding:20px 22px 22px">' +
+function ajudaCard(at) {
+  if (at === 3) {
+    return '<section class="card" style="padding:20px 22px 22px">' +
+      '<h2>Por que perguntar isso</h2>' +
+      '<div style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:10px">' +
+      'O medidor mede a casa inteira, não tomada por tomada. Para dizer quanto é da geladeira, ' +
+      'o sistema precisa saber que existe uma geladeira.' +
+      '<br><br>Marcar aqui não é chute: cada aparelho tem uma assinatura de horário, e é ela que ' +
+      'o cálculo usa para repartir a leitura. Por isso a soma sempre fecha com o medidor.' +
+      '</div></section>';
+  }
+  return '<section class="card" style="padding:20px 22px 22px">' +
     '<h2>Como o cálculo funciona</h2>' +
     '<div style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:10px">' +
     'A geração não é chute nem um número que você digita: vem da irradiação média da região (' +
@@ -886,6 +1032,4 @@ function vUnidade() {
     '<br><br>O consumo hora a hora vem do arquétipo escolhido, ajustado para bater com a média mensal da sua conta. ' +
     'Depois disso o sistema calcula sozinho autoconsumo, injeção, créditos e Fio B.' +
     '</div></section>';
-
-  return '<div class="grid12 enter">' + form + '<div class="s5 stack">' + previa + ajuda + '</div></div>';
 }

@@ -1057,6 +1057,181 @@ grupo('Integridade', () => {
 
 /* ================= execucao ================= */
 
+/* ================= conta nova é conta da pessoa =================
+   Este grupo nasceu de tres defeitos que chegaram juntos, todos com a
+   mesma cara para quem usa: "criei uma conta e veio a casa de outra
+   pessoa dentro". Cada teste aqui trava um deles. */
+grupo('Conta nova é conta da pessoa', () => {
+
+  /* Defeito 1: o painel dizia "Bom dia, Marina" para qualquer um. */
+  teste('a saudação usa o nome de quem está logado', () => {
+    const antes = SESSAO;
+    try {
+      SESSAO = { id: 'a@b.com', nome: 'Ana Carolina de Souza', email: 'a@b.com', ate: null };
+      const s = saudacao();
+      ok(s.indexOf('Ana') >= 0, 'não usou o nome da conta: ' + s);
+      ok(s.indexOf('Carolina') < 0, 'deveria usar só o primeiro nome: ' + s);
+      ok(s.indexOf('Marina') < 0, 'voltou o nome fixo de demonstração: ' + s);
+    } finally { SESSAO = antes; }
+  });
+
+  teste('visitante é cumprimentado sem nome inventado', () => {
+    const antes = SESSAO;
+    try {
+      SESSAO = { id: 'visitante', nome: 'Visitante', email: null, ate: null };
+      const s = saudacao();
+      ok(/^(Bom dia|Boa tarde|Boa noite)$/.test(s), 'visitante não deveria ter nome: ' + s);
+    } finally { SESSAO = antes; }
+  });
+
+  /* Defeito 2: a unidade nascia com os aparelhos do arquétipo dentro,
+     todos marcados como "detectado por IA", sem ninguém ter cadastrado. */
+  teste('a unidade só tem os aparelhos que a pessoa marcou', () => {
+    const u = montarUnidade({
+      chave: 'u-teste', nome: 'Casa teste', arquetipo: 'casaVazia', telhado: 'bom',
+      distribuidora: 'X', tarifa: 1, consumoMes: 300, potenciaKwp: 4,
+      paineis: 10, investimento: 20000, mesesOperacao: 12,
+      aparelhos: ['gel', 'luz']
+    });
+    igual(u.equipamentos.length, 2, 'deveria ter só os dois marcados');
+    const ids = u.equipamentos.map(e => e.id).sort().join(',');
+    igual(ids, 'gel,luz', 'trouxe aparelho que não foi marcado: ' + ids);
+  });
+
+  teste('marcar nenhum aparelho deixa a unidade sem nenhum', () => {
+    const u = montarUnidade({
+      chave: 'u-vazia', nome: 'Casa', arquetipo: 'casaVazia', telhado: 'bom',
+      distribuidora: 'X', tarifa: 1, consumoMes: 300, potenciaKwp: 4,
+      paineis: 10, investimento: 20000, mesesOperacao: 12,
+      aparelhos: []
+    });
+    igual(u.equipamentos.length, 0, 'lista vazia deveria produzir zero aparelhos');
+  });
+
+  /* Unidade salva antes desta versão não tem a lista. Não pode esvaziar
+     o painel de quem já usava o sistema. */
+  teste('unidade antiga, sem a lista, continua com tudo', () => {
+    const u = montarUnidade({
+      chave: 'u-antiga', nome: 'Casa antiga', arquetipo: 'casaVazia', telhado: 'bom',
+      distribuidora: 'X', tarifa: 1, consumoMes: 300, potenciaKwp: 4,
+      paineis: 10, investimento: 20000, mesesOperacao: 12
+    });
+    igual(u.equipamentos.length, ARQUETIPOS.casaVazia.equipamentos.length,
+      'unidade sem a lista deveria manter todos os aparelhos');
+  });
+
+  teste('as fatias não são renormalizadas quando sobram poucos aparelhos', () => {
+    /* Se a pessoa declara só a geladeira, a geladeira não pode virar 100%
+       da conta dela. O que falta tem que aparecer como não identificado. */
+    const cheia = montarUnidade({
+      chave: 'u-c', nome: 'A', arquetipo: 'casaVazia', telhado: 'bom', distribuidora: 'X',
+      tarifa: 1, consumoMes: 300, potenciaKwp: 4, paineis: 10, investimento: 20000,
+      mesesOperacao: 12, aparelhos: ['gel']
+    });
+    const gel = cheia.equipamentos[0];
+    const original = ARQUETIPOS.casaVazia.equipamentos.filter(e => e.id === 'gel')[0];
+    igual(gel.share, original.share, 'a fatia da geladeira foi inflada');
+  });
+
+  /* Defeito 3: o medidor chamava o motor de 2 em 2 segundos e estourava
+     enquanto a conta ainda não tinha unidade. */
+  teste('o motor não quebra quando não há unidade nenhuma', () => {
+    const antes = S.perfil;
+    S.perfil = null; _visao = null; _cacheLedger.clear();
+    try {
+      const md = mesSimulado(S.perfil, 2026, 7);
+      igual(md.tc, 0, 'mês sem unidade deveria ser zero');
+      igual(md.dias.length, md.nd, 'o mês vazio tem que ter a forma de um mês de verdade');
+      igual(md.dias[0].cons.length, 24, 'faltaram as 24 horas no dia vazio');
+      const v = visao(true);
+      igual(v.mtd.tc, 0, 'a visão sem unidade deveria estar zerada');
+      const p = potenciaAgora();
+      ok(isFinite(p.cons) && isFinite(p.ger), 'a potência virou NaN sem unidade');
+    } finally { S.perfil = antes; _visao = null; _cacheLedger.clear(); }
+  });
+
+  teste('perfil apontando para unidade apagada também não quebra', () => {
+    const antes = S.perfil;
+    S.perfil = 'unidade-que-nao-existe'; _visao = null; _cacheLedger.clear();
+    try {
+      const l = ledger(S.perfil, 2026, 7, 100);
+      ok(l.linhas.length > 0, 'o livro precisa de pelo menos uma linha');
+      igual(l.creditos, 0, 'não deveria haver crédito sem unidade');
+      ok(isFinite(visao(true).economia), 'a economia virou NaN');
+    } finally { S.perfil = antes; _visao = null; _cacheLedger.clear(); }
+  });
+
+  teste('a tarifa continua plausível sem unidade cadastrada', () => {
+    const antes = S.perfil;
+    S.perfil = null;
+    try {
+      const t = tarifaAtual();
+      ok(t > 0.1 && t < 3, 'tarifa fora de qualquer realidade: ' + t);
+    } finally { S.perfil = antes; }
+  });
+
+  teste('a lista de aparelhos do arquétipo é o que o cadastro oferece', () => {
+    Object.keys(ARQUETIPOS).forEach(k => {
+      const lista = aparelhosDoArquetipo(k);
+      igual(lista.length, ARQUETIPOS[k].equipamentos.length, k + ': lista de tamanho errado');
+      lista.forEach(e => {
+        ok(e.id && e.nome && e.local, k + ': aparelho sem id, nome ou local');
+        ok(typeof e.pot === 'number', k + '/' + e.nome + ': potência inválida');
+      });
+    });
+  });
+});
+
+/* ================= leitor da conta de luz ================= */
+grupo('Leitor da conta de luz', () => {
+
+  teste('reconhece a distribuidora pelo nome', () => {
+    const r = interpretarConta('COPEL DISTRIBUICAO S.A. NOTA FISCAL/CONTA DE ENERGIA');
+    igual(r.distribuidora, 'Copel');
+  });
+
+  teste('pega o consumo em kWh', () => {
+    const r = interpretarConta('Consumo faturado 347 kWh no mes de referencia');
+    igual(r.consumo, 347);
+  });
+
+  teste('entende o número no formato brasileiro', () => {
+    const r = interpretarConta('CONSUMO 1.284 kWh');
+    igual(r.consumo, 1284, 'o ponto de milhar foi lido como decimal');
+  });
+
+  teste('pega a tarifa quando ela está escrita', () => {
+    const r = interpretarConta('Tarifa 0,89210 R$/kWh');
+    ok(r.tarifa > 0.89 && r.tarifa < 0.893, 'tarifa lida errado: ' + r.tarifa);
+  });
+
+  teste('deduz a tarifa do total quando ela não aparece', () => {
+    const r = interpretarConta('Consumo 300 kWh TOTAL A PAGAR 270,00');
+    ok(r.tarifaDeduzida, 'deveria ter marcado que a tarifa foi deduzida');
+    perto(r.tarifa, 0.9, 0.01, 'dedução errada');
+  });
+
+  teste('recusa número fora de qualquer realidade', () => {
+    igual(interpretarConta('Tarifa 98,50 R$/kWh').tarifa, null, 'aceitou tarifa impossível');
+    igual(interpretarConta('Consumo 3 kWh').consumo, null, 'aceitou consumo impossível');
+  });
+
+  teste('não inventa campo quando não achou nada', () => {
+    const r = interpretarConta('texto sem nada de útil aqui dentro');
+    igual(r.distribuidora, null);
+    igual(r.consumo, null);
+    igual(r.tarifa, null);
+    igual(r.total, null);
+  });
+
+  teste('texto vazio ou nulo não quebra o leitor', () => {
+    [null, undefined, '', '   '].forEach(v => {
+      const r = interpretarConta(v);
+      igual(r.consumo, null, 'entrada ' + JSON.stringify(v) + ' deveria dar nada');
+    });
+  });
+});
+
 function rodar() {
   const alvo = document.getElementById('saida');
   const grupos = {};

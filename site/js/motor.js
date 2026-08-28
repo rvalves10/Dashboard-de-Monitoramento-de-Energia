@@ -222,11 +222,34 @@ function tempoDoDia(chave, d) {
 }
 
 /* ---------- mês simulado (memoizado) ---------- */
+/* Mês sem nada medido. Tem exatamente a mesma forma do mês de verdade,
+   porque quem consome isto não deve precisar saber a diferença. */
+function mesVazio(y, m, nd) {
+  const zeros = () => new Array(24).fill(0);
+  const dias = [];
+  for (let i = 0; i < nd; i++) {
+    dias.push({
+      dia: i + 1, dow: new Date(y, m, i + 1).getDay(),
+      cons: zeros(), ger: zeros(), tc: 0, tg: 0, auto: 0, inj: 0, rede: 0
+    });
+  }
+  return { y: y, m: m, nd: nd, dias: dias, tc: 0, tg: 0, auto: 0, inj: 0, rede: 0 };
+}
+
 const _cacheMes = new Map();
 function mesSimulado(chave, y, m) {
   const ck = chave + '|' + y + '|' + m;
   if (_cacheMes.has(ck)) return _cacheMes.get(ck);
   const u = uni(chave), nd = diasNoMes(y, m);
+
+  /* A chave pode não corresponder a unidade nenhuma: conta recém-criada
+     ainda sem unidade, estado salvo apontando para uma unidade apagada, ou
+     perfil de exemplo com os exemplos desligados. Antes isto estourava
+     dentro de um timer de 2 em 2 segundos e enchia o console de erro.
+
+     Mês zerado é a resposta correta: sem unidade não há o que medir. Quem
+     desenha a tela já trata esse estado mostrando o cadastro. */
+  if (!u) return mesVazio(y, m, nd);
 
   const sazG = 1 + 0.19 * Math.cos(2 * Math.PI * (m - 11) / 12);
   const sazC = 1 + 0.15 * Math.cos(2 * Math.PI * m / 12);
@@ -293,7 +316,10 @@ function ate(md, horas) {
 /* data em que a unidade entrou em operação, deduzida dos meses de operação */
 function inicioOperacao(chave) {
   const u = uni(chave), d = agora();
-  return new Date(d.getFullYear(), d.getMonth() - (u.mesesOperacao - 1), 1);
+  /* Mesma razão de mesVazio: a chave pode não existir. Sem unidade, a
+     operação começa hoje — nenhum mês de histórico para montar. */
+  const meses = u ? u.mesesOperacao : 1;
+  return new Date(d.getFullYear(), d.getMonth() - (meses - 1), 1);
 }
 function temDireitoAdquirido(chave) {
   return inicioOperacao(chave) <= CORTE_DIREITO_ADQUIRIDO;
@@ -305,11 +331,11 @@ function temDireitoAdquirido(chave) {
    Comparar a geração real contra o esperado mede saúde operacional (sujeira,
    inversor, falha). Comparar contra o potencial mede qualidade da instalação. */
 function potencialRegiao(chave, m, nd) {
-  const u = uni(chave);
+  const u = uni(chave) || UNIDADE_VAZIA;
   return u.potenciaKwp * IRRADIACAO_SP[m] * RAZAO_DESEMPENHO * nd;
 }
 function geracaoEsperada(chave, m, nd) {
-  return potencialRegiao(chave, m, nd) * uni(chave).fatorInstalacao;
+  return potencialRegiao(chave, m, nd) * (uni(chave) || UNIDADE_VAZIA).fatorInstalacao;
 }
 
 /* ---------- livro de créditos: compensação mês a mês ---------- */
@@ -318,6 +344,21 @@ function ledger(chave, ate_y, ate_m, horasUltimo) {
   const ck = chave + '|' + ate_y + '|' + ate_m + '|' + (horasUltimo == null ? 'cheio' : Math.floor(horasUltimo));
   if (_cacheLedger.has(ck)) return _cacheLedger.get(ck);
   const u = uni(chave);
+
+  /* Sem unidade não há histórico de compensação. Uma linha zerada no mês
+     corrente mantém a forma que o resto do sistema espera — quem lê isto
+     sempre pega linhas[linhas.length-1] e contava com ela existir. */
+  if (!u) {
+    return {
+      linhas: [{
+        y: ate_y, m: ate_m, k: ate_y * 12 + ate_m,
+        cons: 0, ger: 0, auto: 0, inj: 0, rede: 0,
+        usado: 0, faturado: 0, fioB: 0, percFioB: 0, economia: 0, creditos: 0
+      }],
+      creditos: 0, economiaTotal: 0, fioBTotal: 0, direitoAdquirido: false
+    };
+  }
+
   const fim = ate_y * 12 + ate_m;
   const ini = fim - (u.mesesOperacao - 1);
   const adq = temDireitoAdquirido(chave);
@@ -378,7 +419,13 @@ const PADRAO = {
   nova: {
     nome: '', arquetipo: 'casaVazia', telhado: 'bom', distribuidora: '',
     tarifa: 0.92, consumoMes: 300, potenciaKwp: 4.0, paineis: 9,
-    investimento: 17000, mesesOperacao: 12
+    investimento: 17000, mesesOperacao: 12,
+    /* ids dos aparelhos que a pessoa marcou ter. null = ainda nao escolheu;
+       o cadastro comeca com todos marcados e ela desmarca o que nao tem. */
+    aparelhos: null,
+    /* qual passo do cadastro esta aberto: 1 conta de luz, 2 sistema solar,
+       3 aparelhos */
+    passo: 1
   },
   novo: { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: 'Sala' },
   editando: null, salvo: false,
@@ -410,7 +457,28 @@ function salvar() {
 }
 
 /* ---------- visão consolidada ---------- */
-function unidade() { return uni(S.perfil); }
+
+/* Unidade neutra, com a mesma forma de uma de verdade e tudo em zero.
+   Existe para um estado legítimo do app: conta criada e ainda sem unidade
+   cadastrada. Antes disso, qualquer função que lesse um campo da unidade
+   estourava — e como o medidor chama isso de 2 em 2 segundos, o console
+   enchia de erro enquanto a pessoa preenchia o cadastro.
+
+   Não é para esconder o estado vazio: quem decide o que desenhar é
+   semUnidade(), e ele continua dizendo a verdade. Isto só evita que o
+   cálculo quebre no meio do caminho. */
+const UNIDADE_VAZIA = {
+  chave: null, propria: false, arquetipo: 'casaVazia',
+  nome: 'Sem unidade', tipo: '—', curto: '—', distribuidora: '—',
+  tarifa: 0, tarifaComp: 0, fioB: 0, ilum: 0, minFatura: 0,
+  potenciaKwp: 0, paineis: 0, investimento: 0, mesesOperacao: 1,
+  fatorInstalacao: 0, condicaoTelhado: '—',
+  consumoMes: 0, geracaoMes: 0, metaPadrao: 0,
+  consumoH: new Array(24).fill(0), semana: new Array(7).fill(1),
+  comodos: ['Geral'], equipamentos: [], deteccoes: []
+};
+
+function unidade() { return uni(S.perfil) || UNIDADE_VAZIA; }
 
 /* ---------- unidades criadas pelo usuário ----------
    As duas de demonstração ficam em UNIDADES_BASE. As do usuário vivem no
@@ -498,6 +566,13 @@ const TELHADOS = [
 /* Monta uma unidade completa a partir do que o usuário informou.
    O que dá para calcular, é calculado: geração vem da irradiação da região,
    da potência instalada e da condição do telhado — não se pergunta. */
+/* Quais aparelhos o arquétipo sabe estimar. É a lista que o cadastro
+   mostra para a pessoa marcar o que ela realmente tem. */
+function aparelhosDoArquetipo(chaveArq) {
+  const a = ARQUETIPOS[chaveArq] || ARQUETIPOS.casaVazia;
+  return a.equipamentos.map(e => ({ id: e.id, nome: e.nome, local: e.local, cat: e.cat, pot: e.pot }));
+}
+
 function montarUnidade(f) {
   const a = ARQUETIPOS[f.arquetipo] || ARQUETIPOS.casaVazia;
   const telhado = TELHADOS.filter(t => t.k === f.telhado)[0] || TELHADOS[1];
@@ -516,7 +591,17 @@ function montarUnidade(f) {
     consumoMes: f.consumoMes, geracaoMes: geracaoMes,
     metaPadrao: Math.round(f.consumoMes * 0.92),
     consumoH: a.consumoH.slice(), semana: a.semana.slice(), comodos: a.comodos.slice(),
-    equipamentos: a.equipamentos.map(e => Object.assign({}, e, { fonte: 'ia' })),
+    /* Só entra o que a pessoa marcou ter no cadastro. Unidade salva antes
+       desta versão não tem a lista, e aí vale tudo — senão o painel de
+       quem já usava esvaziaria sozinho.
+
+       Não renormalizamos as fatias de propósito: se você declarou só a
+       geladeira, ela não vira 100% da sua conta. O que sobra aparece como
+       "Não identificado", que é a verdade e é o convite para cadastrar
+       o resto. */
+    equipamentos: a.equipamentos
+      .filter(e => !Array.isArray(f.aparelhos) || f.aparelhos.indexOf(e.id) >= 0)
+      .map(e => Object.assign({}, e, { fonte: 'ia' })),
     deteccoes: []
   };
 }
@@ -551,7 +636,10 @@ function ajustarPerfil() {
 function tarifaAtual() {
   const u = unidade();
   if (S.tarifa[S.perfil] != null) return S.tarifa[S.perfil];
-  return u ? u.tarifa : 0.92;   /* sem unidade ainda: valor so para nao quebrar a tela */
+  /* A unidade neutra tem tarifa 0, que e correto para ela mas pessimo aqui:
+     tarifa zero zera todo valor em reais da tela. Sem unidade cadastrada
+     vale um numero plausivel, so para a interface ter o que mostrar. */
+  return u && u !== UNIDADE_VAZIA ? u.tarifa : 0.92;
 }
 
 function agora() { return new Date(); }
@@ -829,7 +917,15 @@ function deteccoesPendentes() {
   return unidade().deteccoes.filter(x => !S.respondidas[S.perfil + ':' + x.id]);
 }
 
+/* O nome é de quem está logado, não um nome de exemplo. Visitante não tem
+   nome, então recebe só o cumprimento — inventar um nome ali fazia a conta
+   da pessoa parecer a conta de outra. Só o primeiro nome: "Bom dia, Ana
+   Carolina de Souza" não é como ninguém cumprimenta. */
 function saudacao() {
   const hr = agora().getHours();
-  return (hr < 12 ? 'Bom dia' : hr < 18 ? 'Boa tarde' : 'Boa noite') + ', Marina';
+  const cumprimento = hr < 12 ? 'Bom dia' : hr < 18 ? 'Boa tarde' : 'Boa noite';
+  const s = (typeof sessao === 'function') ? sessao() : null;
+  const temConta = s && s.id !== 'visitante' && s.nome;
+  const nome = temConta ? String(s.nome).trim().split(/\s+/)[0] : '';
+  return nome ? cumprimento + ', ' + nome : cumprimento;
 }

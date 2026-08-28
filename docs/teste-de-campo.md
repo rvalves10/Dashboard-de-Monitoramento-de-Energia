@@ -80,7 +80,7 @@ agora.
 ## Como saber se algo quebrou de verdade
 
 Abra **`testes/index.html`** e espere uns segundos. Deve aparecer
-**87 de 87 testes passaram**, tudo verde.
+**105 de 105 testes passaram**, tudo verde.
 
 Se aparecer qualquer linha vermelha, tire um print e mande no grupo com a
 mensagem: *"teste vermelho"* e o nome do que falhou.

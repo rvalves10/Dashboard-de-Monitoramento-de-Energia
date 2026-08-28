@@ -21,7 +21,7 @@ const ler = (...p) => readFileSync(join(raiz, ...p), 'utf8');
    no fim compara as duas listas. */
 const CSS = ['base.css', 'componentes.css', 'telas.css', 'conta.css',
   'movel.css', 'responsivo.css', 'impressao.css'];
-const JS = ['banco.js', 'motor.js', 'login.js', 'telas.js', 'movel.js', 'controle.js'];
+const JS = ['banco.js', 'motor.js', 'login.js', 'leitor.js', 'telas.js', 'movel.js', 'controle.js'];
 
 const paginaFonte = ler('site', 'index.html');
 const conferir = (lista, pasta) => {
@@ -37,6 +37,21 @@ const conferir = (lista, pasta) => {
 };
 conferir(CSS, 'css');
 conferir(JS, 'js');
+
+/* A pagina de testes tem a propria lista de scripts, e ela precisa carregar
+   os mesmos arquivos, na mesma ordem. Quando alguem acrescenta um js ao site
+   e esquece de acrescentar aqui, a suite roda contra um app pela metade e
+   acusa falhas que nao existem — foi exatamente o que aconteceu quando
+   leitor.js entrou. Melhor o build reclamar do que caçar isso na mao. */
+const paginaTestes = ler('testes', 'index.html');
+const naTestes = (paginaTestes.match(/\.\.\/site\/js\/[\w.-]+/g) || []).map(x => x.split('/').pop());
+const difOrdem = naTestes.join(',') !== JS.join(',');
+if (difOrdem) {
+  console.error('\n  testes/index.html nao carrega os mesmos js do site, na mesma ordem.');
+  console.error('  site:   ' + JS.join(', '));
+  console.error('  testes: ' + (naTestes.join(', ') || '(nenhum)'));
+  process.exit(1);
+}
 
 const css = CSS.map(f => '/* ===== css/' + f + ' ===== */\n' + ler('site', 'css', f)).join('\n\n');
 const js = JS.map(f => '/* ===== js/' + f + ' ===== */\n' + ler('site', 'js', f)).join('\n\n');

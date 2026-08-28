@@ -270,22 +270,41 @@ function syncMeta() {
     f.style.background = v.projConsumo > meta ? 'var(--bad)' : 'var(--good)';
   }
 }
+/* Digitar nao redesenha a tela inteira — o campo perderia o foco no meio
+   da palavra. Estas funcoes atualizam so o que depende do que foi digitado.
+   Quem adicionar um elemento que reage ao formulario precisa atualizar
+   aqui tambem, senao ele congela com o valor do ultimo render. */
 function syncUnidade() {
-  if (!$('#pvGer')) return;
-  const n = S.nova, p = previaUnidade();
-  txt('#pvGer', nf(p.geracao));
-  txt('#pvExpl', nf(p.telhado.fator * 100) + '% do sol da região, com ' + nf(n.potenciaKwp, 1) + ' kWp instalados');
-  txt('#pvCob', textoCobertura(p, n));
-  const b = $('#pvBar'); if (b) b.style.width = clamp(p.cobertura, 0, 100) + '%';
-  const c = $('#pvConta');
-  if (c) c.innerHTML = 'Sem os painéis, sua conta seria cerca de <b style="color:var(--on-dark)">' + brl(p.contaSem) + '</b> por mês.';
-  const btn = $('[data-act="salvar-unidade"]');
-  if (btn) {
-    const pode = n.nome.trim().length > 1 && n.potenciaKwp > 0 && n.consumoMes > 0;
-    btn.disabled = !pode;
-    btn.style.background = pode ? 'var(--on-dark)' : '';
-    btn.style.color = pode ? 'var(--dark)' : '';
+  const n = S.nova;
+
+  /* prévia da geração: só existe nos passos 1 e 2 */
+  if ($('#pvGer')) {
+    const p = previaUnidade();
+    txt('#pvGer', nf(p.geracao));
+    txt('#pvExpl', nf(p.telhado.fator * 100) + '% do sol da região, com ' + nf(n.potenciaKwp, 1) + ' kWp instalados');
+    txt('#pvCob', textoCobertura(p, n));
+    const b = $('#pvBar'); if (b) b.style.width = clamp(p.cobertura, 0, 100) + '%';
+    const c = $('#pvConta');
+    if (c) c.innerHTML = 'Sem os painéis, sua conta seria cerca de <b style="color:var(--on-dark)">' + brl(p.contaSem) + '</b> por mês.';
   }
+
+  /* o "Continuar" do passo aberto libera assim que o passo fecha */
+  const at = typeof passoAtual === 'function' ? passoAtual() : 1;
+  const seguir = $('[data-act="nova-passo"].dark-btn');
+  if (seguir) seguir.disabled = !passoCompleto(at);
+
+  const btn = $('[data-act="salvar-unidade"]');
+  if (btn) btn.disabled = !(passoCompleto(1) && passoCompleto(2));
+
+  /* a trilha marca o passo como concluído no mesmo instante */
+  $$('.trilha-item').forEach((li, i) => {
+    const n_ = i + 1;
+    if (n_ === at) return;
+    li.classList.toggle('trilha-item--feito', passoCompleto(n_) && n_ < at);
+  });
+
+  const falta = $('.passo-falta');
+  if (falta) falta.style.display = passoCompleto(at) ? 'none' : '';
 }
 function syncTarifa() { txt('#tarLbl', 'R$ ' + nf(tarifaAtual(), 2) + ' / kWh'); }
 
@@ -411,13 +430,38 @@ const ACOES = {
       S.exemplos ? 'As unidades de demonstração voltaram para o menu.'
         : 'Agora você vê apenas as unidades que cadastrou.', 'sun');
   },
-  'nova-arq': el => { S.nova.arquetipo = el.dataset.v; salvar(); render(); },
+  /* Trocar de arquetipo troca a lista de aparelhos possiveis, entao a
+     selecao antiga nao vale mais: volta a null, que o cadastro le como
+     "todos marcados". */
+  'nova-arq': el => { S.nova.arquetipo = el.dataset.v; S.nova.aparelhos = null; salvar(); render(); },
+  'nova-passo': el => { S.nova.passo = Number(el.dataset.v) || 1; salvar(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); },
+  'nova-aparelho': el => {
+    const id = el.dataset.v;
+    const todos = aparelhosDoArquetipo(S.nova.arquetipo).map(e => e.id);
+    const atual = Array.isArray(S.nova.aparelhos) ? S.nova.aparelhos.slice() : todos.slice();
+    const i = atual.indexOf(id);
+    if (i >= 0) atual.splice(i, 1); else atual.push(id);
+    S.nova.aparelhos = atual;
+    salvar(); render();
+  },
+  'nova-aparelhos-todos': () => {
+    const todos = aparelhosDoArquetipo(S.nova.arquetipo).map(e => e.id);
+    const atual = Array.isArray(S.nova.aparelhos) ? S.nova.aparelhos : todos;
+    S.nova.aparelhos = atual.length === todos.length ? [] : todos.slice();
+    salvar(); render();
+  },
   'nova-telhado': el => { S.nova.telhado = el.dataset.v; salvar(); render(); },
   'salvar-unidade': () => {
     const n = S.nova;
     if (n.nome.trim().length < 2 || !(n.potenciaKwp > 0) || !(n.consumoMes > 0)) return;
     const chave = 'u' + Date.now().toString(36);
-    S.unidades = (S.unidades || []).concat([Object.assign({}, n, { chave: chave, nome: n.nome.trim() })]);
+    /* passo e estado do formulario, nao da unidade — nao vai para o banco.
+       aparelhos vira lista explicita: unidade nova nasce com o que a pessoa
+       marcou, nunca com a lista inteira do arquetipo por omissao. */
+    const dados = Object.assign({}, n, { chave: chave, nome: n.nome.trim() });
+    delete dados.passo;
+    if (!Array.isArray(dados.aparelhos)) dados.aparelhos = aparelhosDoArquetipo(n.arquetipo).map(e => e.id);
+    S.unidades = (S.unidades || []).concat([dados]);
     const u = uni(chave);
     S.metas[chave] = u.metaPadrao;
     S.tarifa[chave] = null;
@@ -539,6 +583,16 @@ document.addEventListener('input', ev => {
 });
 document.addEventListener('change', ev => {
   const el = ev.target;
+
+  /* A foto da conta de luz. O input fica escondido dentro de um <label>,
+     entao o clique vem do label e o arquivo chega por 'change'. */
+  if (el.dataset && el.dataset.act === 'foto-conta') {
+    const arquivo = el.files && el.files[0];
+    el.value = '';   /* solta o arquivo: escolher a mesma foto de novo tem que disparar */
+    if (arquivo) lerContaDeLuz(arquivo, render);
+    return;
+  }
+
   if (!el.dataset || !el.dataset.in) return;
   if (el.type === 'range') { _visao = null; render(); }
 });
@@ -586,7 +640,11 @@ else if (_consultaEstreita.addListener) _consultaEstreita.addListener(aoMudarLar
 /* ---------- o tique ---------- */
 let _spikeCooldown = 0, _spikeAtivo = false;
 function tique() {
-  if (!sessao()) return;
+  /* Sem unidade cadastrada nao existe medidor para ler: a conta acabou de
+     nascer e a pessoa ainda esta na tela de cadastro. Sem esta guarda o
+     tique chamava potenciaAgora() a cada 2 segundos e estourava em
+     mesSimulado, porque uni() devolve null. */
+  if (!sessao() || semUnidade()) return;
   pulso();
   buscarMedidor();
   gravarLeitura();
@@ -612,7 +670,7 @@ function tique() {
 /* uma linha por minuto no banco: e o historico que localStorage nao aguenta */
 let _ultimaGravacao = 0;
 async function gravarLeitura() {
-  if (!sessao() || !Banco.usandoIndexedDB) return;
+  if (!sessao() || semUnidade() || !Banco.usandoIndexedDB) return;
   const agoraMs = Date.now();
   if (agoraMs - _ultimaGravacao < 60000) return;
   _ultimaGravacao = agoraMs;
@@ -622,7 +680,7 @@ async function gravarLeitura() {
 
 let _ultimaHora = -1;
 function tiqueLento() {
-  if (!sessao()) return;
+  if (!sessao() || semUnidade()) return;
   const h = new Date().getHours();
   _visao = null;
   if (h !== _ultimaHora) { _ultimaHora = h; render(); }

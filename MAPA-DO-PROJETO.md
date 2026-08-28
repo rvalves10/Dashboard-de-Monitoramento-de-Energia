@@ -27,7 +27,7 @@ Solaris/
 │   ├── css/              a aparência, dividida por assunto
 │   └── js/               o funcionamento, dividido por responsabilidade
 │
-├── testes/               54 testes que rodam no navegador
+├── testes/               105 testes que rodam no navegador
 ├── firmware/             o código do ESP32, para quando o sensor existir
 ├── app-futuro/           fase 2: o que fazer quando virar aplicativo
 ├── docs/                 documentação de apoio
@@ -66,12 +66,42 @@ Também tem ordem: `banco` antes de `motor`, `motor` antes de todos os outros.
 | `banco.js` | Abre o IndexedDB e guarda contas, estado e leituras. | Mudar o que é gravado. |
 | `motor.js` | **O coração.** Calcula sol, nuvem, consumo, créditos, Fio B e a divisão por aparelho. | Mudar qualquer número ou regra de cálculo. |
 | `login.js` | Contas, sessão e derivação de senha. | Mexer em cadastro ou entrada. |
+| `leitor.js` | Lê a conta de luz por foto: OCR no navegador e interpretação dos campos. | Melhorar o que o leitor reconhece. |
 | `telas.js` | Monta as telas da versão ampla. | Mudar o que aparece na tela. |
 | `movel.js` | As mesmas telas em coluna única. | Mudar a versão de celular. |
 | `controle.js` | Cliques, rotas, o tique do medidor e os avisos. | Adicionar botão ou atalho. |
 
 Cada arquivo começa com um comentário explicando o que faz e por quê. Leia
 o cabeçalho antes de editar — economiza tempo.
+
+---
+
+## Conta nova começa vazia — e vazia é vazia
+
+Três defeitos chegaram juntos aqui, todos com a mesma cara para quem usa:
+"criei uma conta e veio a casa de outra pessoa dentro". O grupo de testes
+*Conta nova é conta da pessoa* trava os três.
+
+**O nome é de quem entrou.** `saudacao()` lê `sessao().nome`. Havia um nome
+fixo de demonstração no código, e toda conta era cumprimentada com ele.
+Visitante não tem nome: recebe só "Bom dia".
+
+**A unidade só tem os aparelhos que a pessoa marcou.** O arquétipo continua
+definindo a curva de consumo hora a hora, mas a lista de aparelhos agora vem
+do passo 3 do cadastro. `montarUnidade()` filtra por `f.aparelhos`. Unidade
+salva antes desta versão não tem esse campo, e aí vale tudo — senão o painel
+de quem já usava esvaziaria sozinho.
+
+**As fatias não são renormalizadas.** Se a pessoa declara só a geladeira, a
+geladeira não vira 100% da conta dela: o que falta aparece como "Não
+identificado". É a verdade, e é o convite para cadastrar o resto.
+
+**O motor não estoura sem unidade.** Conta recém-criada, unidade apagada ou
+perfil de exemplo com os exemplos desligados são estados legítimos. Antes
+disso o medidor chamava o motor de 2 em 2 segundos e enchia o console de erro
+enquanto a pessoa preenchia o cadastro. Agora existe `UNIDADE_VAZIA` e
+`mesVazio()`, com a mesma forma dos de verdade e tudo em zero. Quem decide o
+que desenhar continua sendo `semUnidade()`.
 
 ---
 
@@ -150,6 +180,9 @@ mudança, `onclick` se perderia; com delegação, nunca.
 4. `node ferramentas/build.mjs` para atualizar o arquivo único
 5. Commit
 
-O build confere sozinho se as listas de arquivos batem com o `site/index.html`
-— se alguém adicionar um CSS e esquecer de registrar, o build reclama em vez
-de gerar coisa quebrada.
+O build confere sozinho duas coisas, e reclama em vez de gerar coisa quebrada:
+
+- se as listas de arquivos batem com o `site/index.html`;
+- se `testes/index.html` carrega os mesmos `js`, na mesma ordem. A página de
+  testes tem lista própria, e quando ela fica para trás a suíte roda contra um
+  app pela metade e acusa falha que não existe.

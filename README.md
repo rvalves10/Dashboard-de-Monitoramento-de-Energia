@@ -25,7 +25,7 @@ Se preferir um arquivo só para mandar por e-mail ou WhatsApp, use
 ## Conferir se está tudo certo
 
 Abra **`testes/index.html`** e espere alguns segundos.
-Devem aparecer **87 de 87 testes passando**, tudo verde.
+Devem aparecer **105 de 105 testes passando**, tudo verde.
 
 ---
 
@@ -76,7 +76,7 @@ Solaris/
 ├── index.html          abre o site
 ├── Solaris.html        o site num arquivo só (gerado pelo build)
 ├── site/               ◀ o projeto: css/ e js/
-├── testes/             80 testes, rodam no navegador
+├── testes/             105 testes, rodam no navegador
 ├── firmware/           código do ESP32, para quando o sensor existir
 ├── app-futuro/         fase 2: o que fazer para virar aplicativo
 ├── docs/               teste de campo, contrato de dados, usabilidade

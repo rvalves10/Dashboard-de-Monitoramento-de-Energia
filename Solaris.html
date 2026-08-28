@@ -558,7 +558,10 @@ svg{display:block}
 /* ---------- formulario ---------- */
 .field{margin-top:var(--e5)}
 .field:first-of-type{margin-top:var(--e5)}
-.field-lbl{font-size:var(--t-sm);font-weight:600;color:var(--ink-2)}
+/* display:block e obrigatorio: <label> e inline por padrao, e como o
+   campo ao lado tem largura maxima, os dois dividiam a mesma linha —
+   o rotulo ficava colado na lateral esquerda do input. */
+.field-lbl{display:block;font-size:var(--t-sm);font-weight:600;color:var(--ink-2)}
 .text-in{
   width:100%;height:42px;margin-top:6px;padding:0 var(--e3);border-radius:var(--r-md);
   border:1px solid var(--line-2);background:var(--surface);
@@ -720,6 +723,91 @@ input[type=range]{width:100%;margin:var(--e2) 0 0;accent-color:var(--sun);cursor
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
 }
+
+/* ---------- cadastro em passos ----------
+   A trilha nao e enfeite: ela responde "quanto falta", que e a pergunta
+   que faz a pessoa desistir no meio de um formulario. */
+.trilha{list-style:none;display:flex;gap:var(--e2);margin:0;padding:0;flex-wrap:wrap}
+.trilha-item{flex:1;min-width:150px}
+.trilha-item button,.trilha-item>span{
+  display:flex;align-items:center;gap:var(--e2);width:100%;
+  padding:var(--e2) var(--e3);border-radius:var(--r-md);
+  border:1px solid var(--line);background:var(--surface);text-align:left;
+  transition:border-color .14s var(--curva),background .14s var(--curva);
+}
+.trilha-item button:hover{border-color:var(--n-500)}
+.trilha-item>span{opacity:.55;cursor:default}
+.trilha-n{
+  width:22px;height:22px;border-radius:50%;flex-shrink:0;
+  display:grid;place-items:center;
+  font-size:var(--t-xs);font-weight:700;font-variant-numeric:tabular-nums;
+  background:var(--ground-2);color:var(--muted);
+}
+.trilha-t{font-size:var(--t-sm);font-weight:600;color:var(--muted);line-height:var(--lh-snug)}
+.trilha-item--atual button{border-color:var(--ink);background:var(--surface)}
+.trilha-item--atual .trilha-n{background:var(--ink);color:var(--on-dark)}
+.trilha-item--atual .trilha-t{color:var(--ink)}
+.trilha-item--feito .trilha-n{background:var(--good);color:#fff}
+.trilha-item--feito .trilha-t{color:var(--ink-2)}
+
+.passo-nav{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--e4);
+  margin-top:var(--e6);padding-top:var(--e5);border-top:1px solid var(--line);flex-wrap:wrap;
+}
+.passo-nav-fim{display:flex;align-items:center;gap:var(--e3);margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.passo-falta{font-size:var(--t-xs);color:var(--faint);max-width:34ch;text-align:right;line-height:var(--lh-snug)}
+
+/* ---------- escolher os aparelhos que existem ---------- */
+.apsel-topo{display:flex;align-items:baseline;justify-content:space-between;gap:var(--e3);flex-wrap:wrap}
+.apsel-grade{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--e2);margin-top:var(--e3)}
+@media (max-width:720px){.apsel-grade{grid-template-columns:1fr}}
+.apsel{
+  display:flex;align-items:flex-start;gap:var(--e3);width:100%;
+  padding:var(--e3);border-radius:var(--r-md);
+  border:1px solid var(--line-2);background:var(--surface);
+  transition:border-color .13s var(--curva),background .13s var(--curva);
+}
+.apsel:hover{border-color:var(--n-500)}
+.apsel-cx{
+  width:20px;height:20px;border-radius:var(--r-xs);flex-shrink:0;margin-top:1px;
+  display:grid;place-items:center;
+  border:1.5px solid var(--line-2);background:var(--surface);color:#fff;
+  transition:background .13s var(--curva),border-color .13s var(--curva);
+}
+.apsel[aria-pressed="true"]{border-color:var(--ink);background:var(--ground-2)}
+.apsel[aria-pressed="true"] .apsel-cx{background:var(--good);border-color:var(--good)}
+.apsel-txt{min-width:0}
+.apsel-n{display:block;font-size:var(--t-sm);font-weight:600;color:var(--ink)}
+.apsel-d{display:block;font-size:var(--t-xs);color:var(--faint);margin-top:2px}
+
+/* ---------- foto da conta de luz ---------- */
+.foto-cx{
+  display:flex;align-items:center;gap:var(--e3);flex-wrap:wrap;
+  padding:var(--e4);border-radius:var(--r-md);margin-top:var(--e4);
+  border:1px dashed var(--line-2);background:var(--ground-2);
+}
+.foto-ic{
+  width:38px;height:38px;border-radius:var(--r-sm);flex-shrink:0;
+  display:grid;place-items:center;background:var(--surface);color:var(--muted);
+}
+.foto-txt{flex:1;min-width:180px}
+.foto-t{display:flex;align-items:center;gap:6px;font-size:var(--t-sm);font-weight:600;color:var(--ink)}
+.foto-d{font-size:var(--t-xs);color:var(--muted);margin-top:3px;line-height:var(--lh-body);max-width:62ch}
+.foto-btn{
+  display:inline-flex;align-items:center;gap:6px;flex-shrink:0;cursor:pointer;
+  height:36px;padding:0 var(--e4);border-radius:var(--r-md);
+  background:var(--dark);color:var(--on-dark);font-size:var(--t-sm);font-weight:600;
+  transition:background .14s var(--curva);
+}
+.foto-btn:hover{background:var(--dark-2)}
+.foto-outra{cursor:pointer;margin-top:var(--e2)}
+.foto-cx--lendo,.foto-cx--ok,.foto-cx--erro{display:block;border-style:solid}
+.foto-cx--ok{background:var(--good-bg);border-color:var(--good-line)}
+.foto-cx--ok .foto-t{color:var(--good)}
+.foto-cx--erro{background:var(--bad-bg);border-color:var(--bad-line)}
+.foto-cx--erro .foto-t{color:var(--bad)}
+.foto-barra{height:5px;border-radius:var(--r-pill);background:var(--ground-2);overflow:hidden;margin:var(--e2) 0}
+.foto-barra i{display:block;height:100%;border-radius:var(--r-pill);background:var(--sun);transition:width .3s var(--curva)}
 
 
 /* ===== css/conta.css ===== */
@@ -1701,11 +1789,34 @@ function tempoDoDia(chave, d) {
 }
 
 /* ---------- mês simulado (memoizado) ---------- */
+/* Mês sem nada medido. Tem exatamente a mesma forma do mês de verdade,
+   porque quem consome isto não deve precisar saber a diferença. */
+function mesVazio(y, m, nd) {
+  const zeros = () => new Array(24).fill(0);
+  const dias = [];
+  for (let i = 0; i < nd; i++) {
+    dias.push({
+      dia: i + 1, dow: new Date(y, m, i + 1).getDay(),
+      cons: zeros(), ger: zeros(), tc: 0, tg: 0, auto: 0, inj: 0, rede: 0
+    });
+  }
+  return { y: y, m: m, nd: nd, dias: dias, tc: 0, tg: 0, auto: 0, inj: 0, rede: 0 };
+}
+
 const _cacheMes = new Map();
 function mesSimulado(chave, y, m) {
   const ck = chave + '|' + y + '|' + m;
   if (_cacheMes.has(ck)) return _cacheMes.get(ck);
   const u = uni(chave), nd = diasNoMes(y, m);
+
+  /* A chave pode não corresponder a unidade nenhuma: conta recém-criada
+     ainda sem unidade, estado salvo apontando para uma unidade apagada, ou
+     perfil de exemplo com os exemplos desligados. Antes isto estourava
+     dentro de um timer de 2 em 2 segundos e enchia o console de erro.
+
+     Mês zerado é a resposta correta: sem unidade não há o que medir. Quem
+     desenha a tela já trata esse estado mostrando o cadastro. */
+  if (!u) return mesVazio(y, m, nd);
 
   const sazG = 1 + 0.19 * Math.cos(2 * Math.PI * (m - 11) / 12);
   const sazC = 1 + 0.15 * Math.cos(2 * Math.PI * m / 12);
@@ -1772,7 +1883,10 @@ function ate(md, horas) {
 /* data em que a unidade entrou em operação, deduzida dos meses de operação */
 function inicioOperacao(chave) {
   const u = uni(chave), d = agora();
-  return new Date(d.getFullYear(), d.getMonth() - (u.mesesOperacao - 1), 1);
+  /* Mesma razão de mesVazio: a chave pode não existir. Sem unidade, a
+     operação começa hoje — nenhum mês de histórico para montar. */
+  const meses = u ? u.mesesOperacao : 1;
+  return new Date(d.getFullYear(), d.getMonth() - (meses - 1), 1);
 }
 function temDireitoAdquirido(chave) {
   return inicioOperacao(chave) <= CORTE_DIREITO_ADQUIRIDO;
@@ -1784,11 +1898,11 @@ function temDireitoAdquirido(chave) {
    Comparar a geração real contra o esperado mede saúde operacional (sujeira,
    inversor, falha). Comparar contra o potencial mede qualidade da instalação. */
 function potencialRegiao(chave, m, nd) {
-  const u = uni(chave);
+  const u = uni(chave) || UNIDADE_VAZIA;
   return u.potenciaKwp * IRRADIACAO_SP[m] * RAZAO_DESEMPENHO * nd;
 }
 function geracaoEsperada(chave, m, nd) {
-  return potencialRegiao(chave, m, nd) * uni(chave).fatorInstalacao;
+  return potencialRegiao(chave, m, nd) * (uni(chave) || UNIDADE_VAZIA).fatorInstalacao;
 }
 
 /* ---------- livro de créditos: compensação mês a mês ---------- */
@@ -1797,6 +1911,21 @@ function ledger(chave, ate_y, ate_m, horasUltimo) {
   const ck = chave + '|' + ate_y + '|' + ate_m + '|' + (horasUltimo == null ? 'cheio' : Math.floor(horasUltimo));
   if (_cacheLedger.has(ck)) return _cacheLedger.get(ck);
   const u = uni(chave);
+
+  /* Sem unidade não há histórico de compensação. Uma linha zerada no mês
+     corrente mantém a forma que o resto do sistema espera — quem lê isto
+     sempre pega linhas[linhas.length-1] e contava com ela existir. */
+  if (!u) {
+    return {
+      linhas: [{
+        y: ate_y, m: ate_m, k: ate_y * 12 + ate_m,
+        cons: 0, ger: 0, auto: 0, inj: 0, rede: 0,
+        usado: 0, faturado: 0, fioB: 0, percFioB: 0, economia: 0, creditos: 0
+      }],
+      creditos: 0, economiaTotal: 0, fioBTotal: 0, direitoAdquirido: false
+    };
+  }
+
   const fim = ate_y * 12 + ate_m;
   const ini = fim - (u.mesesOperacao - 1);
   const adq = temDireitoAdquirido(chave);
@@ -1857,7 +1986,13 @@ const PADRAO = {
   nova: {
     nome: '', arquetipo: 'casaVazia', telhado: 'bom', distribuidora: '',
     tarifa: 0.92, consumoMes: 300, potenciaKwp: 4.0, paineis: 9,
-    investimento: 17000, mesesOperacao: 12
+    investimento: 17000, mesesOperacao: 12,
+    /* ids dos aparelhos que a pessoa marcou ter. null = ainda nao escolheu;
+       o cadastro comeca com todos marcados e ela desmarca o que nao tem. */
+    aparelhos: null,
+    /* qual passo do cadastro esta aberto: 1 conta de luz, 2 sistema solar,
+       3 aparelhos */
+    passo: 1
   },
   novo: { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: 'Sala' },
   editando: null, salvo: false,
@@ -1889,7 +2024,28 @@ function salvar() {
 }
 
 /* ---------- visão consolidada ---------- */
-function unidade() { return uni(S.perfil); }
+
+/* Unidade neutra, com a mesma forma de uma de verdade e tudo em zero.
+   Existe para um estado legítimo do app: conta criada e ainda sem unidade
+   cadastrada. Antes disso, qualquer função que lesse um campo da unidade
+   estourava — e como o medidor chama isso de 2 em 2 segundos, o console
+   enchia de erro enquanto a pessoa preenchia o cadastro.
+
+   Não é para esconder o estado vazio: quem decide o que desenhar é
+   semUnidade(), e ele continua dizendo a verdade. Isto só evita que o
+   cálculo quebre no meio do caminho. */
+const UNIDADE_VAZIA = {
+  chave: null, propria: false, arquetipo: 'casaVazia',
+  nome: 'Sem unidade', tipo: '—', curto: '—', distribuidora: '—',
+  tarifa: 0, tarifaComp: 0, fioB: 0, ilum: 0, minFatura: 0,
+  potenciaKwp: 0, paineis: 0, investimento: 0, mesesOperacao: 1,
+  fatorInstalacao: 0, condicaoTelhado: '—',
+  consumoMes: 0, geracaoMes: 0, metaPadrao: 0,
+  consumoH: new Array(24).fill(0), semana: new Array(7).fill(1),
+  comodos: ['Geral'], equipamentos: [], deteccoes: []
+};
+
+function unidade() { return uni(S.perfil) || UNIDADE_VAZIA; }
 
 /* ---------- unidades criadas pelo usuário ----------
    As duas de demonstração ficam em UNIDADES_BASE. As do usuário vivem no
@@ -1977,6 +2133,13 @@ const TELHADOS = [
 /* Monta uma unidade completa a partir do que o usuário informou.
    O que dá para calcular, é calculado: geração vem da irradiação da região,
    da potência instalada e da condição do telhado — não se pergunta. */
+/* Quais aparelhos o arquétipo sabe estimar. É a lista que o cadastro
+   mostra para a pessoa marcar o que ela realmente tem. */
+function aparelhosDoArquetipo(chaveArq) {
+  const a = ARQUETIPOS[chaveArq] || ARQUETIPOS.casaVazia;
+  return a.equipamentos.map(e => ({ id: e.id, nome: e.nome, local: e.local, cat: e.cat, pot: e.pot }));
+}
+
 function montarUnidade(f) {
   const a = ARQUETIPOS[f.arquetipo] || ARQUETIPOS.casaVazia;
   const telhado = TELHADOS.filter(t => t.k === f.telhado)[0] || TELHADOS[1];
@@ -1995,7 +2158,17 @@ function montarUnidade(f) {
     consumoMes: f.consumoMes, geracaoMes: geracaoMes,
     metaPadrao: Math.round(f.consumoMes * 0.92),
     consumoH: a.consumoH.slice(), semana: a.semana.slice(), comodos: a.comodos.slice(),
-    equipamentos: a.equipamentos.map(e => Object.assign({}, e, { fonte: 'ia' })),
+    /* Só entra o que a pessoa marcou ter no cadastro. Unidade salva antes
+       desta versão não tem a lista, e aí vale tudo — senão o painel de
+       quem já usava esvaziaria sozinho.
+
+       Não renormalizamos as fatias de propósito: se você declarou só a
+       geladeira, ela não vira 100% da sua conta. O que sobra aparece como
+       "Não identificado", que é a verdade e é o convite para cadastrar
+       o resto. */
+    equipamentos: a.equipamentos
+      .filter(e => !Array.isArray(f.aparelhos) || f.aparelhos.indexOf(e.id) >= 0)
+      .map(e => Object.assign({}, e, { fonte: 'ia' })),
     deteccoes: []
   };
 }
@@ -2030,7 +2203,10 @@ function ajustarPerfil() {
 function tarifaAtual() {
   const u = unidade();
   if (S.tarifa[S.perfil] != null) return S.tarifa[S.perfil];
-  return u ? u.tarifa : 0.92;   /* sem unidade ainda: valor so para nao quebrar a tela */
+  /* A unidade neutra tem tarifa 0, que e correto para ela mas pessimo aqui:
+     tarifa zero zera todo valor em reais da tela. Sem unidade cadastrada
+     vale um numero plausivel, so para a interface ter o que mostrar. */
+  return u && u !== UNIDADE_VAZIA ? u.tarifa : 0.92;
 }
 
 function agora() { return new Date(); }
@@ -2308,9 +2484,17 @@ function deteccoesPendentes() {
   return unidade().deteccoes.filter(x => !S.respondidas[S.perfil + ':' + x.id]);
 }
 
+/* O nome é de quem está logado, não um nome de exemplo. Visitante não tem
+   nome, então recebe só o cumprimento — inventar um nome ali fazia a conta
+   da pessoa parecer a conta de outra. Só o primeiro nome: "Bom dia, Ana
+   Carolina de Souza" não é como ninguém cumprimenta. */
 function saudacao() {
   const hr = agora().getHours();
-  return (hr < 12 ? 'Bom dia' : hr < 18 ? 'Boa tarde' : 'Boa noite') + ', Marina';
+  const cumprimento = hr < 12 ? 'Bom dia' : hr < 18 ? 'Boa tarde' : 'Boa noite';
+  const s = (typeof sessao === 'function') ? sessao() : null;
+  const temConta = s && s.id !== 'visitante' && s.nome;
+  const nome = temConta ? String(s.nome).trim().split(/\s+/)[0] : '';
+  return nome ? cumprimento + ', ' + nome : cumprimento;
 }
 
 
@@ -2754,6 +2938,288 @@ function renderLogin() {
 }
 
 
+/* ===== js/leitor.js ===== */
+/* leitor.js — ler a conta de luz por foto
+
+   O que ele faz: recebe a foto da fatura, extrai o texto com OCR dentro do
+   proprio navegador e procura ali os quatro campos que o cadastro pede —
+   distribuidora, consumo em kWh, tarifa e total. Depois preenche o
+   formulario e devolve a lista do que achou, para a pessoa conferir.
+
+   Tres decisoes que valem explicar:
+
+   1. O OCR roda no navegador, nao num servidor nosso. Nao existe servidor
+      neste projeto, e mandar a conta de luz de alguem para um servico de
+      terceiro sem necessidade seria pior: a fatura tem nome, endereco e
+      numero de instalacao. Assim a imagem nunca sai da maquina.
+
+   2. A biblioteca so e baixada quando a pessoa escolhe uma foto. Se ela
+      nunca usar, o site nao pede nada da rede e continua abrindo com
+      duplo clique, como sempre.
+
+   3. Nada e salvo sozinho. O que o OCR entende vira sugestao preenchida
+      nos campos, com aviso de conferir. Leitura de foto de celular erra,
+      e aqui um erro vira conta de luz errada pelos proximos doze meses.
+*/
+'use strict';
+
+/* Estado da leitura. Fica fora de S de proposito: e estado de tela em
+   andamento, nao dado da conta — nao faz sentido gravar no banco nem
+   ressuscitar "lendo 40%" quando a pessoa voltar amanha. */
+let LEITOR = {};
+
+const LEITOR_CDN = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+
+/* As distribuidoras que atendem a maior parte do pais. Casar por nome e
+   de longe o campo mais confiavel: e o texto maior da folha, quase sempre
+   sai limpo no OCR, e a lista e fechada. */
+const DISTRIBUIDORAS = [
+  'Enel', 'CPFL', 'Light', 'Cemig', 'Copel', 'Celesc', 'Neoenergia', 'Equatorial',
+  'EDP', 'Energisa', 'RGE', 'Coelba', 'Celpe', 'Cosern', 'Elektro', 'Sulgipe',
+  'Amazonas Energia', 'CEB', 'CEEE', 'Celg', 'Cepisa', 'Ceron', 'Eletroacre', 'Boa Vista'
+];
+
+function leitorDisponivel() {
+  return typeof fetch === 'function' && location.protocol !== 'file:';
+}
+
+/* Foto de celular vem com 12 megapixels e sombra. O OCR nao precisa de
+   nada disso: reduzir para ~1600px de largura e jogar para tons de cinza
+   com contraste esticado acelera muito e melhora o acerto. */
+function prepararImagem(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const maxL = 1600;
+        const escala = Math.min(1, maxL / img.naturalWidth);
+        const w = Math.round(img.naturalWidth * escala);
+        const h = Math.round(img.naturalHeight * escala);
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        const cx = cv.getContext('2d');
+        cx.drawImage(img, 0, 0, w, h);
+
+        const d = cx.getImageData(0, 0, w, h);
+        const px = d.data;
+        /* cinza pela luminancia e nao pela media: o vermelho da tarja da
+           fatura sumia junto com o texto na media simples */
+        let min = 255, max = 0;
+        const cinza = new Uint8ClampedArray(px.length / 4);
+        for (let i = 0, j = 0; i < px.length; i += 4, j++) {
+          const g = (px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114) | 0;
+          cinza[j] = g;
+          if (g < min) min = g;
+          if (g > max) max = g;
+        }
+        const faixa = Math.max(1, max - min);
+        for (let i = 0, j = 0; i < px.length; i += 4, j++) {
+          const g = ((cinza[j] - min) / faixa) * 255;
+          px[i] = px[i + 1] = px[i + 2] = g;
+        }
+        cx.putImageData(d, 0, 0);
+        URL.revokeObjectURL(url);
+        cv.toBlob(b => b ? resolve(b) : reject(new Error('Não consegui preparar a imagem.')), 'image/png');
+      } catch (e) {
+        URL.revokeObjectURL(url);
+        reject(e);
+      }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Esse arquivo não parece uma imagem.')); };
+    img.src = url;
+  });
+}
+
+function carregarTesseract() {
+  if (window.Tesseract) return Promise.resolve(window.Tesseract);
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = LEITOR_CDN;
+    s.onload = () => window.Tesseract
+      ? resolve(window.Tesseract)
+      : reject(new Error('O leitor carregou pela metade. Recarregue a página e tente de novo.'));
+    s.onerror = () => reject(new Error('Não consegui baixar o leitor. Ele precisa de internet na primeira vez — depois disso fica no cache do navegador.'));
+    document.head.appendChild(s);
+  });
+}
+
+/* ---------- interpretar o texto ---------- */
+
+/* O OCR troca 0 por O e 1 por l com frequencia. Normalizar antes de
+   procurar numero evita a maior parte dos falsos negativos. */
+function limparTexto(t) {
+  return String(t || '')
+    .replace(/[|]/g, ' ')
+    .replace(/ /g, ' ')
+    .replace(/[ \t]+/g, ' ');
+}
+
+function numeroDoTexto(txt) {
+  if (txt == null) return NaN;
+  const t = String(txt).trim().replace(/\s/g, '');
+  if (!t) return NaN;
+  let limpo;
+  if (t.indexOf(',') >= 0) limpo = t.replace(/\./g, '').replace(',', '.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(t)) limpo = t.replace(/\./g, '');
+  else limpo = t;
+  const n = Number(limpo);
+  return isFinite(n) ? n : NaN;
+}
+
+function acharDistribuidora(texto) {
+  const alvo = texto.toLowerCase();
+  for (let i = 0; i < DISTRIBUIDORAS.length; i++) {
+    const d = DISTRIBUIDORAS[i];
+    if (alvo.indexOf(d.toLowerCase()) >= 0) return d;
+  }
+  return null;
+}
+
+/* Consumo: procura um numero perto da palavra kWh. A fatura tem varios
+   numeros com kWh do lado (consumo, injetado, saldo), entao pegamos o
+   maior valor plausivel de consumo mensal residencial ou comercial. */
+function acharConsumo(texto) {
+  const candidatos = [];
+  const re = /(\d{1,3}(?:\.\d{3})*(?:,\d+)?|\d+(?:[.,]\d+)?)\s*k\s*w\s*h/gi;
+  let m;
+  while ((m = re.exec(texto)) !== null) {
+    const n = numeroDoTexto(m[1]);
+    if (isFinite(n) && n >= 20 && n <= 50000) candidatos.push(n);
+  }
+  const reRotulo = /consumo[^\n\d]{0,40}(\d{1,3}(?:\.\d{3})*(?:,\d+)?|\d+(?:[.,]\d+)?)/gi;
+  while ((m = reRotulo.exec(texto)) !== null) {
+    const n = numeroDoTexto(m[1]);
+    if (isFinite(n) && n >= 20 && n <= 50000) candidatos.push(n);
+  }
+  if (!candidatos.length) return null;
+  /* o rotulado como consumo costuma ser o maior dos que aparecem com kWh */
+  candidatos.sort((a, b) => b - a);
+  return Math.round(candidatos[0]);
+}
+
+/* Tarifa: um valor entre R$ 0,30 e R$ 2,50 por kWh cobre o Brasil inteiro.
+   Fora dessa faixa e outra coisa que o OCR pegou junto. */
+function acharTarifa(texto) {
+  const re = /(?:tarifa|pre[cç]o\s*unit|valor\s*unit|r\$\s*\/\s*kwh)[^\n\d]{0,30}(\d+[.,]\d{2,6})/gi;
+  let m;
+  while ((m = re.exec(texto)) !== null) {
+    const n = numeroDoTexto(m[1]);
+    if (isFinite(n) && n >= 0.3 && n <= 2.5) return +n.toFixed(4);
+  }
+  return null;
+}
+
+function acharTotal(texto) {
+  const re = /total\s*a\s*pagar[^\n\d]{0,30}(\d{1,3}(?:\.\d{3})*,\d{2}|\d+[.,]\d{2})/gi;
+  const m = re.exec(texto);
+  if (m) {
+    const n = numeroDoTexto(m[1]);
+    if (isFinite(n) && n > 0 && n < 1000000) return n;
+  }
+  return null;
+}
+
+/* Devolve o que reconheceu. Campo que nao apareceu volta null — nunca
+   um palpite, porque palpite silencioso aqui vira erro de calculo que
+   ninguem percebe. */
+function interpretarConta(textoBruto) {
+  const texto = limparTexto(textoBruto);
+  const consumo = acharConsumo(texto);
+  let tarifa = acharTarifa(texto);
+  const total = acharTotal(texto);
+
+  /* Sem tarifa explicita, da para deduzir do total dividido pelo consumo.
+     Fica marcado como deduzida para a tela poder avisar. */
+  let tarifaDeduzida = false;
+  if (tarifa == null && total != null && consumo) {
+    const t = total / consumo;
+    if (t >= 0.3 && t <= 2.5) { tarifa = +t.toFixed(4); tarifaDeduzida = true; }
+  }
+  return {
+    distribuidora: acharDistribuidora(texto),
+    consumo: consumo,
+    tarifa: tarifa,
+    tarifaDeduzida: tarifaDeduzida,
+    total: total,
+    texto: texto
+  };
+}
+
+/* ---------- o fluxo completo ---------- */
+async function lerContaDeLuz(file, aoMudar) {
+  const anuncia = () => { if (typeof aoMudar === 'function') aoMudar(); };
+
+  if (!file) return;
+  if (!/^image\//.test(file.type)) {
+    LEITOR = { estado: 'erro', msg: 'Mande uma imagem (JPG ou PNG). Se a conta é PDF, tire um print da primeira página.' };
+    return anuncia();
+  }
+  if (file.size > 20 * 1024 * 1024) {
+    LEITOR = { estado: 'erro', msg: 'Essa imagem tem mais de 20 MB. Tire a foto com qualidade menor.' };
+    return anuncia();
+  }
+  if (!leitorDisponivel()) {
+    LEITOR = { estado: 'erro', msg: 'A leitura por foto precisa que o site esteja aberto por um endereço http. Abrindo o arquivo direto do disco o navegador bloqueia o download do leitor — rode "node ferramentas/servidor.mjs" ou preencha à mão.' };
+    return anuncia();
+  }
+
+  LEITOR = { estado: 'lendo', progresso: 2, etapa: 'Preparando a imagem' };
+  anuncia();
+
+  let worker;
+  try {
+    const imagem = await prepararImagem(file);
+
+    LEITOR.progresso = 8; LEITOR.etapa = 'Baixando o leitor (só na primeira vez)'; anuncia();
+    const T = await carregarTesseract();
+
+    LEITOR.progresso = 20; LEITOR.etapa = 'Carregando o português'; anuncia();
+    worker = await T.createWorker('por', 1, {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          LEITOR.progresso = 30 + Math.round((m.progress || 0) * 65);
+          LEITOR.etapa = 'Lendo o texto da fatura';
+          anuncia();
+        }
+      }
+    });
+
+    const saida = await worker.recognize(imagem);
+    const lido = interpretarConta((saida && saida.data && saida.data.text) || '');
+
+    /* preenche o formulario com o que foi reconhecido */
+    const achados = [];
+    if (lido.distribuidora) {
+      S.nova.distribuidora = lido.distribuidora;
+      achados.push({ rotulo: 'Distribuidora', valor: lido.distribuidora });
+    }
+    if (lido.consumo) {
+      S.nova.consumoMes = lido.consumo;
+      achados.push({ rotulo: 'Consumo', valor: nf(lido.consumo) + ' kWh' });
+    }
+    if (lido.tarifa) {
+      S.nova.tarifa = lido.tarifa;
+      achados.push({
+        rotulo: 'Tarifa',
+        valor: 'R$ ' + nf(lido.tarifa, 2) + (lido.tarifaDeduzida ? ' (deduzida do total)' : '')
+      });
+    }
+    /* Nome so quando ainda esta vazio: se a pessoa ja escreveu "Minha casa",
+       a foto nao tem por que apagar. */
+    if (!S.nova.nome.trim() && lido.distribuidora) S.nova.nome = 'Minha unidade';
+
+    LEITOR = { estado: 'ok', achados: achados };
+    if (achados.length) salvar();
+  } catch (e) {
+    LEITOR = { estado: 'erro', msg: (e && e.message) || 'Algo deu errado na leitura.' };
+  } finally {
+    if (worker) { try { await worker.terminate(); } catch (e) { } }
+  }
+  anuncia();
+}
+
+
 /* ===== js/telas.js ===== */
 /* telas.js — as telas da versao ampla
 
@@ -2800,7 +3266,8 @@ const IC = {
   volta: 'M15 6l-6 6 6 6',
   chevron: 'M9 6l6 6-6 6',
   lixo: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
-  lapis: 'M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM14 6l4 4'
+  lapis: 'M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM14 6l4 4',
+  camera: 'M3 8a2 2 0 0 1 2-2h2.5L9 4h6l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z'
 };
 function ico(d, sz, cor, sw) {
   return '<svg width="' + (sz || 16) + '" height="' + (sz || 16) + '" viewBox="0 0 24 24" fill="none" stroke="' + (cor || 'currentColor') + '" stroke-width="' + (sw || 1.8) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"/></svg>';
@@ -3565,19 +4032,92 @@ function textoCobertura(p, n) {
   return base;
 }
 
+/* ---------- cadastro da unidade, em tres passos ----------
+   Era um formulario unico com dez campos. Conta nova cai direto aqui, e
+   dez campos de uma vez e onde a pessoa desiste. Dividido em passos ela
+   ve o fim da tarefa, e cada passo pergunta uma coisa so:
+
+     1. o que esta na conta de luz   (da para preencher pela foto)
+     2. o que esta na nota do instalador
+     3. quais aparelhos ela realmente tem
+
+   O passo 3 existe por causa de um defeito real: a unidade nascia com os
+   aparelhos do arquetipo ja dentro, e a pessoa via "Ar-condicionado" num
+   painel que deveria ser dela. Agora nada aparece sem ela ter marcado. */
+const PASSOS_UNIDADE = [
+  { n: 1, titulo: 'Sua conta de luz', sub: 'Os números que já estão na fatura que chega todo mês.' },
+  { n: 2, titulo: 'Seu sistema solar', sub: 'O que está na nota do instalador. O resto o sistema calcula.' },
+  { n: 3, titulo: 'O que você tem ligado', sub: 'Só o que existe na sua unidade. É isso que o painel vai dividir.' }
+];
+
+function passoAtual() {
+  return clamp(Number(S.nova.passo) || 1, 1, 3);
+}
+/* Cada passo so libera o seguinte quando o que ele pede esta preenchido. */
+function passoCompleto(n) {
+  const v = S.nova;
+  if (n === 1) return v.nome.trim().length > 1 && v.consumoMes > 0 && v.tarifa > 0;
+  if (n === 2) return v.potenciaKwp > 0 && v.paineis > 0;
+  return true;
+}
+
+function trilhaPassos() {
+  const at = passoAtual();
+  return '<ol class="trilha">' + PASSOS_UNIDADE.map(p => {
+    const estado = p.n === at ? 'atual' : passoCompleto(p.n) && p.n < at ? 'feito' : 'espera';
+    /* passo ja visitado abre sempre; passo a frente so abre se o anterior fechou */
+    const podeIr = p.n <= at || passoCompleto(p.n - 1);
+    return '<li class="trilha-item trilha-item--' + estado + '">' +
+      (podeIr
+        ? '<button data-act="nova-passo" data-v="' + p.n + '"' + (p.n === at ? ' aria-current="step"' : '') + '>'
+        : '<span>') +
+      '<span class="trilha-n">' + (estado === 'feito' ? ico(IC.check, 12, 'currentColor', 3) : p.n) + '</span>' +
+      '<span class="trilha-t">' + p.titulo + '</span>' +
+      (podeIr ? '</button>' : '</span>') + '</li>';
+  }).join('') + '</ol>';
+}
+
+/* ----- bloco da foto da conta de luz ----- */
+function blocoFotoConta() {
+  const e = LEITOR || {};
+  if (e.estado === 'lendo') {
+    return '<div class="foto-cx foto-cx--lendo">' +
+      '<div class="foto-t">Lendo a sua conta… ' + nf(clamp(e.progresso || 0, 0, 100)) + '%</div>' +
+      '<div class="foto-barra"><i style="width:' + clamp(e.progresso || 0, 3, 100) + '%"></i></div>' +
+      '<div class="foto-d">' + esc(e.etapa || 'Preparando o leitor') + '</div></div>';
+  }
+  if (e.estado === 'ok') {
+    const achou = e.achados || [];
+    return '<div class="foto-cx foto-cx--ok">' +
+      '<div class="foto-t">' + ico(IC.check, 14, 'currentColor', 2.6) +
+      (achou.length
+        ? 'Preenchi ' + achou.length + (achou.length > 1 ? ' campos' : ' campo') + ' pela foto'
+        : 'Li a foto, mas não reconheci nenhum campo') + '</div>' +
+      (achou.length
+        ? '<div class="foto-d">' + achou.map(a => '<b>' + esc(a.rotulo) + ':</b> ' + esc(a.valor)).join(' · ') +
+          '<br>Confira cada um abaixo antes de continuar. Leitura de foto erra, e o cálculo inteiro depende destes números.</div>'
+        : '<div class="foto-d">Pode digitar à mão nos campos abaixo. Foto reta, sem sombra e com a fatura preenchendo a tela costuma funcionar melhor.</div>') +
+      '<label class="link-btn foto-outra" for="fotoConta">Tentar outra foto' +
+      '<input type="file" id="fotoConta" accept="image/*" data-act="foto-conta" class="sr"></label></div>';
+  }
+  if (e.estado === 'erro') {
+    return '<div class="foto-cx foto-cx--erro">' +
+      '<div class="foto-t">Não consegui ler a foto</div>' +
+      '<div class="foto-d">' + esc(e.msg || 'Tente de novo ou preencha à mão.') + '</div>' +
+      '<label class="link-btn foto-outra" for="fotoConta">Tentar de novo' +
+      '<input type="file" id="fotoConta" accept="image/*" data-act="foto-conta" class="sr"></label></div>';
+  }
+  return '<div class="foto-cx">' +
+    '<span class="foto-ic">' + ico(IC.camera, 18, 'currentColor', 1.8) + '</span>' +
+    '<span class="foto-txt"><span class="foto-t">Tem a conta de luz aí?</span>' +
+    '<span class="foto-d">Mande uma foto e eu tento preencher o consumo, a tarifa e a distribuidora para você conferir.</span></span>' +
+    '<label class="foto-btn" for="fotoConta">' + ico(IC.mais, 14, 'currentColor', 2.4) + 'Escolher foto' +
+    '<input type="file" id="fotoConta" accept="image/*" data-act="foto-conta" class="sr"></label></div>';
+}
+
 function vUnidade() {
-  const n = S.nova, p = previaUnidade();
-  const pode = n.nome.trim().length > 1 && n.potenciaKwp > 0 && n.consumoMes > 0;
-
-  const arqs = Object.keys(ARQUETIPOS).map(k => {
-    const a = ARQUETIPOS[k], at = n.arquetipo === k;
-    return '<button class="opt" data-act="nova-arq" data-v="' + k + '" aria-pressed="' + at + '">' +
-      '<span class="opt-t">' + a.rotulo + '</span>' +
-      '<span class="opt-d">' + a.desc + '</span></button>';
-  }).join('');
-
-  const tels = TELHADOS.map(t => '<button class="chip" data-act="nova-telhado" data-v="' + t.k + '" ' +
-    'aria-pressed="' + (n.telhado === t.k) + '">' + t.rotulo + '</button>').join('');
+  const n = S.nova, p = previaUnidade(), at = passoAtual();
+  const pode = passoCompleto(1) && passoCompleto(2);
 
   /* Sempre type=text: input[type=number] recusa vírgula decimal, e em
      português a vírgula é o separador natural. O parse aceita as duas. */
@@ -3585,38 +4125,102 @@ function vUnidade() {
     '<div class="field"><label class="field-lbl" for="' + id + '">' + rot + '</label>' +
     '<input class="text-in" id="' + id + '" data-fid="' + id + '" data-in="' + id + '" type="text" ' +
     (num ? 'inputmode="decimal" ' : '') +
-    'value="' + esc(num ? (valor % 1 === 0 ? nf(valor) : String(valor).replace('.', ',')) : valor) + '" autocomplete="off" style="max-width:320px">' +
+    'value="' + esc(num ? (valor % 1 === 0 ? nf(valor) : String(valor).replace('.', ',')) : valor) + '" autocomplete="off" style="max-width:340px">' +
     (dica ? '<div class="dica">' + dica + '</div>' : '') + '</div>';
 
+  let corpo;
+  if (at === 1) {
+    const arqs = Object.keys(ARQUETIPOS).map(k => {
+      const a = ARQUETIPOS[k];
+      return '<button class="opt" data-act="nova-arq" data-v="' + k + '" aria-pressed="' + (n.arquetipo === k) + '">' +
+        '<span class="opt-t">' + a.rotulo + '</span>' +
+        '<span class="opt-d">' + a.desc + '</span></button>';
+    }).join('');
+    corpo = blocoFotoConta() +
+      campo('unNome', 'Nome da unidade', 'Como você quer ver no menu — “Minha casa”, “Loja do centro”.', n.nome) +
+      campo('unConsumo', 'Consumo médio por mês (kWh)', 'Pegue a média dos últimos 12 meses — costuma vir num gráfico na própria conta.', n.consumoMes, true) +
+      campo('unTarifa', 'Tarifa (R$ por kWh)', 'Divida o valor total pela quantidade de kWh, ou procure por “tarifa” na conta.', n.tarifa, true) +
+      campo('unDistribuidora', 'Distribuidora', 'Quem manda a conta: Enel, CPFL, Light, Cemig…', n.distribuidora) +
+      '<div class="field"><span class="field-lbl">Como a energia é usada</span>' +
+      '<div class="dica">Isso define a curva de consumo hora a hora, sem você digitar 24 números.</div>' +
+      '<div class="opts">' + arqs + '</div></div>';
+  } else if (at === 2) {
+    const tels = TELHADOS.map(t => '<button class="chip" data-act="nova-telhado" data-v="' + t.k + '" ' +
+      'aria-pressed="' + (n.telhado === t.k) + '">' + t.rotulo + '</button>').join('');
+    corpo = '<div class="field"><span class="field-lbl">Condição do telhado</span>' +
+      '<div class="dica">Determina quanto do sol da região os painéis conseguem aproveitar.</div>' +
+      '<div class="chips">' + tels + '</div></div>' +
+      campo('unPotencia', 'Potência instalada (kWp)', 'Está na nota do instalador. Some a potência dos painéis e divida por mil.', n.potenciaKwp, true) +
+      campo('unPaineis', 'Quantidade de painéis', '', n.paineis, true) +
+      campo('unInvestimento', 'Quanto custou (R$)', 'Usado só para calcular em quanto tempo o sistema se paga.', n.investimento, true) +
+      campo('unMeses', 'Há quantos meses está ligado', 'Define se você tem direito adquirido pela Lei 14.300 e o histórico que o sistema monta.', n.mesesOperacao, true);
+  } else {
+    const opcoes = aparelhosDoArquetipo(n.arquetipo);
+    const marcados = Array.isArray(n.aparelhos) ? n.aparelhos : opcoes.map(e => e.id);
+    const itens = opcoes.map(e => {
+      const on = marcados.indexOf(e.id) >= 0;
+      return '<button class="apsel" data-act="nova-aparelho" data-v="' + esc(e.id) + '" aria-pressed="' + on + '">' +
+        '<span class="apsel-cx" aria-hidden="true">' + (on ? ico(IC.check, 12, 'currentColor', 3) : '') + '</span>' +
+        '<span class="apsel-txt"><span class="apsel-n">' + esc(e.nome) + '</span>' +
+        '<span class="apsel-d">' + esc(e.local) + ' · ' + nf(e.pot) + ' W típicos</span></span></button>';
+    }).join('');
+    corpo = '<div class="field">' +
+      '<div class="apsel-topo"><span class="field-lbl">Marque o que existe na sua unidade</span>' +
+      '<button class="link-btn" data-act="nova-aparelhos-todos">' +
+      (marcados.length === opcoes.length ? 'Desmarcar todos' : 'Marcar todos') + '</button></div>' +
+      '<div class="dica">Só o que estiver marcado aparece no painel e no ranking. O que você não marcar continua sendo medido: entra como “Não identificado”, e dá para cadastrar depois em Aparelhos.</div>' +
+      '<div class="apsel-grade">' + itens + '</div>' +
+      (marcados.length === 0
+        ? '<div class="dica" style="color:var(--warn)">Sem nenhum marcado, o painel mostra todo o consumo como não identificado. Dá para seguir assim e cadastrar depois.</div>'
+        : '') + '</div>';
+  }
+
+  const voltar = at > 1
+    ? '<button class="ghost-btn" data-act="nova-passo" data-v="' + (at - 1) + '">Voltar</button>'
+    : '';
+  const avancar = at < 3
+    ? '<button class="dark-btn" data-act="nova-passo" data-v="' + (at + 1) + '"' +
+      (passoCompleto(at) ? '' : ' disabled') + '>Continuar' + ico(IC.seta, 13, 'currentColor', 2.4) + '</button>'
+    : '<button class="dark-btn" data-act="salvar-unidade"' + (pode ? '' : ' disabled') + '>' +
+      ico(IC.check, 14, 'currentColor', 2.6) + 'Criar minha unidade</button>';
+  const falta = at < 3
+    ? (passoCompleto(at) ? '' : '<span class="passo-falta">' + (at === 1
+        ? 'Preencha o nome, o consumo e a tarifa para continuar.'
+        : 'Informe a potência e a quantidade de painéis.') + '</span>')
+    : (pode ? '' : '<span class="passo-falta">Volte e complete os passos anteriores.</span>');
+
   const form = '<section class="card s7" style="padding:24px 28px 28px">' +
-    '<h2>Sua unidade</h2>' +
-    '<div class="card-sub">Só o que está na sua conta de luz e na nota do instalador. O resto o sistema calcula.</div>' +
-
-    campo('unNome', 'Nome da unidade', 'Como você quer ver no menu — “Minha casa”, “Loja do centro”.', n.nome) +
-
-    '<div class="field"><span class="field-lbl">Como a energia é usada</span>' +
-    '<div class="dica">Isso define a curva de consumo hora a hora, sem você digitar 24 números.</div>' +
-    '<div class="opts">' + arqs + '</div></div>' +
-
-    '<div class="field"><span class="field-lbl">Condição do telhado</span>' +
-    '<div class="dica">Determina quanto do sol da região os painéis conseguem aproveitar.</div>' +
-    '<div class="chips">' + tels + '</div></div>' +
-
-    '<hr class="rule" style="margin:24px 0 4px">' +
-    '<h3 style="margin-bottom:4px">Da sua conta de luz</h3>' +
-    campo('unConsumo', 'Consumo médio por mês (kWh)', 'Pegue a média dos últimos 12 meses — costuma vir num gráfico na própria conta.', n.consumoMes, true) +
-    campo('unTarifa', 'Tarifa (R$ por kWh)', 'Divida o valor total pela quantidade de kWh, ou procure por “tarifa” na conta.', n.tarifa, true) +
-    campo('unDistribuidora', 'Distribuidora', '', n.distribuidora) +
-
-    '<hr class="rule" style="margin:24px 0 4px">' +
-    '<h3 style="margin-bottom:4px">Do seu sistema solar</h3>' +
-    campo('unPotencia', 'Potência instalada (kWp)', 'Está na nota do instalador. Some a potência dos painéis e divida por mil.', n.potenciaKwp, true) +
-    campo('unPaineis', 'Quantidade de painéis', '', n.paineis, true) +
-    campo('unInvestimento', 'Quanto custou (R$)', 'Usado só para calcular em quanto tempo o sistema se paga.', n.investimento, true) +
-    campo('unMeses', 'Há quantos meses está ligado', 'Define se você tem direito adquirido pela Lei 14.300 e o histórico que o sistema monta.', n.mesesOperacao, true) +
+    trilhaPassos() +
+    '<h2 style="margin-top:22px">' + PASSOS_UNIDADE[at - 1].titulo + '</h2>' +
+    '<div class="card-sub">' + PASSOS_UNIDADE[at - 1].sub + '</div>' +
+    corpo +
+    '<div class="passo-nav">' + voltar + '<div class="passo-nav-fim">' + falta + avancar + '</div></div>' +
     '</section>';
 
-  const previa = '<section class="card card--dark" style="padding:24px 26px 26px">' +
+  return '<div class="grid12 enter">' + form + '<div class="s5 stack">' + previaCard(n, p, at) + ajudaCard(at) + '</div></div>';
+}
+
+/* A prévia muda de foco conforme o passo: nos dois primeiros o que importa
+   é a geração; no terceiro, quanto do consumo os aparelhos marcados
+   conseguem explicar. */
+function previaCard(n, p, at) {
+  if (at === 3) {
+    const opcoes = aparelhosDoArquetipo(n.arquetipo);
+    const marcados = Array.isArray(n.aparelhos) ? n.aparelhos : opcoes.map(e => e.id);
+    const a = ARQUETIPOS[n.arquetipo] || ARQUETIPOS.casaVazia;
+    const coberto = soma(a.equipamentos.filter(e => marcados.indexOf(e.id) >= 0).map(e => e.share)) * 100;
+    return '<section class="card card--dark" style="padding:24px 26px 26px">' +
+      '<h2>O que o painel vai explicar</h2>' +
+      '<div style="display:flex;align-items:baseline;gap:8px;margin-top:12px">' +
+      '<span class="big big-46">' + nf(coberto) + '</span>' +
+      '<span style="font-size:15px;color:var(--on-dark-soft)">% do seu consumo</span></div>' +
+      '<div class="est-bar"><i style="width:' + clamp(coberto, 0, 100) + '%"></i></div>' +
+      '<div style="font-size:13px;color:var(--on-dark-soft);margin-top:12px;line-height:1.55">' +
+      marcados.length + ' de ' + opcoes.length + ' aparelhos marcados. Os ' +
+      nf(Math.max(0, 100 - coberto)) + '% restantes aparecem como <b style="color:var(--on-dark)">Não identificado</b> ' +
+      'até você cadastrar o que falta.</div></section>';
+  }
+  return '<section class="card card--dark" style="padding:24px 26px 26px">' +
     '<h2>O que o sistema vai calcular</h2>' +
     '<div style="display:flex;align-items:baseline;gap:8px;margin-top:12px">' +
     '<span class="big big-46" id="pvGer">' + nf(p.geracao) + '</span>' +
@@ -3625,16 +4229,24 @@ function vUnidade() {
     nf(p.telhado.fator * 100) + '% do sol da região, com ' + nf(n.potenciaKwp, 1) + ' kWp instalados</div>' +
     '<div class="est-bar"><i id="pvBar" style="width:' + clamp(p.cobertura, 0, 100) + '%"></i></div>' +
     '<div style="font-size:12px;color:var(--on-dark-soft);margin-top:8px" id="pvCob">' + textoCobertura(p, n) + '</div>' +
-    '<hr style="border:0;height:1px;background:rgba(244,241,234,.14);margin:18px 0 14px">' +
+    '<hr style="border:0;height:1px;background:rgba(242,244,246,.14);margin:18px 0 14px">' +
     '<div style="font-size:13px;color:var(--on-dark-soft);line-height:1.55" id="pvConta">' +
     'Sem os painéis, sua conta seria cerca de <b style="color:var(--on-dark)">' + brl(p.contaSem) + '</b> por mês.</div>' +
-    '<button class="dark-btn" data-act="salvar-unidade" style="width:100%;height:46px;margin-top:20px;border-radius:13px;font-size:14.5px;' +
-    (pode ? 'background:var(--on-dark);color:var(--dark)' : '') + '"' + (pode ? '' : ' disabled') + '>' +
-    ico(IC.mais, 15, 'currentColor', 2.4) + 'Criar unidade</button>' +
-    (pode ? '' : '<div style="font-size:12px;color:var(--on-dark-soft);margin-top:10px">Falta o nome, a potência ou o consumo.</div>') +
     '</section>';
+}
 
-  const ajuda = '<section class="card" style="padding:20px 22px 22px">' +
+function ajudaCard(at) {
+  if (at === 3) {
+    return '<section class="card" style="padding:20px 22px 22px">' +
+      '<h2>Por que perguntar isso</h2>' +
+      '<div style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:10px">' +
+      'O medidor mede a casa inteira, não tomada por tomada. Para dizer quanto é da geladeira, ' +
+      'o sistema precisa saber que existe uma geladeira.' +
+      '<br><br>Marcar aqui não é chute: cada aparelho tem uma assinatura de horário, e é ela que ' +
+      'o cálculo usa para repartir a leitura. Por isso a soma sempre fecha com o medidor.' +
+      '</div></section>';
+  }
+  return '<section class="card" style="padding:20px 22px 22px">' +
     '<h2>Como o cálculo funciona</h2>' +
     '<div style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:10px">' +
     'A geração não é chute nem um número que você digita: vem da irradiação média da região (' +
@@ -3643,8 +4255,6 @@ function vUnidade() {
     '<br><br>O consumo hora a hora vem do arquétipo escolhido, ajustado para bater com a média mensal da sua conta. ' +
     'Depois disso o sistema calcula sozinho autoconsumo, injeção, créditos e Fio B.' +
     '</div></section>';
-
-  return '<div class="grid12 enter">' + form + '<div class="s5 stack">' + previa + ajuda + '</div></div>';
 }
 
 
@@ -4174,22 +4784,41 @@ function syncMeta() {
     f.style.background = v.projConsumo > meta ? 'var(--bad)' : 'var(--good)';
   }
 }
+/* Digitar nao redesenha a tela inteira — o campo perderia o foco no meio
+   da palavra. Estas funcoes atualizam so o que depende do que foi digitado.
+   Quem adicionar um elemento que reage ao formulario precisa atualizar
+   aqui tambem, senao ele congela com o valor do ultimo render. */
 function syncUnidade() {
-  if (!$('#pvGer')) return;
-  const n = S.nova, p = previaUnidade();
-  txt('#pvGer', nf(p.geracao));
-  txt('#pvExpl', nf(p.telhado.fator * 100) + '% do sol da região, com ' + nf(n.potenciaKwp, 1) + ' kWp instalados');
-  txt('#pvCob', textoCobertura(p, n));
-  const b = $('#pvBar'); if (b) b.style.width = clamp(p.cobertura, 0, 100) + '%';
-  const c = $('#pvConta');
-  if (c) c.innerHTML = 'Sem os painéis, sua conta seria cerca de <b style="color:var(--on-dark)">' + brl(p.contaSem) + '</b> por mês.';
-  const btn = $('[data-act="salvar-unidade"]');
-  if (btn) {
-    const pode = n.nome.trim().length > 1 && n.potenciaKwp > 0 && n.consumoMes > 0;
-    btn.disabled = !pode;
-    btn.style.background = pode ? 'var(--on-dark)' : '';
-    btn.style.color = pode ? 'var(--dark)' : '';
+  const n = S.nova;
+
+  /* prévia da geração: só existe nos passos 1 e 2 */
+  if ($('#pvGer')) {
+    const p = previaUnidade();
+    txt('#pvGer', nf(p.geracao));
+    txt('#pvExpl', nf(p.telhado.fator * 100) + '% do sol da região, com ' + nf(n.potenciaKwp, 1) + ' kWp instalados');
+    txt('#pvCob', textoCobertura(p, n));
+    const b = $('#pvBar'); if (b) b.style.width = clamp(p.cobertura, 0, 100) + '%';
+    const c = $('#pvConta');
+    if (c) c.innerHTML = 'Sem os painéis, sua conta seria cerca de <b style="color:var(--on-dark)">' + brl(p.contaSem) + '</b> por mês.';
   }
+
+  /* o "Continuar" do passo aberto libera assim que o passo fecha */
+  const at = typeof passoAtual === 'function' ? passoAtual() : 1;
+  const seguir = $('[data-act="nova-passo"].dark-btn');
+  if (seguir) seguir.disabled = !passoCompleto(at);
+
+  const btn = $('[data-act="salvar-unidade"]');
+  if (btn) btn.disabled = !(passoCompleto(1) && passoCompleto(2));
+
+  /* a trilha marca o passo como concluído no mesmo instante */
+  $$('.trilha-item').forEach((li, i) => {
+    const n_ = i + 1;
+    if (n_ === at) return;
+    li.classList.toggle('trilha-item--feito', passoCompleto(n_) && n_ < at);
+  });
+
+  const falta = $('.passo-falta');
+  if (falta) falta.style.display = passoCompleto(at) ? 'none' : '';
 }
 function syncTarifa() { txt('#tarLbl', 'R$ ' + nf(tarifaAtual(), 2) + ' / kWh'); }
 
@@ -4315,13 +4944,38 @@ const ACOES = {
       S.exemplos ? 'As unidades de demonstração voltaram para o menu.'
         : 'Agora você vê apenas as unidades que cadastrou.', 'sun');
   },
-  'nova-arq': el => { S.nova.arquetipo = el.dataset.v; salvar(); render(); },
+  /* Trocar de arquetipo troca a lista de aparelhos possiveis, entao a
+     selecao antiga nao vale mais: volta a null, que o cadastro le como
+     "todos marcados". */
+  'nova-arq': el => { S.nova.arquetipo = el.dataset.v; S.nova.aparelhos = null; salvar(); render(); },
+  'nova-passo': el => { S.nova.passo = Number(el.dataset.v) || 1; salvar(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); },
+  'nova-aparelho': el => {
+    const id = el.dataset.v;
+    const todos = aparelhosDoArquetipo(S.nova.arquetipo).map(e => e.id);
+    const atual = Array.isArray(S.nova.aparelhos) ? S.nova.aparelhos.slice() : todos.slice();
+    const i = atual.indexOf(id);
+    if (i >= 0) atual.splice(i, 1); else atual.push(id);
+    S.nova.aparelhos = atual;
+    salvar(); render();
+  },
+  'nova-aparelhos-todos': () => {
+    const todos = aparelhosDoArquetipo(S.nova.arquetipo).map(e => e.id);
+    const atual = Array.isArray(S.nova.aparelhos) ? S.nova.aparelhos : todos;
+    S.nova.aparelhos = atual.length === todos.length ? [] : todos.slice();
+    salvar(); render();
+  },
   'nova-telhado': el => { S.nova.telhado = el.dataset.v; salvar(); render(); },
   'salvar-unidade': () => {
     const n = S.nova;
     if (n.nome.trim().length < 2 || !(n.potenciaKwp > 0) || !(n.consumoMes > 0)) return;
     const chave = 'u' + Date.now().toString(36);
-    S.unidades = (S.unidades || []).concat([Object.assign({}, n, { chave: chave, nome: n.nome.trim() })]);
+    /* passo e estado do formulario, nao da unidade — nao vai para o banco.
+       aparelhos vira lista explicita: unidade nova nasce com o que a pessoa
+       marcou, nunca com a lista inteira do arquetipo por omissao. */
+    const dados = Object.assign({}, n, { chave: chave, nome: n.nome.trim() });
+    delete dados.passo;
+    if (!Array.isArray(dados.aparelhos)) dados.aparelhos = aparelhosDoArquetipo(n.arquetipo).map(e => e.id);
+    S.unidades = (S.unidades || []).concat([dados]);
     const u = uni(chave);
     S.metas[chave] = u.metaPadrao;
     S.tarifa[chave] = null;
@@ -4443,6 +5097,16 @@ document.addEventListener('input', ev => {
 });
 document.addEventListener('change', ev => {
   const el = ev.target;
+
+  /* A foto da conta de luz. O input fica escondido dentro de um <label>,
+     entao o clique vem do label e o arquivo chega por 'change'. */
+  if (el.dataset && el.dataset.act === 'foto-conta') {
+    const arquivo = el.files && el.files[0];
+    el.value = '';   /* solta o arquivo: escolher a mesma foto de novo tem que disparar */
+    if (arquivo) lerContaDeLuz(arquivo, render);
+    return;
+  }
+
   if (!el.dataset || !el.dataset.in) return;
   if (el.type === 'range') { _visao = null; render(); }
 });
@@ -4490,7 +5154,11 @@ else if (_consultaEstreita.addListener) _consultaEstreita.addListener(aoMudarLar
 /* ---------- o tique ---------- */
 let _spikeCooldown = 0, _spikeAtivo = false;
 function tique() {
-  if (!sessao()) return;
+  /* Sem unidade cadastrada nao existe medidor para ler: a conta acabou de
+     nascer e a pessoa ainda esta na tela de cadastro. Sem esta guarda o
+     tique chamava potenciaAgora() a cada 2 segundos e estourava em
+     mesSimulado, porque uni() devolve null. */
+  if (!sessao() || semUnidade()) return;
   pulso();
   buscarMedidor();
   gravarLeitura();
@@ -4516,7 +5184,7 @@ function tique() {
 /* uma linha por minuto no banco: e o historico que localStorage nao aguenta */
 let _ultimaGravacao = 0;
 async function gravarLeitura() {
-  if (!sessao() || !Banco.usandoIndexedDB) return;
+  if (!sessao() || semUnidade() || !Banco.usandoIndexedDB) return;
   const agoraMs = Date.now();
   if (agoraMs - _ultimaGravacao < 60000) return;
   _ultimaGravacao = agoraMs;
@@ -4526,7 +5194,7 @@ async function gravarLeitura() {
 
 let _ultimaHora = -1;
 function tiqueLento() {
-  if (!sessao()) return;
+  if (!sessao() || semUnidade()) return;
   const h = new Date().getHours();
   _visao = null;
   if (h !== _ultimaHora) { _ultimaHora = h; render(); }
