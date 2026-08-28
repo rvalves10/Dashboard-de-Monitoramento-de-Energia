@@ -170,7 +170,10 @@ function vPainel() {
   const maxE = Math.max.apply(null, meses.map(l => l.economia)) || 1;
   const spark = meses.map((l, i) => {
     const ehAgora = i === meses.length - 1;
-    return '<div class="spark-col' + (ehAgora ? ' is-now' : '') + '" title="' + MES3[l.m] + ': ' + brl(l.economia) + '">' +
+    /* mes anterior ao cadastro entra hachurado: e reconstrucao, nao leitura */
+    const est = !l.medido && !l.parcial;
+    return '<div class="spark-col' + (ehAgora ? ' is-now' : '') + (est ? ' spark-col--est' : '') +
+      '" title="' + MES3[l.m] + ': ' + brl(l.economia) + (est ? ' (estimado)' : '') + '">' +
       '<span class="spark-bar" style="height:' + Math.round((l.economia / maxE) * 52 + 6) + 'px"></span>' +
       '<span class="spark-lbl">' + MES3[l.m] + '</span></div>';
   }).join('');
@@ -288,6 +291,23 @@ function graficoDia(dia, v) {
     '<div class="chart-axis">' + eixo + '</div></section>';
 }
 
+/* ---------- medido x estimado ----------
+   O medidor so vale a partir do cadastro da unidade. Antes disso o sistema
+   reconstroi o periodo com a mesma fisica, o que e util para comparar, mas
+   nao e leitura — e apresentar conta como leitura e o tipo de coisa que
+   derruba um trabalho na banca. Todo lugar que mostra passado avisa. */
+function avisoEstimativa(unidadeTempo) {
+  const desde = medidoDesde(S.perfil);
+  const quando = desde
+    ? 'desde ' + desde.getDate() + ' de ' + MESES[desde.getMonth()]
+    : 'ainda não';
+  const alvo = unidadeTempo === 'hora' ? 'as horas' : 'os ' + (unidadeTempo || 'dia') + 's';
+  return '<div class="aviso-est">' + ico(IC.faisca, 14, 'currentColor', 2) +
+    '<span><b>' + (desde ? 'O medidor grava esta unidade ' + quando + '.' : 'Esta é uma unidade de demonstração.') + '</b> ' +
+    'Antes disso não havia o que medir, então ' + alvo + ' hachurados são reconstrução a partir do consumo, ' +
+    'da potência e do telhado que você informou — servem para comparar, não são leitura do medidor.</span></div>';
+}
+
 /* ---------- histórico ---------- */
 function vHistorico() {
   const v = visao(), t = tarifaAtual(), s = seriePeriodo();
@@ -300,11 +320,19 @@ function vHistorico() {
   saldos.forEach((x, i) => { if (x > saldos[iM]) iM = i; if (x < saldos[iP]) iP = i; });
   const cobertos = saldos.filter(x => x >= 0).length;
 
-  const barras = s.cons.map((c, i) => '<div class="hbar" data-i="' + i + '">' +
-    '<span class="hbar-pair"><i class="hbar-c" style="height:' + Math.max(1, (c / max) * 150) + 'px"></i>' +
-    '<i class="hbar-g" style="height:' + Math.max(1, (s.ger[i] / max) * 150) + 'px"></i></span>' +
-    '<span class="hbar-saldo" style="background:' + (saldos[i] >= 0 ? 'var(--good-soft)' : 'var(--bad-soft)') + '"></span>' +
-    '<span class="hbar-lbl">' + s.labels[i] + '</span></div>').join('');
+  /* Barra hachurada = periodo anterior ao cadastro da unidade: reconstrucao,
+     nao leitura do medidor. A divisoria cai na primeira barra medida. */
+  const med = s.medido || [];
+  const iCorte = med.indexOf(true);
+  const temEstimado = med.indexOf(false) >= 0;
+  const barras = s.cons.map((c, i) => {
+    const est = med[i] === false;
+    return '<div class="hbar' + (est ? ' hbar--est' : '') + (i === iCorte && iCorte > 0 ? ' hbar--corte' : '') + '" data-i="' + i + '">' +
+      '<span class="hbar-pair"><i class="hbar-c" style="height:' + Math.max(1, (c / max) * 150) + 'px"></i>' +
+      '<i class="hbar-g" style="height:' + Math.max(1, (s.ger[i] / max) * 150) + 'px"></i></span>' +
+      '<span class="hbar-saldo" style="background:' + (saldos[i] >= 0 ? 'var(--good-soft)' : 'var(--bad-soft)') + '"></span>' +
+      '<span class="hbar-lbl">' + s.labels[i] + '</span></div>';
+  }).join('');
 
   const tiles = [
     ['Consumo no período', nf(tC, 1), 'kWh', '<span style="color:' + (dC <= 0 ? 'var(--good)' : 'var(--bad)') + '">' + sinal(dC, 1) + '% vs período anterior</span>'],
@@ -332,7 +360,9 @@ function vHistorico() {
   return '<div class="grid12 enter"><section class="card s12"><div class="card-head"><div><h2>' + esc(s.rotulo) + '</h2>' +
     '<div class="card-sub">A faixa fina embaixo mostra se o sol cobriu o gasto daquele ' + s.unidade + '</div></div>' +
     '<div class="legend"><span><i class="swatch swatch--sq" style="background:var(--grid)"></i>Consumo</span>' +
-    '<span><i class="swatch swatch--sq" style="background:var(--sun)"></i>Geração</span></div></div>' +
+    '<span><i class="swatch swatch--sq" style="background:var(--sun)"></i>Geração</span>' +
+    (temEstimado ? '<span><i class="swatch swatch--sq swatch--est"></i>Estimado</span>' : '') +
+    '</div></div>' + (temEstimado ? avisoEstimativa(s.unidade) : '') +
     '<div class="chart" style="margin-top:0">' +
     '<div class="hbars" id="hbars" tabindex="0" role="img" aria-label="' + esc(s.rotulo) +
     '. Consumo total ' + nf(tC, 1) + ' quilowatt-hora, geração ' + nf(tG, 1) +
@@ -583,7 +613,7 @@ function vRelatorio() {
 
   const meses = v.ledger.linhas.slice(-12);
   const maxE = Math.max.apply(null, meses.map(x => x.economia)) || 1;
-  const ybars = meses.map((x, i) => '<div class="ybar' + (i === meses.length - 1 ? ' is-now' : '') + '" title="' + MES3[x.m] + ': ' + brl(x.economia) + '">' +
+  const ybars = meses.map((x, i) => '<div class="ybar' + (i === meses.length - 1 ? ' is-now' : '') + (!x.medido && !x.parcial ? ' ybar--est' : '') + '" title="' + MES3[x.m] + ': ' + brl(x.economia) + (!x.medido && !x.parcial ? ' (estimado)' : '') + '">' +
     '<i style="height:' + Math.round((x.economia / maxE) * 92 + 8) + 'px"></i><span>' + MES3[x.m] + '</span></div>').join('');
 
   const hoje = v.data;
@@ -599,11 +629,24 @@ function vRelatorio() {
     '<div><div class="leaf-t">Sem os painéis, esta conta seria ' + brl(semSolar) + '</div>' +
     '<div class="leaf-s">Você vai pagar ' + brl(total) + ' — ' + pct(((semSolar - total) / Math.max(semSolar, 1)) * 100) + ' menor. No mês, ' +
     nf(v.co2, 1) + ' kg de CO₂ deixaram de ir para a atmosfera, o mesmo que ' + arv + ' árvores absorvem em um mês.</div></div></div>' +
+    /* O relatorio e a peca que a pessoa imprime e leva para alguem. Se o mes
+       ainda nao foi medido inteiro, isso precisa estar escrito nele, e nao
+       so na tela — por isso entra no corpo do documento, nao num aviso. */
+    (v.linhaAtual && !v.linhaAtual.medido
+      ? '<div class="aviso-est" style="margin-top:18px">' + ico(IC.faisca, 14, 'currentColor', 2) +
+        '<span><b>Este mês ainda não foi medido inteiro.</b> ' +
+        (medidoDesde(S.perfil)
+          ? 'A unidade foi cadastrada em ' + medidoDesde(S.perfil).getDate() + ' de ' + MESES[medidoDesde(S.perfil).getMonth()] +
+            '; o que vem antes disso é reconstruído a partir do que você informou, não lido do medidor.'
+          : 'Esta é uma unidade de demonstração: todos os valores são simulados.') + '</span></div>'
+      : '') +
     '<div style="font-size:11.5px;color:var(--fainter);margin-top:18px">Emitido em ' + hoje.getDate() + ' de ' + MESES[v.m] + ' de ' + v.y +
     ' · valores estimados a partir do medidor e da tarifa cadastrada</div></section>' +
 
     '<div class="s4 stack">' +
     '<section class="card" style="padding:20px 22px 22px"><h2>Economia nos 12 meses</h2>' +
+    (meses.some(l => !l.medido && !l.parcial)
+      ? '<div class="card-sub">Barra hachurada é mês anterior ao cadastro: estimativa, não leitura.</div>' : '') +
     '<div class="big big-30" style="margin-top:8px">' + brl(soma(meses.map(x => x.economia))) + '</div>' +
     '<div class="ybars">' + ybars + '</div></section>' +
     '<section class="card" style="padding:20px 22px 22px"><h2>Saldo de créditos</h2>' +

@@ -458,7 +458,9 @@ const ACOES = {
     /* passo e estado do formulario, nao da unidade — nao vai para o banco.
        aparelhos vira lista explicita: unidade nova nasce com o que a pessoa
        marcou, nunca com a lista inteira do arquetipo por omissao. */
-    const dados = Object.assign({}, n, { chave: chave, nome: n.nome.trim() });
+    /* criadaEm marca o instante em que o medidor comeca a valer para esta
+       unidade. Tudo anterior e reconstrucao, e a tela avisa. */
+    const dados = Object.assign({}, n, { chave: chave, nome: n.nome.trim(), criadaEm: Date.now() });
     delete dados.passo;
     if (!Array.isArray(dados.aparelhos)) dados.aparelhos = aparelhosDoArquetipo(n.arquetipo).map(e => e.id);
     S.unidades = (S.unidades || []).concat([dados]);

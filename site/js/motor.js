@@ -353,7 +353,8 @@ function ledger(chave, ate_y, ate_m, horasUltimo) {
       linhas: [{
         y: ate_y, m: ate_m, k: ate_y * 12 + ate_m,
         cons: 0, ger: 0, auto: 0, inj: 0, rede: 0,
-        usado: 0, faturado: 0, fioB: 0, percFioB: 0, economia: 0, creditos: 0
+        usado: 0, faturado: 0, fioB: 0, percFioB: 0, economia: 0, creditos: 0,
+        medido: false, parcial: false
       }],
       creditos: 0, economiaTotal: 0, fioBTotal: 0, direitoAdquirido: false
     };
@@ -386,7 +387,11 @@ function ledger(chave, ate_y, ate_m, horasUltimo) {
     linhas.push({
       y: y, m: m, k: k, cons: p.tc, ger: p.tg, auto: p.auto, inj: p.inj, rede: p.rede,
       usado: usado, faturado: faturado, fioB: fioB, percFioB: perc,
-      economia: economia, creditos: creditos
+      economia: economia, creditos: creditos,
+      /* medido: o mes inteiro veio do medidor.
+         parcial: o mes em que a unidade foi cadastrada, metade e metade.
+         nenhum dos dois: reconstrucao a partir do que a pessoa informou. */
+      medido: mesMedido(chave, y, m), parcial: mesParcial(chave, y, m)
     });
   }
   const r = { linhas: linhas, creditos: creditos, economiaTotal: economiaTotal, fioBTotal: fioBTotal, direitoAdquirido: adq };
@@ -581,6 +586,10 @@ function montarUnidade(f) {
 
   return {
     chave: f.chave, propria: true, arquetipo: f.arquetipo,
+    /* Quando esta unidade foi cadastrada no Solaris. Tudo antes disso e
+       reconstrucao a partir do que a pessoa informou; dai para frente e
+       o medidor. A tela usa isto para nao vender estimativa como leitura. */
+    criadaEm: f.criadaEm || null,
     nome: f.nome, tipo: a.tipo + ' · ' + a.rotulo.toLowerCase(), curto: a.tipo,
     distribuidora: f.distribuidora || 'Não informada',
     tarifa: f.tarifa, tarifaComp: +(f.tarifa * 0.86).toFixed(3), fioB: +(f.tarifa * 0.28).toFixed(3),
@@ -604,6 +613,39 @@ function montarUnidade(f) {
       .map(e => Object.assign({}, e, { fonte: 'ia' })),
     deteccoes: []
   };
+}
+
+/* ---------- o que foi medido e o que e estimativa ----------
+   O medidor so existe a partir do momento em que a unidade foi cadastrada.
+   Antes disso o sistema reconstroi o historico com a mesma fisica, para a
+   pessoa ter contra o que comparar — mas isso e conta, nao leitura, e a
+   tela precisa dizer isso.
+
+   Unidade de demonstracao nao tem data de cadastro: nela tudo e estimativa,
+   o que e a verdade, ja que ninguem mediu a Casa das Acacias. */
+function medidoDesde(chave) {
+  const u = uni(chave);
+  return u && u.criadaEm ? new Date(u.criadaEm) : null;
+}
+/* Um dia so conta como medido se a unidade ja existia no comeco dele. */
+function diaMedido(chave, data) {
+  const desde = medidoDesde(chave);
+  if (!desde) return false;
+  const d0 = new Date(desde.getFullYear(), desde.getMonth(), desde.getDate());
+  return data >= d0;
+}
+/* Um mes so e medido inteiro se a unidade foi cadastrada antes de ele comecar. */
+function mesMedido(chave, y, m) {
+  const desde = medidoDesde(chave);
+  if (!desde) return false;
+  return (y * 12 + m) > (desde.getFullYear() * 12 + desde.getMonth());
+}
+/* O mes do cadastro e o unico que tem os dois: comeca estimado e vira medido
+   no meio. A tela chama isso de parcial. */
+function mesParcial(chave, y, m) {
+  const desde = medidoDesde(chave);
+  if (!desde) return false;
+  return (y * 12 + m) === (desde.getFullYear() * 12 + desde.getMonth());
 }
 
 function unidadesProprias() { return (S.unidades || []).map(montarUnidade); }
@@ -816,11 +858,18 @@ function seriePeriodo() {
       rede: soma(dia.cons.slice(0, ha).map((c, i) => Math.max(0, c - dia.ger[i]))),
       labels: dia.cons.slice(0, ha).map((_, i) => i % 3 === 0 ? String(i).padStart(2, '0') + 'h' : ''),
       nomes: dia.cons.map((_, i) => String(i).padStart(2, '0') + 'h'),
+      /* Se a unidade foi cadastrada hoje as 14h, as horas de 0 a 13 sao
+         reconstrucao, nao leitura. Por isso a comparacao e por hora. */
+      medido: dia.cons.slice(0, ha).map((_, i) => {
+        const desde = medidoDesde(S.perfil);
+        if (!desde) return false;
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), i + 1) > desde;
+      }),
       anterior: (() => { const p = new Date(d); p.setDate(d.getDate() - 1); const pm = mesSimulado(S.perfil, p.getFullYear(), p.getMonth()); const pd = pm.dias[p.getDate() - 1]; const n = Math.max(1, ha); return { c: soma(pd.cons.slice(0, n)), g: soma(pd.ger.slice(0, n)) }; })()
     };
   }
   if (S.periodo === 'semana') {
-    const cons = [], ger = [], labels = [], nomes = [];
+    const cons = [], ger = [], labels = [], nomes = [], medido = [];
     let ac = 0, ag = 0, redeTot = 0;
     for (let i = 6; i >= 0; i--) {
       const dd = new Date(d); dd.setDate(d.getDate() - i);
@@ -835,15 +884,16 @@ function seriePeriodo() {
       }
       cons.push(c); ger.push(g);
       labels.push(DIA3[dd.getDay()]); nomes.push(DIAF[dd.getDay()] + ', ' + dd.getDate() + '/' + (dd.getMonth() + 1));
+      medido.push(diaMedido(S.perfil, new Date(dd.getFullYear(), dd.getMonth(), dd.getDate())));
       const pd = new Date(dd); pd.setDate(dd.getDate() - 7);
       const pm = mesSimulado(S.perfil, pd.getFullYear(), pd.getMonth());
       const pdia = pm.dias[pd.getDate() - 1];
       ac += pdia.tc; ag += pdia.tg;
     }
-    return { rotulo: 'Últimos 7 dias', unidade: 'dia', cons: cons, ger: ger, rede: redeTot, labels: labels, nomes: nomes, anterior: { c: ac, g: ag } };
+    return { rotulo: 'Últimos 7 dias', unidade: 'dia', cons: cons, ger: ger, rede: redeTot, labels: labels, nomes: nomes, medido: medido, anterior: { c: ac, g: ag } };
   }
   const nDias = Math.ceil(v.hDec / 24);
-  const cons = [], ger = [], labels = [], nomes = [];
+  const cons = [], ger = [], labels = [], nomes = [], medido = [];
   for (let i = 0; i < nDias; i++) {
     const dia = v.md.dias[i];
     const parcial = i === nDias - 1 ? (v.hDec - i * 24) : 24;
@@ -852,10 +902,11 @@ function seriePeriodo() {
     cons.push(c); ger.push(g);
     labels.push((i + 1) % 5 === 0 || i === 0 ? String(i + 1) : '');
     nomes.push(dia.dia + ' de ' + MESES[v.m]);
+    medido.push(diaMedido(S.perfil, new Date(v.y, v.m, i + 1)));
   }
   const pk = v.y * 12 + v.m - 1, py = Math.floor(pk / 12), pm2 = pk - py * 12;
   const ant = ate(mesSimulado(S.perfil, py, pm2), Math.min(v.hDec, diasNoMes(py, pm2) * 24));
-  return { rotulo: MESES[v.m].charAt(0).toUpperCase() + MESES[v.m].slice(1) + ', dia a dia', unidade: 'dia', cons: cons, ger: ger, rede: v.mtd.rede, labels: labels, nomes: nomes, anterior: { c: ant.tc, g: ant.tg } };
+  return { rotulo: MESES[v.m].charAt(0).toUpperCase() + MESES[v.m].slice(1) + ', dia a dia', unidade: 'dia', cons: cons, ger: ger, rede: v.mtd.rede, labels: labels, nomes: nomes, medido: medido, anterior: { c: ant.tc, g: ant.tg } };
 }
 
 /* caminho SVG */
