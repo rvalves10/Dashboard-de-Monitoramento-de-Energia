@@ -799,6 +799,27 @@ grupo('Acessibilidade', () => {
     return d;
   }
 
+  teste('a tela de entrada tem rotulo em tudo', () => {
+    const antes = sessao();
+    sair();
+    try {
+      const d = document.createElement('div');
+      d.innerHTML = vLogin();
+      ok(d.querySelector('.entrada'), 'a tela de entrada nao montou');
+      igual(d.querySelectorAll('h1').length, 1, 'deveria ter um h1');
+      d.querySelectorAll('button').forEach(b => {
+        const nome = (b.textContent || '').trim() || b.getAttribute('aria-label') || '';
+        ok(nome.length > 0, 'botao sem nome na tela de entrada');
+      });
+      d.querySelectorAll('input').forEach(i => {
+        const dentro = i.closest && i.closest('label');
+        ok(dentro || i.getAttribute('aria-label'), 'campo sem rotulo: ' + i.id);
+      });
+      ok(d.querySelector('[data-act="auth-visitante"]'),
+        'faltou o caminho de entrar sem conta - o teste de campo depende dele');
+    } finally { if (antes) carregarSessao(); }
+  });
+
   teste('todo botao tem nome acessivel', () => {
     ['painel', 'historico', 'equipamentos', 'cadastro', 'alertas', 'relatorio', 'config', 'unidade'].forEach(t => {
       const d = comoDOM(html(t));

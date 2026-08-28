@@ -12,9 +12,10 @@ participar.
 
 1. Abra o arquivo **`Solaris.html`** (duplo clique). Se preferir, `index.html`
    também abre a mesma coisa.
-2. O site abre direto no painel. **Não precisa criar conta.**
+2. Vai aparecer a tela de entrada. Clique em **"Entrar sem criar conta"** e
+   pronto — você já está no painel. **Não precisa criar conta para testar.**
 3. Se quiser guardar seus dados separados dos de quem mais usa o computador,
-   clique em **Entrar** no canto inferior esquerdo e crie uma conta.
+   crie uma conta. O que você já fez como visitante vai junto.
 4. Anote a data em que você começou.
 
 > **Deixe a aba aberta.** O sistema grava uma leitura do medidor por minuto.
@@ -28,6 +29,7 @@ participar.
 Percorra estas tarefas sem pedir ajuda a ninguém. Se travar, **anote onde
 travou** — isso é o dado mais valioso do teste inteiro.
 
+- [ ] Entrar sem criar conta e chegar ao painel
 - [ ] Descobrir qual aparelho mais gasta e quanto ele custa por mês
 - [ ] Trocar de unidade (Casa das Acácias ↔ Padaria) e ver o que muda
 - [ ] Cadastrar um aparelho novo pela tela **Cadastrar**
@@ -77,7 +79,7 @@ agora.
 ## Como saber se algo quebrou de verdade
 
 Abra **`testes/index.html`** e espere uns segundos. Deve aparecer
-**80 de 80 testes passaram**, tudo verde.
+**81 de 81 testes passaram**, tudo verde.
 
 Se aparecer qualquer linha vermelha, tire um print e mande no grupo com a
 mensagem: *"teste vermelho"* e o nome do que falhou.

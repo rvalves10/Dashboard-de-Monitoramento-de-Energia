@@ -10,7 +10,11 @@ vem na próxima conta — com a Lei 14.300 já dentro do cálculo.
 
 ## Abrir
 
-**Duplo clique em `index.html`.** É só isso.
+**Duplo clique em `index.html`.** O site abre na tela de entrada.
+
+Para começar a testar na hora, clique em **"Entrar sem criar conta"** — vai
+direto para o painel. Criar conta é para quando você quiser seus dados
+separados de quem mais usa o mesmo computador.
 
 Não tem instalação, não tem `npm install`, não precisa de internet nem de
 servidor. Funciona em qualquer navegador razoavelmente atual.
@@ -21,7 +25,7 @@ Se preferir um arquivo só para mandar por e-mail ou WhatsApp, use
 ## Conferir se está tudo certo
 
 Abra **`testes/index.html`** e espere alguns segundos.
-Devem aparecer **80 de 80 testes passando**, tudo verde.
+Devem aparecer **81 de 81 testes passando**, tudo verde.
 
 ---
 
@@ -111,10 +115,11 @@ avisa. O site nunca deixa de funcionar por causa do banco.
 
 ---
 
-## Login (opcional)
+## Entrada e contas
 
-O site abre direto no painel, em modo visitante. Criar conta serve para
-separar dados de quem divide o mesmo navegador — não é obrigatório.
+A primeira tela é a de entrada: à esquerda o que o site faz, à direita o
+formulário. **Ninguém fica travado ali** — o botão "Entrar sem criar conta"
+leva direto ao painel, e quem criar conta depois leva junto o que já fez.
 
 **Isto não é segurança contra quem tem acesso ao computador.** Sem servidor,
 não existe segredo do lado do cliente. O que é real:

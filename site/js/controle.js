@@ -420,16 +420,24 @@ const ACOES = {
   },
   'auth-modo': el => { modoLogin = el.dataset.v; erroLogin = ''; renderLogin(); },
   'auth-abrir': () => { modoLogin = 'entrar'; erroLogin = ''; renderLogin(); },
+  'auth-visitante': () => { entrarComoVisitante(); aoEntrar(); },
   'auth-voltar': () => {
     if (!sessao()) { entrarComoVisitante(); aoEntrar(); return; }
     document.body.classList.remove('vista-login');
     render();
   },
   sair: () => {
-    if (!window.confirm('Sair da conta? Seus dados continuam salvos neste navegador.')) return;
+    const visitante = ehVisitante();
+    const aviso = visitante
+      ? 'Voltar para a tela de entrada? O que você fez continua salvo neste navegador.'
+      : 'Sair da conta? Seus dados continuam salvos neste navegador.';
+    if (!window.confirm(aviso)) return;
     sair();
-    entrarComoVisitante();
-    aoEntrar();
+    /* a tela de entrada e a porta do site, entao sair leva de volta para ela */
+    S = JSON.parse(JSON.stringify(PADRAO));
+    _visao = null; _cacheLedger.clear();
+    modoLogin = 'entrar'; erroLogin = '';
+    renderLogin();
   },
   'limpar-leituras': async () => {
     if (!window.confirm('Apagar o hist\u00f3rico de leituras desta conta? O painel continua funcionando \u2014 s\u00f3 o registro minuto a minuto some.')) return;
@@ -616,9 +624,14 @@ async function iniciar() {
   if (!$('#root')) return;
   await Banco.iniciar();
   await carregarContas();
-  /* Site normal: abre direto no painel. Sem sessão, entra como visitante
-     e o login fica disponível no menu para quem quiser conta própria. */
-  if (!carregarSessao()) entrarComoVisitante();
+  /* A porta de entrada e a tela de login. Quem so quer olhar entra sem
+     criar conta, num clique - o botao esta la. */
+  if (!carregarSessao()) {
+    modoLogin = 'entrar';
+    renderLogin();
+    iniciarRelogios();
+    return;
+  }
   await carregar();
   if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
   if (!uni(S.perfil)) S.perfil = 'residencial';

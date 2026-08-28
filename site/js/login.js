@@ -247,75 +247,128 @@ async function migrarDoVisitante(destinoId) {
 }
 
 /* ---------- tela de login ---------- */
-function temSessaoAtiva() { return !!SESSAO; }
-
 let modoLogin = 'entrar';   /* entrar | criar */
 let erroLogin = '';
 let ocupado = false;
 
 function vLogin() {
   const criar = modoLogin === 'criar';
-  const nContas = Object.keys(contas()).length;
+  const quantas = Object.keys(contas()).length;
 
-  return '<div class="auth">' +
-    '<div class="auth-glow"></div>' +
-    '<div class="auth-cx">' +
-    (temSessaoAtiva() ? '<button class="auth-voltar" data-act="auth-voltar">' +
-      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>' +
-      'Voltar para o painel</button>' : '') +
+  /* Coluna da esquerda: o que o site faz. Quem chega aqui pela primeira vez
+     precisa saber onde entrou antes de decidir criar conta. */
+  const vitrine =
+    '<section class="ent-vitrine">' +
+    '<span class="ent-glow"></span>' +
+    '<div class="ent-vitrine-in">' +
+      '<div class="ent-marca">' +
+        '<span class="ent-ic">' +
+        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16150F" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M22 12h-2.4M4.4 12H2M19.07 4.93l-1.7 1.7M6.63 17.37l-1.7 1.7M19.07 19.07l-1.7-1.7M6.63 6.63l-1.7-1.7"/>' +
+        '</svg></span>' +
+        '<div><div class="ent-nome">Solaris</div>' +
+        '<div class="ent-tag">Energia sob controle</div></div>' +
+      '</div>' +
 
-    '<div class="auth-marca">' +
-    '<span class="auth-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16150F" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M22 12h-2.4M4.4 12H2M19.07 4.93l-1.7 1.7M6.63 17.37l-1.7 1.7M19.07 19.07l-1.7-1.7M6.63 6.63l-1.7-1.7"/></svg></span>' +
-    '<div><div class="auth-nome">Solaris</div><div class="auth-sub">Energia sob controle</div></div></div>' +
+      '<h1 class="ent-titulo">Sua conta de luz,<br>explicada.</h1>' +
 
-    '<h1 class="auth-t">' + (criar ? 'Criar sua conta' : 'Entrar') + '</h1>' +
-    '<p class="auth-d">' + (criar
-      ? 'Opcional. Serve para separar seus dados de quem mais usa este navegador — unidades, aparelhos e metas ficam só na sua conta.'
-      : 'Use a conta que você criou neste navegador.') + '</p>' +
+      '<ul class="ent-lista">' +
+        itemVitrine('M9 3v6M15 3v6M6 9h12v3a6 6 0 0 1-12 0zM12 18v3',
+          'Para onde vai cada quilowatt',
+          'O consumo dividido por aparelho, a partir do padr\u00e3o do medidor.') +
+        itemVitrine('M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v3M12 20v3M23 12h-3M4 12H1',
+          'Quanto o sol cobriu de verdade',
+          'Hora a hora, cruzando o que o painel gera com o que a casa usa.') +
+        itemVitrine('M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4',
+          'Quanto vem na pr\u00f3xima conta',
+          'Com cr\u00e9ditos, m\u00ednimo faturado e o Fio B da Lei 14.300.') +
+      '</ul>' +
 
-    '<form class="auth-form" id="formLogin" autocomplete="on">' +
-    (criar
-      ? '<label class="auth-campo"><span>Nome</span>' +
-      '<input type="text" id="auNome" name="name" autocomplete="name" placeholder="Como quer ser chamado" required></label>'
-      : '') +
-    '<label class="auth-campo"><span>E-mail</span>' +
-    '<input type="email" id="auEmail" name="email" autocomplete="' + (criar ? 'username' : 'username') + '" placeholder="voce@exemplo.com" required></label>' +
-    '<label class="auth-campo"><span>Senha</span>' +
-    '<input type="password" id="auSenha" name="password" autocomplete="' + (criar ? 'new-password' : 'current-password') + '" placeholder="' + (criar ? 'Pelo menos 6 caracteres' : 'Sua senha') + '" required></label>' +
-    (criar ? '' :
-      '<label class="auth-check"><input type="checkbox" id="auManter" checked><span>Continuar conectado por 30 dias</span></label>') +
+      '<div class="ent-rodape">' +
+        '<span class="live-dot"></span>' +
+        'Medidor virtual rodando \u00b7 uma leitura por minuto gravada no banco' +
+      '</div>' +
+    '</div></section>';
 
-    (erroLogin ? '<div class="auth-erro" role="alert">' + esc(erroLogin) + '</div>' : '') +
+  /* Coluna da direita: o formulario. */
+  const formulario =
+    '<section class="ent-form">' +
+    '<div class="ent-cx">' +
 
-    '<button type="submit" class="auth-btn" id="auEnviar"' + (ocupado ? ' disabled' : '') + '>' +
-    (ocupado ? 'Verificando…' : (criar ? 'Criar conta e entrar' : 'Entrar')) + '</button>' +
-    '</form>' +
+      '<div class="ent-abas" role="tablist">' +
+        '<button role="tab" data-act="auth-modo" data-v="entrar" aria-selected="' + (!criar) + '">Entrar</button>' +
+        '<button role="tab" data-act="auth-modo" data-v="criar" aria-selected="' + criar + '">Criar conta</button>' +
+      '</div>' +
 
-    '<div class="auth-alt">' +
-    (criar
-      ? 'Já tem conta? <button data-act="auth-modo" data-v="entrar">Entrar</button>'
-      : 'Primeira vez aqui? <button data-act="auth-modo" data-v="criar">Criar uma conta</button>') +
-    '</div>' +
+      '<p class="ent-sub">' + (criar
+        ? 'A conta guarda suas unidades, aparelhos e metas separados de quem mais usa este navegador.'
+        : 'Use a conta que voc\u00ea criou neste navegador.') + '</p>' +
 
-    '<div class="auth-ou"><span>ou</span></div>' +
-    '<button class="auth-visitante" data-act="auth-voltar">' + (temSessaoAtiva()
-      ? 'Voltar para o painel'
-      : 'Continuar sem conta') + '</button>' +
-    '<div class="auth-visitante-d">' + (temSessaoAtiva()
-      ? 'Você já está usando o Solaris. Entrar só troca de conta.'
-      : 'O painel funciona sem cadastro. Os dados ficam neste navegador e qualquer pessoa que usar este computador enxerga.') + '</div>' +
+      '<form class="ent-campos" id="formLogin" autocomplete="on">' +
+        (criar
+          ? campoEntrada('auNome', 'Nome', 'text', 'name', 'Como quer ser chamado')
+          : '') +
+        campoEntrada('auEmail', 'E-mail', 'email', 'username', 'voce@exemplo.com') +
+        campoEntrada('auSenha', 'Senha', 'password',
+          criar ? 'new-password' : 'current-password',
+          criar ? 'Pelo menos 6 caracteres' : 'Sua senha') +
 
-    '<div class="auth-aviso">' +
-    '<b>Sobre a segurança deste login</b>' +
-    'O Solaris roda sem servidor, direto de um arquivo. A senha não é guardada — só uma derivação dela com salt e ' + nf(ITERACOES) + ' iterações' +
-    (TEM_WEBCRYPTO ? ' (PBKDF2 pelo WebCrypto)' : ' (SHA-256 encadeado)') + '. ' +
-    'Isso separa os dados entre contas, mas <b>não protege contra quem tem acesso a este computador</b>: sem servidor, não existe segredo do lado do cliente. ' +
-    'Não há recuperação de senha — esquecer significa perder os dados daquela conta.' +
-    '</div>' +
+        (criar ? '' :
+          '<label class="ent-check"><input type="checkbox" id="auManter" checked>' +
+          '<span>Continuar conectado por 30 dias</span></label>') +
 
-    (nContas ? '<div class="auth-rodape">' + nContas + (nContas > 1 ? ' contas neste navegador' : ' conta neste navegador') + '</div>' : '') +
+        (erroLogin ? '<div class="ent-erro" role="alert">' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>' +
+          '<span>' + esc(erroLogin) + '</span></div>' : '') +
 
-    '</div></div>';
+        '<button type="submit" class="ent-botao" id="auEnviar"' + (ocupado ? ' disabled' : '') + '>' +
+        (ocupado ? '<span class="ent-girando"></span>Verificando\u2026'
+          : (criar ? 'Criar conta e entrar' : 'Entrar')) + '</button>' +
+      '</form>' +
+
+      '<div class="ent-ou"><span>ou</span></div>' +
+
+      /* O caminho de teste tem que ser um clique. Durante o teste de campo
+         ninguem deveria travar numa tela de cadastro. */
+      '<button class="ent-visitante" data-act="auth-visitante">' +
+        '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>' +
+        'Entrar sem criar conta' +
+      '</button>' +
+      '<p class="ent-visitante-d">Vai direto para o painel com os dados de demonstra\u00e7\u00e3o. ' +
+      'D\u00e1 para criar conta depois sem perder o que voc\u00ea fez.</p>' +
+
+      '<details class="ent-aviso">' +
+        '<summary>Como seus dados ficam guardados</summary>' +
+        '<p>O Solaris roda sem servidor, direto no seu navegador. A senha nunca ' +
+        '\u00e9 gravada \u2014 s\u00f3 uma deriva\u00e7\u00e3o dela com salt e ' + nf(ITERACOES) + ' itera\u00e7\u00f5es' +
+        (TEM_WEBCRYPTO ? ' (PBKDF2 pelo WebCrypto)' : ' (SHA-256 encadeado)') + '. ' +
+        'Isso separa os dados entre contas, mas <b>n\u00e3o protege contra quem tem ' +
+        'acesso a este computador</b>: sem servidor, n\u00e3o existe segredo do lado do ' +
+        'cliente. Tamb\u00e9m n\u00e3o h\u00e1 recupera\u00e7\u00e3o de senha, porque n\u00e3o h\u00e1 e-mail para enviar.</p>' +
+      '</details>' +
+
+      (quantas ? '<div class="ent-contador">' + quantas +
+        (quantas > 1 ? ' contas neste navegador' : ' conta neste navegador') + '</div>' : '') +
+
+    '</div></section>';
+
+  return '<div class="entrada">' + vitrine + formulario + '</div>';
+}
+
+/* um item da lista de argumentos, na coluna da esquerda */
+function itemVitrine(icone, titulo, texto) {
+  return '<li><span class="ent-li-ic">' +
+    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + icone + '"/></svg>' +
+    '</span><div><b>' + titulo + '</b><span>' + texto + '</span></div></li>';
+}
+
+/* um campo do formulario */
+function campoEntrada(id, rotulo, tipo, autocomplete, dica) {
+  return '<label class="ent-campo" for="' + id + '">' +
+    '<span>' + rotulo + '</span>' +
+    '<input type="' + tipo + '" id="' + id + '" name="' + autocomplete + '" ' +
+    'autocomplete="' + autocomplete + '" placeholder="' + dica + '" required>' +
+    '</label>';
 }
 
 /* envio do formulário */
