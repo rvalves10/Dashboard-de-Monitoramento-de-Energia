@@ -7,7 +7,7 @@
 <title>Solaris — monitoramento de energia solar</title>
 <meta name="description" content="Painel que mostra para onde vai cada quilowatt da sua casa ou do seu comércio, quanto o sol cobriu e quanto vem na próxima conta.">
 <meta name="theme-color" content="#16150F">
-<link rel="icon" href="../assets/favicon.svg">
+<link rel="icon" href="assets/favicon.svg">
 
 <!-- Fontes: Bricolage Grotesque para os títulos e números grandes,
      IBM Plex Sans para o texto e IBM Plex Mono para dados tabulares. -->
@@ -49,18 +49,22 @@
   módulo exige servidor HTTP por causa de CORS, e a gente quer que o site
   abra com duplo clique, sem instalar nada e sem rede.
 
-  banco     abre o IndexedDB e guarda contas, estado e leituras
-  motor     a simulação física, as tarifas e a compensação de créditos
-  login     contas, sessão e derivação de senha
-  leitor    le a conta de luz por foto (OCR sob demanda)
-  telas     as telas da versão ampla
-  movel     a mesma coisa em coluna única, para tela estreita
-  controle  eventos, rotas, o tique do medidor e os avisos
+  A ordem é a das camadas, e não pode mudar: banco de dados primeiro, depois
+  a lógica de domínio, e por último a interface. Cada camada só usa o que já
+  foi carregado antes dela.
+
+  banco-de-dados/banco.js   abre o IndexedDB: contas, estado e leituras
+  backend/motor.js          a simulação física, as tarifas e a Lei 14.300
+  backend/login.js          contas, sessão e derivação de senha
+  backend/leitor.js         lê a conta de luz por foto (OCR sob demanda)
+  frontend/js/telas.js      as telas da versão ampla
+  frontend/js/movel.js      a mesma coisa em coluna única, para tela estreita
+  frontend/js/controle.js   eventos, rotas, o tique do medidor e os avisos
 -->
-<script src="js/banco.js"></script>
-<script src="js/motor.js"></script>
-<script src="js/login.js"></script>
-<script src="js/leitor.js"></script>
+<script src="../banco-de-dados/banco.js"></script>
+<script src="../backend/motor.js"></script>
+<script src="../backend/login.js"></script>
+<script src="../backend/leitor.js"></script>
 <script src="js/telas.js"></script>
 <script src="js/movel.js"></script>
 <script src="js/controle.js"></script>

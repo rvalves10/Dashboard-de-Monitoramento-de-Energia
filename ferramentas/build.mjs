@@ -16,50 +16,65 @@ import { fileURLToPath } from 'node:url';
 const raiz = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ler = (...p) => readFileSync(join(raiz, ...p), 'utf8');
 
-/* A ordem tem que ser a mesma do site/index.html. Se alguém adicionar um
-   arquivo lá e esquecer aqui, o build sai quebrado — por isso a conferência
-   no fim compara as duas listas. */
+/* Cada arquivo mora na camada a que pertence, e o build precisa saber onde
+   procurar. A ORDEM aqui e a mesma do frontend/index.html e nao pode mudar:
+   banco de dados, dominio, interface. Cada camada so usa o que ja foi
+   carregado antes dela. */
 const CSS = ['base.css', 'componentes.css', 'telas.css', 'conta.css',
   'movel.css', 'responsivo.css', 'impressao.css'];
-const JS = ['banco.js', 'motor.js', 'login.js', 'leitor.js', 'telas.js', 'movel.js', 'controle.js'];
+const JS = [
+  ['banco-de-dados', 'banco.js'],
+  ['backend', 'motor.js'],
+  ['backend', 'login.js'],
+  ['backend', 'leitor.js'],
+  ['frontend/js', 'telas.js'],
+  ['frontend/js', 'movel.js'],
+  ['frontend/js', 'controle.js']
+];
+const caminhoJS = ([pasta, arq]) => pasta + '/' + arq;
 
-const paginaFonte = ler('site', 'index.html');
-const conferir = (lista, pasta) => {
-  const faltando = lista.filter(f => paginaFonte.indexOf(pasta + '/' + f) < 0);
-  const sobrando = (paginaFonte.match(new RegExp(pasta + '\\/[\\w.-]+', 'g')) || [])
-    .map(x => x.split('/')[1]).filter(f => lista.indexOf(f) < 0);
-  if (faltando.length || sobrando.length) {
-    console.error('\n  As listas do build e do site/index.html não batem.');
-    if (faltando.length) console.error('  No build mas não na página: ' + faltando.join(', '));
-    if (sobrando.length) console.error('  Na página mas não no build: ' + sobrando.join(', '));
-    process.exit(1);
-  }
-};
-conferir(CSS, 'css');
-conferir(JS, 'js');
+const paginaFonte = ler('frontend', 'index.html');
+
+/* O build so gera se a pagina e as listas daqui contarem a mesma historia.
+   Sem isso, quem adiciona um arquivo e esquece de registrar descobre pelo
+   site quebrado, nao pelo build. */
+const faltandoCSS = CSS.filter(f => paginaFonte.indexOf('css/' + f) < 0);
+if (faltandoCSS.length) {
+  console.error('\n  CSS no build mas nao em frontend/index.html: ' + faltandoCSS.join(', '));
+  process.exit(1);
+}
+const faltandoJS = JS.map(caminhoJS).filter(c => {
+  const rel = c.indexOf('frontend/') === 0 ? c.slice('frontend/'.length) : '../' + c;
+  return paginaFonte.indexOf(rel) < 0;
+});
+if (faltandoJS.length) {
+  console.error('\n  JS no build mas nao em frontend/index.html: ' + faltandoJS.join(', '));
+  process.exit(1);
+}
 
 /* A pagina de testes tem a propria lista de scripts, e ela precisa carregar
-   os mesmos arquivos, na mesma ordem. Quando alguem acrescenta um js ao site
-   e esquece de acrescentar aqui, a suite roda contra um app pela metade e
-   acusa falhas que nao existem — foi exatamente o que aconteceu quando
-   leitor.js entrou. Melhor o build reclamar do que caçar isso na mao. */
+   os mesmos arquivos, na mesma ordem. Quando ela fica para tras, a suite roda
+   contra um app pela metade e acusa falhas que nao existem — foi exatamente o
+   que aconteceu quando leitor.js entrou. */
 const paginaTestes = ler('testes', 'index.html');
-const naTestes = (paginaTestes.match(/\.\.\/site\/js\/[\w.-]+/g) || []).map(x => x.split('/').pop());
-const difOrdem = naTestes.join(',') !== JS.join(',');
-if (difOrdem) {
+const naTestes = (paginaTestes.match(/\.\.\/[\w/-]+\/([\w.-]+\.js)/g) || [])
+  .map(x => x.replace(/^\.\.\//, ''))
+  .filter(x => x.indexOf('testes') !== 0);
+const esperado = JS.map(caminhoJS);
+if (naTestes.join(',') !== esperado.join(',')) {
   console.error('\n  testes/index.html nao carrega os mesmos js do site, na mesma ordem.');
-  console.error('  site:   ' + JS.join(', '));
+  console.error('  site:   ' + esperado.join(', '));
   console.error('  testes: ' + (naTestes.join(', ') || '(nenhum)'));
   process.exit(1);
 }
 
-const css = CSS.map(f => '/* ===== css/' + f + ' ===== */\n' + ler('site', 'css', f)).join('\n\n');
-const js = JS.map(f => '/* ===== js/' + f + ' ===== */\n' + ler('site', 'js', f)).join('\n\n');
+const css = CSS.map(f => '/* ===== frontend/css/' + f + ' ===== */\n' + ler('frontend', 'css', f)).join('\n\n');
+const js = JS.map(([pasta, arq]) => '/* ===== ' + pasta + '/' + arq + ' ===== */\n' + ler(...pasta.split('/'), arq)).join('\n\n');
 
 /* um </script> dentro de uma string JS fecharia o bloco inline antes da hora */
 const jsSeguro = js.replace(/<\/script/gi, '<\\/script');
 
-const favicon = 'data:image/svg+xml,' + encodeURIComponent(ler('assets', 'favicon.svg'));
+const favicon = 'data:image/svg+xml,' + encodeURIComponent(ler('frontend', 'assets', 'favicon.svg'));
 
 const fontes =
   '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +

@@ -12,6 +12,9 @@ vem na próxima conta — com a Lei 14.300 já dentro do cálculo.
 
 **Duplo clique em `index.html`.** O site abre na tela de entrada.
 
+Para conferir o painel do banco de dados e a leitura da conta por foto, use o
+endereço http: `node ferramentas/servidor.mjs`.
+
 Para começar a testar na hora, clique em **"Entrar sem criar conta"** — vai
 direto para o painel. Criar conta é para quando você quiser seus dados
 separados de quem mais usa o mesmo computador.
@@ -24,7 +27,9 @@ Se preferir um arquivo só para mandar por e-mail ou WhatsApp, use
 
 ## Conferir se está tudo certo
 
-Abra **`testes/index.html`** e espere alguns segundos.
+Suba o servidor local com `node ferramentas/servidor.mjs` e abra
+**`http://localhost:8080/testes/index.html`**. (Abrindo o arquivo direto do
+disco também roda, mas o painel do banco de dados fica limitado.)
 Devem aparecer **105 de 105 testes passando**, tudo verde.
 
 ---
@@ -32,12 +37,12 @@ Devem aparecer **105 de 105 testes passando**, tudo verde.
 ## Para a equipe: teste de campo
 
 Se você chegou aqui para participar do teste de 7 a 30 dias, o roteiro está
-em **[`docs/teste-de-campo.md`](docs/teste-de-campo.md)**. Leva 5 minutos
+em **[`documentacao/teste-de-campo.md`](documentacao/teste-de-campo.md)**. Leva 5 minutos
 para começar.
 
 ## Para quem vai mexer no código
 
-Leia **[`MAPA-DO-PROJETO.md`](MAPA-DO-PROJETO.md)** antes de abrir qualquer
+Leia **[`documentacao/MAPA-DO-PROJETO.md`](documentacao/MAPA-DO-PROJETO.md)** antes de abrir qualquer
 arquivo. Explica onde fica cada coisa e por quê.
 
 ---
@@ -71,21 +76,51 @@ texto fixo.
 
 ## Estrutura
 
+O projeto é dividido por **camada**, e a ordem da dependência é sempre a
+mesma: a interface usa o domínio, o domínio usa o banco. Nunca o contrário.
+
 ```
-Solaris/
-├── index.html          abre o site
-├── Solaris.html        o site num arquivo só (gerado pelo build)
-├── site/               ◀ o projeto: css/ e js/
-├── testes/             105 testes, rodam no navegador
-├── firmware/           código do ESP32, para quando o sensor existir
-├── app-futuro/         fase 2: o que fazer para virar aplicativo
-├── docs/               teste de campo, contrato de dados, usabilidade
-├── apresentacao/       plano do semestre e slides da banca
-├── design/             o desenho original
-└── ferramentas/        o script de build
+frontend/  ──usa──▶  backend/  ──usa──▶  banco-de-dados/
 ```
 
-Detalhe de cada arquivo em [`MAPA-DO-PROJETO.md`](MAPA-DO-PROJETO.md).
+```
+Solaris/
+├── index.html            abre o site (encaminha para frontend/)
+├── Solaris.html          o site num arquivo só (gerado pelo build)
+│
+├── frontend/             ◀ o que a pessoa vê
+│   ├── index.html        a página; carrega as três camadas na ordem certa
+│   ├── css/              a aparência, dividida por assunto
+│   ├── js/               telas, versão de celular e eventos
+│   └── assets/           o ícone
+│
+├── backend/              ◀ a lógica de domínio
+│   ├── motor.js          sol, consumo, créditos, Fio B, divisão por aparelho
+│   ├── login.js          contas, sessão e derivação de senha
+│   └── leitor.js         lê a conta de luz por foto (OCR no navegador)
+│
+├── banco-de-dados/       ◀ IndexedDB: contas, estado e leituras
+│   └── banco.js
+│
+├── skills/               instruções que padronizam o trabalho com IA
+├── documentacao/         mapa, contrato de dados, teste de campo, banca
+│
+├── testes/               105 testes, rodam no navegador
+├── ferramentas/          build, servidor local e instalador de skills
+└── firmware/             código do ESP32, para quando o sensor existir
+```
+
+**Cada camada tem o seu `LEIA-ME.md`** explicando o que faz, o que não faz e
+por quê. Comece pelo da camada que você vai mexer.
+
+> **Sobre o nome `backend`:** não existe servidor neste projeto. A pasta se
+> chama assim porque é a camada que, num sistema com servidor, moraria no
+> servidor — e é ela que atravessaria se um dia isso acontecer. Hoje tudo roda
+> no navegador, que é o que permite abrir com duplo clique e manter os dados
+> da pessoa na máquina dela. Está explicado em
+> [`backend/LEIA-ME.md`](backend/LEIA-ME.md).
+
+Detalhe de cada arquivo em [`documentacao/MAPA-DO-PROJETO.md`](documentacao/MAPA-DO-PROJETO.md).
 
 ---
 
@@ -171,5 +206,8 @@ Abra `app-futuro/previa-app.html` para ver como ficaria.
 
 - Branch por frente, `main` sempre abrindo sem erro.
 - Rodar `testes/index.html` antes de abrir pull request.
-- `node ferramentas/build.mjs` depois de mexer em `site/`.
+- `node ferramentas/build.mjs` depois de mexer em `frontend/`, `backend/` ou
+  `banco-de-dados/`.
+- `node ferramentas/instalar-skills.mjs` depois de clonar, e sempre que alguém
+  alterar uma skill.
 - **Congelamento na semana 13**: depois disso só correção de defeito.

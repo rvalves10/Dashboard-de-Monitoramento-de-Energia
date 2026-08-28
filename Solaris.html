@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%0A%20%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2222%22%20fill%3D%22%2316150F%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2215%22%20fill%3D%22none%22%20stroke%3D%22%23EDA22B%22%20stroke-width%3D%224.5%22%2F%3E%0A%20%20%3Cg%20stroke%3D%22%23F5C25B%22%20stroke-width%3D%224.5%22%20stroke-linecap%3D%22round%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M50%2023v7M50%2070v7M77%2050h-7M30%2050h-7M69%2031l-5%205M36%2064l-5%205M69%2069l-5-5M36%2036l-5-5%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A">
 <style>
-/* ===== css/base.css ===== */
+/* ===== frontend/css/base.css ===== */
 /* base.css
    Cores, tipografia, reset e utilitarios. Tudo que o resto herda.
    Parte do sistema de design do Solaris. A ordem em que os arquivos
@@ -208,7 +208,7 @@ svg{display:block}
 .sem-js p{line-height:var(--lh-body);color:var(--muted)}
 
 
-/* ===== css/componentes.css ===== */
+/* ===== frontend/css/componentes.css ===== */
 /* componentes.css
    Pecas reaproveitadas: menu, cartoes, botoes, formularios, avisos.
    Parte do sistema de design do Solaris. A ordem em que os arquivos
@@ -373,7 +373,7 @@ svg{display:block}
 .big-74{font-size:var(--t-4xl);letter-spacing:-.038em;line-height:.92}
 
 
-/* ===== css/telas.css ===== */
+/* ===== frontend/css/telas.css ===== */
 /* telas.css
    Estilos de cada tela: painel, historico, aparelhos, alertas, relatorio.
    Parte do sistema de design do Solaris. A ordem em que os arquivos
@@ -842,7 +842,7 @@ input[type=range]{width:100%;margin:var(--e2) 0 0;accent-color:var(--sun);cursor
 }
 
 
-/* ===== css/conta.css ===== */
+/* ===== frontend/css/conta.css ===== */
 /* conta.css
    Tela de entrada, cartao da conta e o painel do banco de dados.
    Parte do sistema de design do Solaris. A ordem em que os arquivos
@@ -1139,7 +1139,7 @@ body.vista-login{background:var(--dark)}
 @media (max-width:640px){ .cadastro-solo{padding:var(--e6) var(--e5) var(--e7)} }
 
 
-/* ===== css/movel.css ===== */
+/* ===== frontend/css/movel.css ===== */
 /* movel.css
    Como o site se comporta em tela estreita. E o mesmo site, nao um app.
    Parte do sistema de design do Solaris. A ordem em que os arquivos
@@ -1229,7 +1229,7 @@ body.vista-login{background:var(--dark)}
 .mob-hbars .hbar-lbl{font-size:var(--t-xs)}
 
 
-/* ===== css/responsivo.css ===== */
+/* ===== frontend/css/responsivo.css ===== */
 /* responsivo.css
    Pontos de quebra entre desktop, tablet e celular.
    Parte do sistema de design do Solaris. A ordem em que os arquivos
@@ -1280,7 +1280,7 @@ body.vista-login{background:var(--dark)}
 }
 
 
-/* ===== css/impressao.css ===== */
+/* ===== frontend/css/impressao.css ===== */
 /* impressao.css
    Como o relatorio sai no papel e no PDF.
    Parte do sistema de design do Solaris. A ordem em que os arquivos
@@ -1315,7 +1315,7 @@ body.vista-login{background:var(--dark)}
 <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
 <noscript><div class="sem-js"><h1>Solaris</h1><p>O painel lê o medidor em tempo real e desenha os gráficos no próprio navegador, então precisa de JavaScript ativado para funcionar.</p></div></noscript>
 <script>
-/* ===== js/banco.js ===== */
+/* ===== banco-de-dados/banco.js ===== */
 /* banco.js — o banco de dados
 
    Usamos IndexedDB, que e o banco que ja vem dentro do navegador. Nao
@@ -1596,7 +1596,7 @@ const Banco = {
 };
 
 
-/* ===== js/motor.js ===== */
+/* ===== backend/motor.js ===== */
 /* motor.js — onde os numeros nascem
 
    Este e o coracao do projeto e a parte que a banca vai questionar. Nada
@@ -2581,7 +2581,7 @@ function saudacao() {
 }
 
 
-/* ===== js/login.js ===== */
+/* ===== backend/login.js ===== */
 /* login.js — contas e sessao
 
    O login e OPCIONAL. O site abre direto no painel, em modo visitante, e
@@ -3021,7 +3021,7 @@ function renderLogin() {
 }
 
 
-/* ===== js/leitor.js ===== */
+/* ===== backend/leitor.js ===== */
 /* leitor.js — ler a conta de luz por foto
 
    O que ele faz: recebe a foto da fatura, extrai o texto com OCR dentro do
@@ -3303,7 +3303,7 @@ async function lerContaDeLuz(file, aoMudar) {
 }
 
 
-/* ===== js/telas.js ===== */
+/* ===== frontend/js/telas.js ===== */
 /* telas.js — as telas da versao ampla
 
    Cada tela e uma funcao que devolve HTML como texto. Nada de framework:
@@ -4384,7 +4384,7 @@ function ajudaCard(at) {
 }
 
 
-/* ===== js/movel.js ===== */
+/* ===== frontend/js/movel.js ===== */
 /* movel.js — o mesmo site em tela estreita
 
    Abaixo de 760 px de largura o controle.js chama vMovel() no lugar da
@@ -4637,7 +4637,7 @@ function mConfig() {
 }
 
 
-/* ===== js/controle.js ===== */
+/* ===== frontend/js/controle.js ===== */
 /* controle.js — quem manda no site
 
    Junta tudo: decide qual tela desenhar, escuta os cliques, cuida das

@@ -76,7 +76,7 @@ IndexedDB:
 node ferramentas/servidor.mjs
 ```
 
-Abre em `http://localhost:8080/site/index.html`.
+Abre em `http://localhost:8080/frontend/index.html`.
 
 ## Depois de subir
 

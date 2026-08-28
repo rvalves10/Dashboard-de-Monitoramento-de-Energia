@@ -49,7 +49,7 @@ createServer(async (req, res) => {
 }).listen(porta, () => {
   console.log('');
   console.log('  Solaris no ar:');
-  console.log('    site      http://localhost:' + porta + '/site/index.html');
+  console.log('    site      http://localhost:' + porta + '/frontend/index.html');
   console.log('    testes    http://localhost:' + porta + '/testes/index.html');
   console.log('    um arquivo so   http://localhost:' + porta + '/Solaris.html');
   console.log('');

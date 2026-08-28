@@ -21,7 +21,7 @@ e quanto vem na próxima conta — já com a Lei 14.300 no cálculo.
 para pegar a virada de mês. Deixem a aba aberta quando der — o sistema grava
 uma leitura por minuto e a gente quer ver o histórico crescer.
 
-O roteiro completo do que testar está em `docs/teste-de-campo.md`, dentro da
+O roteiro completo do que testar está em `documentacao/teste-de-campo.md`, dentro da
 pasta. São 8 tarefas para fazer no primeiro dia e um checklist rápido para
 os dias seguintes.
 

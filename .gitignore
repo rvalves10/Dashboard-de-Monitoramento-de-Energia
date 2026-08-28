@@ -4,3 +4,6 @@ dist/
 .DS_Store
 Thumbs.db
 Solaris-UPX.zip
+
+# gerado por ferramentas/instalar-skills.mjs — a fonte e skills/
+.claude/skills/

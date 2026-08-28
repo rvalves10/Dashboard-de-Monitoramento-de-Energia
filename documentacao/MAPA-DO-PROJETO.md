@@ -7,7 +7,7 @@ leia isto antes de mexer em qualquer arquivo.
 
 ## Começando
 
-**Para ver o site funcionando:** abra `index.html` (ou `site/index.html`).
+**Para ver o site funcionando:** abra `index.html` (ou `frontend/index.html`).
 Duplo clique resolve — não precisa instalar nada, não precisa de internet.
 
 **Para conferir se está tudo certo:** abra `testes/index.html`. Se aparecer
@@ -17,33 +17,66 @@ alguma linha vermelha, alguma coisa quebrou.
 
 ## As pastas
 
+O projeto é dividido por **camada**. A dependência anda numa direção só:
+
+```
+frontend/  ──usa──▶  backend/  ──usa──▶  banco-de-dados/
+```
+
+O frontend nunca calcula tarifa nem fala com o banco. O backend nunca lê o
+DOM nem monta HTML. Quando você não souber onde uma função deveria morar,
+pergunte de quem ela precisa: é isso que decide.
+
 ```
 Solaris/
-├── index.html            abre o site (só encaminha para site/)
+├── index.html            abre o site (só encaminha para frontend/)
 ├── Solaris.html          o site inteiro num arquivo só, para mandar por e-mail
 │
-├── site/                 ◀ O PROJETO. É isto que a gente está entregando.
-│   ├── index.html        a página; carrega o CSS e o JS na ordem certa
+├── frontend/             ◀ o que a pessoa vê
+│   ├── LEIA-ME.md
+│   ├── index.html        a página; carrega as três camadas na ordem certa
 │   ├── css/              a aparência, dividida por assunto
-│   └── js/               o funcionamento, dividido por responsabilidade
+│   ├── js/               telas.js, movel.js, controle.js
+│   └── assets/           ícone
+│
+├── backend/              ◀ a lógica de domínio
+│   ├── LEIA-ME.md        inclui por que se chama assim sem haver servidor
+│   ├── motor.js
+│   ├── login.js
+│   └── leitor.js
+│
+├── banco-de-dados/       ◀ IndexedDB
+│   ├── LEIA-ME.md        as três tabelas e por que não é localStorage
+│   └── banco.js
+│
+├── skills/               instruções que padronizam o trabalho com IA
+│   ├── solaris-visual/   regras de aparência
+│   ├── solaris-motor/    regras do cálculo
+│   └── solaris-revisao/  o que conferir antes do pull request
+│
+├── documentacao/         este mapa, contrato de dados, teste de campo,
+│   ├── apresentacao/     plano do semestre e slides da banca
+│   ├── design/           o desenho original, antes de virar código
+│   └── app-futuro/       fase 2: o que fazer quando virar aplicativo
 │
 ├── testes/               105 testes que rodam no navegador
 ├── firmware/             o código do ESP32, para quando o sensor existir
-├── app-futuro/           fase 2: o que fazer quando virar aplicativo
-├── docs/                 documentação de apoio
-├── apresentacao/         plano do semestre e slides da banca
-├── design/               o desenho original, antes de virar código
-├── assets/               ícone
-├── ferramentas/          o script que gera o arquivo único
+├── ferramentas/          build, servidor local e instalador de skills
 └── dist/                 saída do build (não versionado, pode apagar)
 ```
 
+**Não existe servidor neste projeto.** A pasta `backend/` se chama assim
+porque é a camada que, num sistema com servidor, moraria no servidor — e é
+ela que atravessaria se um dia isso acontecer. Hoje tudo roda no navegador,
+que é o que permite abrir com duplo clique e manter os dados da pessoa na
+máquina dela.
+
 ---
 
-## `site/css/` — a aparência
+## `frontend/css/` — a aparência
 
 A ordem em que entram importa: cada arquivo pode sobrescrever o anterior.
-Se mexer na ordem no `site/index.html`, coisas quebram.
+Se mexer na ordem no `frontend/index.html`, coisas quebram.
 
 | Arquivo | O que tem dentro |
 | --- | --- |
@@ -57,16 +90,29 @@ Se mexer na ordem no `site/index.html`, coisas quebram.
 
 ---
 
-## `site/js/` — o funcionamento
+## Os arquivos de código
 
-Também tem ordem: `banco` antes de `motor`, `motor` antes de todos os outros.
+A ordem de carregamento é a ordem das camadas, e não pode mudar: cada uma só
+usa o que já foi carregado antes dela.
+
+### `banco-de-dados/`
 
 | Arquivo | O que faz | Quando mexer |
 | --- | --- | --- |
 | `banco.js` | Abre o IndexedDB e guarda contas, estado e leituras. | Mudar o que é gravado. |
+
+### `backend/` — a lógica de domínio
+
+| Arquivo | O que faz | Quando mexer |
+| --- | --- | --- |
 | `motor.js` | **O coração.** Calcula sol, nuvem, consumo, créditos, Fio B e a divisão por aparelho. | Mudar qualquer número ou regra de cálculo. |
 | `login.js` | Contas, sessão e derivação de senha. | Mexer em cadastro ou entrada. |
 | `leitor.js` | Lê a conta de luz por foto: OCR no navegador e interpretação dos campos. | Melhorar o que o leitor reconhece. |
+
+### `frontend/js/` — a interface
+
+| Arquivo | O que faz | Quando mexer |
+| --- | --- | --- |
 | `telas.js` | Monta as telas da versão ampla. | Mudar o que aparece na tela. |
 | `movel.js` | As mesmas telas em coluna única. | Mudar a versão de celular. |
 | `controle.js` | Cliques, rotas, o tique do medidor e os avisos. | Adicionar botão ou atalho. |
@@ -174,7 +220,7 @@ mudança, `onclick` se perderia; com delegação, nunca.
 
 ## Fluxo de trabalho
 
-1. Editar em `site/`
+1. Editar em `frontend/`, `backend/` e `banco-de-dados/`
 2. Recarregar o navegador e ver
 3. Abrir `testes/index.html` e conferir se está tudo verde
 4. `node ferramentas/build.mjs` para atualizar o arquivo único
@@ -182,7 +228,7 @@ mudança, `onclick` se perderia; com delegação, nunca.
 
 O build confere sozinho duas coisas, e reclama em vez de gerar coisa quebrada:
 
-- se as listas de arquivos batem com o `site/index.html`;
+- se as listas de arquivos batem com o `frontend/index.html`;
 - se `testes/index.html` carrega os mesmos `js`, na mesma ordem. A página de
   testes tem lista própria, e quando ela fica para trás a suíte roda contra um
   app pela metade e acusa falha que não existe.

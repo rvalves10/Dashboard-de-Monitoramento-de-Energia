@@ -24,7 +24,7 @@ muda a prévia junto.
 
 ## Por que o site já funciona no celular sem ser app
 
-Abaixo de 760 px de largura o `site/js/movel.js` troca a casca: sai o menu
+Abaixo de 760 px de largura o `frontend/js/movel.js` troca a casca: sai o menu
 lateral, entra uma coluna única com abas embaixo. É o mesmo motor, os mesmos
 dados e o mesmo banco. Quem abrir o endereço no celular vê isso.
 

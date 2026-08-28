@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-/* Mesmos tokens do site (site/css/base.css). Se a paleta mudar la,
+/* Mesmos tokens do site (frontend/css/base.css). Se a paleta mudar la,
    mude aqui tambem - esta pagina nao carrega o CSS do site de proposito,
    para um erro de estilo nunca derrubar a suite. */
 :root{
@@ -62,9 +62,10 @@ code{font-family:'IBM Plex Mono',monospace;background:var(--ground);padding:2px 
 (function () {
   var v = '?t=' + Date.now();
   var arquivos = [
-    '../site/js/banco.js', '../site/js/motor.js', '../site/js/login.js',
-    '../site/js/leitor.js', '../site/js/telas.js', '../site/js/movel.js',
-    '../site/js/controle.js', 'testes.js'
+    '../banco-de-dados/banco.js',
+    '../backend/motor.js', '../backend/login.js', '../backend/leitor.js',
+    '../frontend/js/telas.js', '../frontend/js/movel.js', '../frontend/js/controle.js',
+    'testes.js'
   ];
   (function proximo(i) {
     if (i >= arquivos.length) return;
