@@ -362,6 +362,10 @@ const PADRAO = {
   regras: { meta: true, salto: true, solar: true, standby: false },
   tarifa: { residencial: null, negocio: null },
   extras: [], removidos: [], respondidas: {}, dispensados: [], unidades: [],
+  /* As duas unidades de demonstracao (Casa das Acacias e a padaria) so
+     aparecem quando isto e verdadeiro. O visitante ve; conta nova nao,
+     porque conta nova nao tem casa nenhuma cadastrada ainda. */
+  exemplos: true,
   nova: {
     nome: '', arquetipo: 'casaVazia', telhado: 'bom', distribuidora: '',
     tarifa: 0.92, consumoMes: 300, potenciaKwp: 4.0, paineis: 9,
@@ -509,15 +513,37 @@ function montarUnidade(f) {
 }
 
 function unidadesProprias() { return (S.unidades || []).map(montarUnidade); }
+
+/* As de demonstracao vem do codigo; as suas vem do banco. A bandeira
+   S.exemplos decide se as primeiras entram na lista. */
+function mostrandoExemplos() { return S.exemplos !== false; }
+
 function uni(chave) {
-  if (UNIDADES_BASE[chave]) return UNIDADES_BASE[chave];
+  if (UNIDADES_BASE[chave]) return mostrandoExemplos() ? UNIDADES_BASE[chave] : null;
   const f = (S.unidades || []).filter(x => x.chave === chave)[0];
   return f ? montarUnidade(f) : null;
 }
 function chavesUnidades() {
-  return Object.keys(UNIDADES_BASE).concat((S.unidades || []).map(x => x.chave));
+  const proprias = (S.unidades || []).map(x => x.chave);
+  return mostrandoExemplos() ? Object.keys(UNIDADES_BASE).concat(proprias) : proprias;
 }
-function tarifaAtual() { const u = unidade(); return S.tarifa[S.perfil] != null ? S.tarifa[S.perfil] : u.tarifa; }
+/* true quando nao ha nada para mostrar e o site precisa pedir a primeira
+   unidade antes de desenhar qualquer painel */
+function semUnidade() { return chavesUnidades().length === 0; }
+
+/* Garante que S.perfil aponta para uma unidade que existe. Chamado depois
+   de qualquer coisa que possa remover a unidade ativa. */
+function ajustarPerfil() {
+  const chaves = chavesUnidades();
+  if (!chaves.length) { S.perfil = null; return false; }
+  if (chaves.indexOf(S.perfil) < 0) { S.perfil = chaves[0]; _visao = null; _cacheLedger.clear(); }
+  return true;
+}
+function tarifaAtual() {
+  const u = unidade();
+  if (S.tarifa[S.perfil] != null) return S.tarifa[S.perfil];
+  return u ? u.tarifa : 0.92;   /* sem unidade ainda: valor so para nao quebrar a tela */
+}
 
 function agora() { return new Date(); }
 function horasDecorridas(d) { return (d.getDate() - 1) * 24 + d.getHours() + d.getMinutes() / 60; }

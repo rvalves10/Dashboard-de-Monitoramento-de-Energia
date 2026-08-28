@@ -25,6 +25,20 @@ const TELA_ORDEM = NAV.map(n => n.k);
 const LARGURA_ESTREITA = 760;
 function telaEstreita() { return window.innerWidth <= LARGURA_ESTREITA; }
 
+/* O formulario de unidade sem a casca do site, porque ainda nao ha
+   menu lateral nem painel para mostrar ao lado. */
+function corpoPrimeiroCadastro() {
+  return '<div class="cadastro-solo">' +
+    '<header class="cadastro-solo-topo">' +
+      '<button class="link-btn" data-act="nav" data-tela="painel">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>' +
+      'Voltar</button>' +
+      '<h1>Sua primeira unidade</h1>' +
+    '</header>' +
+    '<div class="cadastro-solo-corpo">' + vUnidade() + '</div>' +
+    '</div>';
+}
+
 function corpoAmplo() {
   let tela = '';
   if (S.tela === 'painel') tela = vPainel();
@@ -47,6 +61,17 @@ function render() {
   const ativo = document.activeElement;
   const fid = ativo && ativo.dataset ? ativo.dataset.fid : null;
   const caret = ativo && ativo.selectionStart != null ? ativo.selectionStart : null;
+
+  /* Sem unidade nenhuma nao ha painel para desenhar. Duas telas passam
+     nesse estado: o convite e o proprio formulario de cadastro. */
+  ajustarPerfil();
+  if (semUnidade()) {
+    root.innerHTML = S.tela === 'unidade' ? corpoPrimeiroCadastro() : vPrimeiraUnidade();
+    document.body.classList.remove('vista-celular');
+    _ultimoModo = telaEstreita();
+    if (fid) { const a = $('[data-fid="' + fid + '"]'); if (a) a.focus({ preventScroll: true }); }
+    return;
+  }
 
   const mob = telaEstreita();
   root.innerHTML = mob ? vMovel() : corpoAmplo();
@@ -372,6 +397,20 @@ const ACOES = {
     salvar(); render();
     aviso(campos.nome + ' cadastrado', nf(kwh, 1) + ' kWh por mês · ' + brl(kwh * tarifaAtual()) + ' na conta.', 'good');
   },
+  'ligar-exemplos': () => {
+    S.exemplos = true;
+    ajustarPerfil(); _visao = null; _cacheLedger.clear();
+    salvar(); render();
+    aviso('Exemplos carregados', 'Casa das Acácias e Padaria Pão de Ouro são demonstração. Desligue em Configurações quando cadastrar a sua.', 'sun');
+  },
+  'alternar-exemplos': () => {
+    S.exemplos = !mostrandoExemplos();
+    ajustarPerfil(); _visao = null; _cacheLedger.clear();
+    salvar(); render();
+    aviso(S.exemplos ? 'Exemplos ligados' : 'Exemplos desligados',
+      S.exemplos ? 'As unidades de demonstração voltaram para o menu.'
+        : 'Agora você vê apenas as unidades que cadastrou.', 'sun');
+  },
   'nova-arq': el => { S.nova.arquetipo = el.dataset.v; salvar(); render(); },
   'nova-telhado': el => { S.nova.telhado = el.dataset.v; salvar(); render(); },
   'salvar-unidade': () => {
@@ -608,11 +647,15 @@ async function aoEntrar(migrou) {
   _visao = null; _cacheLedger.clear();
   render();
   const s = sessao();
+  if (semUnidade()) {
+    aviso('Conta criada', 'Cadastre sua primeira unidade para o Solaris começar a calcular.', 'good');
+    return;
+  }
   if (ehVisitante()) {
-    aviso('Medidor conectado', nf(visao().mtd.tc) + ' kWh no mês até agora. Criar conta é opcional — serve para separar seus dados de quem mais usa este navegador.', 'good');
+    aviso('Medidor conectado', nf(visao().mtd.tc) + ' kWh no mês até agora · dados de demonstração.', 'good');
   } else {
     aviso('Bem-vindo, ' + s.nome.split(' ')[0],
-      migrou ? 'O que você fez como visitante veio junto para a sua conta.'
+      migrou ? 'As unidades que você cadastrou vieram junto.'
         : 'Medidor conectado · ' + nf(visao().mtd.tc) + ' kWh no mês até agora.', 'good');
   }
 }

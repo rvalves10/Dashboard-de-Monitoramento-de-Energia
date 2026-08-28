@@ -36,6 +36,7 @@ travou** — isso é o dado mais valioso do teste inteiro.
 - [ ] Corrigir a estimativa de algum aparelho que a IA detectou
 - [ ] Mudar a meta do mês em **Alertas e metas** e ver o aviso mudar
 - [ ] Abrir **Relatório** e dar `Ctrl+P` para ver como sai impresso
+- [ ] Criar uma conta e reparar que ela começa **vazia** (é assim mesmo)
 - [ ] Cadastrar a **sua própria casa** com os dados da sua conta de luz
 - [ ] Abrir o site no celular e conferir se dá para usar
 
@@ -79,7 +80,7 @@ agora.
 ## Como saber se algo quebrou de verdade
 
 Abra **`testes/index.html`** e espere uns segundos. Deve aparecer
-**81 de 81 testes passaram**, tudo verde.
+**87 de 87 testes passaram**, tudo verde.
 
 Se aparecer qualquer linha vermelha, tire um print e mande no grupo com a
 mensagem: *"teste vermelho"* e o nome do que falhou.
@@ -109,6 +110,9 @@ Para não gastar o tempo de vocês com o que já está mapeado:
   não tem como ser. Ele serve para separar dados, não para proteger.
 - **Não tem "esqueci minha senha".** Sem servidor, não tem e-mail para enviar.
 - **Os dados ficam só neste navegador.** Não sincroniza entre computadores.
+- **Conta nova começa vazia.** Não é bug: a casa e a padaria são exemplos,
+  e exemplo não deve aparecer como se fosse seu. Dá para ligá-los em
+  Configurações se quiser passear pelo sistema.
 - **A moldura de celular saiu.** O site se adapta sozinho a tela estreita;
   a simulação de aplicativo está em `app-futuro/previa-app.html`.
 

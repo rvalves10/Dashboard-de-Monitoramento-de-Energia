@@ -236,14 +236,29 @@ async function apagarConta() {
    Dois casos em que os dados ficariam órfãos e o usuário acharia que
    perdeu tudo. Os dois são resolvidos calados. */
 
-/* quem brincou como visitante e depois criou conta leva o que fez junto */
+/* Quem brincou como visitante e depois criou conta leva junto o que
+   cadastrou — mas NAO as unidades de demonstracao. Conta nova comeca
+   com as suas coisas e mais nada; se voce nao cadastrou nenhuma, ela
+   comeca vazia mesmo, e o site pede a primeira. */
 async function migrarDoVisitante(destinoId) {
   const dados = await Banco.estado('visitante');
   if (!dados) return false;
   if (await Banco.estado(destinoId)) return false;
-  await Banco.salvarEstado(destinoId, dados);
+
+  const proprias = (dados.unidades || []);
+  const chavesProprias = proprias.map(u => u.chave);
+  const limpo = Object.assign({}, dados, {
+    exemplos: false,
+    unidades: proprias,
+    /* aparelhos e respostas presos as unidades de demonstracao ficam para tras */
+    extras: (dados.extras || []).filter(e => chavesProprias.indexOf(e.perfil) >= 0),
+    removidos: (dados.removidos || []).filter(r => chavesProprias.some(c => r.indexOf(c + ':') === 0)),
+    perfil: chavesProprias[0] || null,
+    detalhe: null, tela: 'painel'
+  });
+  await Banco.salvarEstado(destinoId, limpo);
   await Banco.apagarEstado('visitante');
-  return true;
+  return proprias.length > 0;
 }
 
 /* ---------- tela de login ---------- */
@@ -388,6 +403,8 @@ async function enviarLogin(ev) {
       const eraVisitante = ehVisitante();
       const c = await criarConta(nome, email, senha);
       if (eraVisitante) migrou = await migrarDoVisitante(c.id);
+      /* conta nova nunca comeca com as unidades de demonstracao dentro */
+      if (!await Banco.estado(c.id)) await Banco.salvarEstado(c.id, { exemplos: false, perfil: null });
       await entrar(email, senha, true);
     } else await entrar(email, senha, manter);
     ocupado = false;

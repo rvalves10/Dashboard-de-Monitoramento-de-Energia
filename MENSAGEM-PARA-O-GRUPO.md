@@ -31,7 +31,7 @@ filtrem — "achei feio" também é dado. Três linhas de quem usou de verdade
 valem mais que uma página de quem só olhou.
 
 **Se quiserem conferir que está tudo funcionando:** abram `testes/index.html`.
-Tem que aparecer 81 de 81 testes verdes. Se aparecer vermelho, print no grupo.
+Tem que aparecer 87 de 87 testes verdes. Se aparecer vermelho, print no grupo.
 
 **Duas coisas para já saberem, para não perderem tempo reportando:**
 - Os dados do medidor são simulados, ainda não tem sensor ligado. Os números
@@ -40,6 +40,9 @@ Tem que aparecer 81 de 81 testes verdes. Se aparecer vermelho, print no grupo.
   fase, com o ESP32.
 - O login é opcional e não é segurança de verdade. Ele serve só para separar
   dados de quem divide o mesmo computador.
+- Se criarem conta, ela começa **vazia** — a casa e a padaria são exemplos, e
+  exemplo não deve aparecer como se fosse de vocês. O site pede a primeira
+  unidade, e dá para ligar os exemplos em Configurações.
 
 Qualquer dúvida, me chamem. Valeu! 🙏
 

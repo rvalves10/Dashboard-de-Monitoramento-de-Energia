@@ -421,7 +421,84 @@ grupo('Unidades', () => {
   });
 });
 
-/* ================= contas e sessão ================= */
+/* ================= conta vazia ================= */
+grupo('Conta vazia', () => {
+
+  function comExemplos(v, fn) {
+    const antes = S.exemplos, antesP = S.perfil, antesU = S.unidades;
+    S.exemplos = v; _visao = null; _cacheLedger.clear();
+    try { return fn(); }
+    finally {
+      S.exemplos = antes; S.perfil = antesP; S.unidades = antesU;
+      _visao = null; _cacheLedger.clear();
+    }
+  }
+
+  teste('com exemplos ligados aparecem as duas unidades de demonstracao', () => {
+    comExemplos(true, () => {
+      const c = chavesUnidades();
+      ok(c.indexOf('residencial') >= 0, 'faltou a casa de exemplo');
+      ok(c.indexOf('negocio') >= 0, 'faltou a padaria de exemplo');
+      igual(semUnidade(), false);
+    });
+  });
+
+  teste('com exemplos desligados e sem unidade propria, a conta fica vazia', () => {
+    comExemplos(false, () => {
+      S.unidades = [];
+      igual(chavesUnidades().length, 0, 'sobrou unidade em conta vazia');
+      igual(semUnidade(), true, 'deveria pedir a primeira unidade');
+      igual(uni('residencial'), null, 'a casa de exemplo vazou');
+      igual(uni('negocio'), null, 'a padaria de exemplo vazou');
+    });
+  });
+
+  teste('com exemplos desligados so aparece o que a pessoa cadastrou', () => {
+    comExemplos(false, () => {
+      S.unidades = [{
+        chave: 'minha', nome: 'Minha casa', arquetipo: 'casaVazia', telhado: 'bom',
+        distribuidora: 'CPFL', tarifa: 0.98, consumoMes: 380,
+        potenciaKwp: 5.2, paineis: 12, investimento: 24000, mesesOperacao: 8
+      }];
+      igual(chavesUnidades().length, 1);
+      igual(chavesUnidades()[0], 'minha');
+      igual(semUnidade(), false);
+      S.perfil = 'minha';
+      igual(unidade().nome, 'Minha casa');
+    });
+  });
+
+  teste('a tela de primeira unidade oferece as duas saidas', () => {
+    const d = document.createElement('div');
+    d.innerHTML = vPrimeiraUnidade();
+    ok(d.querySelector('[data-tela="unidade"]'), 'faltou o caminho de cadastrar');
+    ok(d.querySelector('[data-act="ligar-exemplos"]'), 'faltou o caminho de ver exemplos');
+    igual(d.querySelectorAll('h1').length, 1, 'deveria ter um h1');
+  });
+
+  teste('o perfil se ajusta sozinho quando a unidade ativa some', () => {
+    comExemplos(true, () => {
+      S.perfil = 'nao-existe-mais';
+      ok(ajustarPerfil(), 'deveria ter encontrado outra unidade');
+      ok(chavesUnidades().indexOf(S.perfil) >= 0, 'perfil continuou invalido');
+    });
+    comExemplos(false, () => {
+      S.unidades = []; S.perfil = 'nao-existe-mais';
+      igual(ajustarPerfil(), false, 'sem unidade deveria devolver false');
+      igual(S.perfil, null, 'perfil deveria ficar nulo');
+    });
+  });
+
+  teste('a tarifa nao quebra quando ainda nao ha unidade', () => {
+    comExemplos(false, () => {
+      S.unidades = []; S.perfil = null;
+      const t = tarifaAtual();
+      ok(isFinite(t) && t > 0, 'tarifaAtual devolveu ' + t);
+    });
+  });
+});
+
+/* ================= contas e sess\u00e3o ================= */
 /* Estes precisam de await, então entram numa fila separada que roda
    depois dos síncronos. O armazenamento é salvo antes e restaurado
    depois, para o teste nunca comer os dados de quem estiver usando. */

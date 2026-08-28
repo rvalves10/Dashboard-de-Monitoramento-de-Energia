@@ -865,6 +865,85 @@ body.vista-celular,body.vista-login{background-image:none}
 @media print{ body{background-image:none} .card{box-shadow:none} }
 
 
+/* ============================================================
+   PRIMEIRA UNIDADE
+   Conta nova comeca vazia de proposito. Esta tela pede a primeira
+   unidade em vez de mostrar um painel com zeros.
+   ============================================================ */
+.comecar{
+  min-height:100vh;min-height:100dvh;
+  display:flex;align-items:center;justify-content:center;
+  padding:48px 24px;background:var(--ground);
+}
+.comecar-cx{width:100%;max-width:520px;text-align:center}
+
+.comecar-ic{
+  width:62px;height:62px;border-radius:20px;margin:0 auto;
+  display:grid;place-items:center;
+  background:linear-gradient(150deg,var(--sun-lite),#E08A18);
+  box-shadow:0 12px 30px -10px rgba(237,162,43,.55);
+}
+.comecar-cx h1{
+  font-family:var(--f-display);font-weight:800;
+  font-size:clamp(28px,4vw,38px);letter-spacing:-1.4px;line-height:1.08;
+  margin:26px 0 0;
+}
+.comecar-d{
+  font-size:15px;color:var(--muted);line-height:1.6;
+  margin:16px auto 0;max-width:46ch;
+}
+.comecar-d b{color:var(--ink);font-weight:600}
+
+.comecar-precisa{
+  text-align:left;background:var(--surface);border:1px solid var(--line);
+  border-radius:16px;padding:18px 20px;margin-top:28px;box-shadow:var(--elev-1);
+}
+.comecar-precisa-t{
+  font-size:11px;text-transform:uppercase;letter-spacing:1px;
+  color:var(--fainter);font-weight:700;
+}
+.comecar-precisa ul{margin:12px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:8px}
+.comecar-precisa li{font-size:13.5px;color:var(--ink-2);line-height:1.5}
+.comecar-precisa li b{font-weight:600;color:var(--ink)}
+.comecar-precisa-p{font-size:12px;color:var(--faint);margin-top:12px;line-height:1.5}
+
+.comecar-botao{
+  width:100%;height:50px;margin-top:24px;border-radius:14px;font-size:15px;
+}
+.comecar-ou{
+  display:flex;align-items:center;gap:12px;margin:22px 0 14px;
+  color:var(--fainter);font-size:11.5px;
+}
+.comecar-ou::before,.comecar-ou::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.comecar-exemplo{
+  width:100%;height:44px;border-radius:12px;
+  border:1px solid var(--line-2);background:var(--surface);
+  font-size:13.5px;font-weight:600;color:var(--ink-2);
+  transition:border-color .15s,color .15s;
+}
+.comecar-exemplo:hover{border-color:var(--ink);color:var(--ink)}
+.comecar-exemplo-d{
+  font-size:11.5px;color:var(--faint);margin:10px auto 0;
+  line-height:1.5;max-width:44ch;
+}
+
+@media (max-width:520px){
+  .comecar{padding:32px 20px;align-items:flex-start}
+  .comecar-cx h1{font-size:26px}
+}
+
+/* o formulario de unidade quando ainda nao existe menu lateral */
+.cadastro-solo{min-height:100vh;min-height:100dvh;background:var(--ground);padding:36px 5vw 64px}
+.cadastro-solo-topo{max-width:1100px;margin:0 auto 26px}
+.cadastro-solo-topo h1{
+  font-family:var(--f-display);font-weight:700;font-size:clamp(26px,3vw,34px);
+  letter-spacing:-1.2px;margin:12px 0 0;
+}
+.cadastro-solo-corpo{max-width:1100px;margin:0 auto}
+@media (max-width:640px){ .cadastro-solo{padding:26px 20px 48px} }
+
+
 /* ===== css/movel.css ===== */
 /* movel.css
    Como o site se comporta em tela estreita. E o mesmo site, nao um app.
@@ -1684,6 +1763,10 @@ const PADRAO = {
   regras: { meta: true, salto: true, solar: true, standby: false },
   tarifa: { residencial: null, negocio: null },
   extras: [], removidos: [], respondidas: {}, dispensados: [], unidades: [],
+  /* As duas unidades de demonstracao (Casa das Acacias e a padaria) so
+     aparecem quando isto e verdadeiro. O visitante ve; conta nova nao,
+     porque conta nova nao tem casa nenhuma cadastrada ainda. */
+  exemplos: true,
   nova: {
     nome: '', arquetipo: 'casaVazia', telhado: 'bom', distribuidora: '',
     tarifa: 0.92, consumoMes: 300, potenciaKwp: 4.0, paineis: 9,
@@ -1831,15 +1914,37 @@ function montarUnidade(f) {
 }
 
 function unidadesProprias() { return (S.unidades || []).map(montarUnidade); }
+
+/* As de demonstracao vem do codigo; as suas vem do banco. A bandeira
+   S.exemplos decide se as primeiras entram na lista. */
+function mostrandoExemplos() { return S.exemplos !== false; }
+
 function uni(chave) {
-  if (UNIDADES_BASE[chave]) return UNIDADES_BASE[chave];
+  if (UNIDADES_BASE[chave]) return mostrandoExemplos() ? UNIDADES_BASE[chave] : null;
   const f = (S.unidades || []).filter(x => x.chave === chave)[0];
   return f ? montarUnidade(f) : null;
 }
 function chavesUnidades() {
-  return Object.keys(UNIDADES_BASE).concat((S.unidades || []).map(x => x.chave));
+  const proprias = (S.unidades || []).map(x => x.chave);
+  return mostrandoExemplos() ? Object.keys(UNIDADES_BASE).concat(proprias) : proprias;
 }
-function tarifaAtual() { const u = unidade(); return S.tarifa[S.perfil] != null ? S.tarifa[S.perfil] : u.tarifa; }
+/* true quando nao ha nada para mostrar e o site precisa pedir a primeira
+   unidade antes de desenhar qualquer painel */
+function semUnidade() { return chavesUnidades().length === 0; }
+
+/* Garante que S.perfil aponta para uma unidade que existe. Chamado depois
+   de qualquer coisa que possa remover a unidade ativa. */
+function ajustarPerfil() {
+  const chaves = chavesUnidades();
+  if (!chaves.length) { S.perfil = null; return false; }
+  if (chaves.indexOf(S.perfil) < 0) { S.perfil = chaves[0]; _visao = null; _cacheLedger.clear(); }
+  return true;
+}
+function tarifaAtual() {
+  const u = unidade();
+  if (S.tarifa[S.perfil] != null) return S.tarifa[S.perfil];
+  return u ? u.tarifa : 0.92;   /* sem unidade ainda: valor so para nao quebrar a tela */
+}
 
 function agora() { return new Date(); }
 function horasDecorridas(d) { return (d.getDate() - 1) * 24 + d.getHours() + d.getMinutes() / 60; }
@@ -2361,14 +2466,29 @@ async function apagarConta() {
    Dois casos em que os dados ficariam órfãos e o usuário acharia que
    perdeu tudo. Os dois são resolvidos calados. */
 
-/* quem brincou como visitante e depois criou conta leva o que fez junto */
+/* Quem brincou como visitante e depois criou conta leva junto o que
+   cadastrou — mas NAO as unidades de demonstracao. Conta nova comeca
+   com as suas coisas e mais nada; se voce nao cadastrou nenhuma, ela
+   comeca vazia mesmo, e o site pede a primeira. */
 async function migrarDoVisitante(destinoId) {
   const dados = await Banco.estado('visitante');
   if (!dados) return false;
   if (await Banco.estado(destinoId)) return false;
-  await Banco.salvarEstado(destinoId, dados);
+
+  const proprias = (dados.unidades || []);
+  const chavesProprias = proprias.map(u => u.chave);
+  const limpo = Object.assign({}, dados, {
+    exemplos: false,
+    unidades: proprias,
+    /* aparelhos e respostas presos as unidades de demonstracao ficam para tras */
+    extras: (dados.extras || []).filter(e => chavesProprias.indexOf(e.perfil) >= 0),
+    removidos: (dados.removidos || []).filter(r => chavesProprias.some(c => r.indexOf(c + ':') === 0)),
+    perfil: chavesProprias[0] || null,
+    detalhe: null, tela: 'painel'
+  });
+  await Banco.salvarEstado(destinoId, limpo);
   await Banco.apagarEstado('visitante');
-  return true;
+  return proprias.length > 0;
 }
 
 /* ---------- tela de login ---------- */
@@ -2513,6 +2633,8 @@ async function enviarLogin(ev) {
       const eraVisitante = ehVisitante();
       const c = await criarConta(nome, email, senha);
       if (eraVisitante) migrou = await migrarDoVisitante(c.id);
+      /* conta nova nunca comeca com as unidades de demonstracao dentro */
+      if (!await Banco.estado(c.id)) await Banco.salvarEstado(c.id, { exemplos: false, perfil: null });
       await entrar(email, senha, true);
     } else await entrar(email, senha, manter);
     ocupado = false;
@@ -3213,7 +3335,23 @@ function vConfig() {
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">' +
     '<div style="font-size:12.5px;color:var(--faint);max-width:44ch">Aparelhos cadastrados, metas e tarifa ficam salvos neste navegador.</div>' +
     '<button class="danger-btn" data-act="reset-tudo">Apagar meus dados</button></div>' +
-    '</section>' + cardUnidades() + cardFonte() + cardBanco() + '</div>';
+    '</section>' + cardUnidades() + cardExemplos() + cardFonte() + cardBanco() + '</div>';
+}
+
+/* liga e desliga as unidades de demonstracao */
+function cardExemplos() {
+  const ligado = mostrandoExemplos();
+  const proprias = (S.unidades || []).length;
+  return '<section class="card s6"><div class="card-head"><div><h2>Unidades de exemplo</h2>' +
+    '<div class="card-sub">Uma casa e uma padaria de demonstração, para conhecer o sistema</div></div>' +
+    '<button class="tog" data-act="alternar-exemplos" role="switch" ' +
+    'aria-checked="' + ligado + '" aria-label="Mostrar unidades de exemplo"><i></i></button></div>' +
+    '<div style="font-size:13px;color:var(--muted);margin-top:14px;line-height:1.55;max-width:60ch">' +
+    (ligado
+      ? 'Elas aparecem no menu junto com as suas. Não são dados reais — servem para mostrar como o sistema se comporta.' +
+        (proprias ? '' : ' Desligar agora deixaria a conta vazia, porque você ainda não cadastrou nenhuma unidade sua.')
+      : 'Estão escondidas. Você vê apenas ' + (proprias === 1 ? 'a sua unidade' : 'as suas ' + proprias + ' unidades') + '.') +
+    '</div></section>';
 }
 
 /* estado do banco de dados — preenchido de forma assíncrona depois do render */
@@ -3281,6 +3419,44 @@ function cardFonte() {
 }
 function kv(k, v, mono) {
   return '<div class="kv"><dt>' + k + '</dt><dd' + (mono ? ' class="mono"' : '') + '>' + v + '</dd></div>';
+}
+
+/* ---------- conta nova, sem unidade nenhuma ----------
+   Aparece no lugar do painel enquanto nao ha o que mostrar. Duas saidas:
+   cadastrar a unidade de verdade ou ligar os exemplos para dar uma olhada. */
+function vPrimeiraUnidade() {
+  const s = sessao() || {};
+  const primeiro = (s.nome || '').split(' ')[0];
+  return '<div class="comecar">' +
+    '<div class="comecar-cx">' +
+      '<span class="comecar-ic">' +
+      '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#16150F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M3 11l9-8 9 8M5 9.5V21h14V9.5M9 21v-6h6v6"/></svg></span>' +
+
+      '<h1>' + (primeiro ? primeiro + ', vamos' : 'Vamos') + ' come\u00e7ar<br>pela sua unidade</h1>' +
+      '<p class="comecar-d">Sua conta est\u00e1 vazia \u2014 e \u00e9 assim que tem que ser. ' +
+      'Cadastre a casa ou o com\u00e9rcio que voc\u00ea quer acompanhar e o Solaris passa a ' +
+      'calcular gera\u00e7\u00e3o, consumo, cr\u00e9ditos e conta em cima dos <b>seus</b> n\u00fameros.</p>' +
+
+      '<div class="comecar-precisa">' +
+        '<div class="comecar-precisa-t">Tenha \u00e0 m\u00e3o</div>' +
+        '<ul>' +
+          '<li>Uma <b>conta de luz</b>: consumo m\u00e9dio em kWh e a tarifa</li>' +
+          '<li>A <b>nota do instalador</b>: pot\u00eancia em kWp e n\u00famero de pain\u00e9is</li>' +
+        '</ul>' +
+        '<div class="comecar-precisa-p">N\u00e3o tem agora? D\u00e1 para colocar valores aproximados e corrigir depois.</div>' +
+      '</div>' +
+
+      '<button class="dark-btn comecar-botao" data-act="nav" data-tela="unidade">' +
+        ico(IC.mais, 16, 'currentColor', 2.4) + 'Cadastrar minha unidade</button>' +
+
+      '<div class="comecar-ou"><span>ou</span></div>' +
+      '<button class="comecar-exemplo" data-act="ligar-exemplos">' +
+        'Ver primeiro com dados de exemplo' +
+      '</button>' +
+      '<p class="comecar-exemplo-d">Carrega duas unidades de demonstra\u00e7\u00e3o \u2014 uma casa e uma ' +
+      'padaria \u2014 para voc\u00ea passear pelo sistema. D\u00e1 para desligar depois em Configura\u00e7\u00f5es.</p>' +
+    '</div></div>';
 }
 
 /* ---------- cadastrar unidade ---------- */
@@ -3665,6 +3841,20 @@ const TELA_ORDEM = NAV.map(n => n.k);
 const LARGURA_ESTREITA = 760;
 function telaEstreita() { return window.innerWidth <= LARGURA_ESTREITA; }
 
+/* O formulario de unidade sem a casca do site, porque ainda nao ha
+   menu lateral nem painel para mostrar ao lado. */
+function corpoPrimeiroCadastro() {
+  return '<div class="cadastro-solo">' +
+    '<header class="cadastro-solo-topo">' +
+      '<button class="link-btn" data-act="nav" data-tela="painel">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>' +
+      'Voltar</button>' +
+      '<h1>Sua primeira unidade</h1>' +
+    '</header>' +
+    '<div class="cadastro-solo-corpo">' + vUnidade() + '</div>' +
+    '</div>';
+}
+
 function corpoAmplo() {
   let tela = '';
   if (S.tela === 'painel') tela = vPainel();
@@ -3687,6 +3877,17 @@ function render() {
   const ativo = document.activeElement;
   const fid = ativo && ativo.dataset ? ativo.dataset.fid : null;
   const caret = ativo && ativo.selectionStart != null ? ativo.selectionStart : null;
+
+  /* Sem unidade nenhuma nao ha painel para desenhar. Duas telas passam
+     nesse estado: o convite e o proprio formulario de cadastro. */
+  ajustarPerfil();
+  if (semUnidade()) {
+    root.innerHTML = S.tela === 'unidade' ? corpoPrimeiroCadastro() : vPrimeiraUnidade();
+    document.body.classList.remove('vista-celular');
+    _ultimoModo = telaEstreita();
+    if (fid) { const a = $('[data-fid="' + fid + '"]'); if (a) a.focus({ preventScroll: true }); }
+    return;
+  }
 
   const mob = telaEstreita();
   root.innerHTML = mob ? vMovel() : corpoAmplo();
@@ -4012,6 +4213,20 @@ const ACOES = {
     salvar(); render();
     aviso(campos.nome + ' cadastrado', nf(kwh, 1) + ' kWh por mês · ' + brl(kwh * tarifaAtual()) + ' na conta.', 'good');
   },
+  'ligar-exemplos': () => {
+    S.exemplos = true;
+    ajustarPerfil(); _visao = null; _cacheLedger.clear();
+    salvar(); render();
+    aviso('Exemplos carregados', 'Casa das Acácias e Padaria Pão de Ouro são demonstração. Desligue em Configurações quando cadastrar a sua.', 'sun');
+  },
+  'alternar-exemplos': () => {
+    S.exemplos = !mostrandoExemplos();
+    ajustarPerfil(); _visao = null; _cacheLedger.clear();
+    salvar(); render();
+    aviso(S.exemplos ? 'Exemplos ligados' : 'Exemplos desligados',
+      S.exemplos ? 'As unidades de demonstração voltaram para o menu.'
+        : 'Agora você vê apenas as unidades que cadastrou.', 'sun');
+  },
   'nova-arq': el => { S.nova.arquetipo = el.dataset.v; salvar(); render(); },
   'nova-telhado': el => { S.nova.telhado = el.dataset.v; salvar(); render(); },
   'salvar-unidade': () => {
@@ -4248,11 +4463,15 @@ async function aoEntrar(migrou) {
   _visao = null; _cacheLedger.clear();
   render();
   const s = sessao();
+  if (semUnidade()) {
+    aviso('Conta criada', 'Cadastre sua primeira unidade para o Solaris começar a calcular.', 'good');
+    return;
+  }
   if (ehVisitante()) {
-    aviso('Medidor conectado', nf(visao().mtd.tc) + ' kWh no mês até agora. Criar conta é opcional — serve para separar seus dados de quem mais usa este navegador.', 'good');
+    aviso('Medidor conectado', nf(visao().mtd.tc) + ' kWh no mês até agora · dados de demonstração.', 'good');
   } else {
     aviso('Bem-vindo, ' + s.nome.split(' ')[0],
-      migrou ? 'O que você fez como visitante veio junto para a sua conta.'
+      migrou ? 'As unidades que você cadastrou vieram junto.'
         : 'Medidor conectado · ' + nf(visao().mtd.tc) + ' kWh no mês até agora.', 'good');
   }
 }

@@ -231,3 +231,82 @@ body.vista-login{background:var(--dark)}
 /* o fundo com gradiente nao faz sentido nestes dois contextos */
 body.vista-celular,body.vista-login{background-image:none}
 @media print{ body{background-image:none} .card{box-shadow:none} }
+
+
+/* ============================================================
+   PRIMEIRA UNIDADE
+   Conta nova comeca vazia de proposito. Esta tela pede a primeira
+   unidade em vez de mostrar um painel com zeros.
+   ============================================================ */
+.comecar{
+  min-height:100vh;min-height:100dvh;
+  display:flex;align-items:center;justify-content:center;
+  padding:48px 24px;background:var(--ground);
+}
+.comecar-cx{width:100%;max-width:520px;text-align:center}
+
+.comecar-ic{
+  width:62px;height:62px;border-radius:20px;margin:0 auto;
+  display:grid;place-items:center;
+  background:linear-gradient(150deg,var(--sun-lite),#E08A18);
+  box-shadow:0 12px 30px -10px rgba(237,162,43,.55);
+}
+.comecar-cx h1{
+  font-family:var(--f-display);font-weight:800;
+  font-size:clamp(28px,4vw,38px);letter-spacing:-1.4px;line-height:1.08;
+  margin:26px 0 0;
+}
+.comecar-d{
+  font-size:15px;color:var(--muted);line-height:1.6;
+  margin:16px auto 0;max-width:46ch;
+}
+.comecar-d b{color:var(--ink);font-weight:600}
+
+.comecar-precisa{
+  text-align:left;background:var(--surface);border:1px solid var(--line);
+  border-radius:16px;padding:18px 20px;margin-top:28px;box-shadow:var(--elev-1);
+}
+.comecar-precisa-t{
+  font-size:11px;text-transform:uppercase;letter-spacing:1px;
+  color:var(--fainter);font-weight:700;
+}
+.comecar-precisa ul{margin:12px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:8px}
+.comecar-precisa li{font-size:13.5px;color:var(--ink-2);line-height:1.5}
+.comecar-precisa li b{font-weight:600;color:var(--ink)}
+.comecar-precisa-p{font-size:12px;color:var(--faint);margin-top:12px;line-height:1.5}
+
+.comecar-botao{
+  width:100%;height:50px;margin-top:24px;border-radius:14px;font-size:15px;
+}
+.comecar-ou{
+  display:flex;align-items:center;gap:12px;margin:22px 0 14px;
+  color:var(--fainter);font-size:11.5px;
+}
+.comecar-ou::before,.comecar-ou::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.comecar-exemplo{
+  width:100%;height:44px;border-radius:12px;
+  border:1px solid var(--line-2);background:var(--surface);
+  font-size:13.5px;font-weight:600;color:var(--ink-2);
+  transition:border-color .15s,color .15s;
+}
+.comecar-exemplo:hover{border-color:var(--ink);color:var(--ink)}
+.comecar-exemplo-d{
+  font-size:11.5px;color:var(--faint);margin:10px auto 0;
+  line-height:1.5;max-width:44ch;
+}
+
+@media (max-width:520px){
+  .comecar{padding:32px 20px;align-items:flex-start}
+  .comecar-cx h1{font-size:26px}
+}
+
+/* o formulario de unidade quando ainda nao existe menu lateral */
+.cadastro-solo{min-height:100vh;min-height:100dvh;background:var(--ground);padding:36px 5vw 64px}
+.cadastro-solo-topo{max-width:1100px;margin:0 auto 26px}
+.cadastro-solo-topo h1{
+  font-family:var(--f-display);font-weight:700;font-size:clamp(26px,3vw,34px);
+  letter-spacing:-1.2px;margin:12px 0 0;
+}
+.cadastro-solo-corpo{max-width:1100px;margin:0 auto}
+@media (max-width:640px){ .cadastro-solo{padding:26px 20px 48px} }

@@ -666,7 +666,23 @@ function vConfig() {
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">' +
     '<div style="font-size:12.5px;color:var(--faint);max-width:44ch">Aparelhos cadastrados, metas e tarifa ficam salvos neste navegador.</div>' +
     '<button class="danger-btn" data-act="reset-tudo">Apagar meus dados</button></div>' +
-    '</section>' + cardUnidades() + cardFonte() + cardBanco() + '</div>';
+    '</section>' + cardUnidades() + cardExemplos() + cardFonte() + cardBanco() + '</div>';
+}
+
+/* liga e desliga as unidades de demonstracao */
+function cardExemplos() {
+  const ligado = mostrandoExemplos();
+  const proprias = (S.unidades || []).length;
+  return '<section class="card s6"><div class="card-head"><div><h2>Unidades de exemplo</h2>' +
+    '<div class="card-sub">Uma casa e uma padaria de demonstração, para conhecer o sistema</div></div>' +
+    '<button class="tog" data-act="alternar-exemplos" role="switch" ' +
+    'aria-checked="' + ligado + '" aria-label="Mostrar unidades de exemplo"><i></i></button></div>' +
+    '<div style="font-size:13px;color:var(--muted);margin-top:14px;line-height:1.55;max-width:60ch">' +
+    (ligado
+      ? 'Elas aparecem no menu junto com as suas. Não são dados reais — servem para mostrar como o sistema se comporta.' +
+        (proprias ? '' : ' Desligar agora deixaria a conta vazia, porque você ainda não cadastrou nenhuma unidade sua.')
+      : 'Estão escondidas. Você vê apenas ' + (proprias === 1 ? 'a sua unidade' : 'as suas ' + proprias + ' unidades') + '.') +
+    '</div></section>';
 }
 
 /* estado do banco de dados — preenchido de forma assíncrona depois do render */
@@ -734,6 +750,44 @@ function cardFonte() {
 }
 function kv(k, v, mono) {
   return '<div class="kv"><dt>' + k + '</dt><dd' + (mono ? ' class="mono"' : '') + '>' + v + '</dd></div>';
+}
+
+/* ---------- conta nova, sem unidade nenhuma ----------
+   Aparece no lugar do painel enquanto nao ha o que mostrar. Duas saidas:
+   cadastrar a unidade de verdade ou ligar os exemplos para dar uma olhada. */
+function vPrimeiraUnidade() {
+  const s = sessao() || {};
+  const primeiro = (s.nome || '').split(' ')[0];
+  return '<div class="comecar">' +
+    '<div class="comecar-cx">' +
+      '<span class="comecar-ic">' +
+      '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#16150F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M3 11l9-8 9 8M5 9.5V21h14V9.5M9 21v-6h6v6"/></svg></span>' +
+
+      '<h1>' + (primeiro ? primeiro + ', vamos' : 'Vamos') + ' come\u00e7ar<br>pela sua unidade</h1>' +
+      '<p class="comecar-d">Sua conta est\u00e1 vazia \u2014 e \u00e9 assim que tem que ser. ' +
+      'Cadastre a casa ou o com\u00e9rcio que voc\u00ea quer acompanhar e o Solaris passa a ' +
+      'calcular gera\u00e7\u00e3o, consumo, cr\u00e9ditos e conta em cima dos <b>seus</b> n\u00fameros.</p>' +
+
+      '<div class="comecar-precisa">' +
+        '<div class="comecar-precisa-t">Tenha \u00e0 m\u00e3o</div>' +
+        '<ul>' +
+          '<li>Uma <b>conta de luz</b>: consumo m\u00e9dio em kWh e a tarifa</li>' +
+          '<li>A <b>nota do instalador</b>: pot\u00eancia em kWp e n\u00famero de pain\u00e9is</li>' +
+        '</ul>' +
+        '<div class="comecar-precisa-p">N\u00e3o tem agora? D\u00e1 para colocar valores aproximados e corrigir depois.</div>' +
+      '</div>' +
+
+      '<button class="dark-btn comecar-botao" data-act="nav" data-tela="unidade">' +
+        ico(IC.mais, 16, 'currentColor', 2.4) + 'Cadastrar minha unidade</button>' +
+
+      '<div class="comecar-ou"><span>ou</span></div>' +
+      '<button class="comecar-exemplo" data-act="ligar-exemplos">' +
+        'Ver primeiro com dados de exemplo' +
+      '</button>' +
+      '<p class="comecar-exemplo-d">Carrega duas unidades de demonstra\u00e7\u00e3o \u2014 uma casa e uma ' +
+      'padaria \u2014 para voc\u00ea passear pelo sistema. D\u00e1 para desligar depois em Configura\u00e7\u00f5es.</p>' +
+    '</div></div>';
 }
 
 /* ---------- cadastrar unidade ---------- */

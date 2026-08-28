@@ -25,7 +25,7 @@ Se preferir um arquivo só para mandar por e-mail ou WhatsApp, use
 ## Conferir se está tudo certo
 
 Abra **`testes/index.html`** e espere alguns segundos.
-Devem aparecer **81 de 81 testes passando**, tudo verde.
+Devem aparecer **87 de 87 testes passando**, tudo verde.
 
 ---
 
@@ -115,11 +115,22 @@ avisa. O site nunca deixa de funcionar por causa do banco.
 
 ---
 
-## Entrada e contas
+## Entrada, contas e dados de exemplo
 
 A primeira tela é a de entrada: à esquerda o que o site faz, à direita o
 formulário. **Ninguém fica travado ali** — o botão "Entrar sem criar conta"
-leva direto ao painel, e quem criar conta depois leva junto o que já fez.
+leva direto ao painel.
+
+**Visitante e conta veem coisas diferentes, de propósito:**
+
+| | O que aparece |
+| --- | --- |
+| **Visitante** | Casa das Acácias e Padaria Pão de Ouro — as duas unidades de demonstração, para conhecer o sistema |
+| **Conta nova** | Nada. A conta começa vazia e o site pede a primeira unidade |
+
+Conta nova não pode vir com casa de mentira dentro. Quem cria conta cadastra
+a própria unidade — ou liga os exemplos em Configurações se só quiser passear
+pelo sistema antes.
 
 **Isto não é segurança contra quem tem acesso ao computador.** Sem servidor,
 não existe segredo do lado do cliente. O que é real:
