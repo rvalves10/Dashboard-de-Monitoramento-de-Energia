@@ -5,15 +5,15 @@
    nenhuma, e publicar online. O site em site/ continua sendo a fonte — este
    arquivo é gerado, nunca editado à mão.
 
-   Rodar:  node ferramentas/build.mjs
-   Saída:  Solaris.html                    documento completo, duplo clique
-           dist/solaris-artifact.html       sem tags de documento, para publicar
+   Rodar:  node backend/ferramentas/build.mjs
+   Saída:  Solaris.html            documento completo, abre com duplo clique
+           Solaris-publicar.html   sem tags de documento, para hospedar
 */
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const raiz = join(dirname(fileURLToPath(import.meta.url)), '..');
+const raiz = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const ler = (...p) => readFileSync(join(raiz, ...p), 'utf8');
 
 /* Cada arquivo mora na camada a que pertence, e o build precisa saber onde
@@ -21,14 +21,20 @@ const ler = (...p) => readFileSync(join(raiz, ...p), 'utf8');
    banco de dados, dominio, interface. Cada camada so usa o que ja foi
    carregado antes dela. */
 const CSS = ['base.css', 'componentes.css', 'telas.css', 'conta.css',
-  'movel.css', 'responsivo.css', 'impressao.css'];
+  'assistente.css', 'movel.css', 'responsivo.css', 'impressao.css'];
 const JS = [
+  ['banco-de-dados', 'config.js'],
+  ['banco-de-dados/dados', 'regiao-sorocaba.js'],
+  ['banco-de-dados', 'local.js'],
+  ['banco-de-dados', 'supabase.js'],
   ['banco-de-dados', 'banco.js'],
   ['backend', 'motor.js'],
   ['backend', 'login.js'],
   ['backend', 'leitor.js'],
+  ['backend', 'agente.js'],
   ['frontend/js', 'telas.js'],
   ['frontend/js', 'movel.js'],
+  ['frontend/js', 'assistente.js'],
   ['frontend/js', 'controle.js']
 ];
 const caminhoJS = ([pasta, arq]) => pasta + '/' + arq;
@@ -128,10 +134,9 @@ ${jsSeguro}
 `;
 
 writeFileSync(join(raiz, 'Solaris.html'), completo, 'utf8');
-mkdirSync(join(raiz, 'dist'), { recursive: true });
-writeFileSync(join(raiz, 'dist', 'solaris-artifact.html'), publicar, 'utf8');
+writeFileSync(join(raiz, 'Solaris-publicar.html'), publicar, 'utf8');
 
 const kb = n => (n / 1024).toFixed(0).padStart(4) + ' KB';
 console.log('  Solaris.html                ' + kb(completo.length) + '   (mandar por e-mail, abre com duplo clique)');
-console.log('  dist/solaris-artifact.html  ' + kb(publicar.length) + '   (publicar online)');
+console.log('  Solaris-publicar.html       ' + kb(publicar.length) + '   (publicar online)');
 console.log('  ' + CSS.length + ' arquivos de CSS e ' + JS.length + ' de JavaScript, na mesma ordem do site.');

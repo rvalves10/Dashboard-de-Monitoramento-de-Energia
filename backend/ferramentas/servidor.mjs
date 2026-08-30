@@ -5,7 +5,7 @@
    parte do IndexedDB. Para conferir o banco de dados de verdade - e para
    mostrar para outra pessoa na mesma rede - use este servidor.
 
-   Rodar:  node ferramentas/servidor.mjs
+   Rodar:  node backend/ferramentas/servidor.mjs
    Parar:  Ctrl+C
 */
 import { createServer } from 'node:http';
@@ -14,7 +14,7 @@ import { join, extname, normalize } from 'node:path';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const raiz = join(dirname(fileURLToPath(import.meta.url)), '..');
+const raiz = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const porta = Number(process.argv[2]) || 8080;
 
 const TIPOS = {

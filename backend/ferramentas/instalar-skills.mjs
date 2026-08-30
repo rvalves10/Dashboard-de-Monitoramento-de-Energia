@@ -6,13 +6,13 @@
    .claude/skills/. Este script faz a ponte.
 
    Rodar depois de clonar o repositório, e de novo quando alguém alterar uma
-   skill:  node ferramentas/instalar-skills.mjs
+   skill:  node backend/ferramentas/instalar-skills.mjs
 */
 import { readdirSync, mkdirSync, copyFileSync, statSync, rmSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const raiz = join(dirname(fileURLToPath(import.meta.url)), '..');
+const raiz = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const origem = join(raiz, 'skills');
 const destino = join(raiz, '.claude', 'skills');
 
