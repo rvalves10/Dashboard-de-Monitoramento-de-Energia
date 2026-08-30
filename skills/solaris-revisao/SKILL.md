@@ -11,7 +11,7 @@ Este roteiro é o que separa "funcionou na minha máquina" de "pode subir".
 ## 1. A suíte, sempre
 
 ```
-node ferramentas/servidor.mjs
+node backend/ferramentas/servidor.mjs
 ```
 e abra `http://localhost:8080/testes/index.html`.
 
@@ -68,7 +68,7 @@ as telas nas duas cascas. Ela existe porque um furo real escapou uma vez.
 ## 7. O build
 
 ```
-node ferramentas/build.mjs
+node backend/ferramentas/build.mjs
 ```
 
 Ele confere sozinho se as listas batem com `frontend/index.html` e se
@@ -91,5 +91,5 @@ entender o que estava errado, não só o que ficou.
 - [ ] 1440px e 390px
 - [ ] Campos novos entram na `sync` certa
 - [ ] Texto do usuário passa por `esc()`
-- [ ] `node ferramentas/build.mjs` sem reclamação
+- [ ] `node backend/ferramentas/build.mjs` sem reclamação
 - [ ] Mensagem de commit explica o porquê

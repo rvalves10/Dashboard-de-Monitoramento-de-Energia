@@ -62,9 +62,15 @@ code{font-family:'IBM Plex Mono',monospace;background:var(--ground);padding:2px 
 (function () {
   var v = '?t=' + Date.now();
   var arquivos = [
+    '../banco-de-dados/config.js',
+    '../banco-de-dados/dados/regiao-sorocaba.js',
+    '../banco-de-dados/local.js',
+    '../banco-de-dados/supabase.js',
     '../banco-de-dados/banco.js',
     '../backend/motor.js', '../backend/login.js', '../backend/leitor.js',
-    '../frontend/js/telas.js', '../frontend/js/movel.js', '../frontend/js/controle.js',
+    '../backend/agente.js',
+    '../frontend/js/telas.js', '../frontend/js/movel.js',
+    '../frontend/js/assistente.js', '../frontend/js/controle.js',
     'testes.js'
   ];
   (function proximo(i) {

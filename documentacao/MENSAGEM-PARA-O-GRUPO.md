@@ -14,7 +14,7 @@ e quanto vem na próxima conta — já com a Lei 14.300 no cálculo.
 **Como abrir (2 minutos):**
 1. Baixem o `Solaris-UPX.zip` e **extraiam a pasta** (não abram de dentro do zip)
 2. Duplo clique em `index.html`
-3. Na tela que abrir, clique em **"Entrar sem criar conta"**
+3. Na tela que abrir, clique em **"Criar conta"** e crie a sua
 4. Pronto. Não precisa instalar nada nem estar na internet
 
 **O que eu preciso de vocês:** usar por **pelo menos 7 dias**, o ideal são 30

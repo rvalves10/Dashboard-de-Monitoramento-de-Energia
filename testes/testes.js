@@ -355,7 +355,7 @@ grupo('Unidades', () => {
 
   teste('a geração é calculada, não digitada', () => {
     const u = montarUnidade(RASCUNHO);
-    const irr = soma(IRRADIACAO_SP) / 12;
+    const irr = soma(IRRADIACAO_REGIAO) / 12;
     perto(u.geracaoMes, RASCUNHO.potenciaKwp * irr * RAZAO_DESEMPENHO * 0.80 * 30, 0.5);
   });
 
@@ -601,15 +601,28 @@ grupo('Contas', () => {
     ok(dup, 'aceitou o mesmo e-mail em outra caixa');
   }));
 
+  /* Antes isto era provado contra o modo visitante. Sem visitante, a prova
+     ficou melhor: duas contas de verdade, que e o caso que acontece. */
   testeAsync('cada conta tem o seu balde de dados', () => limpo(async () => {
+    const OUTRO = 'outra@exemplo.com';
     await criarConta('Teste', EMAIL, SENHA);
     await entrar(EMAIL, SENHA, false);
     igual(contaAtual(), EMAIL, 'a conta ativa deveria ser a que entrou');
-    await Banco.salvarEstado(EMAIL, { marca: 'da conta' });
-    entrarComoVisitante();
-    igual(contaAtual(), 'visitante', 'visitante deveria ter balde próprio');
-    const doVisitante = await Banco.estado('visitante');
-    ok(!doVisitante || doVisitante.marca !== 'da conta', 'o dado da conta vazou para o visitante');
+    await Banco.salvarEstado(EMAIL, { marca: 'da primeira' });
+
+    try {
+      await criarConta('Outra', OUTRO, SENHA);
+      await entrar(OUTRO, SENHA, false);
+      igual(contaAtual(), OUTRO, 'a conta ativa deveria ter trocado');
+      const daOutra = await Banco.estado(OUTRO);
+      ok(!daOutra || daOutra.marca !== 'da primeira', 'o dado de uma conta vazou para a outra');
+    } finally {
+      /* a segunda conta e desta prova, e nao pode sobrar no banco de quem
+         estiver rodando a suite — nem se a assercao acima falhar */
+      await Banco.apagarConta(OUTRO);
+      await Banco.apagarEstado(OUTRO);
+      delete _contas[OUTRO];
+    }
   }));
 
   testeAsync('sessão expirada é descartada', () => limpo(async () => {
@@ -693,7 +706,7 @@ grupo('Banco', () => {
 
   testeAsync('as estatísticas respondem', async () => {
     const e = await Banco.estatisticas();
-    ok(e.motor === 'IndexedDB' || e.motor.indexOf('localStorage') === 0, 'motor estranho: ' + e.motor);
+    ok(/^(IndexedDB|localStorage|Supabase)/.test(e.motor), 'motor estranho: ' + e.motor);
     ok(typeof e.leituras === 'number', 'contagem de leituras inválida');
     ok(e.janelaDias > 0 && e.intervaloSeg > 0, 'parâmetros de histórico zerados');
   });
@@ -816,13 +829,14 @@ grupo('Injecao', () => {
       nova: JSON.parse(JSON.stringify(S.nova)),
       perfil: S.perfil, tela: S.tela, tab: S.tab, msub: S.msub, detalhe: S.detalhe
     };
-    /* o site sempre tem sessao aberta; a varredura precisa refletir isso */
-    const sessaoAntes = sessao();
-    if (!sessaoAntes) entrarComoVisitante();
+    /* a varredura roda as telas de dentro do app, que so existem com sessao.
+       Nao ha mais visitante, entao montamos uma sessao direto. */
+    const sessaoAntes = SESSAO;
+    if (!SESSAO) SESSAO = { id: 'varredura@exemplo.com', nome: 'Varredura', email: 'varredura@exemplo.com', ate: null };
     const TELAS_AMPLAS = ['painel', 'historico', 'equipamentos', 'cadastro',
-      'alertas', 'relatorio', 'config', 'unidade'];
-    const ABAS = ['painel', 'historico', 'aparelhos', 'metas', 'mais'];
-    const SUBS = [null, 'conta', 'cadastro', 'config'];
+      'alertas', 'relatorio', 'config', 'unidade', 'assistente'];
+    const ABAS = ['painel', 'historico', 'aparelhos', 'assistente', 'mais'];
+    const SUBS = [null, 'conta', 'cadastro', 'config', 'metas'];
 
     try {
       /* 1. aparelho cadastrado com nome e local envenenados */
@@ -892,13 +906,15 @@ grupo('Acessibilidade', () => {
         const dentro = i.closest && i.closest('label');
         ok(dentro || i.getAttribute('aria-label'), 'campo sem rotulo: ' + i.id);
       });
-      ok(d.querySelector('[data-act="auth-visitante"]'),
-        'faltou o caminho de entrar sem conta - o teste de campo depende dele');
+      /* O contrario do que este teste cobrava antes: agora o login e a unica
+         porta, e qualquer atalho que reapareca aqui quebra o requisito. */
+      ok(!d.querySelector('[data-act="auth-visitante"]'),
+        'voltou a saida de visitante: o login e obrigatorio');
     } finally { if (antes) carregarSessao(); }
   });
 
   teste('todo botao tem nome acessivel', () => {
-    ['painel', 'historico', 'equipamentos', 'cadastro', 'alertas', 'relatorio', 'config', 'unidade'].forEach(t => {
+    ['painel', 'historico', 'equipamentos', 'cadastro', 'alertas', 'relatorio', 'config', 'unidade', 'assistente'].forEach(t => {
       const d = comoDOM(html(t));
       d.querySelectorAll('button').forEach(b => {
         const nome = (b.textContent || '').trim() || b.getAttribute('aria-label') || '';
@@ -908,7 +924,7 @@ grupo('Acessibilidade', () => {
   });
 
   teste('todo campo de formulario tem rotulo ligado', () => {
-    ['cadastro', 'unidade', 'config'].forEach(t => {
+    ['cadastro', 'unidade', 'config', 'assistente'].forEach(t => {
       const d = comoDOM(html(t));
       d.querySelectorAll('input').forEach(i => {
         const temLabel = i.id && d.querySelector('label[for="' + i.id + '"]');
@@ -1075,12 +1091,12 @@ grupo('Conta nova é conta da pessoa', () => {
     } finally { SESSAO = antes; }
   });
 
-  teste('visitante é cumprimentado sem nome inventado', () => {
+  teste('sessão sem nome não ganha nome inventado', () => {
     const antes = SESSAO;
     try {
-      SESSAO = { id: 'visitante', nome: 'Visitante', email: null, ate: null };
+      SESSAO = { id: 'x@y.com', nome: '', email: 'x@y.com', ate: null };
       const s = saudacao();
-      ok(/^(Bom dia|Boa tarde|Boa noite)$/.test(s), 'visitante não deveria ter nome: ' + s);
+      ok(/^(Bom dia|Boa tarde|Boa noite)$/.test(s), 'não deveria inventar nome: ' + s);
     } finally { SESSAO = antes; }
   });
 
@@ -1255,7 +1271,6 @@ grupo('Apagar do banco', () => {
     const contasAntes = await Banco.contas();
     const estadosAntes = {};
     for (const c of contasAntes) estadosAntes[c.id] = await Banco.estado(c.id);
-    const estadoVisitante = await Banco.estado('visitante');
 
     try {
       await Banco.salvarConta({ id: '__t1__@x.com', nome: 'T1' });
@@ -1282,8 +1297,233 @@ grupo('Apagar do banco', () => {
       for (const id of Object.keys(estadosAntes)) {
         if (estadosAntes[id]) await Banco.salvarEstado(id, estadosAntes[id]);
       }
-      if (estadoVisitante) await Banco.salvarEstado('visitante', estadoVisitante);
     }
+  });
+});
+
+
+/* ================= a regiao de Sorocaba =================
+   Esta base alimenta tres coisas ao mesmo tempo: a irradiacao do calculo, a
+   distribuidora que o cadastro sugere e o contexto que o assistente recebe.
+   Um dado errado aqui nao quebra a tela — ele faz o sistema afirmar com
+   confianca uma coisa que nao e verdade, que e pior. */
+grupo('Regiao', () => {
+
+  teste('toda cidade aponta para uma distribuidora que existe', () => {
+    CIDADES_REGIAO.forEach(c => {
+      ok(DISTRIBUIDORAS[c.distribuidora],
+        c.nome + ' aponta para uma distribuidora inexistente: ' + c.distribuidora);
+    });
+  });
+
+  teste('nao ha cidade repetida', () => {
+    const vistos = {};
+    CIDADES_REGIAO.forEach(c => {
+      ok(!vistos[c.id], 'cidade duplicada: ' + c.id);
+      vistos[c.id] = true;
+    });
+  });
+
+  teste('toda cidade tem nome, perfil e distancia coerentes', () => {
+    CIDADES_REGIAO.forEach(c => {
+      ok(c.nome && c.nome.length > 2, 'cidade sem nome: ' + c.id);
+      ok(c.perfil && c.perfil.length > 30, c.nome + ' sem perfil descrito');
+      ok(c.distancia >= 0 && c.distancia < 200, c.nome + ': distancia implausivel');
+      ok(c.populacao > 0, c.nome + ': populacao zerada');
+    });
+  });
+
+  teste('Sorocaba e a sede, e a distancia dela e zero', () => {
+    const s = cidade('sorocaba');
+    ok(s, 'Sorocaba sumiu da base');
+    igual(s.distancia, 0, 'Sorocaba deveria ser o ponto de referencia');
+    igual(s.distribuidora, 'cpfl-piratininga', 'Sorocaba e atendida pela CPFL Piratininga');
+  });
+
+  /* O caso que motivou a base existir: cidade vizinha com OUTRA
+     distribuidora. Se isto quebrar, o assistente volta a dar o telefone e o
+     mes de reajuste errados para quem mora la. */
+  teste('cidade vizinha pode ter outra distribuidora', () => {
+    igual(distribuidoraDaCidade('piedade').id, 'neoenergia-elektro',
+      'Piedade e Neoenergia Elektro, nao CPFL');
+    igual(distribuidoraDaCidade('sarapui').id, 'cpfl-santa-cruz',
+      'Sarapui e CPFL Santa Cruz, nao Piratininga');
+    igual(distribuidoraDaCidade('votorantim').id, 'cpfl-piratininga');
+  });
+
+  teste('toda distribuidora tem canal de atendimento e mes de reajuste', () => {
+    Object.keys(DISTRIBUIDORAS).forEach(k => {
+      const d = DISTRIBUIDORAS[k];
+      igual(d.id, k, 'id de distribuidora fora de sincronia: ' + k);
+      ok(d.telefone && /[0-9]/.test(d.telefone), d.nome + ' sem telefone');
+      ok(d.reajusteMes >= 1 && d.reajusteMes <= 12, d.nome + ': mes de reajuste invalido');
+    });
+  });
+
+  teste('a contagem de meses ate o reajuste fica entre 1 e 12', () => {
+    for (let m = 0; m < 12; m++) {
+      const n = mesesAteReajuste('cpfl-piratininga', new Date(2026, m, 15));
+      ok(n >= 1 && n <= 12, 'mes ' + m + ' deu ' + n);
+    }
+  });
+
+  teste('a irradiacao da regiao tem doze meses plausiveis', () => {
+    igual(IRRADIACAO_REGIAO.length, 12, 'faltou mes na serie de irradiacao');
+    IRRADIACAO_REGIAO.forEach((v, i) => {
+      ok(v > 2 && v < 8, 'irradiacao implausivel no mes ' + i + ': ' + v);
+    });
+    /* Hemisferio sul: o verao (dez-jan) gera mais que o inverno (jun-jul).
+       Se isto inverter, alguem copiou uma serie do hemisferio norte. */
+    ok(IRRADIACAO_REGIAO[11] > IRRADIACAO_REGIAO[5],
+      'dezembro deveria ter mais sol que junho no hemisferio sul');
+  });
+
+  teste('a cidade escolhida define a distribuidora da unidade', () => {
+    const u = montarUnidade({
+      chave: 'u-cid', nome: 'Casa', cidade: 'tatui', arquetipo: 'casaVazia',
+      telhado: 'bom', distribuidora: '', tarifa: 1, consumoMes: 300,
+      potenciaKwp: 4, paineis: 10, investimento: 20000, mesesOperacao: 12
+    });
+    igual(u.distribuidora, 'Neoenergia Elektro', 'nao herdou a distribuidora da cidade');
+    igual(u.cidade, 'tatui');
+  });
+
+  teste('quem esta fora da regiao digita a distribuidora na mao', () => {
+    const u = montarUnidade({
+      chave: 'u-fora', nome: 'Casa', cidade: 'outra', arquetipo: 'casaVazia',
+      telhado: 'bom', distribuidora: 'Light', tarifa: 1, consumoMes: 300,
+      potenciaKwp: 4, paineis: 10, investimento: 20000, mesesOperacao: 12
+    });
+    igual(u.distribuidora, 'Light', 'o que foi digitado tem que valer');
+  });
+});
+
+/* ================= a escolha do banco =================
+   O router e simples demais para ter defeito sutil, e por isso mesmo e onde
+   um erro passaria despercebido: se ele deixasse de repassar um metodo, a
+   falha apareceria em producao como "nao salva", sem erro nenhum no console. */
+grupo('Escolha do banco', () => {
+
+  teste('sem credenciais, o Supabase nem e tentado', () => {
+    igual(supabaseConfigurado(), false,
+      'config.js do repositorio deveria vir sem credenciais preenchidas');
+  });
+
+  /* Assincrono de proposito, como o grupo Banco: os testes sincronos rodam
+     enquanto testes.js e avaliado, e Banco.iniciar() so e chamado depois. */
+  testeAsync('o banco escolhido e um dos tres conhecidos', async () => {
+    ok(['supabase', 'indexeddb', 'localStorage'].indexOf(Banco.motor) >= 0,
+      'motor desconhecido: ' + Banco.motor);
+    igual(Banco.online, Banco.motor === 'supabase',
+      'online e motor contam historias diferentes');
+  });
+
+  teste('o router repassa toda a interface do banco', () => {
+    ['contas', 'conta', 'salvarConta', 'apagarConta',
+      'estado', 'salvarEstado', 'apagarEstado',
+      'registrarLeitura', 'leituras', 'contarLeituras', 'podarLeituras',
+      'limparLeituras', 'apagarTudo', 'estatisticas'].forEach(m => {
+      igual(typeof Banco[m], 'function', 'o router nao repassa ' + m);
+      igual(typeof BancoLocal[m], 'function', 'local.js nao tem ' + m);
+      igual(typeof BancoSupabase[m], 'function', 'supabase.js nao tem ' + m);
+    });
+  });
+
+  testeAsync('offline, o que so existe na nuvem responde vazio em vez de quebrar', async () => {
+    if (Banco.online) return;
+    igual(await Banco.perfilConversa('x'), null, 'perfil deveria vir nulo offline');
+    igual((await Banco.historicoConversa('x')).length, 0, 'conversa deveria vir vazia offline');
+    const r = await Banco.chamarAgente({ pergunta: 'oi' });
+    igual(r.ok, false, 'o agente nao pode responder sem servidor');
+    ok(r.erro && r.erro.length > 10, 'e precisa dizer por que');
+  });
+
+  testeAsync('a tela diz por que caiu para o banco local', async () => {
+    if (Banco.online) return;
+    ok(Banco.motivoLocal && Banco.motivoLocal.length > 30,
+      'sem motivo, quem configurou o Supabase acha que os dados subiram');
+  });
+});
+
+/* ================= o assistente ================= */
+grupo('Assistente', () => {
+
+  teste('o papo rapido tem cinco perguntas bem formadas', () => {
+    igual(PERGUNTAS_PERFIL.length, 5, 'mudou a quantidade de perguntas');
+    const ids = {};
+    PERGUNTAS_PERFIL.forEach(q => {
+      ok(!ids[q.id], 'pergunta com id repetido: ' + q.id);
+      ids[q.id] = true;
+      ok(q.pergunta && q.pergunta.indexOf('?') > 0, q.id + ': pergunta sem interrogacao');
+      ok(q.porque && q.porque.length > 20, q.id + ': falta dizer por que a pergunta existe');
+      ok(q.opcoes.length >= 3, q.id + ': poucas opcoes');
+      q.opcoes.forEach(o => {
+        ok(o.v && o.r, q.id + ': opcao sem valor ou sem rotulo');
+      });
+    });
+  });
+
+  teste('perfil so conta como respondido depois de gravado', () => {
+    const antes = S.perfilCliente;
+    try {
+      S.perfilCliente = null;
+      igual(perfilRespondido(), false, 'perfil nulo nao pode contar como respondido');
+      S.perfilCliente = { tratamento: 'neutro' };
+      igual(perfilRespondido(), false, 'sem carimbo de tempo ainda nao esta pronto');
+      S.perfilCliente = { tratamento: 'neutro', em: Date.now() };
+      igual(perfilRespondido(), true, 'perfil gravado deveria contar');
+    } finally { S.perfilCliente = antes; }
+  });
+
+  teste('o contexto do painel leva os numeros e nao inventa nenhum', () => {
+    comPerfil('residencial', () => {
+      const c = contextoDoPainel();
+      ok(c.unidade, 'faltou a unidade no contexto');
+      ok(c.cidade, 'faltou a cidade — e ela que puxa a distribuidora certa');
+      ok(c.consumoMes && c.geracaoMes, 'faltaram os numeros do mes');
+      Object.keys(c).forEach(k => {
+        const v = c[k];
+        ok(typeof v !== 'number' || isFinite(v), k + ' veio NaN ou infinito');
+        ok(String(v).indexOf('undefined') < 0, k + ' veio com undefined dentro');
+      });
+    });
+  });
+
+  teste('sem unidade, o contexto vem vazio em vez de zerado', () => {
+    const guardaPerfil = S.perfil, guardaUn = S.unidades, guardaEx = S.exemplos;
+    try {
+      S.unidades = []; S.exemplos = false; S.perfil = 'nao-existe'; _visao = null;
+      igual(Object.keys(contextoDoPainel()).length, 0,
+        'mandar zeros faria o assistente falar de uma casa que nao existe');
+    } finally {
+      S.perfil = guardaPerfil; S.unidades = guardaUn; S.exemplos = guardaEx;
+      _visao = null;
+    }
+  });
+
+  teste('as sugestoes mudam com o estado e nunca vem vazias', () => {
+    comPerfil('residencial', () => {
+      const g = sugestoesDoAgente();
+      ok(g.length >= 3, 'poucas sugestoes de partida');
+      g.forEach(t => ok(t.indexOf('?') > 0, 'sugestao que nao e pergunta: ' + t));
+    });
+  });
+
+  teste('assistente desligado explica o que fazer', () => {
+    if (Banco.online) return;
+    const m = agenteIndisponivel();
+    ok(m && m.length > 40, '"indisponivel" sozinho nao ajuda ninguem');
+    ok(m.indexOf('config.js') > 0, 'a mensagem deveria dizer onde configurar');
+  });
+
+  /* O modelo responde em texto. Se esse texto virasse HTML, uma resposta com
+     tag dentro executaria na tela de quem perguntou. */
+  teste('resposta do modelo nunca vira HTML de verdade', () => {
+    const d = document.createElement('div');
+    d.innerHTML = textoDaFala('<img src=x onerror=alert(1)> **negrito** e <b>tag</b>');
+    igual(d.querySelectorAll('img').length, 0, 'a tag do modelo virou elemento');
+    igual(d.querySelectorAll('b').length, 1, 'so o negrito de markdown pode virar tag');
+    ok(d.textContent.indexOf('<b>tag</b>') >= 0, 'a tag literal deveria aparecer como texto');
   });
 });
 

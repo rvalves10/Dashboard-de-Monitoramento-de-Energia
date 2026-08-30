@@ -34,42 +34,58 @@ Solaris/
 │
 ├── frontend/             ◀ o que a pessoa vê
 │   ├── LEIA-ME.md
-│   ├── index.html        a página; carrega as três camadas na ordem certa
+│   ├── index.html        a página; carrega as camadas na ordem certa
 │   ├── css/              a aparência, dividida por assunto
-│   ├── js/               telas.js, movel.js, controle.js
+│   ├── js/               telas.js, movel.js, assistente.js, controle.js
 │   └── assets/           ícone
 │
 ├── backend/              ◀ a lógica de domínio
-│   ├── LEIA-ME.md        inclui por que se chama assim sem haver servidor
+│   ├── LEIA-ME.md        inclui por que se chama assim
 │   ├── motor.js
 │   ├── login.js
-│   └── leitor.js
+│   ├── leitor.js
+│   ├── agente.js         o assistente de IA, do lado do navegador
+│   ├── ferramentas/      build, servidor local, skills e o gerador do SQL
+│   └── firmware/         o código do ESP32, para quando o sensor existir
 │
-├── banco-de-dados/       ◀ IndexedDB
-│   ├── LEIA-ME.md        as três tabelas e por que não é localStorage
-│   └── banco.js
+├── banco-de-dados/       ◀ onde tudo é gravado
+│   ├── LEIA-ME.md        os dois bancos e por que existem os dois
+│   ├── config.js         url do Supabase e modelo do assistente
+│   ├── banco.js          escolhe quem responde
+│   ├── supabase.js       Postgres na nuvem
+│   ├── local.js          IndexedDB
+│   ├── esquema.sql       tabelas, RLS e os dados da região
+│   ├── dados/            regiao-sorocaba.js
+│   └── supabase/functions/agente/   a Edge Function que fala com o Gemini
 │
 ├── skills/               instruções que padronizam o trabalho com IA
 │   ├── solaris-visual/   regras de aparência
 │   ├── solaris-motor/    regras do cálculo
 │   └── solaris-revisao/  o que conferir antes do pull request
 │
-├── documentacao/         este mapa, contrato de dados, teste de campo,
+├── documentacao/         este mapa, como ligar o Supabase, teste de campo,
 │   ├── apresentacao/     plano do semestre e slides da banca
 │   ├── design/           o desenho original, antes de virar código
 │   └── app-futuro/       fase 2: o que fazer quando virar aplicativo
 │
-├── testes/               105 testes que rodam no navegador
-├── firmware/             o código do ESP32, para quando o sensor existir
-├── ferramentas/          build, servidor local e instalador de skills
-└── dist/                 saída do build (não versionado, pode apagar)
+└── testes/               129 testes que rodam no navegador
 ```
 
-**Não existe servidor neste projeto.** A pasta `backend/` se chama assim
-porque é a camada que, num sistema com servidor, moraria no servidor — e é
-ela que atravessaria se um dia isso acontecer. Hoje tudo roda no navegador,
-que é o que permite abrir com duplo clique e manter os dados da pessoa na
-máquina dela.
+**São seis pastas, e é para continuar assim.** Ferramentas e firmware moram
+dentro de `backend/` porque são a mesma camada: o firmware é o medidor que
+alimenta o domínio, e as ferramentas existem para construir e servir o
+projeto. Não crie pasta nova na raiz — se uma coisa não achou lugar, ela
+provavelmente pertence a uma camada que já existe.
+
+**Sobre o nome `backend`.** Ele nasceu num projeto sem servidor nenhum: era
+a camada que, num sistema com servidor, moraria no servidor. Hoje já existe
+servidor — o Supabase — mas o nome continua certo, porque é exatamente essa
+camada que atravessou. `agente.js` fala com uma função que roda lá;
+`login.js` manda a senha para ser conferida lá.
+
+O que **não** mudou: sem credenciais, tudo cai para o banco do navegador e o
+site continua abrindo com duplo clique. Essa promessa é o motivo de o
+`banco-de-dados/banco.js` existir.
 
 ---
 
@@ -84,6 +100,7 @@ Se mexer na ordem no `frontend/index.html`, coisas quebram.
 | `componentes.css` | Peças que aparecem em várias telas: menu lateral, cartões, botões, formulários, avisos. |
 | `telas.css` | O que é específico de uma tela só: o herói do painel, o donut, os gráficos, a tabela de aparelhos, a fatura. |
 | `conta.css` | Tela de entrada, cartão da conta e o painel do banco de dados. |
+| `assistente.css` | A fala (usada nas duas telas de conversa), o papo rápido do cadastro e o chat com o assistente. |
 | `movel.css` | Como o site se comporta em tela estreita. |
 | `responsivo.css` | Os pontos de quebra entre desktop, tablet e celular. |
 | `impressao.css` | Como o relatório sai no papel. Esconde menu e botões, mostra o cabeçalho. |
@@ -97,9 +114,19 @@ usa o que já foi carregado antes dela.
 
 ### `banco-de-dados/`
 
+São dois bancos com a mesma interface e um que escolhe entre eles. Nada acima
+desta camada sabe qual dos dois respondeu — é isso que deixa o site funcionar
+com e sem internet.
+
 | Arquivo | O que faz | Quando mexer |
 | --- | --- | --- |
-| `banco.js` | Abre o IndexedDB e guarda contas, estado e leituras. | Mudar o que é gravado. |
+| `config.js` | A url e a chave do Supabase, e qual modelo do Gemini responde. | Ligar a nuvem, trocar de modelo. |
+| `banco.js` | **Escolhe** quem atende: Supabase se der, navegador se não. Repassa a interface inteira. | Acrescentar um método novo ao banco — ele só existe de verdade depois de aparecer aqui. |
+| `supabase.js` | Postgres na nuvem, por HTTP puro. Conta, sessão, estado, leituras, conversa e a chamada da Edge Function. | Mudar o que sobe para o servidor. |
+| `local.js` | IndexedDB dentro do navegador, com reserva em `localStorage`. Era o banco inteiro até a versão passada. | Mudar o que é gravado offline. |
+| `esquema.sql` | As sete tabelas, o RLS e os dados da região. Cole inteiro no SQL Editor do Supabase. | Mudar tabela ou política. |
+| `dados/regiao-sorocaba.js` | As 20 cidades, as 3 distribuidoras e a irradiação. **É a fonte** — o bloco no `esquema.sql` é gerado dela. | Corrigir cidade, telefone ou concessão. |
+| `supabase/functions/agente/index.ts` | A Edge Function: recebe a pergunta, monta o prompt com o perfil e a região, e chama o Gemini com a chave que só existe no servidor. | Mudar como o assistente pensa. |
 
 ### `backend/` — a lógica de domínio
 
@@ -108,6 +135,7 @@ usa o que já foi carregado antes dela.
 | `motor.js` | **O coração.** Calcula sol, nuvem, consumo, créditos, Fio B e a divisão por aparelho. | Mudar qualquer número ou regra de cálculo. |
 | `login.js` | Contas, sessão e derivação de senha. | Mexer em cadastro ou entrada. |
 | `leitor.js` | Lê a conta de luz por foto: OCR no navegador e interpretação dos campos. | Melhorar o que o leitor reconhece. |
+| `agente.js` | O assistente do lado de cá: as cinco perguntas do cadastro, o contexto que vai junto de cada pergunta e o histórico da conversa. **A chave do Gemini não está aqui, e não pode estar.** | Mudar o que o assistente sabe sobre a pessoa. |
 
 ### `frontend/js/` — a interface
 
@@ -115,10 +143,32 @@ usa o que já foi carregado antes dela.
 | --- | --- | --- |
 | `telas.js` | Monta as telas da versão ampla. | Mudar o que aparece na tela. |
 | `movel.js` | As mesmas telas em coluna única. | Mudar a versão de celular. |
+| `assistente.js` | As duas telas de conversa: o papo rápido do cadastro e o chat com o assistente. | Mudar como a conversa aparece. |
 | `controle.js` | Cliques, rotas, o tique do medidor e os avisos. | Adicionar botão ou atalho. |
 
 Cada arquivo começa com um comentário explicando o que faz e por quê. Leia
 o cabeçalho antes de editar — economiza tempo.
+
+---
+
+## As três portas, nesta ordem
+
+`render()`, em `controle.js`, decide o que desenhar por três perguntas
+seguidas — e a ordem delas é o desenho do produto:
+
+1. **sem sessão** → tela de entrada. É a única porta do site: não existe mais
+   "entrar sem criar conta";
+2. **com sessão e sem o papo rápido** → as cinco perguntas. Acontece uma vez
+   na vida da conta, e é o que dá ao assistente com quem falar;
+3. **com papo feito e sem unidade** → cadastro da primeira unidade.
+
+Só depois das três existe painel para desenhar. Quem mexer nessa ordem muda o
+produto, não o código.
+
+O papo rápido vem **antes** do cadastro da unidade de propósito: é o único
+momento em que a pessoa ainda não tem nada para olhar. Se ela já tivesse um
+painel com números, cinco perguntas sobre ela seriam um pedágio no meio do
+caminho, e todo mundo pularia.
 
 ---
 
@@ -212,8 +262,9 @@ mudança, `onclick` se perderia; com delegação, nunca.
 
 | Arquivo | Por quê |
 | --- | --- |
-| `Solaris.html` | É gerado por `node ferramentas/build.mjs`. Editar aqui é jogar fora no próximo build. |
-| `dist/` | Mesma coisa. Saída, não fonte. |
+| `Solaris.html` | É gerado por `node backend/ferramentas/build.mjs`. Editar aqui é jogar fora no próximo build. |
+| `Solaris-publicar.html` | Mesma coisa. Saída, não fonte. |
+| o bloco entre `-- >>> GERADO POR` e `-- <<< FIM` no `esquema.sql` | Gerado por `node backend/ferramentas/gerar-regiao-sql.mjs` a partir de `dados/regiao-sorocaba.js`. Edite o JS e rode o gerador. |
 | `design/Solaris.dc.html` | O desenho original. É a referência de como deveria ficar. |
 
 ---
@@ -223,8 +274,9 @@ mudança, `onclick` se perderia; com delegação, nunca.
 1. Editar em `frontend/`, `backend/` e `banco-de-dados/`
 2. Recarregar o navegador e ver
 3. Abrir `testes/index.html` e conferir se está tudo verde
-4. `node ferramentas/build.mjs` para atualizar o arquivo único
-5. Commit
+4. Mexeu nas cidades ou distribuidoras? `node backend/ferramentas/gerar-regiao-sql.mjs`
+5. `node backend/ferramentas/build.mjs` para atualizar o arquivo único
+6. Commit
 
 O build confere sozinho duas coisas, e reclama em vez de gerar coisa quebrada:
 

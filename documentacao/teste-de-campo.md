@@ -12,11 +12,16 @@ participar.
 
 1. Abra o arquivo **`Solaris.html`** (duplo clique). Se preferir, `index.html`
    também abre a mesma coisa.
-2. Vai aparecer a tela de entrada. Clique em **"Entrar sem criar conta"** e
-   pronto — você já está no painel. **Não precisa criar conta para testar.**
-3. Se quiser guardar seus dados separados dos de quem mais usa o computador,
-   crie uma conta. O que você já fez como visitante vai junto.
-4. Anote a data em que você começou.
+2. Vai aparecer a tela de entrada. Clique em **"Criar conta"**, preencha
+   nome, e-mail e senha, e continue. **A conta é obrigatória** — é ela que
+   separa os seus dados dos de quem mais usa este computador, e é ela que faz
+   o assistente saber com quem está falando.
+3. Responda as **cinco perguntas rápidas** que aparecem em seguida. Levam
+   meio minuto, não são sobre energia, e dá para pular qualquer uma.
+4. Cadastre a sua unidade. Tenha à mão uma conta de luz (consumo médio e
+   tarifa) e a nota do instalador (kWp e número de painéis). Não tem agora?
+   Coloque valores aproximados e corrija depois.
+5. Anote a data em que você começou.
 
 > **Deixe a aba aberta.** O sistema grava uma leitura do medidor por minuto.
 > Quanto mais tempo aberto, mais dado ele acumula — e é isso que a gente
@@ -29,15 +34,18 @@ participar.
 Percorra estas tarefas sem pedir ajuda a ninguém. Se travar, **anote onde
 travou** — isso é o dado mais valioso do teste inteiro.
 
-- [ ] Entrar sem criar conta e chegar ao painel
+- [ ] Criar a conta, responder o papo rápido e chegar ao painel
 - [ ] Descobrir qual aparelho mais gasta e quanto ele custa por mês
 - [ ] Trocar de unidade (Casa das Acácias ↔ Padaria) e ver o que muda
 - [ ] Cadastrar um aparelho novo pela tela **Cadastrar**
 - [ ] Corrigir a estimativa de algum aparelho que a IA detectou
 - [ ] Mudar a meta do mês em **Alertas e metas** e ver o aviso mudar
 - [ ] Abrir **Relatório** e dar `Ctrl+P` para ver como sai impresso
-- [ ] Criar uma conta e reparar que ela começa **vazia** (é assim mesmo)
+- [ ] Reparar que a conta começa **vazia** (é assim mesmo)
 - [ ] Cadastrar a **sua própria casa** com os dados da sua conta de luz
+- [ ] Escolher a **sua cidade** no cadastro e conferir se a distribuidora que
+      aparece é mesmo a que manda a sua conta
+- [ ] Abrir o **Assistente** e perguntar por que a conta veio no valor que veio
 - [ ] Abrir o site no celular e conferir se dá para usar
 
 ---
@@ -80,7 +88,7 @@ agora.
 ## Como saber se algo quebrou de verdade
 
 Abra **`testes/index.html`** e espere uns segundos. Deve aparecer
-**105 de 105 testes passaram**, tudo verde.
+**129 de 129 testes passaram**, tudo verde.
 
 Se aparecer qualquer linha vermelha, tire um print e mande no grupo com a
 mensagem: *"teste vermelho"* e o nome do que falhou.

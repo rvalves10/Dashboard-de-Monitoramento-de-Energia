@@ -73,7 +73,7 @@ dados, prefira o endereço http — por `file://` o navegador limita parte do
 IndexedDB:
 
 ```bash
-node ferramentas/servidor.mjs
+node backend/ferramentas/servidor.mjs
 ```
 
 Abre em `http://localhost:8080/frontend/index.html`.

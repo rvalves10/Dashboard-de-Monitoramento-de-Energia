@@ -5,18 +5,28 @@ da fatura. É onde moram as decisões que a banca vai questionar.
 
 ---
 
-## Antes de tudo: não existe servidor aqui
+## Antes de tudo: onde este código roda
 
 Esta pasta se chama `backend` porque é **a camada de domínio** — o que num
-sistema com servidor moraria no servidor. Mas o Solaris não tem servidor:
-tudo isto roda dentro do navegador de quem abre o site.
+sistema com servidor moraria no servidor. Quando ela foi batizada não havia
+servidor nenhum: tudo rodava dentro do navegador.
 
-Isso é decisão de projeto, não limitação:
+Hoje há, e o nome ficou ainda mais certo, porque **foi exatamente esta camada
+que atravessou**:
 
-- o site abre com **duplo clique**, sem instalar nada e sem internet;
-- na banca não dá para depender de um servidor no ar;
-- os dados da pessoa **não saem da máquina dela** — inclusive a foto da conta
-  de luz, que tem nome, endereço e número de instalação.
+| Roda no navegador | Roda no servidor |
+| --- | --- |
+| `motor.js` — todo o cálculo | conferência da senha (`login.js` chama) |
+| `leitor.js` — o OCR da fatura | o prompt e a chamada ao Gemini (`agente.js` chama) |
+| o contexto que vai junto da pergunta | o perfil do cliente e os dados da região |
+
+O que **não** mudou: sem credenciais do Supabase, tudo cai para o banco do
+navegador e o site continua abrindo com duplo clique, sem instalar nada e sem
+internet. Na banca não dá para depender de um servidor no ar.
+
+E a foto da conta de luz — que tem nome, endereço e número de instalação —
+**continua sem sair da máquina da pessoa**: o OCR roda no navegador, e só os
+campos reconhecidos entram no cadastro.
 
 O que a separação em pastas garante é a **direção da dependência**:
 
@@ -25,19 +35,34 @@ frontend/  ──usa──▶  backend/  ──usa──▶  banco-de-dados/
 ```
 
 O backend nunca lê o DOM nem monta HTML. O frontend nunca calcula tarifa nem
-fala com o IndexedDB direto. Se um dia o projeto ganhar um servidor de
-verdade, é esta pasta que atravessa — e o frontend passa a chamá-la por HTTP
-em vez de chamar direto.
+fala com o banco direto.
 
 ---
 
-## Os três arquivos
+## Os quatro arquivos
 
 | Arquivo | O que faz |
 | --- | --- |
 | `motor.js` | **O coração.** Sol, nuvem, consumo, compensação de créditos, Fio B da Lei 14.300 e a divisão por aparelho. |
-| `login.js` | Contas, sessão e derivação de senha. |
+| `login.js` | Contas, sessão e a tela de entrada. O login é obrigatório: não existe mais modo visitante. |
 | `leitor.js` | Lê a conta de luz por foto: OCR no navegador e interpretação dos campos. |
+| `agente.js` | O assistente de IA do lado do navegador: as cinco perguntas do cadastro, o contexto que vai junto de cada pergunta e o histórico da conversa. |
+
+E mais duas pastas, que são a mesma camada por outro caminho:
+
+| Pasta | O que tem |
+| --- | --- |
+| `ferramentas/` | `build.mjs` (o arquivo único), `servidor.mjs` (http local), `instalar-skills.mjs` e `gerar-regiao-sql.mjs`. |
+| `firmware/` | O código do ESP32 — o medidor físico que um dia alimenta este domínio. |
+
+### Sobre a chave do Gemini
+
+**Ela não está em `agente.js`, e não pode estar.** Chave de API em código de
+navegador é chave publicada: qualquer pessoa abre o DevTools e copia.
+
+A nossa vive como segredo dentro do projeto Supabase, e quem fala com o
+Google é a Edge Function em `banco-de-dados/supabase/functions/agente/`. O
+cliente não precisa de chave nenhuma — abre o site e o assistente funciona.
 
 A ordem de carregamento importa: `motor` antes de `login` e `leitor`, porque
 os dois usam utilitários e o estado `S` que o motor declara.
@@ -64,7 +89,11 @@ Nada aqui é digitado. Tudo é calculado, nesta ordem:
 
 ### Os números que vêm de fora
 
-Só um: `IRRADIACAO_SP`, a irradiação média mês a mês. **Precisa ser conferida
+Só um: `IRRADIACAO_REGIAO`, a irradiação média mês a mês. Ela vem de
+`banco-de-dados/dados/regiao-sorocaba.js` e é **uma série para a região
+inteira** — as cidades atendidas estão dentro de uns 60 km, e a diferença
+real entre elas é menor que a incerteza da própria medida. **Precisa ser
+conferida
 no Atlas Brasileiro de Energia Solar (INPE/LABREN) para a cidade real do
 projeto antes da banca.** Está marcado no código.
 

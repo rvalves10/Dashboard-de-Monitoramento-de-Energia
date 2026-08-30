@@ -95,7 +95,7 @@ própria. Nunca mostre reconstrução com a mesma aparência de leitura.
 - [ ] Nenhum raio de cartão acima de 14px
 - [ ] Nenhuma peça com borda e sombra ao mesmo tempo
 - [ ] Nenhum chapéu em caixa-alta acima de heading
-- [ ] Rodei `node ferramentas/build.mjs`
+- [ ] Rodei `node backend/ferramentas/build.mjs`
 
 ## Onde conferir
 

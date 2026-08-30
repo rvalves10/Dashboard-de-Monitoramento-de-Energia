@@ -16,10 +16,17 @@ escrever `* 0.85` sem explicar de onde veio o 0,85, pare.
 
 Todo número que veio de fora leva comentário dizendo **de onde** veio.
 
-Hoje existe **um só** número externo: `IRRADIACAO_SP`, a irradiação média mês
-a mês. Ele está marcado no código como pendente de conferência no Atlas
-Brasileiro de Energia Solar (INPE/LABREN) para a cidade real do projeto.
-Trocar ali ajusta o resto sozinho.
+Hoje existe **um só** número externo: `IRRADIACAO_REGIAO`, a irradiação média
+mês a mês. Ele vem de `banco-de-dados/dados/regiao-sorocaba.js`, é **uma série
+para a região inteira** — as cidades atendidas estão dentro de uns 60 km e a
+diferença real entre elas é menor que a incerteza da medida — e continua
+pendente de conferência no Atlas Brasileiro de Energia Solar (INPE/LABREN)
+para Sorocaba. Trocar lá ajusta o resto sozinho.
+
+**Nada de tarifa embutida no código.** Tarifa muda todo ano e varia por
+bandeira e por classe; um valor velho é pior que nenhum. A tarifa vem da conta
+de luz da própria pessoa. O que a base da região guarda é *quando* cada
+distribuidora reajusta.
 
 ## 2. A soma tem que fechar com o medidor
 
@@ -93,7 +100,7 @@ Nenhum dado de demonstração pode aparecer em conta criada pelo usuário.
 - [ ] A soma dos aparelhos ainda fecha com o medidor
 - [ ] Testei em data de borda: dia 1º, dia 31, fevereiro, virada de ano
 - [ ] Se mexi em passado, conferi que a marcação de estimado continua certa
-- [ ] Rodei `node ferramentas/build.mjs`
+- [ ] Rodei `node backend/ferramentas/build.mjs`
 
 ## Onde conferir
 

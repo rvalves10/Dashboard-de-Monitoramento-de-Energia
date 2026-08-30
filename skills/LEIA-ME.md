@@ -19,7 +19,7 @@ As skills moram aqui (versionadas, revisáveis em pull request), mas o Claude
 Code procura por elas em `.claude/skills/`. Para copiar:
 
 ```bash
-node ferramentas/instalar-skills.mjs
+node backend/ferramentas/instalar-skills.mjs
 ```
 
 Rode isso depois de clonar o repositório, e de novo sempre que alguém alterar

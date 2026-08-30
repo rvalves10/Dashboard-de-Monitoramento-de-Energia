@@ -841,6 +841,28 @@ input[type=range]{width:100%;margin:var(--e2) 0 0;accent-color:var(--sun);cursor
     rgba(21,24,28,.45) 0 2px, transparent 2px 5px);
 }
 
+/* A distribuidora que veio junto com a cidade escolhida.
+
+   Nao e um aviso e nao flutua: e o resultado de uma escolha que a pessoa
+   acabou de fazer, entao fica encostado no campo, com fundo e sem sombra. */
+.dist-cx{
+  display:flex;gap:var(--e2);align-items:flex-start;
+  margin-top:var(--e3);padding:var(--e3);
+  border-radius:var(--r-md);background:var(--ground-2);
+  font-size:var(--t-sm);color:var(--ink-2);line-height:var(--lh-snug);
+  max-width:340px;
+}
+.dist-ic{flex-shrink:0;color:var(--faint);margin-top:1px}
+.dist-cx b{color:var(--ink);font-weight:600}
+.dist-d{display:block;margin-top:var(--e1);font-size:var(--t-xs);color:var(--muted)}
+
+/* O <select> herda a caixa dos campos de texto, mas o navegador desenha a
+   seta sozinho e ela some sem padding a direita. */
+select.text-in{
+  height:44px;padding-right:var(--e6);
+  background:var(--surface);cursor:pointer;
+}
+
 
 /* ===== frontend/css/conta.css ===== */
 /* conta.css
@@ -966,15 +988,38 @@ body.vista-login{background:var(--dark)}
 
 /* O caminho de teste. Fica visivel de proposito: durante o teste de campo
    ninguem deveria travar numa tela de cadastro. */
-.ent-visitante{
-  width:100%;height:44px;border-radius:var(--r-md);
-  display:flex;align-items:center;justify-content:center;gap:var(--e2);
-  border:1px solid var(--sun-ink);background:var(--sun-wash);
-  font-size:var(--t-base);font-weight:600;color:var(--sun-deeper);
-  transition:background .14s var(--curva);
+/* Confirmacao — recuperacao de senha enviada, cadastro esperando e-mail.
+   Mesma forma da caixa de erro, cor invertida: quem ja aprendeu a ler uma
+   nao precisa aprender a outra. */
+.ent-ok{
+  display:flex;gap:var(--e2);align-items:flex-start;
+  background:var(--good-bg);border:1px solid var(--good-line);color:var(--good);
+  border-radius:var(--r-md);padding:var(--e3);font-size:var(--t-sm);line-height:var(--lh-snug);
 }
-.ent-visitante:hover{background:#FAE9CF}
-.ent-visitante-d{font-size:var(--t-xs);color:var(--faint);margin:var(--e2) auto 0;line-height:var(--lh-snug);text-align:center;max-width:40ch}
+.ent-ok svg{flex-shrink:0;margin-top:2px}
+
+/* Onde a conta esta sendo guardada. E informacao de confianca, entao fica
+   visivel sem precisar abrir nada — o detalhe e que vai no <details>. */
+.ent-modo{
+  display:flex;gap:var(--e2);align-items:flex-start;margin-top:var(--e5);
+  padding:var(--e3);border-radius:var(--r-md);
+  background:var(--ground-2);
+  font-size:var(--t-xs);color:var(--muted);line-height:var(--lh-snug);
+}
+.ent-modo b{color:var(--ink);font-weight:600}
+.ent-modo-ic{flex-shrink:0;color:var(--faint);margin-top:1px}
+.ent-modo--nuvem{background:var(--good-bg);color:#2C5F49}
+.ent-modo--nuvem .ent-modo-ic{color:var(--good)}
+.ent-modo--nuvem b{color:var(--good)}
+
+/* Sem a saida de visitante, este link e a unica porta de quem esqueceu a
+   senha. Discreto, mas nao escondido. */
+.ent-link-voltar{
+  display:block;width:100%;text-align:center;margin-top:var(--e4);
+  font-size:var(--t-sm);font-weight:500;color:var(--muted);
+  text-decoration:underline;text-underline-offset:3px;
+}
+.ent-link-voltar:hover{color:var(--ink)}
 
 .ent-aviso{margin-top:var(--e6);border-top:1px solid var(--line);padding-top:var(--e4)}
 .ent-aviso summary{
@@ -1061,6 +1106,15 @@ body.vista-login{background:var(--dark)}
   font-size:var(--t-xs);color:var(--faint)}
 .bd-pe code{font-family:var(--f-mono);font-size:var(--t-xs);background:var(--ground-2);
   padding:2px 6px;border-radius:var(--r-xs)}
+/* Por que o site caiu para o banco local, ou o que falhou na ultima
+   gravacao. Some quando esta tudo certo. */
+.bd-nota{
+  background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn);
+  border-radius:var(--r-md);padding:var(--e3);margin-bottom:var(--e3);
+  font-size:var(--t-xs);line-height:var(--lh-snug);
+}
+.bd-nota--ruim{background:var(--bad-bg);border-color:var(--bad-line);color:var(--bad)}
+
 .bd-vazio{background:var(--ground-2);border:1px dashed var(--line-2);border-radius:var(--r-md);
   padding:var(--e5);font-size:var(--t-sm);color:var(--muted);line-height:var(--lh-body);margin-top:6px;max-width:66ch}
 
@@ -1141,6 +1195,256 @@ body.vista-login{background:var(--dark)}
 /* Os dois botoes de apagar ficam juntos, a direita. O .bd-pe usa
    space-between, e sem agrupar eles se espalhavam pela linha inteira. */
 .bd-acoes{display:flex;align-items:center;gap:var(--e5);flex-wrap:wrap}
+
+
+/* ===== frontend/css/assistente.css ===== */
+/* assistente.css — as duas telas de conversa
+
+   O papo rapido do cadastro e o assistente compartilham a peca central: a
+   fala. Ela e a mesma nos dois lugares de proposito — quem responde as cinco
+   perguntas ja aprendeu a ler a tela do assistente antes de chegar nela.
+
+   Duas regras da casa que mandam aqui:
+
+   AMBAR E GERACAO SOLAR, e nada mais. Nenhuma bolha, nenhum botao desta tela
+   e ambar: se fosse, a conversa pareceria estar falando do sol. O assistente
+   e neutro — tinta escura para o que voce disse, papel com borda para o que
+   ele respondeu.
+
+   OU BORDA, OU SOMBRA. As bolhas tem borda e nao tem sombra. A unica coisa
+   que flutua de verdade nestas telas e o aviso do canto, que ja mora em
+   componentes.css. */
+
+/* ============================================================
+   A FALA — usada nas duas telas
+   ============================================================ */
+
+.fala{
+  max-width:min(62ch, 88%);
+  padding:var(--e3) var(--e4);
+  border-radius:var(--r-md);
+  font-size:var(--t-base);
+  line-height:var(--lh-body);
+}
+.fala p{margin:0}
+.fala p + p{margin-top:var(--e3)}
+.fala b{font-weight:600}
+
+/* O que o assistente diz: papel com borda, alinhado a esquerda. */
+.fala--ia{
+  background:var(--surface);
+  border:1px solid var(--line);
+  color:var(--ink-2);
+  border-bottom-left-radius:var(--r-xs);
+}
+
+/* O que voce diz: tinta escura, alinhado a direita. O contraste entre as
+   duas e o que deixa a conversa legivel de relance, sem precisar de rotulo
+   "voce" e "assistente" em cima de cada linha. */
+.fala--eu{
+  background:var(--dark);
+  color:var(--on-dark);
+  border-bottom-right-radius:var(--r-xs);
+  margin-left:auto;
+}
+.fala--pulou{background:var(--ground-2);color:var(--faint);border:1px solid var(--line)}
+
+/* A razao da pergunta, dentro da propria bolha. Fica junto de quem pergunta
+   porque e ali que a duvida aparece — em nota de rodape ninguem le. */
+.fala-porque{
+  display:block;margin-top:var(--e2);
+  font-size:var(--t-xs);color:var(--faint);line-height:var(--lh-snug);
+}
+
+/* ============================================================
+   1. O PAPO RAPIDO
+   ============================================================ */
+
+.boas{
+  min-height:100vh;min-height:100dvh;
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:var(--e8) var(--e5);
+  background:var(--ground);
+}
+.boas-cx{width:100%;max-width:640px}
+
+.boas-topo h1{
+  font-size:var(--t-2xl);letter-spacing:-.028em;
+}
+.boas-d{
+  margin-top:var(--e3);color:var(--muted);
+  font-size:var(--t-base);line-height:var(--lh-body);max-width:62ch;
+}
+
+/* Quantas faltam. Sem isto, cinco perguntas parecem um questionario sem fim
+   — e a pessoa sai no meio. */
+.boas-trilha{display:flex;align-items:center;gap:var(--e3);margin-top:var(--e5)}
+.boas-barra{
+  flex:1;height:4px;border-radius:var(--r-pill);
+  background:var(--ground-2);overflow:hidden;
+}
+/* Barra de dado anima largura de proposito: e a excecao deliberada da regra
+   de so animar transform, porque scaleX distorceria o canto arredondado. */
+.boas-barra i{
+  display:block;height:100%;border-radius:var(--r-pill);
+  background:var(--ink);
+  transition:width .32s var(--curva);
+}
+.boas-cont{font-size:var(--t-xs);color:var(--faint);font-variant-numeric:tabular-nums}
+
+.boas-conversa{
+  display:flex;flex-direction:column;gap:var(--e5);
+  margin-top:var(--e6);
+}
+.fala-par{display:flex;flex-direction:column;gap:var(--e2)}
+
+.fala-ops{display:flex;flex-direction:column;gap:var(--e2);margin-top:var(--e2)}
+.fala-op{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--e3);
+  padding:var(--e3) var(--e4);
+  border:1px solid var(--line);border-radius:var(--r-md);
+  background:var(--surface);
+  font-size:var(--t-base);color:var(--ink-2);
+  transition:border-color .14s var(--curva), background .14s var(--curva);
+}
+.fala-op svg{color:var(--n-400);flex-shrink:0}
+.fala-op:hover{border-color:var(--ink);background:var(--n-25)}
+.fala-op:hover svg{color:var(--ink)}
+
+.boas-livre{margin-top:var(--e5)}
+.boas-livre textarea{width:100%;resize:vertical;min-height:96px;line-height:var(--lh-body)}
+
+.boas-pe{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--e3);
+  margin-top:var(--e6);padding-top:var(--e4);
+  border-top:1px solid var(--line);
+}
+
+/* ============================================================
+   2. O ASSISTENTE
+   ============================================================ */
+
+.chat{display:block}
+.chat-cx{padding:var(--e5) var(--e6) var(--e5)}
+
+.chat-topo{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:var(--e4);
+  padding-bottom:var(--e4);border-bottom:1px solid var(--line);
+}
+
+/* Altura fixa com rolagem propria: a barra de escrever tem que ficar sempre
+   no mesmo lugar. Se a pagina inteira rolasse, ela fugiria da tela conforme
+   a conversa crescesse. */
+.chat-rolo{
+  display:flex;flex-direction:column;gap:var(--e4);
+  height:min(52vh, 480px);
+  overflow-y:auto;
+  padding:var(--e5) var(--e1) var(--e5) 0;
+  scroll-behavior:smooth;
+}
+/* As falas encostam no pe, como em qualquer conversa: a mensagem mais nova
+   fica junto de onde se escreve. Feito com margem automatica no primeiro
+   filho, e nao com justify-content:flex-end, porque este ultimo corta o topo
+   quando a conversa passa da altura da caixa. */
+.chat-rolo > :first-child{margin-top:auto}
+
+.chat-vazio{
+  margin:auto;text-align:center;max-width:52ch;
+  padding:var(--e5) 0;
+}
+.chat-vazio-ic{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:52px;height:52px;border-radius:var(--r-lg);
+  background:var(--ground-2);margin-bottom:var(--e4);
+}
+.chat-vazio-ic--off{opacity:.7}
+.chat-vazio h3{font-family:var(--f-display);font-size:var(--t-lg);color:var(--ink);letter-spacing:-.018em}
+.chat-vazio p{
+  margin-top:var(--e3);color:var(--muted);
+  font-size:var(--t-sm);line-height:var(--lh-body);
+}
+
+/* Sugestoes de partida. Tela de chat vazia e a coisa mais intimidante de
+   qualquer produto com IA: sem elas ninguem sabe o que da para perguntar. */
+.chat-sugs{
+  display:flex;flex-wrap:wrap;gap:var(--e2);justify-content:center;
+  margin-top:var(--e5);
+}
+.chat-sug{
+  padding:var(--e2) var(--e3);
+  border:1px solid var(--line);border-radius:var(--r-pill);
+  background:var(--surface);
+  font-size:var(--t-sm);color:var(--ink-2);
+  transition:border-color .14s var(--curva), background .14s var(--curva);
+}
+.chat-sug:hover{border-color:var(--ink);background:var(--n-25)}
+
+/* Os tres pontinhos. Anima so opacidade, e so aparece enquanto a resposta
+   esta mesmo sendo gerada — animacao que pulsa sem nada acontecendo por tras
+   e enfeite, e enfeite nao entra em painel de medicao. */
+.fala--digitando{
+  display:flex;gap:5px;align-items:center;
+  width:auto;padding:var(--e4);
+}
+.fala--digitando span{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--n-400);
+  animation:pontinho 1.2s var(--curva) infinite;
+}
+.fala--digitando span:nth-child(2){animation-delay:.15s}
+.fala--digitando span:nth-child(3){animation-delay:.3s}
+@keyframes pontinho{
+  0%,60%,100%{opacity:.35}
+  30%{opacity:1}
+}
+
+.chat-barra{
+  display:flex;gap:var(--e2);align-items:center;
+  padding-top:var(--e4);border-top:1px solid var(--line);
+}
+.chat-in{
+  flex:1;height:46px;
+  padding:0 var(--e4);
+  border:1px solid var(--line);border-radius:var(--r-md);
+  background:var(--surface);
+  font-size:var(--t-base);color:var(--ink);
+}
+.chat-in::placeholder{color:var(--faint)}
+.chat-in:focus{outline:none;border-color:var(--ink);box-shadow:var(--anel-foco)}
+.chat-in[disabled]{background:var(--ground-2);color:var(--faint)}
+
+.chat-enviar{
+  width:46px;height:46px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:var(--r-md);
+  background:var(--dark);color:var(--on-dark);
+  transition:background .14s var(--curva);
+}
+.chat-enviar:hover:not([disabled]){background:var(--dark-2)}
+.chat-enviar[disabled]{opacity:.5;cursor:progress}
+
+/* O aviso de que a resposta e gerada. Fica no rodape e nao num modal: quem
+   usa todo dia nao pode ter que fechar um aviso a cada visita. */
+.chat-rodape{
+  margin-top:var(--e3);
+  font-size:var(--t-xs);color:var(--faint);line-height:var(--lh-snug);
+  max-width:70ch;
+}
+
+/* ---------- tela estreita ---------- */
+@media (max-width:760px){
+  .boas{padding:var(--e6) var(--e4) var(--e7)}
+  .boas-topo h1{font-size:var(--t-xl)}
+  .fala{max-width:100%}
+
+  .chat-cx{padding:var(--e4);border-radius:var(--r-lg)}
+  /* No celular a barra de abas ja come o pe da tela, entao a conversa usa o
+     que sobra em vez de altura fixa. */
+  .chat-rolo{height:auto;min-height:38vh;max-height:56vh}
+  .chat-topo{flex-direction:column;gap:var(--e2)}
+  .chat-sugs{justify-content:flex-start}
+  .chat-sug{text-align:left}
+}
 
 
 /* ===== frontend/css/movel.css ===== */
@@ -1319,12 +1623,341 @@ body.vista-login{background:var(--dark)}
 <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
 <noscript><div class="sem-js"><h1>Solaris</h1><p>O painel lê o medidor em tempo real e desenha os gráficos no próprio navegador, então precisa de JavaScript ativado para funcionar.</p></div></noscript>
 <script>
-/* ===== banco-de-dados/banco.js ===== */
-/* banco.js — o banco de dados
+/* ===== banco-de-dados/config.js ===== */
+/* config.js — para onde o Solaris fala
 
-   Usamos IndexedDB, que e o banco que ja vem dentro do navegador. Nao
-   precisa instalar nada, nao precisa de servidor, e aguenta muito mais
-   dado que o localStorage (que e so um mapa de texto com uns 5 MB).
+   Este e o unico arquivo que voce precisa editar para ligar o Solaris no
+   Supabase. Preencha as duas linhas de `supabase` e recarregue: o site passa
+   a gravar no Postgres em vez do banco do navegador, e a mesma conta abre em
+   qualquer aparelho.
+
+   Deixou em branco? O site continua funcionando exatamente como antes, com
+   IndexedDB. Isso e proposital: a apresentacao nao pode depender de wi-fi, e
+   o site tem que continuar abrindo com duplo clique.
+
+   Onde achar os valores:
+     Supabase -> seu projeto -> Project Settings -> API
+       url        = "Project URL"
+       chaveAnon  = "anon public"
+
+   A chave anon E PUBLICA de proposito: ela so deixa fazer o que as regras de
+   RLS do banco permitirem, e as regras estao em esquema.sql. O que nao pode
+   aparecer aqui de jeito nenhum e a "service_role" — essa ignora RLS.
+
+   A chave do Gemini tambem NAO mora aqui. Ela fica guardada como segredo
+   dentro do Supabase e so a Edge Function enxerga. O navegador nunca ve a
+   chave, e o cliente nunca precisa ter uma. Veja supabase/funcoes/agente/.
+*/
+'use strict';
+
+const SOLARIS_CONFIG = {
+
+  supabase: {
+    url: '',        /* ex.: 'https://abcdefgh.supabase.co' */
+    chaveAnon: ''   /* ex.: 'eyJhbGciOiJI...' */
+  },
+
+  agente: {
+    /* Nome da Edge Function publicada no Supabase. Se o Supabase nao estiver
+       configurado, o assistente aparece desligado e explica o porque. */
+    funcao: 'agente',
+
+    /* Qual modelo do Gemini responde. A Edge Function so aceita modelos desta
+       familia, para um erro de digitacao aqui nao virar chamada estranha. */
+    modelo: 'gemini-3.5-flash',
+
+    /* Quantas mensagens do historico vao junto em cada pergunta. Alto demais
+       fica caro e lento; baixo demais o assistente esquece o assunto. */
+    memoria: 12
+  }
+};
+
+/* Ligado de verdade so quando as duas coisas estao preenchidas. Meia
+   configuracao e pior que nenhuma: o site tentaria falar com um endereco
+   que nao existe e travaria na abertura. */
+function supabaseConfigurado() {
+  const s = SOLARIS_CONFIG.supabase;
+  return !!(s && typeof s.url === 'string' && s.url.indexOf('http') === 0 &&
+    typeof s.chaveAnon === 'string' && s.chaveAnon.length > 20);
+}
+
+
+/* ===== banco-de-dados/dados/regiao-sorocaba.js ===== */
+/* regiao-sorocaba.js — o que o Solaris sabe sobre onde o cliente mora
+
+   Por que isto existe: ate aqui o sistema tratava "distribuidora" como uma
+   caixa de texto livre. A pessoa digitava "CPFL" e o sistema nao sabia mais
+   nada — nem quando a tarifa dela e reajustada, nem quanto tempo leva para
+   homologar um sistema solar, nem para qual telefone ligar na queda de luz.
+
+   Agora sabe. Esta tabela e a base de conhecimento da regiao de Sorocaba, e
+   ela serve a tres coisas ao mesmo tempo:
+
+     1. o cadastro sugere a distribuidora certa quando a pessoa escolhe a
+        cidade, em vez de deixar ela adivinhar;
+     2. a irradiacao do calculo passa a ser a da regiao dela, nao um perfil
+        generico do interior de Sao Paulo;
+     3. o assistente de IA responde com o nome, o prazo e o canal certos —
+        e uma resposta especifica e o que separa um assistente util de um
+        gerador de texto simpatico.
+
+   ---------------------------------------------------------------------
+   DE ONDE VEM CADA NUMERO — leia antes de mudar qualquer coisa
+
+   Areas de concessao: listas de municipios concedidos da ARSESP e paginas
+   institucionais do Grupo CPFL e da Neoenergia. Conferidas em agosto/2026.
+   Concessao muda pouco, mas muda: se uma cidade trocar de distribuidora,
+   e aqui que se corrige.
+
+   Populacao: Censo 2022 do IBGE, ARREDONDADA AO MILHAR. E ordem de grandeza,
+   para o assistente saber se fala de uma capital regional ou de uma cidade
+   de dez mil pessoas. Nao use este campo em conta nenhuma.
+
+   Irradiacao: UMA SERIE PARA A REGIAO INTEIRA, de proposito. As cidades daqui
+   estao todas dentro de uns 60 km e a diferenca real de irradiacao entre elas
+   e menor que a incerteza da propria medida. Inventar um valor diferente por
+   cidade daria uma falsa precisao que o dado nao tem — e a regra do projeto e
+   nao inventar dado. O grupo ainda deve conferir a serie no CRESESB/Atlas
+   Brasileiro de Energia Solar para Sorocaba antes da banca.
+
+   Tarifa: NAO esta aqui, e nao vai estar. Tarifa muda todo ano, varia por
+   bandeira, por classe e por bandeira de consumo, e chutar um valor velho e
+   pior que nao ter valor nenhum. O sistema le a tarifa da conta de luz da
+   propria pessoa — que e o unico numero certo. O que guardamos aqui e QUANDO
+   ela e reajustada, para o assistente avisar que a proxima conta vem
+   diferente.
+*/
+'use strict';
+
+/* Irradiacao global horizontal media, kWh/m² por dia, mes a mes, para a
+   regiao de Sorocaba (lat -23,5; alt ~600 m). Janeiro a dezembro.
+   Media anual de 4,95 kWh/m²/dia. */
+const IRRADIACAO_SOROCABA = [5.6, 5.8, 5.2, 4.7, 4.0, 3.7, 3.9, 4.7, 4.8, 5.3, 5.7, 6.0];
+
+/* ---------- quem entrega a energia ---------- */
+const DISTRIBUIDORAS = {
+  'cpfl-piratininga': {
+    id: 'cpfl-piratininga',
+    nome: 'CPFL Piratininga',
+    grupo: 'Grupo CPFL Energia (State Grid)',
+    area: '27 municípios do interior e do litoral de São Paulo, incluindo Sorocaba, Jundiaí e Santos',
+    clientes: '1,7 milhão de unidades consumidoras, sendo mais de 300 mil em Sorocaba',
+    /* O mes do reajuste e o que a pessoa sente: e quando a conta muda de
+       patamar sem ela ter mudado de habito. */
+    reajusteMes: 10,
+    reajusteDia: 23,
+    vigencia: 'de 23 de outubro a 22 de outubro do ano seguinte',
+    telefone: '0800 010 1010',
+    site: 'https://www.cpfl.com.br/piratininga',
+    emergencia: 'Falta de energia pelo 0800 010 1010, pelo app CPFL Energia ou por SMS',
+    notas: 'Reajuste anual homologado pela ANEEL em outubro. A agência de atendimento presencial de Sorocaba mudou de endereço recentemente — confirme no site antes de ir.'
+  },
+  'cpfl-santa-cruz': {
+    id: 'cpfl-santa-cruz',
+    nome: 'CPFL Santa Cruz',
+    grupo: 'Grupo CPFL Energia (State Grid)',
+    area: '45 municípios em três estados — 39 em São Paulo, 3 no Paraná e 3 em Minas Gerais — cobrindo 20.249 km²',
+    clientes: 'mais de 500 mil unidades consumidoras',
+    reajusteMes: 2,
+    reajusteDia: null,
+    vigencia: 'anual, em fevereiro',
+    telefone: '0800 701 0102',
+    site: 'https://www.cpfl.com.br/santa-cruz',
+    emergencia: 'Falta de energia pelo 0800 701 0102 ou pelo app CPFL Energia',
+    notas: 'Mesmo grupo da Piratininga, mas concessão e tarifa separadas: quem mora em Sarapuí não paga a mesma tarifa de quem mora em Sorocaba.'
+  },
+  'neoenergia-elektro': {
+    id: 'neoenergia-elektro',
+    nome: 'Neoenergia Elektro',
+    grupo: 'Grupo Neoenergia (Iberdrola)',
+    area: 'municípios do interior de São Paulo e do Mato Grosso do Sul',
+    clientes: 'atende parte da região de Sorocaba pelo lado leste e sul',
+    reajusteMes: 8,
+    reajusteDia: 27,
+    vigencia: 'anual, em agosto',
+    telefone: '0800 701 0102',
+    site: 'https://www.neoenergia.com/web/sp',
+    emergencia: 'Falta de energia pelo 0800 701 0102, pelo site ou pelo WhatsApp da distribuidora',
+    notas: 'Antiga Elektro. Confirme o número de atendimento na sua fatura: a Neoenergia usa centrais diferentes por estado.'
+  }
+};
+
+/* ---------- as cidades ----------
+   distancia: quilometros ate o centro de Sorocaba, por estrada, arredondado.
+   perfil: como a cidade consome energia, em uma linha. Serve para o
+   assistente entender o contexto de quem esta falando com ele — comercio de
+   centro historico, chacara sem gas encanado e industria nao tem o mesmo
+   problema de conta de luz. */
+const CIDADES_REGIAO = [
+  {
+    id: 'sorocaba', nome: 'Sorocaba', uf: 'SP', populacao: 687000, distancia: 0,
+    distribuidora: 'cpfl-piratininga',
+    perfil: 'Capital regional, quarta maior cidade do interior paulista. Forte indústria metalúrgica e de autopeças, comércio grande e muita casa de alvenaria com laje. Sede da Região Metropolitana de Sorocaba.',
+    nota: 'Cidade com mais de 300 mil unidades consumidoras da CPFL Piratininga.'
+  },
+  {
+    id: 'votorantim', nome: 'Votorantim', uf: 'SP', populacao: 124000, distancia: 8,
+    distribuidora: 'cpfl-piratininga',
+    perfil: 'Colada em Sorocaba, historicamente industrial (cimento e metalurgia). Bairros residenciais grandes e muita casa com telhado de duas águas.',
+    nota: 'Na prática funciona como um bairro de Sorocaba para efeito de rede elétrica.'
+  },
+  {
+    id: 'aracoiaba-da-serra', nome: 'Araçoiaba da Serra', uf: 'SP', populacao: 40000, distancia: 22,
+    distribuidora: 'cpfl-piratininga',
+    perfil: 'Cidade de chácaras e condomínios, muita área rural. Sem gás encanado na maior parte, o que joga chuveiro elétrico e aquecimento para cima da conta de luz.',
+    nota: 'Perfil clássico para solar: telhado grande, terreno amplo, pouca sombra de prédio.'
+  },
+  {
+    id: 'salto-de-pirapora', nome: 'Salto de Pirapora', uf: 'SP', populacao: 46000, distancia: 26,
+    distribuidora: 'cpfl-piratininga',
+    perfil: 'Mistura de área urbana pequena e zona rural com sítios. Bombeamento de água pesa na conta de quem mora fora do centro.',
+    nota: 'Bomba d’água costuma ser o aparelho invisível que ninguém lembra de cadastrar.'
+  },
+  {
+    id: 'ipero', nome: 'Iperó', uf: 'SP', populacao: 35000, distancia: 28,
+    distribuidora: 'cpfl-piratininga',
+    perfil: 'Cidade pequena com forte presença rural e a Fábrica de Aramar por perto. Consumo residencial concentrado de manhã e à noite.',
+    nota: ''
+  },
+  {
+    id: 'capela-do-alto', nome: 'Capela do Alto', uf: 'SP', populacao: 21000, distancia: 30,
+    distribuidora: 'cpfl-piratininga',
+    perfil: 'Cidade pequena, agricultura e pequenas indústrias. Muita residência unifamiliar com telhado amplo.',
+    nota: ''
+  },
+  {
+    id: 'aluminio', nome: 'Alumínio', uf: 'SP', populacao: 18000, distancia: 28,
+    distribuidora: 'cpfl-piratininga',
+    perfil: 'Cidade formada em volta da indústria de alumínio. Base residencial pequena e concentrada.',
+    nota: ''
+  },
+  {
+    id: 'mairinque', nome: 'Mairinque', uf: 'SP', populacao: 48000, distancia: 32,
+    distribuidora: 'cpfl-piratininga',
+    perfil: 'Serra, clima mais ameno e mais nublado que Sorocaba. Ferroviária de origem, hoje dormitório e chácaras.',
+    nota: 'Região de serra: dias encobertos são mais frequentes, e o sistema solar rende um pouco menos que no vale.'
+  },
+  {
+    id: 'sao-roque', nome: 'São Roque', uf: 'SP', populacao: 91000, distancia: 40,
+    distribuidora: 'cpfl-piratininga',
+    perfil: 'Turismo, vinícolas e restaurantes. Muito pequeno negócio com câmara fria e cozinha elétrica, que é o perfil onde a conta de luz mais dói.',
+    nota: 'Restaurante e adega: refrigeração roda 24 h e domina a fatura.'
+  },
+  {
+    id: 'aracariguama', nome: 'Araçariguama', uf: 'SP', populacao: 20000, distancia: 45,
+    distribuidora: 'cpfl-piratininga',
+    perfil: 'Cidade pequena às margens da Castello Branco, com galpões e logística.',
+    nota: ''
+  },
+  {
+    id: 'ibiuna', nome: 'Ibiúna', uf: 'SP', populacao: 76000, distancia: 55,
+    distribuidora: 'cpfl-piratininga',
+    perfil: 'Maior área rural da região, cinturão verde de hortaliças. Muita propriedade com irrigação, estufa e câmara fria — consumo bem diferente do urbano.',
+    nota: 'Região de serra e neblina: a geração real costuma ficar abaixo do que a média do interior sugere.'
+  },
+  {
+    id: 'itu', nome: 'Itu', uf: 'SP', populacao: 175000, distancia: 50,
+    distribuidora: 'cpfl-piratininga',
+    perfil: 'Cidade histórica com indústria e muitos condomínios fechados de alto padrão. Consumo residencial alto: ar-condicionado, piscina aquecida e bomba.',
+    nota: 'Piscina com bomba e aquecimento é um dos maiores consumos escondidos em condomínio.'
+  },
+  {
+    id: 'salto', nome: 'Salto', uf: 'SP', populacao: 121000, distancia: 55,
+    distribuidora: 'cpfl-piratininga',
+    perfil: 'Industrial e residencial, colada em Itu. Base têxtil e metalúrgica.',
+    nota: ''
+  },
+  {
+    id: 'porto-feliz', nome: 'Porto Feliz', uf: 'SP', populacao: 53000, distancia: 45,
+    distribuidora: 'cpfl-piratininga',
+    perfil: 'Agroindústria, cana e usinas. Área rural grande com consumo sazonal.',
+    nota: ''
+  },
+  {
+    id: 'boituva', nome: 'Boituva', uf: 'SP', populacao: 63000, distancia: 35,
+    distribuidora: 'cpfl-piratininga',
+    perfil: 'Crescimento rápido em loteamentos e condomínios, capital do paraquedismo. Muita construção nova, que já sai preparada para solar.',
+    nota: 'Casa nova com telhado limpo e sem sombra é o melhor caso de instalação da região.'
+  },
+  {
+    id: 'piedade', nome: 'Piedade', uf: 'SP', populacao: 55000, distancia: 40,
+    distribuidora: 'neoenergia-elektro',
+    perfil: 'Agrícola, forte em fruticultura (caqui e uva). Propriedades rurais com bomba, câmara fria e secador.',
+    nota: 'ATENÇÃO: aqui a distribuidora NÃO é a CPFL. É Neoenergia Elektro, com tarifa e reajuste próprios.'
+  },
+  {
+    id: 'tatui', nome: 'Tatuí', uf: 'SP', populacao: 120000, distancia: 55,
+    distribuidora: 'neoenergia-elektro',
+    perfil: 'Cidade média, conhecida pelo conservatório de música. Comércio de rua forte e indústria leve.',
+    nota: 'ATENÇÃO: distribuidora Neoenergia Elektro, não CPFL.'
+  },
+  {
+    id: 'sarapui', nome: 'Sarapuí', uf: 'SP', populacao: 10000, distancia: 40,
+    distribuidora: 'cpfl-santa-cruz',
+    perfil: 'Cidade pequena, base rural e pecuária.',
+    nota: 'ATENÇÃO: é CPFL, mas é a CPFL SANTA CRUZ — concessão, tarifa e mês de reajuste diferentes dos de Sorocaba.'
+  },
+  {
+    id: 'itapetininga', nome: 'Itapetininga', uf: 'SP', populacao: 157000, distancia: 70,
+    distribuidora: 'cpfl-santa-cruz',
+    perfil: 'Polo regional ao sul, agropecuária e indústria de papel e celulose.',
+    nota: 'ATENÇÃO: CPFL Santa Cruz, não Piratininga.'
+  },
+  {
+    id: 'sao-miguel-arcanjo', nome: 'São Miguel Arcanjo', uf: 'SP', populacao: 33000, distancia: 65,
+    distribuidora: 'cpfl-santa-cruz',
+    perfil: 'Agrícola, fruticultura e turismo rural na divisa do Parque Estadual Carlos Botelho.',
+    nota: ''
+  }
+];
+
+/* ---------- consultas ---------- */
+
+function cidade(id) {
+  return CIDADES_REGIAO.filter(c => c.id === id)[0] || null;
+}
+function distribuidora(id) {
+  return DISTRIBUIDORAS[id] || null;
+}
+/* A distribuidora de uma cidade, ja resolvida. E o atalho que o cadastro e o
+   assistente usam o tempo todo. */
+function distribuidoraDaCidade(idCidade) {
+  const c = cidade(idCidade);
+  return c ? distribuidora(c.distribuidora) : null;
+}
+function nomesDeCidades() {
+  return CIDADES_REGIAO.map(c => c.nome);
+}
+/* Sorocaba primeiro, depois as outras por distancia. E a ordem em que a
+   lista faz sentido para quem mora aqui. */
+function cidadesPorDistancia() {
+  return CIDADES_REGIAO.slice().sort((a, b) => a.distancia - b.distancia);
+}
+
+/* Quantos meses faltam para a proxima conta vir reajustada. Serve para o
+   assistente avisar antes, e nao depois que a pessoa levou o susto. */
+function mesesAteReajuste(idDistribuidora, hoje) {
+  const d = distribuidora(idDistribuidora);
+  if (!d || !d.reajusteMes) return null;
+  const agora = hoje || new Date();
+  const mesAtual = agora.getMonth() + 1;
+  const diff = d.reajusteMes - mesAtual;
+  return diff > 0 ? diff : diff + 12;
+}
+
+
+/* ===== banco-de-dados/local.js ===== */
+/* local.js — o banco que mora no navegador
+
+   E o IndexedDB: contas, estado e leituras gravados na maquina de quem usa.
+   Ate a versao passada este era O banco do Solaris. Hoje ele e a RESERVA:
+   quando o Supabase esta configurado, quem responde e o supabase.js; quando
+   nao esta — sem internet, sem credenciais, ou site aberto com duplo clique
+   direto do disco — quem responde e este arquivo.
+
+   Os dois expoem exatamente a mesma interface, e o banco.js escolhe entre
+   eles. Nada acima da camada de banco sabe qual dos dois atendeu, e essa e a
+   razao de o site continuar abrindo sem rede.
 
    Sao tres tabelas:
      contas    quem pode entrar. A chave e o e-mail.
@@ -1452,9 +2085,9 @@ function reservaTodos(tabela) {
   return fora;
 }
 
-/* ---------- API que o resto do app usa ---------- */
+/* ---------- a interface, identica a do supabase.js ---------- */
 
-const Banco = {
+const BancoLocal = {
   pronto: false,
   usandoIndexedDB: false,
 
@@ -1618,6 +2251,22 @@ const Banco = {
     } catch (e) { /* migração é conveniência, não pode quebrar a abertura */ }
   },
 
+  /* ---------- o que so existe com servidor ----------
+     Estao aqui para o repasse do banco.js nunca cair em undefined. Cada uma
+     explica o que falta, em vez de falhar calada. */
+  authRecuperarSenha() {
+    return Promise.reject(new Error(
+      'Sem servidor não há recuperação de senha: não existe de onde mandar o e-mail. ' +
+      'Configure o Supabase em banco-de-dados/config.js para ter essa opção.'));
+  },
+  authSessao() { return Promise.resolve(null); },
+  authSair() { return Promise.resolve(); },
+  perfilConversa() { return Promise.resolve(null); },
+  salvarPerfilConversa() { return Promise.resolve(null); },
+  historicoConversa() { return Promise.resolve([]); },
+  salvarMensagem() { return Promise.resolve(null); },
+  limparConversa() { return Promise.resolve(null); },
+
   /* números para mostrar em Configurações */
   async estatisticas() {
     const nContas = (await this.contas()).length;
@@ -1630,10 +2279,637 @@ const Banco = {
       }
     } catch (e) { }
     return {
-      motor: this.usandoIndexedDB ? 'IndexedDB' : 'localStorage (reserva)',
+      motor: this.usandoIndexedDB ? 'IndexedDB (neste navegador)' : 'localStorage (reserva)',
       contas: nContas, leituras: nLeituras, bytes: bytes,
       janelaDias: DIAS_HISTORICO, intervaloSeg: INTERVALO_LEITURA
     };
+  }
+};
+
+
+/* ===== banco-de-dados/supabase.js ===== */
+/* supabase.js — o banco de verdade, quando ha internet
+
+   Fala com um projeto Supabase (Postgres gerenciado) por HTTP puro. Expoe
+   exatamente a mesma interface do local.js, e por isso o resto do sistema
+   nao precisa saber qual dos dois esta respondendo.
+
+   POR QUE SEM BIBLIOTECA. O Supabase tem um SDK oficial em npm. Nao usamos,
+   e nao e teimosia: o projeto inteiro se sustenta em nao ter build, nao ter
+   npm install e abrir com duplo clique. Puxar o SDK por CDN traria de volta
+   a dependencia de rede so para desenhar a tela de login. O que precisamos
+   do SDK sao duas APIs REST bem simples — GoTrue para conta e PostgREST para
+   tabela — e elas cabem neste arquivo.
+
+   O QUE MUDA quando o Supabase esta ligado:
+
+     - a conta deixa de ser deste navegador e passa a ser sua. A mesma conta
+       abre no celular e no computador, com os mesmos dados;
+     - a senha e verificada no servidor, nao aqui. Isso e a unica forma de
+       o login virar seguranca de verdade — enquanto rodava so no navegador,
+       era separacao de dados, e a tela dizia isso;
+     - o historico do medidor sai da maquina da pessoa e vira uma tabela.
+
+   O QUE NAO MUDA: se as credenciais nao estiverem em config.js, ou se o
+   servidor nao responder na abertura, o site cai para o local.js e continua
+   funcionando. Nunca ha tela branca por causa do banco.
+
+   SOBRE A CHAVE ANON. Ela vai no navegador de proposito e nao e segredo. O
+   que protege os dados sao as regras de RLS do esquema.sql: cada linha das
+   tabelas de usuario carrega o dono, e o Postgres so devolve as linhas de
+   quem esta autenticado. Sem RLS, esta chave abriria o banco inteiro — por
+   isso o esquema liga RLS em todas as tabelas antes de criar qualquer coisa.
+*/
+'use strict';
+
+/* Toda chamada tem prazo. Sem isto, uma rede ruim deixa o app pendurado
+   esperando para sempre, que e pior do que dizer "nao consegui". */
+const SB_PRAZO = 12000;
+const SB_CHAVE_SESSAO = 'solaris.sb.sessao.v1';
+
+const SB = {
+  url: '',
+  chave: '',
+  /* sessao do Supabase: access_token, refresh_token, expira_em, usuario */
+  sessao: null
+};
+
+function sbUrl(caminho) {
+  return SB.url.replace(/\/+$/, '') + caminho;
+}
+
+/* fetch com prazo, sempre devolvendo objeto — nunca lancando por rede */
+async function sbFetch(caminho, opcoes) {
+  const o = opcoes || {};
+  const controle = typeof AbortController === 'function' ? new AbortController() : null;
+  const prazo = setTimeout(() => { if (controle) controle.abort(); }, o.prazo || SB_PRAZO);
+
+  const cab = Object.assign({
+    'apikey': SB.chave,
+    'Content-Type': 'application/json'
+  }, o.headers || {});
+
+  /* O token do usuario manda; sem ele, a chave anon responde como visitante
+     anonimo e o RLS nao devolve linha nenhuma. */
+  if (!cab['Authorization']) {
+    const t = SB.sessao && SB.sessao.access_token;
+    cab['Authorization'] = 'Bearer ' + (t || SB.chave);
+  }
+
+  try {
+    const r = await fetch(sbUrl(caminho), {
+      method: o.method || 'GET',
+      headers: cab,
+      body: o.body ? JSON.stringify(o.body) : undefined,
+      signal: controle ? controle.signal : undefined
+    });
+    clearTimeout(prazo);
+
+    const texto = await r.text();
+    let corpo = null;
+    if (texto) { try { corpo = JSON.parse(texto); } catch (e) { corpo = texto; } }
+
+    if (!r.ok) {
+      const msg = (corpo && (corpo.msg || corpo.message || corpo.error_description || corpo.error)) ||
+        ('HTTP ' + r.status);
+      return { ok: false, status: r.status, erro: String(msg), dados: corpo };
+    }
+    return { ok: true, status: r.status, dados: corpo, faixa: r.headers.get('content-range') };
+  } catch (e) {
+    clearTimeout(prazo);
+    const abortou = e && (e.name === 'AbortError');
+    return { ok: false, status: 0, rede: true, erro: abortou ? 'O servidor demorou demais para responder.' : 'Sem conexão com o servidor.' };
+  }
+}
+
+/* ---------- sessao ---------- */
+function sbGuardarSessao(s) {
+  SB.sessao = s;
+  try {
+    if (s) localStorage.setItem(SB_CHAVE_SESSAO, JSON.stringify(s));
+    else localStorage.removeItem(SB_CHAVE_SESSAO);
+  } catch (e) { }
+}
+function sbLerSessaoGuardada() {
+  try {
+    const r = localStorage.getItem(SB_CHAVE_SESSAO);
+    return r ? JSON.parse(r) : null;
+  } catch (e) { return null; }
+}
+/* O Supabase devolve expires_in em segundos; guardamos o instante absoluto
+   porque e o que da para comparar depois de a aba ficar horas fechada. */
+function sbMontarSessao(d) {
+  if (!d || !d.access_token) return null;
+  return {
+    access_token: d.access_token,
+    refresh_token: d.refresh_token || null,
+    expira_em: Date.now() + ((d.expires_in || 3600) * 1000),
+    usuario: d.user || null
+  };
+}
+async function sbRenovar() {
+  const s = SB.sessao;
+  if (!s || !s.refresh_token) return false;
+  const r = await sbFetch('/auth/v1/token?grant_type=refresh_token', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + SB.chave },
+    body: { refresh_token: s.refresh_token }
+  });
+  if (!r.ok) { if (!r.rede) sbGuardarSessao(null); return false; }
+  sbGuardarSessao(sbMontarSessao(r.dados));
+  return !!SB.sessao;
+}
+/* Renova com folga de um minuto: token que vence no meio de uma gravacao
+   perde a gravacao. */
+async function sbGarantirToken() {
+  const s = SB.sessao;
+  if (!s) return false;
+  if (Date.now() < s.expira_em - 60000) return true;
+  return await sbRenovar();
+}
+
+/* ---------- PostgREST ----------
+   Uma unica porta de entrada para tabela, para o tratamento de erro e de
+   token nao ficar espalhado. */
+async function sbTabela(tabela, opcoes) {
+  const o = opcoes || {};
+  await sbGarantirToken();
+  const caminho = '/rest/v1/' + tabela + (o.query ? '?' + o.query : '');
+  const cab = {};
+  if (o.prefer) cab['Prefer'] = o.prefer;
+  const r = await sbFetch(caminho, { method: o.method || 'GET', headers: cab, body: o.body });
+  if (!r.ok) BancoSupabase.registrarFalha(r.erro);
+  else BancoSupabase.registrarSucesso();
+  return r;
+}
+
+/* ---------- a interface, identica a do local.js ---------- */
+const BancoSupabase = {
+  pronto: false,
+  usandoIndexedDB: false,   /* nome mantido por compatibilidade: aqui sempre falso */
+  online: true,
+  motorNome: 'Supabase (Postgres)',
+  ultimaFalha: null,
+  falhasSeguidas: 0,
+
+  registrarFalha(msg) {
+    this.falhasSeguidas++;
+    this.ultimaFalha = { msg: msg, em: Date.now() };
+  },
+  registrarSucesso() {
+    this.falhasSeguidas = 0;
+    this.ultimaFalha = null;
+  },
+
+  /* Abre a conexao e confere que o projeto responde. Devolver false aqui e o
+     sinal para o banco.js cair para o local.js — e o site abrir do mesmo
+     jeito, so que sem nuvem. */
+  async iniciar() {
+    SB.url = SOLARIS_CONFIG.supabase.url;
+    SB.chave = SOLARIS_CONFIG.supabase.chaveAnon;
+    SB.sessao = sbLerSessaoGuardada();
+
+    /* Um toque leve so para saber se o projeto esta de pe. Prazo curto: se
+       o Supabase nao respondeu em 6 segundos, nao vamos fazer a pessoa
+       esperar mais para ver a tela de login. */
+    const r = await sbFetch('/auth/v1/health', {
+      headers: { 'Authorization': 'Bearer ' + SB.chave }, prazo: 6000
+    });
+    /* 404 tambem serve: significa que o host existe e respondeu. O que
+       reprova e nao ter resposta nenhuma. */
+    const vivo = r.ok || (r.status >= 200 && r.status < 500);
+    if (!vivo) return false;
+
+    if (SB.sessao) await sbGarantirToken();
+    this.pronto = true;
+    return true;
+  },
+
+  /* ---------- contas ----------
+     Online nao existe "listar todas as contas": o cliente nao pode enumerar
+     usuarios, e nem deveria. A tela de entrada trata a lista vazia. */
+  async contas() { return []; },
+
+  async conta(id) {
+    const r = await sbTabela('perfis', { query: 'id=eq.' + encodeURIComponent(id) + '&select=*' });
+    return (r.ok && Array.isArray(r.dados) && r.dados[0]) || undefined;
+  },
+
+  async salvarConta(c) {
+    return await sbTabela('perfis', {
+      method: 'POST',
+      prefer: 'resolution=merge-duplicates,return=minimal',
+      body: { id: c.id, nome: c.nome, email: c.email }
+    });
+  },
+
+  /* Apagar a propria conta de verdade (a linha em auth.users) exige chave de
+     servico, que nao pode viver no navegador. O que da para fazer daqui e
+     apagar tudo que e dado da pessoa; a funcao apagar-conta cuida do resto
+     quando publicada. */
+  async apagarConta(id) {
+    await sbTabela('perfis', { query: 'id=eq.' + encodeURIComponent(id), method: 'DELETE' });
+    return true;
+  },
+
+  /* ---------- estado ---------- */
+  async estado(conta) {
+    const r = await sbTabela('estado', {
+      query: 'conta=eq.' + encodeURIComponent(conta) + '&select=dados'
+    });
+    if (!r.ok || !Array.isArray(r.dados) || !r.dados[0]) return null;
+    return r.dados[0].dados || null;
+  },
+
+  async salvarEstado(conta, dados) {
+    return await sbTabela('estado', {
+      method: 'POST',
+      prefer: 'resolution=merge-duplicates,return=minimal',
+      body: { conta: conta, dados: dados, em: new Date().toISOString() }
+    });
+  },
+
+  async apagarEstado(conta) {
+    return await sbTabela('estado', {
+      query: 'conta=eq.' + encodeURIComponent(conta), method: 'DELETE'
+    });
+  },
+
+  /* ---------- leituras do medidor ---------- */
+  async registrarLeitura(conta, cons, ger) {
+    return await sbTabela('leituras', {
+      method: 'POST',
+      prefer: 'return=minimal',
+      body: {
+        conta: conta, t: new Date().toISOString(),
+        c: Math.round(cons * 1000) / 1000,
+        g: Math.round(ger * 1000) / 1000
+      }
+    });
+  },
+
+  /* Devolve no mesmo formato do local.js: t em milissegundos, c e g em kW.
+     Quem le o grafico nao deve precisar saber que aqui a coluna e timestamp. */
+  async leituras(conta, desdeMs, limite) {
+    const inicio = new Date(desdeMs || (Date.now() - 2 * 3600000)).toISOString();
+    const q = 'conta=eq.' + encodeURIComponent(conta) +
+      '&t=gte.' + encodeURIComponent(inicio) +
+      '&select=id,t,c,g&order=t.asc' +
+      (limite ? '&limit=' + limite : '&limit=5000');
+    const r = await sbTabela('leituras', { query: q });
+    if (!r.ok || !Array.isArray(r.dados)) return [];
+    return r.dados.map(l => ({
+      id: l.id, conta: conta, t: Date.parse(l.t),
+      c: Number(l.c), g: Number(l.g)
+    }));
+  },
+
+  /* O PostgREST devolve a contagem no cabecalho Content-Range ("0-0/1440"),
+     nao no corpo. Pedimos uma linha so e lemos o total dali — trazer as
+     14 mil linhas de volta so para contar seria absurdo. */
+  async contarLeituras() {
+    const r = await sbTabela('leituras', {
+      query: 'select=id&limit=1', prefer: 'count=exact'
+    });
+    if (!r.ok || !r.faixa) return 0;
+    const total = String(r.faixa).split('/')[1];
+    return total && total !== '*' ? Number(total) : 0;
+  },
+
+  /* No Postgres a poda e trabalho do banco, nao do navegador: existe uma
+     rotina no esquema.sql para isso. Deixar cada aba tentando apagar linha
+     velha seria N clientes brigando pela mesma tabela. */
+  async podarLeituras() { return 0; },
+
+  async limparLeituras(conta) {
+    const r = await sbTabela('leituras', {
+      query: 'conta=eq.' + encodeURIComponent(conta), method: 'DELETE'
+    });
+    return r.ok ? 1 : 0;
+  },
+
+  /* Online, "apagar tudo" e apagar tudo DA PESSOA. Nao existe botao no
+     navegador que limpe o banco dos outros — e isso e uma melhora, nao uma
+     limitacao: no IndexedDB o botao apagava a conta de todo mundo que tinha
+     usado aquele computador. */
+  async apagarTudo() {
+    const antes = await this.estatisticas();
+    const conta = SB.sessao && SB.sessao.usuario ? SB.sessao.usuario.id : null;
+    if (conta) {
+      await this.limparLeituras(conta);
+      await this.apagarEstado(conta);
+      await sbTabela('perfil_conversa', { query: 'conta=eq.' + conta, method: 'DELETE' });
+      await sbTabela('conversas', { query: 'conta=eq.' + conta, method: 'DELETE' });
+    }
+    try {
+      const soltas = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.indexOf('solaris.') === 0) soltas.push(k);
+      }
+      soltas.forEach(k => localStorage.removeItem(k));
+    } catch (e) { }
+    return antes;
+  },
+
+  async migrarDoLocalStorage() { return; },
+
+  async estatisticas() {
+    const leituras = await this.contarLeituras();
+    return {
+      motor: this.motorNome,
+      contas: 1, leituras: leituras, bytes: null,
+      janelaDias: 90, intervaloSeg: 60,
+      online: true,
+      falha: this.ultimaFalha ? this.ultimaFalha.msg : null
+    };
+  },
+
+  /* ---------- conta e sessao (o que o login.js usa) ---------- */
+
+  async authCriar(nome, email, senha) {
+    const r = await sbFetch('/auth/v1/signup', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + SB.chave },
+      body: { email: email, password: senha, data: { nome: nome } }
+    });
+    if (!r.ok) throw new Error(sbMensagem(r.erro));
+
+    /* Se o projeto estiver com confirmacao por e-mail ligada, o cadastro nao
+       devolve sessao — e a pessoa precisa clicar no link antes de entrar. */
+    const s = sbMontarSessao(r.dados);
+    if (!s) {
+      const e = new Error('Conta criada. Confirme o e-mail que enviamos e depois entre.');
+      e.confirmacaoPendente = true;
+      throw e;
+    }
+    sbGuardarSessao(s);
+    const u = s.usuario || {};
+    await this.salvarConta({ id: u.id, nome: nome, email: email });
+    return { id: u.id, nome: nome, email: email };
+  },
+
+  async authEntrar(email, senha) {
+    const r = await sbFetch('/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + SB.chave },
+      body: { email: email, password: senha }
+    });
+    if (!r.ok) throw new Error(sbMensagem(r.erro));
+    const s = sbMontarSessao(r.dados);
+    if (!s) throw new Error('E-mail ou senha não conferem.');
+    sbGuardarSessao(s);
+    const u = s.usuario || {};
+    const meta = u.user_metadata || {};
+    return {
+      id: u.id,
+      nome: meta.nome || (u.email || '').split('@')[0],
+      email: u.email
+    };
+  },
+
+  async authSair() {
+    if (SB.sessao) {
+      await sbFetch('/auth/v1/logout', { method: 'POST' });
+    }
+    sbGuardarSessao(null);
+  },
+
+  /* Sessao valida guardada, ja renovada se precisava. */
+  async authSessao() {
+    if (!SB.sessao) return null;
+    const vale = await sbGarantirToken();
+    if (!vale) return null;
+    const u = SB.sessao.usuario || {};
+    const meta = u.user_metadata || {};
+    return {
+      id: u.id,
+      nome: meta.nome || (u.email || '').split('@')[0],
+      email: u.email
+    };
+  },
+
+  /* Manda o e-mail de troca de senha. Nao dizemos se o e-mail existe: a
+     resposta e sempre a mesma, aqui e na tela. */
+  async authRecuperarSenha(email) {
+    await sbFetch('/auth/v1/recover', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + SB.chave },
+      body: { email: email }
+    });
+    return true;
+  },
+
+  async authTrocarSenha(senhaNova) {
+    const r = await sbFetch('/auth/v1/user', { method: 'PUT', body: { password: senhaNova } });
+    if (!r.ok) throw new Error(sbMensagem(r.erro));
+    return true;
+  },
+
+  /* ---------- o que o assistente precisa ---------- */
+
+  async perfilConversa(conta) {
+    const r = await sbTabela('perfil_conversa', {
+      query: 'conta=eq.' + encodeURIComponent(conta) + '&select=respostas'
+    });
+    if (!r.ok || !Array.isArray(r.dados) || !r.dados[0]) return null;
+    return r.dados[0].respostas || null;
+  },
+
+  async salvarPerfilConversa(conta, respostas) {
+    return await sbTabela('perfil_conversa', {
+      method: 'POST',
+      prefer: 'resolution=merge-duplicates,return=minimal',
+      body: { conta: conta, respostas: respostas, em: new Date().toISOString() }
+    });
+  },
+
+  async historicoConversa(conta, limite) {
+    const r = await sbTabela('conversas', {
+      query: 'conta=eq.' + encodeURIComponent(conta) +
+        '&select=papel,texto,em&order=em.desc&limit=' + (limite || 30)
+    });
+    if (!r.ok || !Array.isArray(r.dados)) return [];
+    return r.dados.slice().reverse();
+  },
+
+  async salvarMensagem(conta, papel, texto) {
+    return await sbTabela('conversas', {
+      method: 'POST', prefer: 'return=minimal',
+      body: { conta: conta, papel: papel, texto: texto, em: new Date().toISOString() }
+    });
+  },
+
+  async limparConversa(conta) {
+    return await sbTabela('conversas', {
+      query: 'conta=eq.' + encodeURIComponent(conta), method: 'DELETE'
+    });
+  },
+
+  /* Chamada da Edge Function que fala com o Gemini. O token do usuario vai
+     junto: e assim que a funcao sabe de quem e o perfil que ela vai carregar,
+     e e por isso que ninguem consegue perguntar em nome de outra pessoa. */
+  async chamarAgente(corpo) {
+    await sbGarantirToken();
+    const nome = (SOLARIS_CONFIG.agente && SOLARIS_CONFIG.agente.funcao) || 'agente';
+    return await sbFetch('/functions/v1/' + nome, {
+      method: 'POST', body: corpo, prazo: 45000
+    });
+  }
+};
+
+/* O GoTrue responde em ingles. Traduzimos os casos que a pessoa realmente
+   encontra, e deixamos o resto passar como veio — mensagem errada em
+   portugues e pior que mensagem certa em ingles. */
+function sbMensagem(erro) {
+  const e = String(erro || '');
+  if (/invalid login credentials/i.test(e)) return 'E-mail ou senha não conferem.';
+  if (/user already registered|already been registered/i.test(e)) return 'Já existe uma conta com esse e-mail.';
+  if (/password should be at least/i.test(e)) return 'A senha precisa de pelo menos 6 caracteres.';
+  if (/unable to validate email|invalid format/i.test(e)) return 'Esse e-mail não parece válido.';
+  if (/email not confirmed/i.test(e)) return 'Confirme o e-mail que enviamos antes de entrar.';
+  if (/rate limit|too many requests/i.test(e)) return 'Muitas tentativas seguidas. Espere um minuto.';
+  if (/sem conexão|demorou demais/i.test(e)) return e;
+  return e || 'Não deu para continuar.';
+}
+
+
+/* ===== banco-de-dados/banco.js ===== */
+/* banco.js — quem atende, e por que
+
+   Este arquivo nao guarda nada. Ele escolhe.
+
+   O Solaris tem dois bancos com a mesma interface:
+
+     supabase.js   Postgres na nuvem. A conta e da pessoa, nao do navegador,
+                   e os dados abrem em qualquer aparelho.
+     local.js      IndexedDB dentro do navegador. Nao precisa de rede nem de
+                   cadastro em lugar nenhum.
+
+   Na abertura, `iniciar()` decide qual dos dois vai responder ao resto da
+   sessao inteira, e o resto do sistema nunca mais pergunta. Chamar
+   `Banco.salvarEstado(...)` funciona igual nos dois casos.
+
+   A REGRA DA ESCOLHA, em ordem:
+
+     1. config.js tem url e chave anon preenchidas?  Se nao, e local.
+     2. O projeto Supabase respondeu em 6 segundos?  Se nao, e local.
+     3. Deu tudo certo: e Supabase.
+
+   Por que cair para o local em vez de mostrar erro: o Solaris e apresentado
+   numa banca, testado em campo por gente que abre o arquivo por WhatsApp, e
+   usado em lugar com internet ruim. Um site de monitoramento que nao abre
+   porque o servidor esta fora nao monitora nada. A tela diz em qual dos dois
+   esta rodando — em Configuracoes -> Banco de dados — para ninguem confundir
+   dado que subiu com dado que ficou na maquina.
+
+   O QUE ACONTECE SE A REDE CAIR NO MEIO. A escolha ja foi feita e nao muda
+   no meio do caminho: trocar de banco com a sessao aberta separaria os dados
+   em dois lugares, e a pessoa veria metade do historico. As gravacoes passam
+   a falhar, o contador de falhas sobe e a tela avisa. Quando a rede volta,
+   volta sozinho.
+*/
+'use strict';
+
+const Banco = {
+  /* qual implementacao esta atendendo */
+  impl: null,
+  motor: 'nenhum',        /* 'supabase' | 'indexeddb' | 'localStorage' */
+  online: false,
+  pronto: false,
+  /* Mantido com este nome porque meio sistema pergunta por ele. Significa
+     "da para gravar o historico minuto a minuto" — que e verdade no
+     IndexedDB e no Supabase, e falso so na reserva de localStorage. */
+  usandoIndexedDB: false,
+  /* Por que caiu para o banco local, quando caiu. A tela mostra isto. */
+  motivoLocal: null,
+
+  async iniciar() {
+    if (supabaseConfigurado()) {
+      let subiu = false;
+      try { subiu = await BancoSupabase.iniciar(); }
+      catch (e) { subiu = false; }
+
+      if (subiu) {
+        this.impl = BancoSupabase;
+        this.motor = 'supabase';
+        this.online = true;
+        this.usandoIndexedDB = true;   /* ha historico, so que numa tabela */
+        this.pronto = true;
+        return true;
+      }
+      this.motivoLocal = 'O Supabase está configurado, mas não respondeu. ' +
+        'O Solaris abriu com o banco deste navegador para você não ficar parado.';
+    } else {
+      this.motivoLocal = 'Sem credenciais do Supabase em banco-de-dados/config.js. ' +
+        'O Solaris está gravando neste navegador.';
+    }
+
+    this.impl = BancoLocal;
+    this.motor = 'local';
+    this.online = false;
+    const comIndexedDB = await BancoLocal.iniciar();
+    this.usandoIndexedDB = !!comIndexedDB;
+    this.motor = comIndexedDB ? 'indexeddb' : 'localStorage';
+    this.pronto = true;
+    return false;
+  },
+
+  /* ---------- repasse ----------
+     Uma linha por metodo, de proposito: assim da para ler a interface
+     inteira do banco de uma vez, e um metodo novo em uma das
+     implementacoes so existe de verdade depois de aparecer aqui. */
+
+  contas() { return this.impl.contas(); },
+  conta(id) { return this.impl.conta(id); },
+  salvarConta(c) { return this.impl.salvarConta(c); },
+  apagarConta(id) { return this.impl.apagarConta(id); },
+
+  estado(conta) { return this.impl.estado(conta); },
+  salvarEstado(conta, dados) { return this.impl.salvarEstado(conta, dados); },
+  apagarEstado(conta) { return this.impl.apagarEstado(conta); },
+
+  registrarLeitura(conta, cons, ger) { return this.impl.registrarLeitura(conta, cons, ger); },
+  leituras(conta, desde, limite) { return this.impl.leituras(conta, desde, limite); },
+  contarLeituras() { return this.impl.contarLeituras(); },
+  podarLeituras() { return this.impl.podarLeituras(); },
+  limparLeituras(conta) { return this.impl.limparLeituras(conta); },
+
+  apagarTudo() { return this.impl.apagarTudo(); },
+  migrarDoLocalStorage() { return this.impl.migrarDoLocalStorage(); },
+
+  async estatisticas() {
+    const e = await this.impl.estatisticas();
+    e.online = this.online;
+    if (!this.online && this.motivoLocal) e.motivo = this.motivoLocal;
+    return e;
+  },
+
+  /* ---------- so existe online ----------
+     Perfil da conversa e historico do assistente moram no Postgres porque a
+     Edge Function precisa ler o perfil para montar o prompt. Offline, quem
+     guarda isso e o proprio estado da conta (S.perfilCliente), e estas
+     funcoes devolvem vazio sem quebrar. */
+
+  perfilConversa(conta) {
+    return this.online ? this.impl.perfilConversa(conta) : Promise.resolve(null);
+  },
+  salvarPerfilConversa(conta, r) {
+    return this.online ? this.impl.salvarPerfilConversa(conta, r) : Promise.resolve(null);
+  },
+  historicoConversa(conta, limite) {
+    return this.online ? this.impl.historicoConversa(conta, limite) : Promise.resolve([]);
+  },
+  salvarMensagem(conta, papel, texto) {
+    return this.online ? this.impl.salvarMensagem(conta, papel, texto) : Promise.resolve(null);
+  },
+  limparConversa(conta) {
+    return this.online ? this.impl.limparConversa(conta) : Promise.resolve(null);
+  },
+  chamarAgente(corpo) {
+    return this.online
+      ? this.impl.chamarAgente(corpo)
+      : Promise.resolve({ ok: false, erro: 'O assistente precisa do Supabase configurado.' });
   }
 };
 
@@ -1724,7 +3000,11 @@ function suave(chave, i, passo) {
 }
 
 /* ---------- unidades ---------- */
-const LAT = -23.55 * Math.PI / 180; /* São Paulo */
+/* Latitude de Sorocaba (-23,50). Entra na declinacao solar, entao e ela que
+   decide a que horas o sol nasce e se poe em cada data do ano. Antes estava
+   a da capital; a diferenca e pequena, mas o projeto e da regiao de Sorocaba
+   e nao ha razao para calcular com a cidade errada. */
+const LAT = -23.50 * Math.PI / 180;
 
 /* Lei 14.300/2022 — marco legal da geração distribuída.
    Sistemas conectados até 06/01/2023 mantêm compensação integral até 2045
@@ -1737,18 +3017,32 @@ function percentualFioB(ano, direitoAdquirido) {
   return ESCADA_FIO_B[ano] !== undefined ? ESCADA_FIO_B[ano] : 1;
 }
 
-/* Irradiação global horizontal média, kWh/m² por dia, mês a mês.
-   ATENÇÃO DO GRUPO: estes valores são um perfil típico do interior de São
-   Paulo e precisam ser conferidos no Atlas Brasileiro de Energia Solar
-   (INPE/LABREN) para a cidade real do projeto antes da banca. É o único
-   número do motor que vem de fora — troque aqui e o resto se ajusta. */
-const IRRADIACAO_SP = [5.9, 5.9, 5.2, 4.7, 4.0, 3.7, 3.9, 4.7, 4.8, 5.3, 5.8, 6.1];
+/* Irradiacao global horizontal media, kWh/m² por dia, mes a mes.
+
+   E o unico numero do motor que vem de fora, e agora ele vem da regiao certa:
+   a serie esta em banco-de-dados/dados/regiao-sorocaba.js, junto com as
+   cidades e as distribuidoras. Antes era um perfil generico do interior de
+   Sao Paulo, herdado de quando o projeto ainda nao tinha cidade definida.
+
+   Uma serie so para a regiao inteira, de proposito: as cidades atendidas
+   estao todas dentro de uns 60 km, e a diferenca real de irradiacao entre
+   elas e menor que a incerteza da propria medida. Dar um valor diferente
+   para cada cidade seria inventar precisao.
+
+   PENDENTE DO GRUPO: conferir a serie no CRESESB / Atlas Brasileiro de
+   Energia Solar (INPE/LABREN) para Sorocaba antes da banca. Trocar la ajusta
+   o resto do calculo sozinho. */
+const IRRADIACAO_REGIAO = IRRADIACAO_SOROCABA;
 const RAZAO_DESEMPENHO = 0.78; /* perdas de inversor, cabos, temperatura e sujeira */
 
 const UNIDADES_BASE = {
   residencial: {
     chave: 'residencial', nome: 'Casa das Acácias', tipo: 'Residencial · 4 pessoas', curto: 'Residencial',
-    distribuidora: 'Enel SP', tarifa: 0.92, tarifaComp: 0.79, fioB: 0.26, ilum: 22, minFatura: 50,
+    /* As duas unidades de demonstracao ficam na regiao do projeto, e nao na
+       capital: se o exemplo mostrar outra distribuidora, o assistente e a
+       tela de tarifa passam a contar uma historia que nao e a de quem esta
+       olhando. */
+    cidade: 'sorocaba', distribuidora: 'CPFL Piratininga', tarifa: 0.92, tarifaComp: 0.79, fioB: 0.26, ilum: 22, minFatura: 50,
     potenciaKwp: 4.4, paineis: 10, investimento: 18400, mesesOperacao: 14,
     fatorInstalacao: 0.58, condicaoTelhado: 'telhado a oeste, sombra do prédio vizinho até as 9h',
     consumoMes: 320, geracaoMes: 285, metaPadrao: 300,
@@ -1775,7 +3069,7 @@ const UNIDADES_BASE = {
   },
   negocio: {
     chave: 'negocio', nome: 'Padaria Pão de Ouro', tipo: 'Pequeno negócio · Centro', curto: 'Pequeno negócio',
-    distribuidora: 'Enel SP', tarifa: 0.78, tarifaComp: 0.66, fioB: 0.22, ilum: 58, minFatura: 100,
+    cidade: 'votorantim', distribuidora: 'CPFL Piratininga', tarifa: 0.78, tarifaComp: 0.66, fioB: 0.22, ilum: 58, minFatura: 100,
     potenciaKwp: 18.6, paineis: 42, investimento: 96000, mesesOperacao: 22,
     fatorInstalacao: 0.55, condicaoTelhado: 'duas águas com inclinação baixa, caixa d’água sombreia parte da tarde',
     consumoMes: 1840, geracaoMes: 1150, metaPadrao: 1700,
@@ -1973,7 +3267,7 @@ function temDireitoAdquirido(chave) {
    inversor, falha). Comparar contra o potencial mede qualidade da instalação. */
 function potencialRegiao(chave, m, nd) {
   const u = uni(chave) || UNIDADE_VAZIA;
-  return u.potenciaKwp * IRRADIACAO_SP[m] * RAZAO_DESEMPENHO * nd;
+  return u.potenciaKwp * IRRADIACAO_REGIAO[m] * RAZAO_DESEMPENHO * nd;
 }
 function geracaoEsperada(chave, m, nd) {
   return potencialRegiao(chave, m, nd) * (uni(chave) || UNIDADE_VAZIA).fatorInstalacao;
@@ -2062,8 +3356,13 @@ const PADRAO = {
      aparecem quando isto e verdadeiro. O visitante ve; conta nova nao,
      porque conta nova nao tem casa nenhuma cadastrada ainda. */
   exemplos: true,
+  /* O papo rapido do cadastro: como esta pessoa quer ser tratada pelo
+     assistente. null = ainda nao respondeu. Fica aqui, no estado da conta,
+     porque e dado da pessoa; quando ha Supabase, tambem vai para a tabela
+     perfil_conversa, que e de onde a Edge Function le para montar o prompt. */
+  perfilCliente: null,
   nova: {
-    nome: '', arquetipo: 'casaVazia', telhado: 'bom', distribuidora: '',
+    nome: '', cidade: 'sorocaba', arquetipo: 'casaVazia', telhado: 'bom', distribuidora: '',
     tarifa: 0.92, consumoMes: 300, potenciaKwp: 4.0, paineis: 9,
     investimento: 17000, mesesOperacao: 12,
     /* ids dos aparelhos que a pessoa marcou ter. null = ainda nao escolheu;
@@ -2115,7 +3414,7 @@ function salvar() {
    cálculo quebre no meio do caminho. */
 const UNIDADE_VAZIA = {
   chave: null, propria: false, arquetipo: 'casaVazia',
-  nome: 'Sem unidade', tipo: '—', curto: '—', distribuidora: '—',
+  nome: 'Sem unidade', tipo: '—', curto: '—', cidade: null, distribuidora: '—',
   tarifa: 0, tarifaComp: 0, fioB: 0, ilum: 0, minFatura: 0,
   potenciaKwp: 0, paineis: 0, investimento: 0, mesesOperacao: 1,
   fatorInstalacao: 0, condicaoTelhado: '—',
@@ -2222,8 +3521,16 @@ function aparelhosDoArquetipo(chaveArq) {
 function montarUnidade(f) {
   const a = ARQUETIPOS[f.arquetipo] || ARQUETIPOS.casaVazia;
   const telhado = TELHADOS.filter(t => t.k === f.telhado)[0] || TELHADOS[1];
-  const irradiacaoMedia = soma(IRRADIACAO_SP) / 12;
+  const irradiacaoMedia = soma(IRRADIACAO_REGIAO) / 12;
   const geracaoMes = f.potenciaKwp * irradiacaoMedia * RAZAO_DESEMPENHO * telhado.fator * 30;
+
+  /* A distribuidora sai da cidade, nao da digitacao. Quem mora em Piedade e
+     atendido pela Neoenergia Elektro mesmo que jure que e CPFL — e errar isso
+     faz o assistente citar o telefone e o mes de reajuste de outra empresa.
+     O campo digitado ainda ganha, para quem esta fora da regiao mapeada. */
+  const dist = distribuidoraDaCidade(f.cidade);
+  const nomeDistribuidora = (f.distribuidora && f.distribuidora.trim()) ||
+    (dist ? dist.nome : 'Não informada');
 
   return {
     chave: f.chave, propria: true, arquetipo: f.arquetipo,
@@ -2232,7 +3539,8 @@ function montarUnidade(f) {
        o medidor. A tela usa isto para nao vender estimativa como leitura. */
     criadaEm: f.criadaEm || null,
     nome: f.nome, tipo: a.tipo + ' · ' + a.rotulo.toLowerCase(), curto: a.tipo,
-    distribuidora: f.distribuidora || 'Não informada',
+    cidade: f.cidade || null,
+    distribuidora: nomeDistribuidora,
     tarifa: f.tarifa, tarifaComp: +(f.tarifa * 0.86).toFixed(3), fioB: +(f.tarifa * 0.28).toFixed(3),
     ilum: a.ilum, minFatura: a.minFatura,
     potenciaKwp: f.potenciaKwp, paineis: f.paineis, investimento: f.investimento,
@@ -2626,26 +3934,44 @@ function saudacao() {
 /* ===== backend/login.js ===== */
 /* login.js — contas e sessao
 
-   O login e OPCIONAL. O site abre direto no painel, em modo visitante, e
-   criar conta serve para separar dados de quem divide o mesmo navegador.
+   O LOGIN E OBRIGATORIO. Nao ha mais "entrar sem criar conta": quem abre o
+   link cai na tela de entrada e so passa dali com uma conta. Antes existia um
+   modo visitante que ia direto ao painel com dados de demonstracao dentro.
 
-   Sendo honesto sobre o que isto e e o que nao e:
+   Por que mudou. O visitante resolvia um problema de teste de campo (ninguem
+   travar no cadastro) e criava tres outros: os dados da pessoa ficavam
+   presos num balde anonimo que qualquer um do mesmo navegador abria; o
+   assistente de IA nao tinha de quem ser assistente, porque nao havia
+   perfil; e a primeira coisa que a pessoa via era a casa de outra gente. Com
+   conta, o Solaris sabe com quem esta falando desde o primeiro segundo — que
+   e a condicao para tudo o que veio depois.
 
-   NAO E seguranca contra quem tem acesso ao computador. O site roda sem
-   servidor; quem abrir o DevTools le o banco. Nao existe segredo do lado
-   do cliente, ponto.
+   Quem so quer passear pelo sistema continua podendo: cria a conta e liga as
+   unidades de exemplo em Configuracoes, com um clique.
 
-   E DE VERDADE:
-     - a senha nunca e gravada, nem em texto nem de forma reversivel;
-     - guardamos uma derivacao dela com salt aleatorio e 150 mil iteracoes
-       (PBKDF2 pelo WebCrypto, ou SHA-256 encadeado onde nao houver);
-     - comparacao em tempo constante, para nao vazar informacao pelo tempo;
-     - a mesma mensagem de erro para senha errada e e-mail inexistente,
-       para nao revelar quais contas existem;
-     - cada conta tem seu proprio balde de dados no banco.
+   ---------------------------------------------------------------------
+   ONDE A SENHA E CONFERIDA — sao dois mundos, e a tela diz em qual voce esta
 
-   Num produto de verdade isso tudo aconteceria no servidor. Esta escrito
-   na propria tela de login, de proposito.
+   COM SUPABASE CONFIGURADO (o normal): a conta e verificada no servidor. A
+   senha nunca chega perto deste arquivo, o token tem prazo de validade e a
+   mesma conta abre em qualquer aparelho. E autenticacao de verdade.
+
+   SEM SUPABASE (site aberto do disco, sem credenciais): tudo continua
+   acontecendo no navegador, como antes. E honesto dizer o que isso e:
+
+     NAO E seguranca contra quem tem acesso ao computador. Sem servidor, quem
+     abrir o DevTools le o banco. Nao existe segredo do lado do cliente.
+
+     E DE VERDADE:
+       - a senha nunca e gravada, nem em texto nem de forma reversivel;
+       - guardamos uma derivacao dela com salt aleatorio e 150 mil iteracoes
+         (PBKDF2 pelo WebCrypto, ou SHA-256 encadeado onde nao houver);
+       - comparacao em tempo constante, para nao vazar pelo tempo de resposta;
+       - a mesma mensagem de erro para senha errada e e-mail inexistente,
+         para nao revelar quais contas existem;
+       - cada conta tem seu proprio balde de dados no banco.
+
+   As duas coisas estao escritas na propria tela de login, de proposito.
 */
 'use strict';
 
@@ -2774,25 +4100,65 @@ async function carregarContas() {
 }
 function normalizarEmail(e) { return String(e || '').trim().toLowerCase(); }
 
+/* Quem confere a senha: o servidor ou este arquivo. Decidido uma vez, na
+   abertura, pelo banco.js — nao muda no meio da sessao. */
+function autenticacaoNoServidor() {
+  return !!(typeof Banco !== 'undefined' && Banco.online);
+}
+
 let SESSAO = null;
 function carregarSessao() {
   const s = lerJSON(CHAVE_SESSAO, null);
   if (!s || !s.id) return null;
   if (s.ate && Date.now() > s.ate) { try { localStorage.removeItem(CHAVE_SESSAO); } catch (e) { } return null; }
-  /* o visitante não tem cadastro; qualquer outra sessão só vale se a conta existir */
-  if (s.id !== 'visitante' && !contas()[s.id]) return null;
+  /* No modo local a sessao so vale se a conta existir neste navegador. No
+     modo servidor quem manda e o token do Supabase, conferido em
+     restaurarSessao() — aqui a lista local esta vazia de proposito. */
+  if (!autenticacaoNoServidor() && !contas()[s.id]) return null;
   SESSAO = s;
   return s;
 }
 function sessao() { return SESSAO; }
-function ehVisitante() { return SESSAO && SESSAO.id === 'visitante'; }
+
+/* A sessao de verdade na abertura do site. E assincrona porque, com Supabase,
+   pode ser preciso renovar o token antes de saber se ainda vale. */
+async function restaurarSessao() {
+  if (!autenticacaoNoServidor()) return carregarSessao();
+
+  const u = await Banco.impl.authSessao();
+  if (!u) { SESSAO = null; try { localStorage.removeItem(CHAVE_SESSAO); } catch (e) { } return null; }
+  SESSAO = { id: u.id, nome: u.nome, email: u.email, ate: null };
+  gravarJSON(CHAVE_SESSAO, SESSAO);
+  return SESSAO;
+}
 
 /* ---------- operações de conta ---------- */
-async function criarConta(nome, email, senha) {
-  const e = normalizarEmail(email);
+/* As tres validacoes valem nos dois modos. O Supabase tambem valida, mas a
+   mensagem dele vem em ingles e generica — conferir aqui antes e o que faz a
+   tela dizer "escreva seu nome" em vez de "invalid request". */
+function conferirCadastro(nome, e, senha) {
   if (String(nome).trim().length < 2) throw new Error('Escreva seu nome com pelo menos 2 letras.');
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) throw new Error('Esse e-mail não parece válido.');
   if (String(senha).length < 6) throw new Error('A senha precisa de pelo menos 6 caracteres.');
+}
+
+/* Cria a conta E DEIXA A PESSOA DENTRO, nos dois modos.
+
+   Isto e uma unica operacao do ponto de vista de quem usa: o botao diz
+   "criar conta e continuar", e ninguem espera digitar a senha de novo logo
+   depois de escolher a senha. Os dois caminhos precisam terminar com sessao
+   aberta, senao a tela seguinte nao sabe quem entrou. */
+async function criarConta(nome, email, senha) {
+  const e = normalizarEmail(email);
+  conferirCadastro(nome, e, senha);
+
+  if (autenticacaoNoServidor()) {
+    const u = await Banco.impl.authCriar(String(nome).trim(), e, senha);
+    SESSAO = { id: u.id, nome: u.nome, email: u.email, ate: null };
+    gravarJSON(CHAVE_SESSAO, SESSAO);
+    return u;
+  }
+
   const todas = contas();
   if (todas[e]) throw new Error('Já existe uma conta com esse e-mail neste navegador.');
 
@@ -2804,11 +4170,23 @@ async function criarConta(nome, email, senha) {
   };
   _contas = todas;
   await Banco.salvarConta(todas[e]);
-  return todas[e];
+
+  const c = todas[e];
+  SESSAO = { id: c.id, nome: c.nome, email: c.email, ate: Date.now() + DIAS_SESSAO * 86400000 };
+  gravarJSON(CHAVE_SESSAO, SESSAO);
+  return c;
 }
 
 async function entrar(email, senha, manter) {
   const e = normalizarEmail(email);
+
+  if (autenticacaoNoServidor()) {
+    const u = await Banco.impl.authEntrar(e, senha);
+    SESSAO = { id: u.id, nome: u.nome, email: u.email, ate: null };
+    gravarJSON(CHAVE_SESSAO, SESSAO);
+    return SESSAO;
+  }
+
   const c = contas()[e];
   /* mesmo sem conta, derivamos uma vez: assim o tempo de resposta não
      revela se o e-mail existe */
@@ -2824,19 +4202,28 @@ async function entrar(email, senha, manter) {
   return SESSAO;
 }
 
-function entrarComoVisitante() {
-  SESSAO = { id: 'visitante', nome: 'Visitante', email: null, ate: null };
-  gravarJSON(CHAVE_SESSAO, SESSAO);
-  return SESSAO;
-}
-
+/* Sair de verdade: no modo servidor tambem invalida o token la, senao a
+   sessao continuaria valendo em outra aba ate vencer sozinha. */
 function sair() {
+  const eraServidor = autenticacaoNoServidor();
   SESSAO = null;
   try { localStorage.removeItem(CHAVE_SESSAO); } catch (e) { }
+  if (eraServidor) Banco.impl.authSair();
 }
 
 async function trocarSenha(senhaAtual, senhaNova) {
-  if (!SESSAO || ehVisitante()) throw new Error('Entre com uma conta para trocar a senha.');
+  if (!SESSAO) throw new Error('Entre com uma conta para trocar a senha.');
+  if (String(senhaNova).length < 6) throw new Error('A nova senha precisa de pelo menos 6 caracteres.');
+
+  if (autenticacaoNoServidor()) {
+    /* Confere a atual entrando de novo: o Supabase deixa trocar a senha so
+       com o token, e isso permitiria trocar a senha de uma sessao esquecida
+       aberta. Pedir a senha atual e o que impede. */
+    await Banco.impl.authEntrar(SESSAO.email, senhaAtual);
+    await Banco.impl.authTrocarSenha(senhaNova);
+    return;
+  }
+
   const todas = contas(), c = todas[SESSAO.id];
   if (!c) throw new Error('Conta não encontrada.');
   const atual = await derivar(senhaAtual, c.salt, c.metodo);
@@ -2849,7 +4236,7 @@ async function trocarSenha(senhaAtual, senhaNova) {
 }
 
 async function apagarConta() {
-  if (!SESSAO || ehVisitante()) return;
+  if (!SESSAO) return;
   const id = SESSAO.id;
   delete _contas[id];
   await Banco.apagarConta(id);
@@ -2858,49 +4245,22 @@ async function apagarConta() {
   sair();
 }
 
-/* ---------- migração de dados ----------
-   Dois casos em que os dados ficariam órfãos e o usuário acharia que
-   perdeu tudo. Os dois são resolvidos calados. */
-
-/* Quem brincou como visitante e depois criou conta leva junto o que
-   cadastrou — mas NAO as unidades de demonstracao. Conta nova comeca
-   com as suas coisas e mais nada; se voce nao cadastrou nenhuma, ela
-   comeca vazia mesmo, e o site pede a primeira. */
-async function migrarDoVisitante(destinoId) {
-  const dados = await Banco.estado('visitante');
-  if (!dados) return false;
-  if (await Banco.estado(destinoId)) return false;
-
-  const proprias = (dados.unidades || []);
-  const chavesProprias = proprias.map(u => u.chave);
-  const limpo = Object.assign({}, dados, {
-    exemplos: false,
-    unidades: proprias,
-    /* aparelhos e respostas presos as unidades de demonstracao ficam para tras */
-    extras: (dados.extras || []).filter(e => chavesProprias.indexOf(e.perfil) >= 0),
-    removidos: (dados.removidos || []).filter(r => chavesProprias.some(c => r.indexOf(c + ':') === 0)),
-    perfil: chavesProprias[0] || null,
-    detalhe: null, tela: 'painel'
-  });
-  await Banco.salvarEstado(destinoId, limpo);
-  await Banco.apagarEstado('visitante');
-  return proprias.length > 0;
-}
-
 /* ---------- tela de login ---------- */
-let modoLogin = 'entrar';   /* entrar | criar */
+let modoLogin = 'entrar';   /* entrar | criar | recuperar */
 let erroLogin = '';
+let avisoLogin = '';
 let ocupado = false;
 
 function vLogin() {
   const criar = modoLogin === 'criar';
-  const quantas = Object.keys(contas()).length;
+  const recuperar = modoLogin === 'recuperar';
+  const naNuvem = autenticacaoNoServidor();
 
-  /* Coluna da esquerda: o que o site faz. Quem chega aqui pela primeira vez
-     precisa saber onde entrou antes de decidir criar conta. */
+  /* Coluna da esquerda: o que o site faz. Agora que ninguem entra sem conta,
+     esta coluna e a unica chance de a pessoa entender onde chegou antes de
+     decidir se cadastra. Ela virou o argumento, nao a decoracao. */
   const vitrine =
     '<section class="ent-vitrine">' +
-    '' +
     '<div class="ent-vitrine-in">' +
       '<div class="ent-marca">' +
         '<span class="ent-ic">' +
@@ -2912,89 +4272,131 @@ function vLogin() {
       '</div>' +
 
       '<h1 class="ent-titulo">Sua conta de luz,<br>explicada.</h1>' +
-      '<p class="ent-linha">Monitoramento de energia solar para casa e pequeno negócio, com a Lei 14.300 dentro do cálculo.</p>' +
+      '<p class="ent-linha">Monitoramento de energia solar para casa e pequeno negócio na região de Sorocaba, com a Lei 14.300 dentro do cálculo.</p>' +
 
       '<ul class="ent-lista">' +
         itemVitrine('M9 3v6M15 3v6M6 9h12v3a6 6 0 0 1-12 0zM12 18v3',
           'Para onde vai cada quilowatt',
-          'O consumo dividido por aparelho, a partir do padr\u00e3o do medidor.') +
+          'O consumo dividido por aparelho, a partir do padrão do medidor.') +
         itemVitrine('M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v3M12 20v3M23 12h-3M4 12H1',
           'Quanto o sol cobriu de verdade',
           'Hora a hora, cruzando o que o painel gera com o que a casa usa.') +
         itemVitrine('M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4',
-          'Quanto vem na pr\u00f3xima conta',
-          'Com cr\u00e9ditos, m\u00ednimo faturado e o Fio B da Lei 14.300.') +
+          'Quanto vem na próxima conta',
+          'Com créditos, mínimo faturado e o Fio B da Lei 14.300.') +
+        itemVitrine('M12 3a6 6 0 0 0-3.4 10.9c.5.5.9 1.3.9 2.1h5c0-.8.4-1.6.9-2.1A6 6 0 0 0 12 3zM10 19.5h4',
+          'Um assistente que conhece a sua conta',
+          'Ele sabe a sua cidade, a sua distribuidora e o que o medidor marca agora.') +
       '</ul>' +
 
       '<div class="ent-rodape">' +
         '<span class="live-dot batendo"></span>' +
-        'Medidor virtual rodando \u00b7 uma leitura por minuto gravada no banco' +
+        'Medidor virtual rodando · uma leitura por minuto gravada no banco' +
       '</div>' +
     '</div></section>';
 
-  /* Coluna da direita: o formulario. */
+  /* ----- a coluna do formulario ----- */
+  const sub = {
+    entrar: 'Use a conta que você criou aqui.',
+    criar: 'Suas unidades, aparelhos e metas ficam guardados na sua conta' +
+      (naNuvem ? ' e abrem em qualquer aparelho.' : ' neste navegador.'),
+    recuperar: 'Mandamos um link de troca de senha para o seu e-mail.'
+  }[modoLogin];
+
+  const campos = recuperar
+    ? campoEntrada('auEmail', 'E-mail da conta', 'email', 'username', 'voce@exemplo.com')
+    : (criar ? campoEntrada('auNome', 'Nome', 'text', 'name', 'Como quer ser chamado') : '') +
+      campoEntrada('auEmail', 'E-mail', 'email', 'username', 'voce@exemplo.com') +
+      campoEntrada('auSenha', 'Senha', 'password',
+        criar ? 'new-password' : 'current-password',
+        criar ? 'Pelo menos 6 caracteres' : 'Sua senha') +
+      (criar ? '' :
+        '<label class="ent-check"><input type="checkbox" id="auManter" checked>' +
+        '<span>Continuar conectado por 30 dias</span></label>');
+
+  const botao = recuperar ? 'Mandar link de recuperação'
+    : criar ? 'Criar conta e continuar' : 'Entrar';
+
   const formulario =
     '<section class="ent-form">' +
     '<div class="ent-cx">' +
 
       '<div class="ent-abas" role="tablist">' +
-        '<button role="tab" data-act="auth-modo" data-v="entrar" aria-selected="' + (!criar) + '">Entrar</button>' +
+        '<button role="tab" data-act="auth-modo" data-v="entrar" aria-selected="' + (modoLogin === 'entrar') + '">Entrar</button>' +
         '<button role="tab" data-act="auth-modo" data-v="criar" aria-selected="' + criar + '">Criar conta</button>' +
       '</div>' +
 
-      '<p class="ent-sub">' + (criar
-        ? 'A conta guarda suas unidades, aparelhos e metas separados de quem mais usa este navegador.'
-        : 'Use a conta que voc\u00ea criou neste navegador.') + '</p>' +
+      '<p class="ent-sub">' + sub + '</p>' +
 
       '<form class="ent-campos" id="formLogin" autocomplete="on">' +
-        (criar
-          ? campoEntrada('auNome', 'Nome', 'text', 'name', 'Como quer ser chamado')
-          : '') +
-        campoEntrada('auEmail', 'E-mail', 'email', 'username', 'voce@exemplo.com') +
-        campoEntrada('auSenha', 'Senha', 'password',
-          criar ? 'new-password' : 'current-password',
-          criar ? 'Pelo menos 6 caracteres' : 'Sua senha') +
-
-        (criar ? '' :
-          '<label class="ent-check"><input type="checkbox" id="auManter" checked>' +
-          '<span>Continuar conectado por 30 dias</span></label>') +
+        campos +
 
         (erroLogin ? '<div class="ent-erro" role="alert">' +
           '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>' +
           '<span>' + esc(erroLogin) + '</span></div>' : '') +
 
+        (avisoLogin ? '<div class="ent-ok" role="status">' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>' +
+          '<span>' + esc(avisoLogin) + '</span></div>' : '') +
+
         '<button type="submit" class="ent-botao" id="auEnviar"' + (ocupado ? ' disabled' : '') + '>' +
-        (ocupado ? '<span class="ent-girando"></span>Verificando\u2026'
-          : (criar ? 'Criar conta e entrar' : 'Entrar')) + '</button>' +
+        (ocupado ? '<span class="ent-girando"></span>Verificando…' : botao) + '</button>' +
       '</form>' +
 
-      '<div class="ent-ou"><span>ou</span></div>' +
+      /* Sem a saida de visitante, quem esquece a senha fica trancado do lado
+         de fora do proprio painel. Recuperacao deixou de ser luxo e virou
+         parte da porta de entrada — mas so existe de verdade com servidor. */
+      (recuperar
+        ? '<button class="ent-link-voltar" data-act="auth-modo" data-v="entrar">Voltar para o login</button>'
+        : criar || !naNuvem ? ''
+        : '<button class="ent-link-voltar" data-act="auth-modo" data-v="recuperar">Esqueci minha senha</button>') +
 
-      /* O caminho de teste tem que ser um clique. Durante o teste de campo
-         ninguem deveria travar numa tela de cadastro. */
-      '<button class="ent-visitante" data-act="auth-visitante">' +
-        '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>' +
-        'Entrar sem criar conta' +
-      '</button>' +
-      '<p class="ent-visitante-d">Vai direto para o painel com os dados de demonstra\u00e7\u00e3o. ' +
-      'D\u00e1 para criar conta depois sem perder o que voc\u00ea fez.</p>' +
-
-      '<details class="ent-aviso">' +
-        '<summary>Como seus dados ficam guardados</summary>' +
-        '<p>O Solaris roda sem servidor, direto no seu navegador. A senha nunca ' +
-        '\u00e9 gravada \u2014 s\u00f3 uma deriva\u00e7\u00e3o dela com salt e ' + nf(ITERACOES) + ' itera\u00e7\u00f5es' +
-        (TEM_WEBCRYPTO ? ' (PBKDF2 pelo WebCrypto)' : ' (SHA-256 encadeado)') + '. ' +
-        'Isso separa os dados entre contas, mas <b>n\u00e3o protege contra quem tem ' +
-        'acesso a este computador</b>: sem servidor, n\u00e3o existe segredo do lado do ' +
-        'cliente. Tamb\u00e9m n\u00e3o h\u00e1 recupera\u00e7\u00e3o de senha, porque n\u00e3o h\u00e1 e-mail para enviar.</p>' +
-      '</details>' +
-
-      (quantas ? '<div class="ent-contador">' + quantas +
-        (quantas > 1 ? ' contas neste navegador' : ' conta neste navegador') + '</div>' : '') +
+      cartaoSeguranca(naNuvem) +
 
     '</div></section>';
 
   return '<div class="entrada">' + vitrine + formulario + '</div>';
+}
+
+/* O que acontece com a senha e com os dados, dito na tela e nao no README.
+   O texto muda conforme onde a conta esta sendo verificada, porque as duas
+   situacoes sao honestamente diferentes — e prometer a mais seria mentira. */
+function cartaoSeguranca(naNuvem) {
+  if (naNuvem) {
+    return '<div class="ent-modo ent-modo--nuvem">' +
+      '<span class="ent-modo-ic">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M6 10a6 6 0 1 1 11.3 2.8A4 4 0 0 1 17 20H7a4 4 0 0 1-1-7.9z"/></svg></span>' +
+      '<span>Conta guardada no servidor. A senha é conferida lá, não neste navegador, ' +
+      'e os seus dados abrem no celular e no computador.</span></div>' +
+
+      '<details class="ent-aviso">' +
+        '<summary>O que fica guardado sobre você</summary>' +
+        '<p>Seu nome, seu e-mail, as unidades que você cadastrar, o histórico do medidor ' +
+        'e as suas conversas com o assistente. Cada linha guarda o dono, e o banco só devolve ' +
+        'as linhas de quem está logado — ninguém lê a unidade de ninguém. ' +
+        'Dá para apagar tudo de uma vez em <b>Configurações → Banco de dados</b>.</p>' +
+      '</details>';
+  }
+
+  const quantas = Object.keys(contas()).length;
+  return '<div class="ent-modo">' +
+    '<span class="ent-modo-ic">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4"/></svg></span>' +
+    '<span>Este Solaris está rodando <b>sem servidor</b>: a conta vale só neste navegador.</span></div>' +
+
+    '<details class="ent-aviso">' +
+      '<summary>O que isso significa para a sua senha</summary>' +
+      '<p>A senha nunca é gravada — só uma derivação dela com salt e ' + nf(ITERACOES) + ' iterações' +
+      (TEM_WEBCRYPTO ? ' (PBKDF2 pelo WebCrypto)' : ' (SHA-256 encadeado)') + '. ' +
+      'Isso separa os dados entre contas, mas <b>não protege contra quem tem acesso a este ' +
+      'computador</b>: sem servidor, não existe segredo do lado do cliente. Também não há ' +
+      'recuperação de senha, porque não há servidor para mandar o e-mail.</p>' +
+    '</details>' +
+
+    (quantas ? '<div class="ent-contador">' + quantas +
+      (quantas > 1 ? ' contas neste navegador' : ' conta neste navegador') + '</div>' : '');
 }
 
 /* um item da lista de argumentos, na coluna da esquerda */
@@ -3013,32 +4415,53 @@ function campoEntrada(id, rotulo, tipo, autocomplete, dica) {
     '</label>';
 }
 
-/* envio do formulário */
+/* envio do formulario */
 async function enviarLogin(ev) {
   ev.preventDefault();
   if (ocupado) return;
   const criar = modoLogin === 'criar';
+  const recuperar = modoLogin === 'recuperar';
   const nome = criar ? ($('#auNome') || {}).value : '';
   const email = ($('#auEmail') || {}).value;
-  const senha = ($('#auSenha') || {}).value;
+  const senha = recuperar ? '' : ($('#auSenha') || {}).value;
   const manter = criar ? true : !!(($('#auManter') || {}).checked);
 
-  ocupado = true; erroLogin = ''; renderLogin();
+  ocupado = true; erroLogin = ''; avisoLogin = ''; renderLogin();
   try {
-    let migrou = false;
+    if (recuperar) {
+      await Banco.impl.authRecuperarSenha(normalizarEmail(email));
+      ocupado = false;
+      modoLogin = 'entrar';
+      /* A mesma mensagem sai com e-mail cadastrado ou nao: dizer "esse e-mail
+         nao existe" entregaria quais contas existem para quem quisesse
+         descobrir. */
+      avisoLogin = 'Se houver conta com esse e-mail, o link de troca de senha já está a caminho.';
+      renderLogin();
+      return;
+    }
+
     if (criar) {
-      const eraVisitante = ehVisitante();
       const c = await criarConta(nome, email, senha);
-      if (eraVisitante) migrou = await migrarDoVisitante(c.id);
-      /* conta nova nunca comeca com as unidades de demonstracao dentro */
-      if (!await Banco.estado(c.id)) await Banco.salvarEstado(c.id, { exemplos: false, perfil: null });
-      await entrar(email, senha, true);
-    } else await entrar(email, senha, manter);
+      /* Conta nova comeca vazia: sem unidade de demonstracao dentro e sem
+         nenhum dado de quem usou este navegador antes. */
+      if (!await Banco.estado(c.id)) {
+        await Banco.salvarEstado(c.id, { exemplos: false, perfil: null, perfilCliente: null });
+      }
+    } else {
+      await entrar(email, senha, manter);
+    }
     ocupado = false;
-    await aoEntrar(migrou);
+    await aoEntrar();
   } catch (e) {
     ocupado = false;
-    erroLogin = e.message || 'Não deu para continuar.';
+    /* Cadastro que exige confirmacao por e-mail nao e erro da pessoa: ela fez
+       tudo certo e so falta clicar no link. Vai como aviso, nao como falha. */
+    if (e && e.confirmacaoPendente) {
+      modoLogin = 'entrar';
+      avisoLogin = e.message;
+    } else {
+      erroLogin = (e && e.message) || 'Não deu para continuar.';
+    }
     renderLogin();
     const alvo = $('#auSenha'); if (alvo) { alvo.focus(); alvo.select(); }
   }
@@ -3095,14 +4518,26 @@ let LEITOR = {};
 
 const LEITOR_CDN = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
 
-/* As distribuidoras que atendem a maior parte do pais. Casar por nome e
-   de longe o campo mais confiavel: e o texto maior da folha, quase sempre
-   sai limpo no OCR, e a lista e fechada. */
-const DISTRIBUIDORAS = [
-  'Enel', 'CPFL', 'Light', 'Cemig', 'Copel', 'Celesc', 'Neoenergia', 'Equatorial',
-  'EDP', 'Energisa', 'RGE', 'Coelba', 'Celpe', 'Cosern', 'Elektro', 'Sulgipe',
-  'Amazonas Energia', 'CEB', 'CEEE', 'Celg', 'Cepisa', 'Ceron', 'Eletroacre', 'Boa Vista'
-];
+/* Os nomes que procuramos na folha. Casar por nome e de longe o campo mais
+   confiavel: e o texto maior da fatura, quase sempre sai limpo no OCR, e a
+   lista e fechada.
+
+   A ORDEM IMPORTA, e a primeira parte da lista nao e enfeite. As nossas
+   distribuidoras vem primeiro, com o nome completo, para uma fatura de
+   Sorocaba ser lida como "CPFL Piratininga" e nao como "CPFL" — sao coisas
+   diferentes: a Piratininga e a Santa Cruz sao concessoes separadas, com
+   tarifa e mes de reajuste proprios. Casando so "CPFL", o sistema perderia
+   justamente a distincao que a base da regiao existe para guardar.
+
+   Depois vem as nacionais, para quem esta fora da regiao ainda ter o campo
+   preenchido. */
+const DISTRIBUIDORAS_NA_FATURA = Object.keys(DISTRIBUIDORAS)
+  .map(k => DISTRIBUIDORAS[k].nome)
+  .concat([
+    'Enel', 'CPFL', 'Light', 'Cemig', 'Copel', 'Celesc', 'Neoenergia', 'Equatorial',
+    'EDP', 'Energisa', 'RGE', 'Coelba', 'Celpe', 'Cosern', 'Elektro', 'Sulgipe',
+    'Amazonas Energia', 'CEB', 'CEEE', 'Celg', 'Cepisa', 'Ceron', 'Eletroacre', 'Boa Vista'
+  ]);
 
 function leitorDisponivel() {
   return typeof fetch === 'function' && location.protocol !== 'file:';
@@ -3194,8 +4629,8 @@ function numeroDoTexto(txt) {
 
 function acharDistribuidora(texto) {
   const alvo = texto.toLowerCase();
-  for (let i = 0; i < DISTRIBUIDORAS.length; i++) {
-    const d = DISTRIBUIDORAS[i];
+  for (let i = 0; i < DISTRIBUIDORAS_NA_FATURA.length; i++) {
+    const d = DISTRIBUIDORAS_NA_FATURA[i];
     if (alvo.indexOf(d.toLowerCase()) >= 0) return d;
   }
   return null;
@@ -3345,6 +4780,272 @@ async function lerContaDeLuz(file, aoMudar) {
 }
 
 
+/* ===== backend/agente.js ===== */
+/* agente.js — o assistente de IA, do lado de ca
+
+   O Solaris tem um assistente movido a Google Gemini. Este arquivo e a
+   metade que roda no navegador: junta o contexto, manda a pergunta e guarda
+   a conversa. A metade que fala com o Google roda no Supabase, em
+   banco-de-dados/supabase/functions/agente/.
+
+   A CHAVE NAO ESTA AQUI, e nao pode estar. Chave de API em codigo de
+   navegador e chave publicada — qualquer pessoa abre o DevTools e copia.
+   A nossa vive como segredo do projeto Supabase e so a Edge Function le.
+   O cliente nao precisa de chave nenhuma: abre o site e o assistente
+   funciona.
+
+   O QUE FAZ O ASSISTENTE SER "DELE" E NAO GENERICO
+
+   Nao treinamos modelo. Treinar peso de modelo custaria caro e nao caberia
+   num trabalho de faculdade — e nem resolveria, porque o que muda de cliente
+   para cliente muda toda semana. O que fazemos e montar, a cada pergunta,
+   um contexto com tres camadas:
+
+     1. QUEM E A PESSOA — o papo rapido do cadastro (PERGUNTAS_PERFIL, aqui
+        embaixo). Como quer ser chamada, quanto entende de energia, o que ela
+        quer do sistema, como e a rotina da casa. Isso fica no banco e a Edge
+        Function le a cada pergunta.
+
+     2. ONDE ELA MORA — a cidade, a distribuidora, quando a tarifa dela e
+        reajustada, o telefone da emergencia. Vem de banco-de-dados/dados/
+        regiao-sorocaba.js e da tabela `cidades`.
+
+     3. O QUE ESTA ACONTECENDO AGORA — os numeros do painel neste minuto:
+        consumo do mes, geracao, creditos, projecao da conta, quais aparelhos
+        pesam mais. Sao os unicos dados que so existem no navegador, porque e
+        aqui que o medidor roda — por isso vao no corpo do pedido.
+
+   O efeito para quem usa e o de um assistente que conhece ele. Para quem
+   mantem o codigo, e um prompt montado por funcao pura, que da para ler,
+   testar e corrigir.
+*/
+'use strict';
+
+/* ---------- o papo rapido do cadastro ----------
+
+   Cinco perguntas, e nenhuma delas e sobre energia de proposito. Perguntar
+   "qual sua tarifa" aqui seria repetir o cadastro da unidade; o que falta ao
+   sistema nao e dado tecnico, e como falar com esta pessoa.
+
+   Todas tem opcao de pular. Cadastro que obriga a responder e cadastro que
+   as pessoas abandonam no meio — e um assistente sem perfil ainda funciona,
+   so responde mais generico. */
+const PERGUNTAS_PERFIL = [
+  {
+    id: 'tratamento',
+    pergunta: 'Como você prefere que eu te chame?',
+    porque: 'Para o assistente falar com você do jeito que você gosta.',
+    opcoes: [
+      { v: 'primeiro_nome', r: 'Pelo primeiro nome, de boa' },
+      { v: 'neutro', r: 'Por “você”, normal' },
+      { v: 'formal', r: 'Formal, senhor ou senhora' }
+    ]
+  },
+  {
+    id: 'conhecimento',
+    pergunta: 'Quanto você entende de conta de luz hoje?',
+    porque: 'Define se o assistente explica cada termo ou vai direto ao ponto.',
+    opcoes: [
+      { v: 'leigo', r: 'Quase nada. Só sei o valor que vem' },
+      { v: 'medio', r: 'O básico: sei ler o kWh e o total' },
+      { v: 'tecnico', r: 'Bastante. Entendo de tarifa e de sistema solar' }
+    ]
+  },
+  {
+    id: 'objetivo',
+    pergunta: 'O que você mais quer do Solaris?',
+    porque: 'Toda resposta vai puxar para o que importa para você.',
+    opcoes: [
+      { v: 'economizar', r: 'Gastar menos no fim do mês' },
+      { v: 'entender', r: 'Entender para onde vai minha energia' },
+      { v: 'investimento', r: 'Saber se o sistema se pagou' },
+      { v: 'sustentabilidade', r: 'Reduzir meu impacto ambiental' }
+    ]
+  },
+  {
+    id: 'rotina',
+    pergunta: 'Como é o movimento na sua unidade durante o dia?',
+    porque: 'Quem fica em casa de dia aproveita muito mais o sol — e o conselho muda.',
+    opcoes: [
+      { v: 'Fica vazia de dia, todo mundo sai', r: 'Vazia: todo mundo sai cedo' },
+      { v: 'Tem gente o dia inteiro', r: 'Tem gente o dia todo' },
+      { v: 'Varia bastante de um dia para o outro', r: 'Varia bastante' },
+      { v: 'É um comércio, com horário de funcionamento', r: 'É um comércio' }
+    ]
+  },
+  {
+    id: 'preocupacao',
+    pergunta: 'O que mais te incomoda na conta de luz hoje?',
+    porque: 'É por onde o assistente vai começar a te ajudar.',
+    opcoes: [
+      { v: 'A conta vem alta e eu não sei por quê', r: 'Vem alta e não sei por quê' },
+      { v: 'A conta varia muito de um mês para o outro', r: 'Varia demais entre os meses' },
+      { v: 'Não sei se o sistema solar está rendendo o que deveria', r: 'Não sei se o solar rende' },
+      { v: 'Nada me incomoda, quero só acompanhar', r: 'Nada. Só quero acompanhar' }
+    ]
+  }
+];
+
+/* Onde o perfil mora enquanto a pessoa responde, e depois de responder.
+   Sempre no estado da conta (que vai para o banco de qualquer jeito) e,
+   quando ha Supabase, tambem na tabela propria — porque quem le o perfil
+   para montar o prompt e a Edge Function, no servidor. */
+function perfilCliente() {
+  return (S && S.perfilCliente) || null;
+}
+function perfilRespondido() {
+  const p = perfilCliente();
+  return !!(p && p.em);
+}
+async function salvarPerfilCliente(respostas) {
+  S.perfilCliente = Object.assign({}, respostas, { em: Date.now() });
+  salvar();
+  await Banco.salvarPerfilConversa(contaAtual(), S.perfilCliente);
+  return S.perfilCliente;
+}
+
+/* ---------- o contexto que so existe aqui ----------
+   O medidor roda no navegador, entao estes numeros nao estao em tabela
+   nenhuma no instante da pergunta. Vao junto com ela. */
+function contextoDoPainel() {
+  if (semUnidade()) return {};
+  const v = visao(), u = unidade();
+  const eq = aparelhos()
+    .filter(e => !e.sintetico)
+    .slice(0, 4)
+    .map(e => e.nome + ' (' + nf((e.kwh / Math.max(v.projConsumo, 1)) * 100) + '%)')
+    .join(', ');
+  const abertos = alertas().filter(a => a.tipo === 'alto').map(a => a.titulo).join('; ');
+
+  return {
+    unidade: u.nome,
+    tipo: u.tipo,
+    cidade: u.cidade || null,
+    distribuidora: u.distribuidora,
+    potenciaKwp: nf(u.potenciaKwp, 1),
+    paineis: u.paineis,
+    tarifa: nf(tarifaAtual(), 2),
+    consumoMes: nf(v.mtd.tc),
+    geracaoMes: nf(v.mtd.tg),
+    economia: nf(v.economia),
+    creditos: nf(v.creditos),
+    autoPct: nf(v.autoPct),
+    contaProj: nf(v.contaProj),
+    desempenho: nf(v.desempenho),
+    topAparelhos: eq,
+    direitoAdquirido: v.direitoAdquirido,
+    percFioB: nf(v.percFioB * 100),
+    alertas: abertos || 'nenhum'
+  };
+}
+
+/* ---------- estado da conversa ---------- */
+const AGENTE = {
+  mensagens: [],      /* { papel: 'pessoa'|'assistente', texto } */
+  rascunho: '',       /* o que esta digitado e ainda nao foi enviado */
+  ocupado: false,
+  erro: null,
+  carregada: false
+};
+
+/* Por que o assistente pode estar desligado, em uma frase que diz o que
+   fazer. "Indisponivel" sozinho nao ajuda ninguem. */
+function agenteIndisponivel() {
+  if (!Banco.online) {
+    return 'O assistente precisa do Supabase configurado. Preencha a url e a chave em ' +
+      'banco-de-dados/config.js e publique a função `agente` — está explicado em ' +
+      'documentacao/ligar-supabase-e-gemini.md.';
+  }
+  if (!sessao()) return 'Entre na sua conta para falar com o assistente.';
+  return null;
+}
+
+async function carregarConversa() {
+  if (AGENTE.carregada) return;
+  AGENTE.carregada = true;
+  const h = await Banco.historicoConversa(contaAtual(), 30);
+  if (h && h.length) AGENTE.mensagens = h.map(m => ({ papel: m.papel, texto: m.texto }));
+}
+
+/* Manda a pergunta e devolve o texto. Quem chama cuida de redesenhar: este
+   arquivo nao toca no DOM, e a regra de camada do projeto. */
+async function perguntarAoAgente(texto) {
+  const pergunta = String(texto || '').trim();
+  if (!pergunta || AGENTE.ocupado) return null;
+
+  const impedimento = agenteIndisponivel();
+  if (impedimento) { AGENTE.erro = impedimento; return null; }
+
+  AGENTE.ocupado = true;
+  AGENTE.erro = null;
+  AGENTE.mensagens = AGENTE.mensagens.concat([{ papel: 'pessoa', texto: pergunta }]);
+
+  const memoria = (SOLARIS_CONFIG.agente && SOLARIS_CONFIG.agente.memoria) || 12;
+  const u = semUnidade() ? null : unidade();
+
+  const r = await Banco.chamarAgente({
+    pergunta: pergunta,
+    modelo: (SOLARIS_CONFIG.agente && SOLARIS_CONFIG.agente.modelo) || undefined,
+    cidade: (u && u.cidade) || null,
+    painel: contextoDoPainel(),
+    /* -1 para nao mandar de volta a pergunta que acabamos de acrescentar */
+    historico: AGENTE.mensagens.slice(0, -1).slice(-memoria)
+  });
+
+  AGENTE.ocupado = false;
+
+  if (!r || !r.ok) {
+    const msg = (r && r.dados && r.dados.erro) || (r && r.erro) ||
+      'Não consegui falar com o assistente agora.';
+    AGENTE.erro = msg;
+    /* A pergunta sai da lista: deixar ela pendurada sem resposta faz parecer
+       que o assistente ignorou a pessoa. */
+    AGENTE.mensagens = AGENTE.mensagens.slice(0, -1);
+    return null;
+  }
+
+  const resposta = (r.dados && r.dados.texto) || '';
+  AGENTE.mensagens = AGENTE.mensagens.concat([{ papel: 'assistente', texto: resposta }]);
+
+  /* Gravar a conversa e conveniencia, nao pode segurar a tela. */
+  const conta = contaAtual();
+  Banco.salvarMensagem(conta, 'pessoa', pergunta);
+  Banco.salvarMensagem(conta, 'assistente', resposta);
+
+  return resposta;
+}
+
+async function limparConversaDoAgente() {
+  AGENTE.mensagens = [];
+  AGENTE.erro = null;
+  await Banco.limparConversa(contaAtual());
+}
+
+/* Perguntas de partida. Tela de chat vazia e a coisa mais intimidante de
+   qualquer produto com IA: ninguem sabe o que da para perguntar. Estas sao
+   escolhidas pelo estado real do sistema, entao mudam junto com ele. */
+function sugestoesDoAgente() {
+  if (semUnidade()) {
+    return [
+      'Como eu descubro meu consumo médio na conta de luz?',
+      'O que é kWp e onde acho isso na nota do instalador?',
+      'Vale a pena instalar solar na minha casa?'
+    ];
+  }
+  const v = visao(), u = unidade();
+  const fora = [];
+  fora.push('Por que minha conta deu ' + brl(v.contaProj) + ' esse mês?');
+  if (v.desempenho < 90) fora.push('Meu sistema está gerando menos do que devia?');
+  else fora.push('Meu sistema está rendendo o esperado?');
+  if (!v.direitoAdquirido) fora.push('O que a Lei 14.300 mudou na minha conta?');
+  fora.push('O que eu mudo hoje para gastar menos no mês que vem?');
+  if (u.distribuidora && u.distribuidora !== 'Não informada' && u.distribuidora !== '—') {
+    fora.push('Quando a ' + u.distribuidora + ' reajusta minha tarifa?');
+  }
+  return fora.slice(0, 4);
+}
+
+
 /* ===== frontend/js/telas.js ===== */
 /* telas.js — as telas da versao ampla
 
@@ -3392,7 +5093,9 @@ const IC = {
   chevron: 'M9 6l6 6-6 6',
   lixo: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
   lapis: 'M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM14 6l4 4',
-  camera: 'M3 8a2 2 0 0 1 2-2h2.5L9 4h6l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z'
+  camera: 'M3 8a2 2 0 0 1 2-2h2.5L9 4h6l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z',
+  ia: 'M12 3a6 6 0 0 0-3.4 10.9c.5.5.9 1.3.9 2.1h5c0-.8.4-1.6.9-2.1A6 6 0 0 0 12 3zM10 19.5h4',
+  mapa: 'M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5zM9 4v13M15 6.5v13'
 };
 function ico(d, sz, cor, sw) {
   return '<svg width="' + (sz || 16) + '" height="' + (sz || 16) + '" viewBox="0 0 24 24" fill="none" stroke="' + (cor || 'currentColor') + '" stroke-width="' + (sw || 1.8) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"/></svg>';
@@ -3407,13 +5110,15 @@ const TELAS = {
   equipamentos: ['Desagregação por IA', 'Seus aparelhos'], cadastro: ['Novo aparelho', 'Cadastrar consumo'],
   alertas: ['Regras e limites', 'Alertas e metas'], relatorio: ['Fechamento do mês', 'Relatório mensal'],
   config: ['Unidade e tarifa', 'Configurações'],
-  unidade: ['Nova unidade', 'Cadastrar unidade']
+  unidade: ['Nova unidade', 'Cadastrar unidade'],
+  assistente: ['Pergunte sobre a sua energia', 'Assistente']
 };
 const NAV = [
   { k: 'painel', label: 'Painel', icon: IC.painel },
   { k: 'historico', label: 'Histórico', icon: IC.historico },
   { k: 'equipamentos', label: 'Aparelhos', icon: IC.aparelhos },
   { k: 'cadastro', label: 'Cadastrar', icon: IC.mais },
+  { k: 'assistente', label: 'Assistente', icon: IC.ia },
   { k: 'alertas', label: 'Alertas e metas', icon: IC.sino },
   { k: 'relatorio', label: 'Relatório', icon: IC.papel },
   { k: 'config', label: 'Configurações', icon: IC.ajustes }
@@ -3469,19 +5174,11 @@ function cardConta() {
   const s = sessao();
   if (!s) return '';
   const inicial = (s.nome || '?').trim().charAt(0).toUpperCase();
-  if (ehVisitante()) {
-    return '<button class="conta conta--entrar" data-act="auth-abrir">' +
-      '<span class="conta-av conta-av--vis">' +
-      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-      '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>' +
-      '<span class="conta-txt"><span class="conta-nome">Entrar</span>' +
-      '<span class="conta-mail">Opcional · salvar em conta própria</span></span>' +
-      '</button>';
-  }
+  /* Sem modo visitante, todo mundo aqui tem conta: sobrou um caso so. */
   return '<div class="conta">' +
     '<span class="conta-av">' + esc(inicial) + '</span>' +
     '<span class="conta-txt"><span class="conta-nome">' + esc(s.nome) + '</span>' +
-    '<span class="conta-mail">' + esc(s.email) + '</span></span>' +
+    '<span class="conta-mail">' + esc(s.email || '') + '</span></span>' +
     '<button class="conta-sair" data-act="sair" title="Sair da conta" aria-label="Sair da conta">' +
     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
     '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>' +
@@ -4037,6 +5734,8 @@ function vConfig() {
     '<dl class="kvs" style="margin-top:18px">' +
     kv('Unidade', esc(u.nome)) +
     kv('Perfil', esc(u.tipo)) +
+    kv('Cidade', esc(u.cidade ? (cidade(u.cidade) || {}).nome || '—' : 'Não informada')) +
+    kv('Distribuidora', esc(u.distribuidora)) +
     kv('Potência instalada', nf(u.potenciaKwp, 1) + ' kWp', true) +
     kv('Painéis', u.paineis + ' painéis', true) +
     kv('Investimento', brl(u.investimento), true) +
@@ -4046,7 +5745,7 @@ function vConfig() {
     '<div class="' + (v.desempenho < 85 ? 'note note--bad' : 'note note--good') + '" style="margin-top:12px">' +
     '<span class="note-dot"></span><div>' +
     '<div class="note-t">Saúde do sistema: ' + pct(v.desempenho) + ' do esperado para este telhado</div>' +
-    '<div class="note-s">Em ' + MESES[v.m] + ' a irradiação da região é ' + nf(IRRADIACAO_SP[v.m], 1) +
+    '<div class="note-s">Em ' + MESES[v.m] + ' a irradiação da região é ' + nf(IRRADIACAO_REGIAO[v.m], 1) +
     ' kWh/m² por dia, o que daria ' + nf(v.potencial) + ' kWh num telhado ideal. O seu (' + esc(u.condicaoTelhado) +
     ') aproveita ' + pct(v.aproveitaTelhado) + ' disso, então o esperado são ' + nf(v.esperada) + ' kWh — e ele entregou ' +
     nf(v.cheio.tg) + '. ' +
@@ -4058,7 +5757,56 @@ function vConfig() {
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">' +
     '<div style="font-size:12.5px;color:var(--faint);max-width:44ch">Aparelhos cadastrados, metas e tarifa ficam salvos neste navegador.</div>' +
     '<button class="danger-btn" data-act="reset-tudo">Apagar meus dados</button></div>' +
-    '</section>' + cardUnidades() + cardExemplos() + cardFonte() + cardBanco() + '</div>';
+    '</section>' + cardAssistente() + cardUnidades() + cardExemplos() + cardFonte() + cardBanco() + '</div>';
+}
+
+/* O que o assistente sabe sobre a pessoa, e o botao para mudar.
+
+   Esta tela existe por uma razao simples: um sistema que guarda um perfil
+   seu para decidir como falar com voce tem que te mostrar esse perfil. Se a
+   pessoa nao consegue ver nem corrigir o que foi guardado, o papo rapido do
+   cadastro deixa de ser um cadastro e vira uma coleta. */
+function cardAssistente() {
+  const p = perfilCliente();
+  const ligado = !agenteIndisponivel();
+
+  const rotuloDe = (idPergunta, valor) => {
+    const q = PERGUNTAS_PERFIL.filter(x => x.id === idPergunta)[0];
+    if (!q) return null;
+    const o = q.opcoes.filter(x => x.v === valor)[0];
+    return o ? o.r : null;
+  };
+
+  const linhas = p
+    ? PERGUNTAS_PERFIL.map(q => {
+        const r = rotuloDe(q.id, p[q.id]);
+        return kv(q.pergunta.replace(/\?$/, ''), r ? esc(r) : '<i style="color:var(--faint)">não respondeu</i>');
+      }).join('') +
+      (p.livre ? kv('Contou também', esc(p.livre)) : '')
+    : '';
+
+  return '<section class="card s6"><div class="card-head"><div>' +
+    '<h2>Seu assistente</h2>' +
+    '<div class="card-sub">O que ele sabe sobre você — e é só isso que ele usa para escolher o tom</div></div>' +
+    '<span class="pill ' + (ligado ? 'pill--good' : 'pill--neutral') + '">' +
+    (ligado ? 'Ligado' : 'Desligado') + '</span></div>' +
+
+    (p
+      ? '<dl class="kvs" style="margin-top:var(--e4)">' + linhas + '</dl>'
+      : '<div style="font-size:var(--t-sm);color:var(--muted);margin-top:var(--e4);line-height:var(--lh-body);max-width:60ch">' +
+        'Você ainda não respondeu o papo rápido. Sem ele o assistente continua funcionando, ' +
+        'só responde igual para todo mundo.</div>') +
+
+    '<div style="display:flex;gap:var(--e3);flex-wrap:wrap;margin-top:var(--e4)">' +
+    '<button class="dark-btn" data-act="perfil-refazer">' + ico(IC.troca, 13, 'currentColor', 2.2) +
+    (p ? 'Refazer o papo' : 'Responder agora') + '</button>' +
+    (ligado ? '<button class="ghost-btn" data-act="nav" data-tela="assistente">Abrir o assistente</button>' : '') +
+    '</div>' +
+
+    (ligado
+      ? ''
+      : '<div class="softbox" style="margin-top:var(--e4)">' + esc(agenteIndisponivel()) + '</div>') +
+    '</section>';
 }
 
 /* liga e desliga as unidades de demonstracao */
@@ -4186,7 +5934,7 @@ function vPrimeiraUnidade() {
 function previaUnidade() {
   const n = S.nova;
   const a = ARQUETIPOS[n.arquetipo], tel = TELHADOS.filter(t => t.k === n.telhado)[0] || TELHADOS[1];
-  const irr = soma(IRRADIACAO_SP) / 12;
+  const irr = soma(IRRADIACAO_REGIAO) / 12;
   const geracao = n.potenciaKwp * irr * RAZAO_DESEMPENHO * tel.fator * 30;
   const cobertura = n.consumoMes > 0 ? clamp((geracao / n.consumoMes) * 100, 0, 999) : 0;
   const contaSem = n.consumoMes * n.tarifa + n.consumoMes * 0.0189 + a.ilum;
@@ -4283,6 +6031,49 @@ function blocoFotoConta() {
     '<input type="file" id="fotoConta" accept="image/*" data-act="foto-conta" class="sr"></label></div>';
 }
 
+/* A cidade, e a distribuidora que vem junto com ela.
+
+   Antes isto era uma caixa de texto onde a pessoa digitava "CPFL" e o sistema
+   nao sabia mais nada. Errar aqui nao e detalhe: quem mora em Piedade e
+   atendido pela Neoenergia Elektro, e se o sistema achar que e CPFL o
+   assistente vai citar o telefone errado e o mes de reajuste errado.
+
+   Escolhendo a cidade, o Solaris ja sabe a distribuidora, quando a tarifa
+   dela e reajustada e como e o consumo tipico do lugar. Quem esta fora da
+   regiao mapeada escolhe "Outra cidade" e digita a distribuidora na mao. */
+function blocoCidade(n) {
+  const lista = cidadesPorDistancia();
+  const fora = n.cidade === 'outra';
+  const opcoes = lista.map(c =>
+    '<option value="' + esc(c.id) + '"' + (n.cidade === c.id ? ' selected' : '') + '>' +
+    esc(c.nome) + (c.distancia ? ' · ' + c.distancia + ' km de Sorocaba' : '') +
+    '</option>').join('');
+
+  const d = fora ? null : distribuidoraDaCidade(n.cidade);
+
+  return '<div class="field"><label class="field-lbl" for="unCidade">Cidade</label>' +
+    '<select class="text-in" id="unCidade" data-fid="unCidade" data-in="unCidade" style="max-width:340px">' +
+    opcoes +
+    '<option value="outra"' + (fora ? ' selected' : '') + '>Outra cidade</option>' +
+    '</select>' +
+    '<div class="dica">Define a irradiação usada no cálculo e quem entrega a sua energia.</div>' +
+
+    (d
+      ? '<div class="dist-cx">' +
+        '<span class="dist-ic">' + ico(IC.raio, 15, 'currentColor', 2) + '</span>' +
+        '<span><b>' + esc(d.nome) + '</b> atende essa cidade.' +
+        '<span class="dist-d">Reajuste ' + esc(d.vigencia) + '. Emergência: ' + esc(d.telefone) + '.</span>' +
+        '</span></div>'
+      : '<div style="margin-top:var(--e3)">' +
+        '<label class="field-lbl" for="unDistribuidora">Distribuidora</label>' +
+        '<input class="text-in" id="unDistribuidora" data-fid="unDistribuidora" data-in="unDistribuidora" ' +
+        'type="text" value="' + esc(n.distribuidora) + '" placeholder="Quem manda a conta" ' +
+        'autocomplete="off" style="max-width:340px">' +
+        '<div class="dica">Fora da região de Sorocaba o Solaris ainda calcula tudo, mas o ' +
+        'assistente não vai saber os prazos e os canais dessa distribuidora.</div></div>') +
+    '</div>';
+}
+
 function vUnidade() {
   const n = S.nova, p = previaUnidade(), at = passoAtual();
   const pode = passoCompleto(1) && passoCompleto(2);
@@ -4306,9 +6097,9 @@ function vUnidade() {
     }).join('');
     corpo = blocoFotoConta() +
       campo('unNome', 'Nome da unidade', 'Como você quer ver no menu — “Minha casa”, “Loja do centro”.', n.nome) +
+      blocoCidade(n) +
       campo('unConsumo', 'Consumo médio por mês (kWh)', 'Pegue a média dos últimos 12 meses — costuma vir num gráfico na própria conta.', n.consumoMes, true) +
       campo('unTarifa', 'Tarifa (R$ por kWh)', 'Divida o valor total pela quantidade de kWh, ou procure por “tarifa” na conta.', n.tarifa, true) +
-      campo('unDistribuidora', 'Distribuidora', 'Quem manda a conta: Enel, CPFL, Light, Cemig…', n.distribuidora) +
       '<div class="field"><span class="field-lbl">Como a energia é usada</span>' +
       '<div class="dica">Isso define a curva de consumo hora a hora, sem você digitar 24 números.</div>' +
       '<div class="opts">' + arqs + '</div></div>';
@@ -4418,7 +6209,7 @@ function ajudaCard(at) {
     '<h2>Como o cálculo funciona</h2>' +
     '<div style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:10px">' +
     'A geração não é chute nem um número que você digita: vem da irradiação média da região (' +
-    nf(soma(IRRADIACAO_SP) / 12, 1) + ' kWh/m² por dia), da potência que você informou, de ' +
+    nf(soma(IRRADIACAO_REGIAO) / 12, 1) + ' kWh/m² por dia), da potência que você informou, de ' +
     pct(RAZAO_DESEMPENHO * 100) + ' de rendimento típico do inversor e da condição do telhado.' +
     '<br><br>O consumo hora a hora vem do arquétipo escolhido, ajustado para bater com a média mensal da sua conta. ' +
     'Depois disso o sistema calcula sozinho autoconsumo, injeção, créditos e Fio B.' +
@@ -4441,14 +6232,19 @@ function ajudaCard(at) {
 */
 'use strict';
 
+/* Cinco abas e o limite do polegar numa barra inferior; a sexta encolhe o
+   alvo de toque abaixo do aceitavel. Como o assistente e a novidade que
+   precisa ser encontrada, ele entra como aba e "Metas" desce para o Mais —
+   metas se ajustam uma vez por mes, o assistente se abre todo dia. */
 const MTABS = [
   { k: 'painel', label: 'Painel', icon: IC.painel },
   { k: 'historico', label: 'Histórico', icon: IC.historico },
   { k: 'aparelhos', label: 'Aparelhos', icon: IC.aparelhos },
-  { k: 'metas', label: 'Metas', icon: IC.sino },
+  { k: 'assistente', label: 'Assistente', icon: IC.ia },
   { k: 'mais', label: 'Mais', icon: 'M5 12h.01M12 12h.01M19 12h.01' }
 ];
 const MMENU = [
+  { k: 'metas', t: 'Metas e alertas', s: 'O limite do mês e as regras que avisam', icon: IC.sino },
   { k: 'conta', t: 'Conta do mês', s: 'Fatura detalhada e economia do ano', icon: IC.papel },
   { k: 'cadastro', t: 'Cadastrar aparelho', s: 'Estime o consumo de algo que a IA não viu', icon: IC.mais },
   { k: 'config', t: 'Configurações', s: 'Tarifa, distribuidora e sistema solar', icon: IC.ajustes }
@@ -4457,18 +6253,19 @@ const MMENU = [
 function vMovel() {
   const v = visao(), u = unidade();
   const sub = S.msub;
-  const titulos = { painel: saudacao(), historico: 'Histórico', aparelhos: 'Seus aparelhos', metas: 'Metas e alertas', mais: 'Mais' };
-  const subT = { conta: 'Conta de ' + MESES[v.m], cadastro: 'Novo aparelho', config: 'Configurações' };
+  const titulos = { painel: saudacao(), historico: 'Histórico', aparelhos: 'Seus aparelhos', assistente: 'Assistente', mais: 'Mais' };
+  const subT = { conta: 'Conta de ' + MESES[v.m], cadastro: 'Novo aparelho', config: 'Configurações', metas: 'Metas e alertas' };
   const titulo = sub ? subT[sub] : titulos[S.tab];
 
   let corpo = '';
   if (sub === 'conta') corpo = mConta();
   else if (sub === 'cadastro') corpo = mCadastro();
   else if (sub === 'config') corpo = mConfig();
+  else if (sub === 'metas') corpo = mMetas();
   else if (S.tab === 'painel') corpo = mPainel();
   else if (S.tab === 'historico') corpo = mHistorico();
   else if (S.tab === 'aparelhos') corpo = mAparelhos();
-  else if (S.tab === 'metas') corpo = mMetas();
+  else if (S.tab === 'assistente') corpo = vAssistente();
   else corpo = mMais();
 
   const tabs = MTABS.map(t => '<button class="mob-tab" data-act="mtab" data-k="' + t.k + '"' +
@@ -4593,22 +6390,14 @@ function mMais() {
       '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + esc(u.nome) + '</span>' +
       '<span class="mob-menu-s" style="display:block">' + esc(u.tipo) + '</span></span></button>';
   }).join('');
-  /* sem sessao nao ha cartao de conta para mostrar. Na pratica sempre
-     existe uma (o site entra como visitante sozinho), mas a tela nao
-     pode quebrar se for chamada fora do fluxo normal. */
-  const s = sessao() || { nome: '', email: null };
-  const conta = !sessao() ? '' : ehVisitante()
-    ? '<button class="mob-menu" data-act="auth-abrir">' +
-    '<span class="conta-av conta-av--vis">' +
-    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-    '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>' +
-    '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">Entrar</span>' +
-    '<span class="mob-menu-s" style="display:block">Opcional · salvar em conta própria</span></span>' +
-    ico(IC.chevron, 15, 'var(--n-400)', 2.2) + '</button>'
-    : '<div class="mob-card" style="display:flex;align-items:center;gap:12px">' +
+  /* Sem modo visitante, quem chegou aqui tem conta. A guarda continua
+     porque a tela nao pode quebrar se for chamada fora do fluxo normal. */
+  const s = sessao();
+  const conta = !s ? '' :
+    '<div class="mob-card" style="display:flex;align-items:center;gap:12px">' +
     '<span class="conta-av">' + esc((s.nome || '?').charAt(0).toUpperCase()) + '</span>' +
     '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + esc(s.nome) + '</span>' +
-    '<span class="mob-menu-s" style="display:block">' + esc(s.email) + '</span></span>' +
+    '<span class="mob-menu-s" style="display:block">' + esc(s.email || '') + '</span></span>' +
     '<button class="link-btn" data-act="sair">Sair</button></div>';
   return '<div class="mob-col">' + conta + menu +
     '<h2 style="margin-top:10px">Trocar de unidade</h2>' + uns + '</div>';
@@ -4669,6 +6458,7 @@ function mConfig() {
     (S.tarifa[S.perfil] != null ? '<button class="link-btn" style="margin-top:8px" data-act="reset-tarifa">Voltar para a tarifa da distribuidora</button>' : '') +
     '</div>' +
     '<div class="mob-card">' +
+    '<div class="mob-rowline"><span>Cidade</span><b>' + esc(u.cidade ? (cidade(u.cidade) || {}).nome || '—' : '—') + '</b></div>' +
     '<div class="mob-rowline"><span>Distribuidora</span><b>' + esc(u.distribuidora) + '</b></div>' +
     '<div class="mob-rowline"><span>Compensação</span><b class="mono">R$ ' + nf(u.tarifaComp, 2) + '</b></div>' +
     '<div class="mob-rowline"><span>Potência</span><b class="mono">' + nf(u.potenciaKwp, 1) + ' kWp</b></div>' +
@@ -4676,6 +6466,244 @@ function mConfig() {
     '<div class="mob-rowline"><span>Mínimo faturado</span><b class="mono">' + u.minFatura + ' kWh</b></div></div>' +
     '<div class="softbox" style="margin-top:0">Sem geração solar sua conta seria <b>' + brl(v.semSolarProj) + '</b> por mês.</div>' +
     '<button class="danger-btn" style="padding:10px 0" data-act="reset-tudo">Apagar meus dados</button></div>';
+}
+
+
+/* ===== frontend/js/assistente.js ===== */
+/* assistente.js — as duas telas de conversa
+
+   Sao duas, e elas fazem coisas diferentes:
+
+   1. O PAPO RAPIDO (vBoasVindas). Aparece uma vez, logo depois de criar a
+      conta, antes de cadastrar qualquer unidade. Cinco perguntas com botao,
+      nenhuma sobre energia: o que falta ao sistema neste momento nao e dado
+      tecnico, e saber como falar com esta pessoa. O que sai daqui vira o tom
+      de todas as respostas do assistente depois.
+
+      Por que antes do cadastro da unidade e nao depois: e o unico momento em
+      que a pessoa ainda nao tem nada para olhar. Se ela ja tivesse um painel
+      com numeros, cinco perguntas sobre ela seriam um pedagio no meio do
+      caminho — e todo mundo pularia.
+
+   2. O ASSISTENTE (vAssistente). A conversa de verdade, com o Gemini do
+      outro lado. Comeca com sugestoes montadas a partir do estado real do
+      sistema, porque tela de chat vazia e a coisa mais intimidante de
+      qualquer produto com IA: ninguem sabe o que da para perguntar.
+
+   Este arquivo so desenha e escuta. Quem monta o contexto, chama o modelo e
+   guarda a conversa e o backend/agente.js — a regra de camada do projeto vale
+   aqui como em todo o resto.
+*/
+'use strict';
+
+/* ---------- 1. o papo rapido ---------- */
+
+/* Enquanto a pessoa responde. Nao vai para o banco a cada clique de
+   proposito: sao cinco perguntas em trinta segundos, e gravar parcial faria
+   uma conta existir com meio perfil dentro. So o fim grava. */
+const ONBOARD = { passo: 0, respostas: {}, livre: '' };
+
+function vBoasVindas() {
+  const s = sessao() || {};
+  const primeiro = String(s.nome || '').trim().split(/\s+/)[0];
+  const total = PERGUNTAS_PERFIL.length;
+  const i = clamp(ONBOARD.passo, 0, total);
+
+  /* Passo final: o campo livre e o fecho. */
+  if (i >= total) return telaFechoBoasVindas(primeiro);
+
+  const q = PERGUNTAS_PERFIL[i];
+  const opcoes = q.opcoes.map(o =>
+    '<button class="fala-op" data-act="perfil-responder" data-id="' + esc(q.id) + '" data-v="' + esc(o.v) + '">' +
+    '<span>' + esc(o.r) + '</span>' +
+    ico(IC.seta, 14, 'currentColor', 2.2) + '</button>').join('');
+
+  /* As respostas ja dadas ficam na tela, acima da pergunta atual: e o que faz
+     isto parecer uma conversa e nao um formulario paginado. */
+  const anteriores = PERGUNTAS_PERFIL.slice(0, i).map(p => {
+    const dada = ONBOARD.respostas[p.id];
+    const rotulo = (p.opcoes.filter(o => o.v === dada)[0] || {}).r;
+    return '<div class="fala-par">' +
+      '<div class="fala fala--ia">' + esc(p.pergunta) + '</div>' +
+      (rotulo ? '<div class="fala fala--eu">' + esc(rotulo) + '</div>'
+        : '<div class="fala fala--eu fala--pulou">Preferiu não dizer</div>') +
+      '</div>';
+  }).join('');
+
+  return '<div class="boas enter">' +
+    '<div class="boas-cx">' +
+
+      cabecalhoBoasVindas(primeiro, i, total) +
+
+      '<div class="boas-conversa">' +
+        anteriores +
+        '<div class="fala-par">' +
+          '<div class="fala fala--ia">' + esc(q.pergunta) +
+            '<span class="fala-porque">' + esc(q.porque) + '</span></div>' +
+          '<div class="fala-ops">' + opcoes + '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="boas-pe">' +
+        (i > 0 ? '<button class="ghost-btn" data-act="perfil-voltar">Voltar</button>' : '<span></span>') +
+        '<button class="link-btn" data-act="perfil-pular" data-id="' + esc(q.id) + '">Pular esta</button>' +
+      '</div>' +
+
+    '</div></div>';
+}
+
+function cabecalhoBoasVindas(primeiro, i, total) {
+  return '<header class="boas-topo">' +
+    '<h1>' + (primeiro ? esc(primeiro) + ', prazer' : 'Prazer') + '. Me conta de você?</h1>' +
+    '<p class="boas-d">Cinco perguntas rápidas, nenhuma sobre energia. Elas servem para o ' +
+    'assistente do Solaris falar com você do seu jeito, em vez de responder igual para todo mundo. ' +
+    'Dá para pular qualquer uma e mudar tudo depois em Configurações.</p>' +
+    '<div class="boas-trilha" role="group" aria-label="Progresso">' +
+    '<div class="boas-barra"><i style="width:' + Math.round((i / total) * 100) + '%"></i></div>' +
+    '<span class="boas-cont">' + Math.min(i + 1, total) + ' de ' + total + '</span>' +
+    '</div></header>';
+}
+
+function telaFechoBoasVindas(primeiro) {
+  return '<div class="boas enter"><div class="boas-cx">' +
+    '<header class="boas-topo">' +
+      '<h1>Mais alguma coisa que eu deva saber?</h1>' +
+      '<p class="boas-d">Opcional, e do seu jeito. Vale qualquer coisa que mude o que eu deveria ' +
+      'olhar na sua conta — “tenho piscina aquecida”, “trabalho de casa às terças”, ' +
+      '“a padaria abre às 4h”, “sou aposentado e fico o dia todo em casa”.</p>' +
+    '</header>' +
+
+    '<div class="boas-livre">' +
+      '<label class="sr" for="perfilLivre">Algo mais que o assistente deva saber</label>' +
+      '<textarea class="text-in" id="perfilLivre" data-fid="perfilLivre" data-in="perfilLivre" rows="4" ' +
+      'placeholder="Escreva aqui, ou deixe em branco e siga em frente.">' + esc(ONBOARD.livre) + '</textarea>' +
+    '</div>' +
+
+    '<div class="boas-pe">' +
+      '<button class="ghost-btn" data-act="perfil-voltar">Voltar</button>' +
+      '<button class="dark-btn" data-act="perfil-terminar">' +
+      ico(IC.check, 14, 'currentColor', 2.6) +
+      (primeiro ? 'Pronto, ' + esc(primeiro) : 'Pronto') + '</button>' +
+    '</div>' +
+
+    '</div></div>';
+}
+
+/* ---------- 2. o assistente ---------- */
+
+function vAssistente() {
+  const impedimento = agenteIndisponivel();
+  if (impedimento) return assistenteDesligado(impedimento);
+
+  const msgs = AGENTE.mensagens;
+  const corpo = msgs.length
+    ? msgs.map(m => '<div class="fala fala--' + (m.papel === 'pessoa' ? 'eu' : 'ia') + '">' +
+        textoDaFala(m.texto) + '</div>').join('')
+    : assistenteVazio();
+
+  const digitando = AGENTE.ocupado
+    ? '<div class="fala fala--ia fala--digitando" role="status">' +
+      '<span></span><span></span><span></span>' +
+      '<span class="sr">O assistente está escrevendo</span></div>'
+    : '';
+
+  const erro = AGENTE.erro
+    ? '<div class="note note--bad" style="margin:0 0 var(--e3)"><span class="note-dot"></span>' +
+      '<div><div class="note-t">O assistente não respondeu</div>' +
+      '<div class="note-s">' + esc(AGENTE.erro) + '</div></div></div>'
+    : '';
+
+  return '<div class="chat enter">' +
+    '<section class="card chat-cx">' +
+      '<div class="chat-topo">' +
+        '<div><h2>' + esc(tituloDoContexto()) + '</h2>' +
+        '<div class="card-sub">' + esc(resumoDoContexto()) + '</div></div>' +
+        (msgs.length
+          ? '<button class="link-btn" data-act="agente-limpar">Limpar conversa</button>' : '') +
+      '</div>' +
+
+      '<div class="chat-rolo" id="chatRolo" aria-live="polite">' + corpo + digitando + '</div>' +
+
+      erro +
+
+      '<form class="chat-barra" id="formAgente">' +
+        '<label class="sr" for="agenteEntrada">Sua pergunta</label>' +
+        '<input class="chat-in" id="agenteEntrada" data-fid="agenteEntrada" data-in="agente" type="text" ' +
+        'value="' + esc(AGENTE.rascunho || '') + '" autocomplete="off" ' +
+        'placeholder="Pergunte sobre a sua conta, o seu consumo ou os seus painéis…"' +
+        (AGENTE.ocupado ? ' disabled' : '') + '>' +
+        '<button class="chat-enviar" type="submit"' + (AGENTE.ocupado ? ' disabled' : '') +
+        ' aria-label="Enviar pergunta">' + ico(IC.seta, 17, 'currentColor', 2.4) + '</button>' +
+      '</form>' +
+
+      '<p class="chat-rodape">Respostas geradas por IA a partir dos seus dados. ' +
+      'Confira antes de decidir alguma coisa com dinheiro, e chame um técnico habilitado ' +
+      'para qualquer serviço elétrico.</p>' +
+    '</section>' +
+    '</div>';
+}
+
+/* O que a tela vazia mostra: o que ele sabe, e o que da para perguntar. */
+function assistenteVazio() {
+  const sugestoes = sugestoesDoAgente().map(t =>
+    '<button class="chat-sug" data-act="agente-sugestao" data-v="' + esc(t) + '">' +
+    esc(t) + '</button>').join('');
+
+  return '<div class="chat-vazio">' +
+    '<span class="chat-vazio-ic">' +
+    ico('M12 3a6 6 0 0 0-3.4 10.9c.5.5.9 1.3.9 2.1h5c0-.8.4-1.6.9-2.1A6 6 0 0 0 12 3zM10 19.5h4', 26, 'var(--n-900)', 1.8) +
+    '</span>' +
+    '<h3>Pergunte o que quiser sobre a sua energia</h3>' +
+    '<p>Eu enxergo o que o seu medidor está marcando agora, a sua tarifa, os seus créditos ' +
+    'e a sua distribuidora. Não invento número: se eu não tiver o dado, eu digo.</p>' +
+    '<div class="chat-sugs">' + sugestoes + '</div>' +
+    '</div>';
+}
+
+/* De qual unidade ele esta falando, e em cima de quais dados.
+
+   Sem estas duas linhas a pessoa nao tem como saber se o assistente esta
+   olhando a unidade certa — e quem tem casa e comercio cadastrados no mesmo
+   Solaris precisa saber. O titulo do cartao nao repete "Assistente", que ja
+   esta na barra do topo e na aba: repetir nome de tela e desperdicar a linha
+   mais visivel do cartao. */
+function tituloDoContexto() {
+  return semUnidade() ? 'Vamos começar pela sua unidade' : 'Falando sobre ' + unidade().nome;
+}
+function resumoDoContexto() {
+  if (semUnidade()) return 'Ainda sem unidade cadastrada — eu ajudo você a cadastrar a primeira.';
+  const u = unidade();
+  const c = u.cidade ? cidade(u.cidade) : null;
+  const partes = [];
+  if (c) partes.push(c.nome);
+  if (u.distribuidora && u.distribuidora !== 'Não informada' && u.distribuidora !== '—') partes.push(u.distribuidora);
+  partes.push(nf(u.potenciaKwp, 1) + ' kWp');
+  return partes.join(' · ');
+}
+
+/* O modelo responde em texto corrido com quebras de linha, e as vezes usa
+   **negrito**. Convertemos as duas coisas e escapamos o resto: nada que vem
+   do modelo pode virar HTML de verdade. */
+function textoDaFala(txt) {
+  return esc(txt)
+    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+    .replace(/\n{2,}/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+    .replace(/^/, '<p>').replace(/$/, '</p>');
+}
+
+/* Assistente desligado nao e erro da pessoa: e configuracao que falta. A tela
+   diz o que fazer, e nao some com a secao do menu — sumir faria parecer que a
+   funcionalidade nunca existiu. */
+function assistenteDesligado(motivo) {
+  return '<div class="chat enter"><section class="card chat-cx">' +
+    '<div class="chat-vazio">' +
+    '<span class="chat-vazio-ic chat-vazio-ic--off">' +
+    ico('M12 3a6 6 0 0 0-3.4 10.9c.5.5.9 1.3.9 2.1h5c0-.8.4-1.6.9-2.1A6 6 0 0 0 12 3zM10 19.5h4M4 4l16 16', 26, 'var(--faint)', 1.8) +
+    '</span>' +
+    '<h3>O assistente ainda não está ligado</h3>' +
+    '<p>' + esc(motivo) + '</p>' +
+    '</div></section></div>';
 }
 
 
@@ -4721,12 +6749,28 @@ function corpoPrimeiroCadastro() {
     '</div>';
 }
 
+/* O assistente sem a casca do site. Conta recem-criada ainda nao tem menu
+   lateral nem painel, mas e exatamente o momento em que a pessoa mais tem
+   pergunta: o que e kWp, onde acha o consumo medio na conta. Barrar o
+   assistente ate haver unidade seria esconder a ajuda de quem mais precisa. */
+function corpoAssistenteSolo() {
+  return '<div class="cadastro-solo">' +
+    '<header class="cadastro-solo-topo">' +
+      '<button class="link-btn" data-act="nav" data-tela="painel">' +
+      ico(IC.volta, 14, 'currentColor', 2.4) + 'Voltar</button>' +
+      '<h1>Assistente</h1>' +
+    '</header>' +
+    '<div class="cadastro-solo-corpo">' + vAssistente() + '</div>' +
+    '</div>';
+}
+
 function corpoAmplo() {
   let tela = '';
   if (S.tela === 'painel') tela = vPainel();
   else if (S.tela === 'historico') tela = vHistorico();
   else if (S.tela === 'equipamentos') tela = vEquip();
   else if (S.tela === 'cadastro') tela = vCadastro();
+  else if (S.tela === 'assistente') tela = vAssistente();
   else if (S.tela === 'alertas') tela = vAlertas();
   else if (S.tela === 'relatorio') tela = vRelatorio();
   else if (S.tela === 'unidade') tela = vUnidade();
@@ -4736,10 +6780,28 @@ function corpoAmplo() {
 
 let _ultimoModo = null;
 function render() {
-  /* sem sessão não existe app: a tela de login é a única coisa renderizada */
+  /* A ordem destas tres portas e o desenho do produto, e nao pode mudar:
+
+       1. sem sessao -> tela de entrada. E a unica porta do site: ninguem
+          mais entra sem conta.
+       2. com sessao e sem o papo rapido -> as cinco perguntas. Acontece uma
+          vez na vida da conta, e e o que da ao assistente com quem falar.
+       3. com papo feito e sem unidade -> cadastro da primeira unidade.
+
+     So depois das tres existe painel para desenhar. */
   if (!sessao()) { renderLogin(); return; }
   document.body.classList.remove('vista-login');
   const root = $('#root');
+
+  if (!perfilRespondido()) {
+    root.innerHTML = vBoasVindas();
+    document.body.classList.remove('vista-celular');
+    _ultimoModo = telaEstreita();
+    const foco = $('[data-fid="perfilLivre"]');
+    if (foco) foco.focus({ preventScroll: true });
+    return;
+  }
+
   const ativo = document.activeElement;
   const fid = ativo && ativo.dataset ? ativo.dataset.fid : null;
   const caret = ativo && ativo.selectionStart != null ? ativo.selectionStart : null;
@@ -4748,7 +6810,10 @@ function render() {
      nesse estado: o convite e o proprio formulario de cadastro. */
   ajustarPerfil();
   if (semUnidade()) {
-    root.innerHTML = S.tela === 'unidade' ? corpoPrimeiroCadastro() : vPrimeiraUnidade();
+    root.innerHTML = S.tela === 'unidade' ? corpoPrimeiroCadastro()
+      : S.tela === 'assistente' ? corpoAssistenteSolo()
+      : vPrimeiraUnidade();
+    ligarAssistente();
     document.body.classList.remove('vista-celular');
     _ultimoModo = telaEstreita();
     if (fid) { const a = $('[data-fid="' + fid + '"]'); if (a) a.focus({ preventScroll: true }); }
@@ -4770,6 +6835,7 @@ function render() {
     }
   }
   ligarGraficos();
+  ligarAssistente();
   preencherCardBanco();
   atualizarHash();
 }
@@ -4779,20 +6845,32 @@ function render() {
 async function preencherCardBanco() {
   if (!$('#cardBanco')) return;
   const est = await Banco.estatisticas();
+
   const motor = $('#bancoMotor');
   if (motor) {
     motor.textContent = est.motor;
-    motor.className = 'pill ' + (Banco.usandoIndexedDB ? 'pill--good' : 'pill--warn');
+    /* Verde para os dois bancos de verdade; ambar so para a reserva de
+       localStorage, que e o unico caso em que alguma coisa deixa de existir. */
+    motor.className = 'pill ' + (Banco.motor === 'localStorage' ? 'pill--warn' : 'pill--good');
   }
 
   const tamanho = est.bytes ? (est.bytes > 1048576
-    ? nf(est.bytes / 1048576, 1) + ' MB' : nf(est.bytes / 1024) + ' KB') : '\u2014';
-  const numeros = [
-    ['Leituras gravadas', nf(est.leituras), 'uma por minuto, \u00faltimos ' + est.janelaDias + ' dias'],
-    ['Contas', nf(est.contas), est.contas === 1 ? 'cadastrada neste navegador' : 'cadastradas neste navegador'],
-    ['Espa\u00e7o em disco', tamanho, 'estimado pelo navegador'],
-    ['Tabelas', '3', 'contas, estado e leituras']
-  ];
+    ? nf(est.bytes / 1048576, 1) + ' MB' : nf(est.bytes / 1024) + ' KB') : '—';
+
+  const numeros = Banco.online
+    ? [
+      ['Leituras gravadas', nf(est.leituras), 'uma por minuto, últimos ' + est.janelaDias + ' dias'],
+      ['Onde', 'Supabase', 'Postgres, com RLS por conta'],
+      ['Seus aparelhos', 'Só seus', 'ninguém mais lê as suas linhas'],
+      ['Tabelas', '7', 'perfis, estado, leituras, conversa, cidades…']
+    ]
+    : [
+      ['Leituras gravadas', nf(est.leituras), 'uma por minuto, últimos ' + est.janelaDias + ' dias'],
+      ['Contas', nf(est.contas), est.contas === 1 ? 'cadastrada neste navegador' : 'cadastradas neste navegador'],
+      ['Espaço em disco', tamanho, 'estimado pelo navegador'],
+      ['Tabelas', '3', 'contas, estado e leituras']
+    ];
+
   const g = $('#bancoNumeros');
   if (g) g.innerHTML = numeros.map(n =>
     '<div class="bd-cel"><div class="bd-k">' + n[0] + '</div>' +
@@ -4801,14 +6879,25 @@ async function preencherCardBanco() {
 
   const alvo = $('#bancoGrafico');
   if (!alvo) return;
+
+  /* Por que o site esta no banco local, quando esta. Sem esta linha, quem
+     configurou o Supabase e nao percebeu que ele nao respondeu acharia que
+     os dados subiram — e eles nao subiram. */
+  const nota = (!Banco.online && est.motivo)
+    ? '<div class="bd-nota">' + esc(est.motivo) + '</div>' : '';
+  const falha = est.falha
+    ? '<div class="bd-nota bd-nota--ruim">A última gravação no servidor falhou: ' +
+      esc(est.falha) + '</div>' : '';
+
   if (!Banco.usandoIndexedDB) {
-    alvo.innerHTML = '<div class="bd-vazio">Este navegador n\u00e3o liberou o IndexedDB, ent\u00e3o o sistema est\u00e1 usando o armazenamento simples como reserva. Tudo funciona, mas o hist\u00f3rico minuto a minuto n\u00e3o \u00e9 gravado.</div>';
+    alvo.innerHTML = nota + '<div class="bd-vazio">Este navegador não liberou o IndexedDB, então o sistema está usando o armazenamento simples como reserva. Tudo funciona, mas o histórico minuto a minuto não é gravado.</div>';
     return;
   }
+
   const linhas = await Banco.leituras(contaAtual(), Date.now() - 2 * 3600000);
   if (linhas.length < 2) {
-    alvo.innerHTML = '<div class="bd-vazio">O banco come\u00e7a a gravar assim que o painel fica aberto \u2014 uma leitura por minuto. Volte aqui daqui a pouco e o gr\u00e1fico aparece.' +
-      (linhas.length ? ' J\u00e1 h\u00e1 ' + linhas.length + ' leitura registrada.' : '') + '</div>';
+    alvo.innerHTML = nota + falha + '<div class="bd-vazio">O banco começa a gravar assim que o painel fica aberto — uma leitura por minuto. Volte aqui daqui a pouco e o gráfico aparece.' +
+      (linhas.length ? ' Já há ' + linhas.length + ' leitura registrada.' : '') + '</div>';
     return;
   }
   const maxV = Math.max.apply(null, linhas.map(l => Math.max(l.c, l.g))) * 1.1 || 1;
@@ -4816,18 +6905,47 @@ async function preencherCardBanco() {
   const cam = arr => caminho(arr, maxV, W, H);
   const c0 = new Date(linhas[0].t), c1 = new Date(linhas[linhas.length - 1].t);
   const hhmm = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-  alvo.innerHTML =
-    '<div class="bd-graf-t">' + linhas.length + ' leituras reais do banco \u00b7 ' + hhmm(c0) + ' at\u00e9 ' + hhmm(c1) + '</div>' +
+  alvo.innerHTML = nota + falha +
+    '<div class="bd-graf-t">' + linhas.length + ' leituras reais do banco · ' + hhmm(c0) + ' até ' + hhmm(c1) + '</div>' +
     '<svg viewBox="0 0 720 96" preserveAspectRatio="none" style="width:100%;height:96px;margin-top:10px">' +
     '<path d="' + caminho(linhas.map(l => l.g), maxV, W, H, true) + '" fill="rgba(237,162,43,.16)"/>' +
     '<path d="' + cam(linhas.map(l => l.g)) + '" fill="none" stroke="var(--sun)" stroke-width="2" stroke-linejoin="round"/>' +
     '<path d="' + cam(linhas.map(l => l.c)) + '" fill="none" stroke="var(--grid)" stroke-width="1.8" stroke-linejoin="round"/>' +
     '</svg>' +
-    '<div class="bd-pe"><span>Cada ponto \u00e9 uma linha na tabela <code>leituras</code></span>' +
+    '<div class="bd-pe"><span>Cada ponto é uma linha na tabela <code>leituras</code></span>' +
     '<span class="bd-acoes">' +
-    '<button class="danger-btn" data-act="limpar-leituras">Apagar hist\u00f3rico desta conta</button>' +
-    '<button class="danger-btn" data-act="apagar-banco">Apagar tudo do banco</button>' +
+    '<button class="danger-btn" data-act="limpar-leituras">Apagar histórico desta conta</button>' +
+    '<button class="danger-btn" data-act="apagar-banco">' +
+    (Banco.online ? 'Apagar todos os meus dados' : 'Apagar tudo do banco') + '</button>' +
     '</span></div>';
+}
+
+/* ---------- o assistente ----------
+   A tela inteira e redesenhada a cada mudanca de estado, entao o formulario
+   precisa ser religado toda vez — mesma razao de os botoes usarem data-act
+   em vez de onclick. A rolagem vai para o fim porque a mensagem que interessa
+   e sempre a ultima. */
+function ligarAssistente() {
+  const f = $('#formAgente');
+  if (f && !f.dataset.ligado) {
+    f.dataset.ligado = '1';
+    f.addEventListener('submit', ev => {
+      ev.preventDefault();
+      enviarPergunta((AGENTE.rascunho || '').trim());
+    });
+  }
+  const rolo = $('#chatRolo');
+  if (rolo) rolo.scrollTop = rolo.scrollHeight;
+}
+
+async function enviarPergunta(texto) {
+  if (!texto || AGENTE.ocupado) return;
+  AGENTE.rascunho = '';
+  render();                 /* mostra a pergunta e os tres pontinhos na hora */
+  await perguntarAoAgente(texto);
+  render();
+  const campo = $('#agenteEntrada');
+  if (campo) campo.focus();
 }
 
 /* ---------- gráficos interativos ---------- */
@@ -5188,26 +7306,62 @@ const ACOES = {
     else aviso('Fonte: simulação', 'O painel voltou a calcular a leitura.', 'sun');
     salvar(); render();
   },
-  'auth-modo': el => { modoLogin = el.dataset.v; erroLogin = ''; renderLogin(); },
-  'auth-abrir': () => { modoLogin = 'entrar'; erroLogin = ''; renderLogin(); },
-  'auth-visitante': () => { entrarComoVisitante(); aoEntrar(); },
-  'auth-voltar': () => {
-    if (!sessao()) { entrarComoVisitante(); aoEntrar(); return; }
-    document.body.classList.remove('vista-login');
+  'auth-modo': el => { modoLogin = el.dataset.v; erroLogin = ''; avisoLogin = ''; renderLogin(); },
+  'auth-abrir': () => { modoLogin = 'entrar'; erroLogin = ''; avisoLogin = ''; renderLogin(); },
+  sair: () => {
+    if (!window.confirm(Banco.online
+      ? 'Sair da conta? Seus dados continuam guardados no servidor.'
+      : 'Sair da conta? Seus dados continuam salvos neste navegador.')) return;
+    sair();
+    /* a tela de entrada e a unica porta do site, entao sair leva de volta
+       para ela — e nao para um painel de demonstracao */
+    S = JSON.parse(JSON.stringify(PADRAO));
+    AGENTE.mensagens = []; AGENTE.carregada = false; AGENTE.rascunho = '';
+    _visao = null; _cacheLedger.clear();
+    modoLogin = 'entrar'; erroLogin = ''; avisoLogin = '';
+    renderLogin();
+  },
+
+  /* ---------- o papo rapido do cadastro ---------- */
+  'perfil-responder': el => {
+    ONBOARD.respostas[el.dataset.id] = el.dataset.v;
+    ONBOARD.passo++;
     render();
   },
-  sair: () => {
-    const visitante = ehVisitante();
-    const aviso = visitante
-      ? 'Voltar para a tela de entrada? O que você fez continua salvo neste navegador.'
-      : 'Sair da conta? Seus dados continuam salvos neste navegador.';
-    if (!window.confirm(aviso)) return;
-    sair();
-    /* a tela de entrada e a porta do site, entao sair leva de volta para ela */
-    S = JSON.parse(JSON.stringify(PADRAO));
-    _visao = null; _cacheLedger.clear();
-    modoLogin = 'entrar'; erroLogin = '';
-    renderLogin();
+  /* Pular grava a ausencia, nao um valor inventado: perfil sem resposta faz
+     o assistente ser generico naquele ponto, que e o correto. */
+  'perfil-pular': el => {
+    delete ONBOARD.respostas[el.dataset.id];
+    ONBOARD.passo++;
+    render();
+  },
+  'perfil-voltar': () => { ONBOARD.passo = Math.max(0, ONBOARD.passo - 1); render(); },
+  'perfil-terminar': async () => {
+    const r = Object.assign({}, ONBOARD.respostas);
+    if (ONBOARD.livre.trim()) r.livre = ONBOARD.livre.trim();
+    await salvarPerfilCliente(r);
+    render();
+    const s = sessao();
+    aviso('Anotado, ' + String(s.nome || '').split(' ')[0],
+      semUnidade()
+        ? 'Agora cadastre sua unidade e o assistente passa a falar dos seus números.'
+        : 'O assistente já está falando do seu jeito. Dá para mudar em Configurações.', 'good');
+  },
+  'perfil-refazer': () => {
+    const p = perfilCliente() || {};
+    ONBOARD.passo = 0;
+    ONBOARD.respostas = Object.assign({}, p);
+    ONBOARD.livre = p.livre || '';
+    S.perfilCliente = null;      /* volta para a porta 2 do render() */
+    salvar(); render();
+  },
+
+  /* ---------- o assistente ---------- */
+  'agente-sugestao': el => enviarPergunta(el.dataset.v),
+  'agente-limpar': async () => {
+    if (!window.confirm('Apagar esta conversa? O assistente esquece o que foi dito aqui.')) return;
+    await limparConversaDoAgente();
+    render();
   },
   'limpar-leituras': async () => {
     if (!window.confirm('Apagar o hist\u00f3rico de leituras desta conta? O painel continua funcionando \u2014 s\u00f3 o registro minuto a minuto some.')) return;
@@ -5266,7 +7420,7 @@ document.addEventListener('keydown', ev => {
   if (el && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); (ACOES[el.dataset.act] || function () { })(el); return; }
   if (ev.target.tagName === 'INPUT' || ev.metaKey || ev.ctrlKey || ev.altKey) return;
   if (ev.key === 'Escape') { if (S.msub) { S.msub = null; render(); } else if (S.detalhe) { S.detalhe = null; render(); } return; }
-  if (ev.key >= '1' && ev.key <= '7' && !telaEstreita()) irPara(TELA_ORDEM[+ev.key - 1]);
+  if (ev.key >= '1' && ev.key <= '8' && !telaEstreita()) irPara(TELA_ORDEM[+ev.key - 1]);
 });
 
 /* entradas contínuas */
@@ -5274,6 +7428,21 @@ document.addEventListener('input', ev => {
   const el = ev.target;
   if (!el.dataset || !el.dataset.in) return;
   const campo = el.dataset.in;
+
+  /* O rascunho do chat mora no AGENTE, e nao no estado da conta: pergunta
+     pela metade nao e configuracao e nao tem por que ir para o banco. */
+  if (campo === 'agente') { AGENTE.rascunho = el.value; return; }
+  if (campo === 'perfilLivre') { ONBOARD.livre = el.value; return; }
+
+  /* Trocar a cidade troca a distribuidora mostrada logo abaixo, entao esta
+     precisa redesenhar — as outras nao, para nao piscar a cada tecla. */
+  if (campo === 'unCidade') {
+    S.nova.cidade = el.value;
+    if (el.value !== 'outra') S.nova.distribuidora = '';
+    salvar(); render();
+    return;
+  }
+
   if (campo === 'nome') { S.novo.nome = el.value; S.salvo = false; syncCadastro(); salvar(); return; }
   if (campo === 'pot' || campo === 'horas' || campo === 'dias') {
     S.novo[campo] = Number(el.value); S.salvo = false; syncCadastro(); salvar(); return;
@@ -5409,27 +7578,43 @@ function iniciarRelogios() {
 }
 
 /* chamado quando uma sessão acabou de ser aberta */
-async function aoEntrar(migrou) {
+async function aoEntrar() {
   document.body.classList.remove('vista-login');
   S = JSON.parse(JSON.stringify(PADRAO));
   await carregar();
+  await sincronizarPerfilDoServidor();
   if (!uni(S.perfil)) S.perfil = 'residencial';
   if (!TELAS[S.tela]) S.tela = 'painel';
   if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
   _visao = null; _cacheLedger.clear();
+  AGENTE.mensagens = []; AGENTE.carregada = false; AGENTE.rascunho = '';
   render();
+  carregarConversa().then(() => { if (S.tela === 'assistente' || S.tab === 'assistente') render(); });
+
   const s = sessao();
+  const primeiro = String(s.nome || '').split(' ')[0];
+
+  /* Tres estados, tres primeiras frases diferentes. Dizer "medidor conectado"
+     para quem ainda nao cadastrou nada seria mentira. */
+  if (!perfilRespondido()) return;   /* a propria tela ja explica o que fazer */
   if (semUnidade()) {
-    aviso('Conta criada', 'Cadastre sua primeira unidade para o Solaris começar a calcular.', 'good');
+    aviso('Tudo pronto, ' + primeiro, 'Cadastre sua primeira unidade para o Solaris começar a calcular.', 'good');
     return;
   }
-  if (ehVisitante()) {
-    aviso('Medidor conectado', nf(visao().mtd.tc) + ' kWh no mês até agora · dados de demonstração.', 'good');
-  } else {
-    aviso('Bem-vindo, ' + s.nome.split(' ')[0],
-      migrou ? 'As unidades que você cadastrou vieram junto.'
-        : 'Medidor conectado · ' + nf(visao().mtd.tc) + ' kWh no mês até agora.', 'good');
-  }
+  aviso('Bem-vindo, ' + primeiro,
+    'Medidor conectado · ' + nf(visao().mtd.tc) + ' kWh no mês até agora.', 'good');
+}
+
+/* O perfil do papo rapido vive em dois lugares quando ha servidor: no estado
+   da conta (que a tela le) e na tabela propria (que a Edge Function le). Se a
+   pessoa respondeu no celular e abriu no computador, o estado local vem sem
+   ele — entao buscamos no servidor antes de decidir mostrar as perguntas de
+   novo. Perguntar duas vezes a mesma coisa e a forma mais rapida de fazer
+   alguem desconfiar de um sistema. */
+async function sincronizarPerfilDoServidor() {
+  if (!Banco.online || perfilRespondido()) return;
+  const doServidor = await Banco.perfilConversa(contaAtual());
+  if (doServidor && doServidor.em) { S.perfilCliente = doServidor; salvar(); }
 }
 
 /* ---------- partida ---------- */
@@ -5439,15 +7624,20 @@ async function iniciar() {
   if (!$('#root')) return;
   await Banco.iniciar();
   await carregarContas();
-  /* A porta de entrada e a tela de login. Quem so quer olhar entra sem
-     criar conta, num clique - o botao esta la. */
-  if (!carregarSessao()) {
+
+  /* A porta de entrada e a tela de login, e nao ha mais como contorna-la.
+     restaurarSessao() cobre os dois modos: com Supabase confere o token no
+     servidor (renovando se preciso), sem Supabase le a sessao do navegador. */
+  const s = await restaurarSessao();
+  if (!s) {
     modoLogin = 'entrar';
     renderLogin();
     iniciarRelogios();
     return;
   }
+
   await carregar();
+  await sincronizarPerfilDoServidor();
   if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
   if (!uni(S.perfil)) S.perfil = 'residencial';
   if (!TELAS[S.tela]) S.tela = 'painel';
@@ -5455,6 +7645,10 @@ async function iniciar() {
   lerHash();
   render();
   iniciarRelogios();
+  carregarConversa().then(() => { if (S.tela === 'assistente' || S.tab === 'assistente') render(); });
+
+  /* O aviso de abertura so faz sentido quando ha o que medir. */
+  if (!perfilRespondido() || semUnidade()) return;
   const v = visao();
   setTimeout(() => {
     aviso('Medidor conectado', 'Lendo ' + unidade().nome + ' em tempo real · ' + nf(v.mtd.tc) + ' kWh no mês até agora.', 'good');
