@@ -55,6 +55,31 @@ quantas leituras existem, quanto espaço o navegador estima e um gráfico das
 
 ---
 
+## Como limpar
+
+Em **Configurações → Banco de dados**, no rodapé do cartão:
+
+| Botão | O que apaga |
+| --- | --- |
+| **Apagar histórico desta conta** | só as `leituras` da conta aberta. O painel continua funcionando; some o registro minuto a minuto. |
+| **Apagar tudo do banco** | as três tabelas inteiras: todas as contas criadas neste navegador, todas as unidades e aparelhos, metas, tarifas e o histórico do medidor. Pergunta duas vezes. **Não tem desfazer.** |
+
+Use o segundo quando o navegador acumulou teste de todo mundo e você quer
+começar do zero de verdade.
+
+### O defeito que isso corrigiu
+
+"Apagar meus dados" removia a chave do `localStorage` — mas o estado de
+verdade mora no IndexedDB. A tela dizia "apagado", nada era apagado, e no
+salvamento seguinte tudo voltava. O sintoma só aparecia depois de recarregar,
+que é justamente quando ninguém está mais olhando.
+
+`Banco.apagarTudo()` limpa as duas vias de armazenamento e as chaves soltas
+que o app guarda fora das tabelas. Há teste automatizado que grava, apaga e
+confere que não voltou.
+
+---
+
 ## Quem pode falar com esta pasta
 
 Só o `backend/`. O `frontend/` nunca chama `Banco` direto — se chamasse, a

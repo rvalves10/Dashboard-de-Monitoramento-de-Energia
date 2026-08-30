@@ -1138,6 +1138,10 @@ body.vista-login{background:var(--dark)}
 .cadastro-solo-corpo{max-width:1100px;margin:0 auto}
 @media (max-width:640px){ .cadastro-solo{padding:var(--e6) var(--e5) var(--e7)} }
 
+/* Os dois botoes de apagar ficam juntos, a direita. O .bd-pe usa
+   space-between, e sem agrupar eles se espalhavam pela linha inteira. */
+.bd-acoes{display:flex;align-items:center;gap:var(--e5);flex-wrap:wrap}
+
 
 /* ===== frontend/css/movel.css ===== */
 /* movel.css
@@ -1410,6 +1414,7 @@ const bdTodos = tabela => transacao(tabela, 'readonly', s => s.getAll());
 const bdGravar = (tabela, valor) => transacao(tabela, 'readwrite', s => s.put(valor));
 const bdApagar = (tabela, chave) => transacao(tabela, 'readwrite', s => s.delete(chave));
 const bdContar = tabela => transacao(tabela, 'readonly', s => s.count());
+const bdEsvaziar = tabela => transacao(tabela, 'readwrite', s => s.clear());
 
 /* ---------- reserva em localStorage ----------
    Mesma interface, para o app não precisar saber qual dos dois está
@@ -1424,6 +1429,17 @@ function reservaGravar(tabela, chave, valor) {
 }
 function reservaApagar(tabela, chave) {
   try { localStorage.removeItem(PREFIXO_RESERVA + tabela + '.' + chave); } catch (e) { }
+}
+function reservaEsvaziar(tabela) {
+  const p = PREFIXO_RESERVA + tabela + '.', apagar = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf(p) === 0) apagar.push(k);
+    }
+    apagar.forEach(k => localStorage.removeItem(k));
+  } catch (e) { }
+  return apagar.length;
 }
 function reservaTodos(tabela) {
   const fora = [], p = PREFIXO_RESERVA + tabela + '.';
@@ -1547,6 +1563,32 @@ const Banco = {
     const linhas = await this.leituras(conta, 0);
     for (const l of linhas) await bdApagar('leituras', l.id);
     return linhas.length;
+  },
+
+  /* Apaga TUDO: contas, estado e leituras, das duas vias de armazenamento.
+     Existe porque "apagar meus dados" so limpava o localStorage enquanto o
+     estado de verdade morava no IndexedDB — os dados voltavam no proximo
+     salvamento e ninguem entendia por que.
+
+     Nao ha desfazer. Quem chama tem que ter confirmado antes. */
+  async apagarTudo() {
+    const antes = await this.estatisticas();
+    if (this.usandoIndexedDB) {
+      for (const t of ['contas', 'estado', 'leituras']) {
+        try { await bdEsvaziar(t); } catch (e) { }
+      }
+    }
+    for (const t of ['contas', 'estado', 'leituras']) reservaEsvaziar(t);
+    /* as chaves soltas que o app guarda fora das tabelas */
+    try {
+      const soltas = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.indexOf('solaris.') === 0) soltas.push(k);
+      }
+      soltas.forEach(k => localStorage.removeItem(k));
+    } catch (e) { }
+    return antes;
   },
 
   /* ---------- migração ----------
@@ -4782,7 +4824,10 @@ async function preencherCardBanco() {
     '<path d="' + cam(linhas.map(l => l.c)) + '" fill="none" stroke="var(--grid)" stroke-width="1.8" stroke-linejoin="round"/>' +
     '</svg>' +
     '<div class="bd-pe"><span>Cada ponto \u00e9 uma linha na tabela <code>leituras</code></span>' +
-    '<button class="danger-btn" data-act="limpar-leituras">Apagar hist\u00f3rico</button></div>';
+    '<span class="bd-acoes">' +
+    '<button class="danger-btn" data-act="limpar-leituras">Apagar hist\u00f3rico desta conta</button>' +
+    '<button class="danger-btn" data-act="apagar-banco">Apagar tudo do banco</button>' +
+    '</span></div>';
 }
 
 /* ---------- gráficos interativos ---------- */
@@ -5172,12 +5217,39 @@ const ACOES = {
   },
   imprimir: () => window.print(),
   'reset-tarifa': () => { S.tarifa[S.perfil] = null; salvar(); render(); aviso('Tarifa restaurada', 'Voltou para R$ ' + nf(unidade().tarifa, 2) + ' / kWh da ' + unidade().distribuidora + '.', 'sun'); },
-  'reset-tudo': () => {
-    if (!window.confirm('Apagar aparelhos cadastrados, metas, tarifa e respostas da IA neste navegador?')) return;
+  'reset-tudo': async () => {
+    if (!window.confirm('Apagar aparelhos cadastrados, metas, tarifa e respostas da IA desta conta?')) return;
+    /* O estado mora no IndexedDB, não no localStorage. Antes daqui só a chave
+       do localStorage era removida, e os dados voltavam no salvamento
+       seguinte — a tela dizia "apagado" e nada tinha sido apagado. */
     try { localStorage.removeItem(chaveEstado()); } catch (e) { }
+    await Banco.apagarEstado(contaAtual());
     S = JSON.parse(JSON.stringify(PADRAO));
-    _visao = null; render();
-    aviso('Dados apagados', 'O Solaris voltou ao estado inicial.', 'bad');
+    _visao = null; _cacheLedger.clear(); _cacheMes.clear();
+    render();
+    aviso('Dados apagados', 'Esta conta voltou ao estado inicial.', 'bad');
+  },
+
+  /* Limpeza completa: contas, estado e leituras, das duas vias de
+     armazenamento. É o botão para quando o navegador acumulou teste de todo
+     mundo e você quer começar de verdade do zero. */
+  'apagar-banco': async () => {
+    if (!window.confirm(
+      'Apagar TUDO do banco de dados deste navegador?\n\n' +
+      'Some: todas as contas criadas aqui, todas as unidades e aparelhos ' +
+      'cadastrados, as metas, as tarifas e o histórico inteiro do medidor.\n\n' +
+      'Não tem desfazer.')) return;
+    if (!window.confirm('Tem certeza? Esta é a última pergunta.')) return;
+
+    const antes = await Banco.apagarTudo();
+    sair();
+    S = JSON.parse(JSON.stringify(PADRAO));
+    _visao = null; _cacheLedger.clear(); _cacheMes.clear();
+    await carregarContas();
+    render();
+    aviso('Banco limpo',
+      (antes ? (antes.contas || 0) + ' contas e ' + nf(antes.leituras || 0) + ' leituras removidas. ' : '') +
+      'O Solaris está como no primeiro dia.', 'bad');
   }
 };
 

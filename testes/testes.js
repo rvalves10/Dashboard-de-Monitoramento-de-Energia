@@ -1232,6 +1232,61 @@ grupo('Leitor da conta de luz', () => {
   });
 });
 
+/* ================= apagar do banco =================
+   Estes dois testes existem por causa de um defeito real: "Apagar meus
+   dados" removia a chave do localStorage enquanto o estado de verdade morava
+   no IndexedDB. A tela dizia "apagado", nada era apagado, e no salvamento
+   seguinte tudo voltava. O sintoma so aparecia depois de recarregar. */
+grupo('Apagar do banco', () => {
+
+  testeAsync('apagarEstado remove de verdade, e nao volta', async () => {
+    const conta = '__apagar__@solaris.local';
+    await Banco.salvarEstado(conta, { perfil: 'x', extras: [1, 2, 3] });
+    ok(await Banco.estado(conta), 'o estado nao chegou a ser gravado');
+
+    await Banco.apagarEstado(conta);
+    const depois = await Banco.estado(conta);
+    ok(!depois, 'o estado continuou no banco depois de apagar');
+  });
+
+  testeAsync('apagarTudo esvazia as tres tabelas', async () => {
+    /* guarda o que existe para devolver no fim: a suite nao pode destruir
+       o banco de quem esta rodando ela */
+    const contasAntes = await Banco.contas();
+    const estadosAntes = {};
+    for (const c of contasAntes) estadosAntes[c.id] = await Banco.estado(c.id);
+    const estadoVisitante = await Banco.estado('visitante');
+
+    try {
+      await Banco.salvarConta({ id: '__t1__@x.com', nome: 'T1' });
+      await Banco.salvarConta({ id: '__t2__@x.com', nome: 'T2' });
+      await Banco.salvarEstado('__t1__@x.com', { perfil: 'a' });
+      await Banco.registrarLeitura('__t1__@x.com', 1, 2);
+      await Banco.registrarLeitura('__t2__@x.com', 1, 2);
+
+      ok((await Banco.contas()).length >= 2, 'as contas de teste nao entraram');
+      ok((await Banco.contarLeituras()) >= 2, 'as leituras de teste nao entraram');
+
+      const antes = await Banco.apagarTudo();
+      ok(antes && typeof antes.contas === 'number', 'apagarTudo deveria devolver o que havia antes');
+
+      igual((await Banco.contas()).length, 0, 'sobrou conta depois de apagar tudo');
+      igual(await Banco.contarLeituras(), 0, 'sobrou leitura depois de apagar tudo');
+      ok(!(await Banco.estado('__t1__@x.com')), 'sobrou estado depois de apagar tudo');
+
+      const soltas = Object.keys(localStorage).filter(k => k.indexOf('solaris') === 0);
+      igual(soltas.length, 0, 'sobraram chaves no localStorage: ' + soltas.join(', '));
+    } finally {
+      /* devolve o banco como estava, senao o resto da suite roda no vazio */
+      for (const c of contasAntes) await Banco.salvarConta(c);
+      for (const id of Object.keys(estadosAntes)) {
+        if (estadosAntes[id]) await Banco.salvarEstado(id, estadosAntes[id]);
+      }
+      if (estadoVisitante) await Banco.salvarEstado('visitante', estadoVisitante);
+    }
+  });
+});
+
 function rodar() {
   const alvo = document.getElementById('saida');
   const grupos = {};

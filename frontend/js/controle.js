@@ -142,7 +142,10 @@ async function preencherCardBanco() {
     '<path d="' + cam(linhas.map(l => l.c)) + '" fill="none" stroke="var(--grid)" stroke-width="1.8" stroke-linejoin="round"/>' +
     '</svg>' +
     '<div class="bd-pe"><span>Cada ponto \u00e9 uma linha na tabela <code>leituras</code></span>' +
-    '<button class="danger-btn" data-act="limpar-leituras">Apagar hist\u00f3rico</button></div>';
+    '<span class="bd-acoes">' +
+    '<button class="danger-btn" data-act="limpar-leituras">Apagar hist\u00f3rico desta conta</button>' +
+    '<button class="danger-btn" data-act="apagar-banco">Apagar tudo do banco</button>' +
+    '</span></div>';
 }
 
 /* ---------- gráficos interativos ---------- */
@@ -532,12 +535,39 @@ const ACOES = {
   },
   imprimir: () => window.print(),
   'reset-tarifa': () => { S.tarifa[S.perfil] = null; salvar(); render(); aviso('Tarifa restaurada', 'Voltou para R$ ' + nf(unidade().tarifa, 2) + ' / kWh da ' + unidade().distribuidora + '.', 'sun'); },
-  'reset-tudo': () => {
-    if (!window.confirm('Apagar aparelhos cadastrados, metas, tarifa e respostas da IA neste navegador?')) return;
+  'reset-tudo': async () => {
+    if (!window.confirm('Apagar aparelhos cadastrados, metas, tarifa e respostas da IA desta conta?')) return;
+    /* O estado mora no IndexedDB, não no localStorage. Antes daqui só a chave
+       do localStorage era removida, e os dados voltavam no salvamento
+       seguinte — a tela dizia "apagado" e nada tinha sido apagado. */
     try { localStorage.removeItem(chaveEstado()); } catch (e) { }
+    await Banco.apagarEstado(contaAtual());
     S = JSON.parse(JSON.stringify(PADRAO));
-    _visao = null; render();
-    aviso('Dados apagados', 'O Solaris voltou ao estado inicial.', 'bad');
+    _visao = null; _cacheLedger.clear(); _cacheMes.clear();
+    render();
+    aviso('Dados apagados', 'Esta conta voltou ao estado inicial.', 'bad');
+  },
+
+  /* Limpeza completa: contas, estado e leituras, das duas vias de
+     armazenamento. É o botão para quando o navegador acumulou teste de todo
+     mundo e você quer começar de verdade do zero. */
+  'apagar-banco': async () => {
+    if (!window.confirm(
+      'Apagar TUDO do banco de dados deste navegador?\n\n' +
+      'Some: todas as contas criadas aqui, todas as unidades e aparelhos ' +
+      'cadastrados, as metas, as tarifas e o histórico inteiro do medidor.\n\n' +
+      'Não tem desfazer.')) return;
+    if (!window.confirm('Tem certeza? Esta é a última pergunta.')) return;
+
+    const antes = await Banco.apagarTudo();
+    sair();
+    S = JSON.parse(JSON.stringify(PADRAO));
+    _visao = null; _cacheLedger.clear(); _cacheMes.clear();
+    await carregarContas();
+    render();
+    aviso('Banco limpo',
+      (antes ? (antes.contas || 0) + ' contas e ' + nf(antes.leituras || 0) + ' leituras removidas. ' : '') +
+      'O Solaris está como no primeiro dia.', 'bad');
   }
 };
 

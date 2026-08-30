@@ -92,6 +92,7 @@ const bdTodos = tabela => transacao(tabela, 'readonly', s => s.getAll());
 const bdGravar = (tabela, valor) => transacao(tabela, 'readwrite', s => s.put(valor));
 const bdApagar = (tabela, chave) => transacao(tabela, 'readwrite', s => s.delete(chave));
 const bdContar = tabela => transacao(tabela, 'readonly', s => s.count());
+const bdEsvaziar = tabela => transacao(tabela, 'readwrite', s => s.clear());
 
 /* ---------- reserva em localStorage ----------
    Mesma interface, para o app não precisar saber qual dos dois está
@@ -106,6 +107,17 @@ function reservaGravar(tabela, chave, valor) {
 }
 function reservaApagar(tabela, chave) {
   try { localStorage.removeItem(PREFIXO_RESERVA + tabela + '.' + chave); } catch (e) { }
+}
+function reservaEsvaziar(tabela) {
+  const p = PREFIXO_RESERVA + tabela + '.', apagar = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf(p) === 0) apagar.push(k);
+    }
+    apagar.forEach(k => localStorage.removeItem(k));
+  } catch (e) { }
+  return apagar.length;
 }
 function reservaTodos(tabela) {
   const fora = [], p = PREFIXO_RESERVA + tabela + '.';
@@ -229,6 +241,32 @@ const Banco = {
     const linhas = await this.leituras(conta, 0);
     for (const l of linhas) await bdApagar('leituras', l.id);
     return linhas.length;
+  },
+
+  /* Apaga TUDO: contas, estado e leituras, das duas vias de armazenamento.
+     Existe porque "apagar meus dados" so limpava o localStorage enquanto o
+     estado de verdade morava no IndexedDB — os dados voltavam no proximo
+     salvamento e ninguem entendia por que.
+
+     Nao ha desfazer. Quem chama tem que ter confirmado antes. */
+  async apagarTudo() {
+    const antes = await this.estatisticas();
+    if (this.usandoIndexedDB) {
+      for (const t of ['contas', 'estado', 'leituras']) {
+        try { await bdEsvaziar(t); } catch (e) { }
+      }
+    }
+    for (const t of ['contas', 'estado', 'leituras']) reservaEsvaziar(t);
+    /* as chaves soltas que o app guarda fora das tabelas */
+    try {
+      const soltas = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.indexOf('solaris.') === 0) soltas.push(k);
+      }
+      soltas.forEach(k => localStorage.removeItem(k));
+    } catch (e) { }
+    return antes;
   },
 
   /* ---------- migração ----------
