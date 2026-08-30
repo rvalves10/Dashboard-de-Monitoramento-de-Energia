@@ -29,14 +29,26 @@ let LEITOR = {};
 
 const LEITOR_CDN = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
 
-/* As distribuidoras que atendem a maior parte do pais. Casar por nome e
-   de longe o campo mais confiavel: e o texto maior da folha, quase sempre
-   sai limpo no OCR, e a lista e fechada. */
-const DISTRIBUIDORAS = [
-  'Enel', 'CPFL', 'Light', 'Cemig', 'Copel', 'Celesc', 'Neoenergia', 'Equatorial',
-  'EDP', 'Energisa', 'RGE', 'Coelba', 'Celpe', 'Cosern', 'Elektro', 'Sulgipe',
-  'Amazonas Energia', 'CEB', 'CEEE', 'Celg', 'Cepisa', 'Ceron', 'Eletroacre', 'Boa Vista'
-];
+/* Os nomes que procuramos na folha. Casar por nome e de longe o campo mais
+   confiavel: e o texto maior da fatura, quase sempre sai limpo no OCR, e a
+   lista e fechada.
+
+   A ORDEM IMPORTA, e a primeira parte da lista nao e enfeite. As nossas
+   distribuidoras vem primeiro, com o nome completo, para uma fatura de
+   Sorocaba ser lida como "CPFL Piratininga" e nao como "CPFL" — sao coisas
+   diferentes: a Piratininga e a Santa Cruz sao concessoes separadas, com
+   tarifa e mes de reajuste proprios. Casando so "CPFL", o sistema perderia
+   justamente a distincao que a base da regiao existe para guardar.
+
+   Depois vem as nacionais, para quem esta fora da regiao ainda ter o campo
+   preenchido. */
+const DISTRIBUIDORAS_NA_FATURA = Object.keys(DISTRIBUIDORAS)
+  .map(k => DISTRIBUIDORAS[k].nome)
+  .concat([
+    'Enel', 'CPFL', 'Light', 'Cemig', 'Copel', 'Celesc', 'Neoenergia', 'Equatorial',
+    'EDP', 'Energisa', 'RGE', 'Coelba', 'Celpe', 'Cosern', 'Elektro', 'Sulgipe',
+    'Amazonas Energia', 'CEB', 'CEEE', 'Celg', 'Cepisa', 'Ceron', 'Eletroacre', 'Boa Vista'
+  ]);
 
 function leitorDisponivel() {
   return typeof fetch === 'function' && location.protocol !== 'file:';
@@ -128,8 +140,8 @@ function numeroDoTexto(txt) {
 
 function acharDistribuidora(texto) {
   const alvo = texto.toLowerCase();
-  for (let i = 0; i < DISTRIBUIDORAS.length; i++) {
-    const d = DISTRIBUIDORAS[i];
+  for (let i = 0; i < DISTRIBUIDORAS_NA_FATURA.length; i++) {
+    const d = DISTRIBUIDORAS_NA_FATURA[i];
     if (alvo.indexOf(d.toLowerCase()) >= 0) return d;
   }
   return null;

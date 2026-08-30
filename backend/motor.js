@@ -83,7 +83,11 @@ function suave(chave, i, passo) {
 }
 
 /* ---------- unidades ---------- */
-const LAT = -23.55 * Math.PI / 180; /* São Paulo */
+/* Latitude de Sorocaba (-23,50). Entra na declinacao solar, entao e ela que
+   decide a que horas o sol nasce e se poe em cada data do ano. Antes estava
+   a da capital; a diferenca e pequena, mas o projeto e da regiao de Sorocaba
+   e nao ha razao para calcular com a cidade errada. */
+const LAT = -23.50 * Math.PI / 180;
 
 /* Lei 14.300/2022 — marco legal da geração distribuída.
    Sistemas conectados até 06/01/2023 mantêm compensação integral até 2045
@@ -96,18 +100,32 @@ function percentualFioB(ano, direitoAdquirido) {
   return ESCADA_FIO_B[ano] !== undefined ? ESCADA_FIO_B[ano] : 1;
 }
 
-/* Irradiação global horizontal média, kWh/m² por dia, mês a mês.
-   ATENÇÃO DO GRUPO: estes valores são um perfil típico do interior de São
-   Paulo e precisam ser conferidos no Atlas Brasileiro de Energia Solar
-   (INPE/LABREN) para a cidade real do projeto antes da banca. É o único
-   número do motor que vem de fora — troque aqui e o resto se ajusta. */
-const IRRADIACAO_SP = [5.9, 5.9, 5.2, 4.7, 4.0, 3.7, 3.9, 4.7, 4.8, 5.3, 5.8, 6.1];
+/* Irradiacao global horizontal media, kWh/m² por dia, mes a mes.
+
+   E o unico numero do motor que vem de fora, e agora ele vem da regiao certa:
+   a serie esta em banco-de-dados/dados/regiao-sorocaba.js, junto com as
+   cidades e as distribuidoras. Antes era um perfil generico do interior de
+   Sao Paulo, herdado de quando o projeto ainda nao tinha cidade definida.
+
+   Uma serie so para a regiao inteira, de proposito: as cidades atendidas
+   estao todas dentro de uns 60 km, e a diferenca real de irradiacao entre
+   elas e menor que a incerteza da propria medida. Dar um valor diferente
+   para cada cidade seria inventar precisao.
+
+   PENDENTE DO GRUPO: conferir a serie no CRESESB / Atlas Brasileiro de
+   Energia Solar (INPE/LABREN) para Sorocaba antes da banca. Trocar la ajusta
+   o resto do calculo sozinho. */
+const IRRADIACAO_REGIAO = IRRADIACAO_SOROCABA;
 const RAZAO_DESEMPENHO = 0.78; /* perdas de inversor, cabos, temperatura e sujeira */
 
 const UNIDADES_BASE = {
   residencial: {
     chave: 'residencial', nome: 'Casa das Acácias', tipo: 'Residencial · 4 pessoas', curto: 'Residencial',
-    distribuidora: 'Enel SP', tarifa: 0.92, tarifaComp: 0.79, fioB: 0.26, ilum: 22, minFatura: 50,
+    /* As duas unidades de demonstracao ficam na regiao do projeto, e nao na
+       capital: se o exemplo mostrar outra distribuidora, o assistente e a
+       tela de tarifa passam a contar uma historia que nao e a de quem esta
+       olhando. */
+    cidade: 'sorocaba', distribuidora: 'CPFL Piratininga', tarifa: 0.92, tarifaComp: 0.79, fioB: 0.26, ilum: 22, minFatura: 50,
     potenciaKwp: 4.4, paineis: 10, investimento: 18400, mesesOperacao: 14,
     fatorInstalacao: 0.58, condicaoTelhado: 'telhado a oeste, sombra do prédio vizinho até as 9h',
     consumoMes: 320, geracaoMes: 285, metaPadrao: 300,
@@ -134,7 +152,7 @@ const UNIDADES_BASE = {
   },
   negocio: {
     chave: 'negocio', nome: 'Padaria Pão de Ouro', tipo: 'Pequeno negócio · Centro', curto: 'Pequeno negócio',
-    distribuidora: 'Enel SP', tarifa: 0.78, tarifaComp: 0.66, fioB: 0.22, ilum: 58, minFatura: 100,
+    cidade: 'votorantim', distribuidora: 'CPFL Piratininga', tarifa: 0.78, tarifaComp: 0.66, fioB: 0.22, ilum: 58, minFatura: 100,
     potenciaKwp: 18.6, paineis: 42, investimento: 96000, mesesOperacao: 22,
     fatorInstalacao: 0.55, condicaoTelhado: 'duas águas com inclinação baixa, caixa d’água sombreia parte da tarde',
     consumoMes: 1840, geracaoMes: 1150, metaPadrao: 1700,
@@ -332,7 +350,7 @@ function temDireitoAdquirido(chave) {
    inversor, falha). Comparar contra o potencial mede qualidade da instalação. */
 function potencialRegiao(chave, m, nd) {
   const u = uni(chave) || UNIDADE_VAZIA;
-  return u.potenciaKwp * IRRADIACAO_SP[m] * RAZAO_DESEMPENHO * nd;
+  return u.potenciaKwp * IRRADIACAO_REGIAO[m] * RAZAO_DESEMPENHO * nd;
 }
 function geracaoEsperada(chave, m, nd) {
   return potencialRegiao(chave, m, nd) * (uni(chave) || UNIDADE_VAZIA).fatorInstalacao;
@@ -421,8 +439,13 @@ const PADRAO = {
      aparecem quando isto e verdadeiro. O visitante ve; conta nova nao,
      porque conta nova nao tem casa nenhuma cadastrada ainda. */
   exemplos: true,
+  /* O papo rapido do cadastro: como esta pessoa quer ser tratada pelo
+     assistente. null = ainda nao respondeu. Fica aqui, no estado da conta,
+     porque e dado da pessoa; quando ha Supabase, tambem vai para a tabela
+     perfil_conversa, que e de onde a Edge Function le para montar o prompt. */
+  perfilCliente: null,
   nova: {
-    nome: '', arquetipo: 'casaVazia', telhado: 'bom', distribuidora: '',
+    nome: '', cidade: 'sorocaba', arquetipo: 'casaVazia', telhado: 'bom', distribuidora: '',
     tarifa: 0.92, consumoMes: 300, potenciaKwp: 4.0, paineis: 9,
     investimento: 17000, mesesOperacao: 12,
     /* ids dos aparelhos que a pessoa marcou ter. null = ainda nao escolheu;
@@ -474,7 +497,7 @@ function salvar() {
    cálculo quebre no meio do caminho. */
 const UNIDADE_VAZIA = {
   chave: null, propria: false, arquetipo: 'casaVazia',
-  nome: 'Sem unidade', tipo: '—', curto: '—', distribuidora: '—',
+  nome: 'Sem unidade', tipo: '—', curto: '—', cidade: null, distribuidora: '—',
   tarifa: 0, tarifaComp: 0, fioB: 0, ilum: 0, minFatura: 0,
   potenciaKwp: 0, paineis: 0, investimento: 0, mesesOperacao: 1,
   fatorInstalacao: 0, condicaoTelhado: '—',
@@ -581,8 +604,16 @@ function aparelhosDoArquetipo(chaveArq) {
 function montarUnidade(f) {
   const a = ARQUETIPOS[f.arquetipo] || ARQUETIPOS.casaVazia;
   const telhado = TELHADOS.filter(t => t.k === f.telhado)[0] || TELHADOS[1];
-  const irradiacaoMedia = soma(IRRADIACAO_SP) / 12;
+  const irradiacaoMedia = soma(IRRADIACAO_REGIAO) / 12;
   const geracaoMes = f.potenciaKwp * irradiacaoMedia * RAZAO_DESEMPENHO * telhado.fator * 30;
+
+  /* A distribuidora sai da cidade, nao da digitacao. Quem mora em Piedade e
+     atendido pela Neoenergia Elektro mesmo que jure que e CPFL — e errar isso
+     faz o assistente citar o telefone e o mes de reajuste de outra empresa.
+     O campo digitado ainda ganha, para quem esta fora da regiao mapeada. */
+  const dist = distribuidoraDaCidade(f.cidade);
+  const nomeDistribuidora = (f.distribuidora && f.distribuidora.trim()) ||
+    (dist ? dist.nome : 'Não informada');
 
   return {
     chave: f.chave, propria: true, arquetipo: f.arquetipo,
@@ -591,7 +622,8 @@ function montarUnidade(f) {
        o medidor. A tela usa isto para nao vender estimativa como leitura. */
     criadaEm: f.criadaEm || null,
     nome: f.nome, tipo: a.tipo + ' · ' + a.rotulo.toLowerCase(), curto: a.tipo,
-    distribuidora: f.distribuidora || 'Não informada',
+    cidade: f.cidade || null,
+    distribuidora: nomeDistribuidora,
     tarifa: f.tarifa, tarifaComp: +(f.tarifa * 0.86).toFixed(3), fioB: +(f.tarifa * 0.28).toFixed(3),
     ilum: a.ilum, minFatura: a.minFatura,
     potenciaKwp: f.potenciaKwp, paineis: f.paineis, investimento: f.investimento,
