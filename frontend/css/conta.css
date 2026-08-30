@@ -121,15 +121,38 @@ body.vista-login{background:var(--dark)}
 
 /* O caminho de teste. Fica visivel de proposito: durante o teste de campo
    ninguem deveria travar numa tela de cadastro. */
-.ent-visitante{
-  width:100%;height:44px;border-radius:var(--r-md);
-  display:flex;align-items:center;justify-content:center;gap:var(--e2);
-  border:1px solid var(--sun-ink);background:var(--sun-wash);
-  font-size:var(--t-base);font-weight:600;color:var(--sun-deeper);
-  transition:background .14s var(--curva);
+/* Confirmacao — recuperacao de senha enviada, cadastro esperando e-mail.
+   Mesma forma da caixa de erro, cor invertida: quem ja aprendeu a ler uma
+   nao precisa aprender a outra. */
+.ent-ok{
+  display:flex;gap:var(--e2);align-items:flex-start;
+  background:var(--good-bg);border:1px solid var(--good-line);color:var(--good);
+  border-radius:var(--r-md);padding:var(--e3);font-size:var(--t-sm);line-height:var(--lh-snug);
 }
-.ent-visitante:hover{background:#FAE9CF}
-.ent-visitante-d{font-size:var(--t-xs);color:var(--faint);margin:var(--e2) auto 0;line-height:var(--lh-snug);text-align:center;max-width:40ch}
+.ent-ok svg{flex-shrink:0;margin-top:2px}
+
+/* Onde a conta esta sendo guardada. E informacao de confianca, entao fica
+   visivel sem precisar abrir nada — o detalhe e que vai no <details>. */
+.ent-modo{
+  display:flex;gap:var(--e2);align-items:flex-start;margin-top:var(--e5);
+  padding:var(--e3);border-radius:var(--r-md);
+  background:var(--ground-2);
+  font-size:var(--t-xs);color:var(--muted);line-height:var(--lh-snug);
+}
+.ent-modo b{color:var(--ink);font-weight:600}
+.ent-modo-ic{flex-shrink:0;color:var(--faint);margin-top:1px}
+.ent-modo--nuvem{background:var(--good-bg);color:#2C5F49}
+.ent-modo--nuvem .ent-modo-ic{color:var(--good)}
+.ent-modo--nuvem b{color:var(--good)}
+
+/* Sem a saida de visitante, este link e a unica porta de quem esqueceu a
+   senha. Discreto, mas nao escondido. */
+.ent-link-voltar{
+  display:block;width:100%;text-align:center;margin-top:var(--e4);
+  font-size:var(--t-sm);font-weight:500;color:var(--muted);
+  text-decoration:underline;text-underline-offset:3px;
+}
+.ent-link-voltar:hover{color:var(--ink)}
 
 .ent-aviso{margin-top:var(--e6);border-top:1px solid var(--line);padding-top:var(--e4)}
 .ent-aviso summary{
@@ -216,6 +239,15 @@ body.vista-login{background:var(--dark)}
   font-size:var(--t-xs);color:var(--faint)}
 .bd-pe code{font-family:var(--f-mono);font-size:var(--t-xs);background:var(--ground-2);
   padding:2px 6px;border-radius:var(--r-xs)}
+/* Por que o site caiu para o banco local, ou o que falhou na ultima
+   gravacao. Some quando esta tudo certo. */
+.bd-nota{
+  background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn);
+  border-radius:var(--r-md);padding:var(--e3);margin-bottom:var(--e3);
+  font-size:var(--t-xs);line-height:var(--lh-snug);
+}
+.bd-nota--ruim{background:var(--bad-bg);border-color:var(--bad-line);color:var(--bad)}
+
 .bd-vazio{background:var(--ground-2);border:1px dashed var(--line-2);border-radius:var(--r-md);
   padding:var(--e5);font-size:var(--t-sm);color:var(--muted);line-height:var(--lh-body);margin-top:6px;max-width:66ch}
 

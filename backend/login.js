@@ -1,25 +1,43 @@
 /* login.js — contas e sessao
 
-   O login e OPCIONAL. O site abre direto no painel, em modo visitante, e
-   criar conta serve para separar dados de quem divide o mesmo navegador.
+   O LOGIN E OBRIGATORIO. Nao ha mais "entrar sem criar conta": quem abre o
+   link cai na tela de entrada e so passa dali com uma conta. Antes existia um
+   modo visitante que ia direto ao painel com dados de demonstracao dentro.
 
-   Sendo honesto sobre o que isto e e o que nao e:
+   Por que mudou. O visitante resolvia um problema de teste de campo (ninguem
+   travar no cadastro) e criava tres outros: os dados da pessoa ficavam
+   presos num balde anonimo que qualquer um do mesmo navegador abria; o
+   assistente de IA nao tinha de quem ser assistente, porque nao havia
+   perfil; e a primeira coisa que a pessoa via era a casa de outra gente. Com
+   conta, o Solaris sabe com quem esta falando desde o primeiro segundo — que
+   e a condicao para tudo o que veio depois.
 
-   NAO E seguranca contra quem tem acesso ao computador. O site roda sem
-   servidor; quem abrir o DevTools le o banco. Nao existe segredo do lado
-   do cliente, ponto.
+   Quem so quer passear pelo sistema continua podendo: cria a conta e liga as
+   unidades de exemplo em Configuracoes, com um clique.
 
-   E DE VERDADE:
-     - a senha nunca e gravada, nem em texto nem de forma reversivel;
-     - guardamos uma derivacao dela com salt aleatorio e 150 mil iteracoes
-       (PBKDF2 pelo WebCrypto, ou SHA-256 encadeado onde nao houver);
-     - comparacao em tempo constante, para nao vazar informacao pelo tempo;
-     - a mesma mensagem de erro para senha errada e e-mail inexistente,
-       para nao revelar quais contas existem;
-     - cada conta tem seu proprio balde de dados no banco.
+   ---------------------------------------------------------------------
+   ONDE A SENHA E CONFERIDA — sao dois mundos, e a tela diz em qual voce esta
 
-   Num produto de verdade isso tudo aconteceria no servidor. Esta escrito
-   na propria tela de login, de proposito.
+   COM SUPABASE CONFIGURADO (o normal): a conta e verificada no servidor. A
+   senha nunca chega perto deste arquivo, o token tem prazo de validade e a
+   mesma conta abre em qualquer aparelho. E autenticacao de verdade.
+
+   SEM SUPABASE (site aberto do disco, sem credenciais): tudo continua
+   acontecendo no navegador, como antes. E honesto dizer o que isso e:
+
+     NAO E seguranca contra quem tem acesso ao computador. Sem servidor, quem
+     abrir o DevTools le o banco. Nao existe segredo do lado do cliente.
+
+     E DE VERDADE:
+       - a senha nunca e gravada, nem em texto nem de forma reversivel;
+       - guardamos uma derivacao dela com salt aleatorio e 150 mil iteracoes
+         (PBKDF2 pelo WebCrypto, ou SHA-256 encadeado onde nao houver);
+       - comparacao em tempo constante, para nao vazar pelo tempo de resposta;
+       - a mesma mensagem de erro para senha errada e e-mail inexistente,
+         para nao revelar quais contas existem;
+       - cada conta tem seu proprio balde de dados no banco.
+
+   As duas coisas estao escritas na propria tela de login, de proposito.
 */
 'use strict';
 
@@ -148,25 +166,65 @@ async function carregarContas() {
 }
 function normalizarEmail(e) { return String(e || '').trim().toLowerCase(); }
 
+/* Quem confere a senha: o servidor ou este arquivo. Decidido uma vez, na
+   abertura, pelo banco.js — nao muda no meio da sessao. */
+function autenticacaoNoServidor() {
+  return !!(typeof Banco !== 'undefined' && Banco.online);
+}
+
 let SESSAO = null;
 function carregarSessao() {
   const s = lerJSON(CHAVE_SESSAO, null);
   if (!s || !s.id) return null;
   if (s.ate && Date.now() > s.ate) { try { localStorage.removeItem(CHAVE_SESSAO); } catch (e) { } return null; }
-  /* o visitante não tem cadastro; qualquer outra sessão só vale se a conta existir */
-  if (s.id !== 'visitante' && !contas()[s.id]) return null;
+  /* No modo local a sessao so vale se a conta existir neste navegador. No
+     modo servidor quem manda e o token do Supabase, conferido em
+     restaurarSessao() — aqui a lista local esta vazia de proposito. */
+  if (!autenticacaoNoServidor() && !contas()[s.id]) return null;
   SESSAO = s;
   return s;
 }
 function sessao() { return SESSAO; }
-function ehVisitante() { return SESSAO && SESSAO.id === 'visitante'; }
+
+/* A sessao de verdade na abertura do site. E assincrona porque, com Supabase,
+   pode ser preciso renovar o token antes de saber se ainda vale. */
+async function restaurarSessao() {
+  if (!autenticacaoNoServidor()) return carregarSessao();
+
+  const u = await Banco.impl.authSessao();
+  if (!u) { SESSAO = null; try { localStorage.removeItem(CHAVE_SESSAO); } catch (e) { } return null; }
+  SESSAO = { id: u.id, nome: u.nome, email: u.email, ate: null };
+  gravarJSON(CHAVE_SESSAO, SESSAO);
+  return SESSAO;
+}
 
 /* ---------- operações de conta ---------- */
-async function criarConta(nome, email, senha) {
-  const e = normalizarEmail(email);
+/* As tres validacoes valem nos dois modos. O Supabase tambem valida, mas a
+   mensagem dele vem em ingles e generica — conferir aqui antes e o que faz a
+   tela dizer "escreva seu nome" em vez de "invalid request". */
+function conferirCadastro(nome, e, senha) {
   if (String(nome).trim().length < 2) throw new Error('Escreva seu nome com pelo menos 2 letras.');
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) throw new Error('Esse e-mail não parece válido.');
   if (String(senha).length < 6) throw new Error('A senha precisa de pelo menos 6 caracteres.');
+}
+
+/* Cria a conta E DEIXA A PESSOA DENTRO, nos dois modos.
+
+   Isto e uma unica operacao do ponto de vista de quem usa: o botao diz
+   "criar conta e continuar", e ninguem espera digitar a senha de novo logo
+   depois de escolher a senha. Os dois caminhos precisam terminar com sessao
+   aberta, senao a tela seguinte nao sabe quem entrou. */
+async function criarConta(nome, email, senha) {
+  const e = normalizarEmail(email);
+  conferirCadastro(nome, e, senha);
+
+  if (autenticacaoNoServidor()) {
+    const u = await Banco.impl.authCriar(String(nome).trim(), e, senha);
+    SESSAO = { id: u.id, nome: u.nome, email: u.email, ate: null };
+    gravarJSON(CHAVE_SESSAO, SESSAO);
+    return u;
+  }
+
   const todas = contas();
   if (todas[e]) throw new Error('Já existe uma conta com esse e-mail neste navegador.');
 
@@ -178,11 +236,23 @@ async function criarConta(nome, email, senha) {
   };
   _contas = todas;
   await Banco.salvarConta(todas[e]);
-  return todas[e];
+
+  const c = todas[e];
+  SESSAO = { id: c.id, nome: c.nome, email: c.email, ate: Date.now() + DIAS_SESSAO * 86400000 };
+  gravarJSON(CHAVE_SESSAO, SESSAO);
+  return c;
 }
 
 async function entrar(email, senha, manter) {
   const e = normalizarEmail(email);
+
+  if (autenticacaoNoServidor()) {
+    const u = await Banco.impl.authEntrar(e, senha);
+    SESSAO = { id: u.id, nome: u.nome, email: u.email, ate: null };
+    gravarJSON(CHAVE_SESSAO, SESSAO);
+    return SESSAO;
+  }
+
   const c = contas()[e];
   /* mesmo sem conta, derivamos uma vez: assim o tempo de resposta não
      revela se o e-mail existe */
@@ -198,19 +268,28 @@ async function entrar(email, senha, manter) {
   return SESSAO;
 }
 
-function entrarComoVisitante() {
-  SESSAO = { id: 'visitante', nome: 'Visitante', email: null, ate: null };
-  gravarJSON(CHAVE_SESSAO, SESSAO);
-  return SESSAO;
-}
-
+/* Sair de verdade: no modo servidor tambem invalida o token la, senao a
+   sessao continuaria valendo em outra aba ate vencer sozinha. */
 function sair() {
+  const eraServidor = autenticacaoNoServidor();
   SESSAO = null;
   try { localStorage.removeItem(CHAVE_SESSAO); } catch (e) { }
+  if (eraServidor) Banco.impl.authSair();
 }
 
 async function trocarSenha(senhaAtual, senhaNova) {
-  if (!SESSAO || ehVisitante()) throw new Error('Entre com uma conta para trocar a senha.');
+  if (!SESSAO) throw new Error('Entre com uma conta para trocar a senha.');
+  if (String(senhaNova).length < 6) throw new Error('A nova senha precisa de pelo menos 6 caracteres.');
+
+  if (autenticacaoNoServidor()) {
+    /* Confere a atual entrando de novo: o Supabase deixa trocar a senha so
+       com o token, e isso permitiria trocar a senha de uma sessao esquecida
+       aberta. Pedir a senha atual e o que impede. */
+    await Banco.impl.authEntrar(SESSAO.email, senhaAtual);
+    await Banco.impl.authTrocarSenha(senhaNova);
+    return;
+  }
+
   const todas = contas(), c = todas[SESSAO.id];
   if (!c) throw new Error('Conta não encontrada.');
   const atual = await derivar(senhaAtual, c.salt, c.metodo);
@@ -223,7 +302,7 @@ async function trocarSenha(senhaAtual, senhaNova) {
 }
 
 async function apagarConta() {
-  if (!SESSAO || ehVisitante()) return;
+  if (!SESSAO) return;
   const id = SESSAO.id;
   delete _contas[id];
   await Banco.apagarConta(id);
@@ -232,49 +311,22 @@ async function apagarConta() {
   sair();
 }
 
-/* ---------- migração de dados ----------
-   Dois casos em que os dados ficariam órfãos e o usuário acharia que
-   perdeu tudo. Os dois são resolvidos calados. */
-
-/* Quem brincou como visitante e depois criou conta leva junto o que
-   cadastrou — mas NAO as unidades de demonstracao. Conta nova comeca
-   com as suas coisas e mais nada; se voce nao cadastrou nenhuma, ela
-   comeca vazia mesmo, e o site pede a primeira. */
-async function migrarDoVisitante(destinoId) {
-  const dados = await Banco.estado('visitante');
-  if (!dados) return false;
-  if (await Banco.estado(destinoId)) return false;
-
-  const proprias = (dados.unidades || []);
-  const chavesProprias = proprias.map(u => u.chave);
-  const limpo = Object.assign({}, dados, {
-    exemplos: false,
-    unidades: proprias,
-    /* aparelhos e respostas presos as unidades de demonstracao ficam para tras */
-    extras: (dados.extras || []).filter(e => chavesProprias.indexOf(e.perfil) >= 0),
-    removidos: (dados.removidos || []).filter(r => chavesProprias.some(c => r.indexOf(c + ':') === 0)),
-    perfil: chavesProprias[0] || null,
-    detalhe: null, tela: 'painel'
-  });
-  await Banco.salvarEstado(destinoId, limpo);
-  await Banco.apagarEstado('visitante');
-  return proprias.length > 0;
-}
-
 /* ---------- tela de login ---------- */
-let modoLogin = 'entrar';   /* entrar | criar */
+let modoLogin = 'entrar';   /* entrar | criar | recuperar */
 let erroLogin = '';
+let avisoLogin = '';
 let ocupado = false;
 
 function vLogin() {
   const criar = modoLogin === 'criar';
-  const quantas = Object.keys(contas()).length;
+  const recuperar = modoLogin === 'recuperar';
+  const naNuvem = autenticacaoNoServidor();
 
-  /* Coluna da esquerda: o que o site faz. Quem chega aqui pela primeira vez
-     precisa saber onde entrou antes de decidir criar conta. */
+  /* Coluna da esquerda: o que o site faz. Agora que ninguem entra sem conta,
+     esta coluna e a unica chance de a pessoa entender onde chegou antes de
+     decidir se cadastra. Ela virou o argumento, nao a decoracao. */
   const vitrine =
     '<section class="ent-vitrine">' +
-    '' +
     '<div class="ent-vitrine-in">' +
       '<div class="ent-marca">' +
         '<span class="ent-ic">' +
@@ -286,89 +338,131 @@ function vLogin() {
       '</div>' +
 
       '<h1 class="ent-titulo">Sua conta de luz,<br>explicada.</h1>' +
-      '<p class="ent-linha">Monitoramento de energia solar para casa e pequeno negócio, com a Lei 14.300 dentro do cálculo.</p>' +
+      '<p class="ent-linha">Monitoramento de energia solar para casa e pequeno negócio na região de Sorocaba, com a Lei 14.300 dentro do cálculo.</p>' +
 
       '<ul class="ent-lista">' +
         itemVitrine('M9 3v6M15 3v6M6 9h12v3a6 6 0 0 1-12 0zM12 18v3',
           'Para onde vai cada quilowatt',
-          'O consumo dividido por aparelho, a partir do padr\u00e3o do medidor.') +
+          'O consumo dividido por aparelho, a partir do padrão do medidor.') +
         itemVitrine('M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v3M12 20v3M23 12h-3M4 12H1',
           'Quanto o sol cobriu de verdade',
           'Hora a hora, cruzando o que o painel gera com o que a casa usa.') +
         itemVitrine('M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4',
-          'Quanto vem na pr\u00f3xima conta',
-          'Com cr\u00e9ditos, m\u00ednimo faturado e o Fio B da Lei 14.300.') +
+          'Quanto vem na próxima conta',
+          'Com créditos, mínimo faturado e o Fio B da Lei 14.300.') +
+        itemVitrine('M12 3a6 6 0 0 0-3.4 10.9c.5.5.9 1.3.9 2.1h5c0-.8.4-1.6.9-2.1A6 6 0 0 0 12 3zM10 19.5h4',
+          'Um assistente que conhece a sua conta',
+          'Ele sabe a sua cidade, a sua distribuidora e o que o medidor marca agora.') +
       '</ul>' +
 
       '<div class="ent-rodape">' +
         '<span class="live-dot batendo"></span>' +
-        'Medidor virtual rodando \u00b7 uma leitura por minuto gravada no banco' +
+        'Medidor virtual rodando · uma leitura por minuto gravada no banco' +
       '</div>' +
     '</div></section>';
 
-  /* Coluna da direita: o formulario. */
+  /* ----- a coluna do formulario ----- */
+  const sub = {
+    entrar: 'Use a conta que você criou aqui.',
+    criar: 'Suas unidades, aparelhos e metas ficam guardados na sua conta' +
+      (naNuvem ? ' e abrem em qualquer aparelho.' : ' neste navegador.'),
+    recuperar: 'Mandamos um link de troca de senha para o seu e-mail.'
+  }[modoLogin];
+
+  const campos = recuperar
+    ? campoEntrada('auEmail', 'E-mail da conta', 'email', 'username', 'voce@exemplo.com')
+    : (criar ? campoEntrada('auNome', 'Nome', 'text', 'name', 'Como quer ser chamado') : '') +
+      campoEntrada('auEmail', 'E-mail', 'email', 'username', 'voce@exemplo.com') +
+      campoEntrada('auSenha', 'Senha', 'password',
+        criar ? 'new-password' : 'current-password',
+        criar ? 'Pelo menos 6 caracteres' : 'Sua senha') +
+      (criar ? '' :
+        '<label class="ent-check"><input type="checkbox" id="auManter" checked>' +
+        '<span>Continuar conectado por 30 dias</span></label>');
+
+  const botao = recuperar ? 'Mandar link de recuperação'
+    : criar ? 'Criar conta e continuar' : 'Entrar';
+
   const formulario =
     '<section class="ent-form">' +
     '<div class="ent-cx">' +
 
       '<div class="ent-abas" role="tablist">' +
-        '<button role="tab" data-act="auth-modo" data-v="entrar" aria-selected="' + (!criar) + '">Entrar</button>' +
+        '<button role="tab" data-act="auth-modo" data-v="entrar" aria-selected="' + (modoLogin === 'entrar') + '">Entrar</button>' +
         '<button role="tab" data-act="auth-modo" data-v="criar" aria-selected="' + criar + '">Criar conta</button>' +
       '</div>' +
 
-      '<p class="ent-sub">' + (criar
-        ? 'A conta guarda suas unidades, aparelhos e metas separados de quem mais usa este navegador.'
-        : 'Use a conta que voc\u00ea criou neste navegador.') + '</p>' +
+      '<p class="ent-sub">' + sub + '</p>' +
 
       '<form class="ent-campos" id="formLogin" autocomplete="on">' +
-        (criar
-          ? campoEntrada('auNome', 'Nome', 'text', 'name', 'Como quer ser chamado')
-          : '') +
-        campoEntrada('auEmail', 'E-mail', 'email', 'username', 'voce@exemplo.com') +
-        campoEntrada('auSenha', 'Senha', 'password',
-          criar ? 'new-password' : 'current-password',
-          criar ? 'Pelo menos 6 caracteres' : 'Sua senha') +
-
-        (criar ? '' :
-          '<label class="ent-check"><input type="checkbox" id="auManter" checked>' +
-          '<span>Continuar conectado por 30 dias</span></label>') +
+        campos +
 
         (erroLogin ? '<div class="ent-erro" role="alert">' +
           '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>' +
           '<span>' + esc(erroLogin) + '</span></div>' : '') +
 
+        (avisoLogin ? '<div class="ent-ok" role="status">' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>' +
+          '<span>' + esc(avisoLogin) + '</span></div>' : '') +
+
         '<button type="submit" class="ent-botao" id="auEnviar"' + (ocupado ? ' disabled' : '') + '>' +
-        (ocupado ? '<span class="ent-girando"></span>Verificando\u2026'
-          : (criar ? 'Criar conta e entrar' : 'Entrar')) + '</button>' +
+        (ocupado ? '<span class="ent-girando"></span>Verificando…' : botao) + '</button>' +
       '</form>' +
 
-      '<div class="ent-ou"><span>ou</span></div>' +
+      /* Sem a saida de visitante, quem esquece a senha fica trancado do lado
+         de fora do proprio painel. Recuperacao deixou de ser luxo e virou
+         parte da porta de entrada — mas so existe de verdade com servidor. */
+      (recuperar
+        ? '<button class="ent-link-voltar" data-act="auth-modo" data-v="entrar">Voltar para o login</button>'
+        : criar || !naNuvem ? ''
+        : '<button class="ent-link-voltar" data-act="auth-modo" data-v="recuperar">Esqueci minha senha</button>') +
 
-      /* O caminho de teste tem que ser um clique. Durante o teste de campo
-         ninguem deveria travar numa tela de cadastro. */
-      '<button class="ent-visitante" data-act="auth-visitante">' +
-        '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>' +
-        'Entrar sem criar conta' +
-      '</button>' +
-      '<p class="ent-visitante-d">Vai direto para o painel com os dados de demonstra\u00e7\u00e3o. ' +
-      'D\u00e1 para criar conta depois sem perder o que voc\u00ea fez.</p>' +
-
-      '<details class="ent-aviso">' +
-        '<summary>Como seus dados ficam guardados</summary>' +
-        '<p>O Solaris roda sem servidor, direto no seu navegador. A senha nunca ' +
-        '\u00e9 gravada \u2014 s\u00f3 uma deriva\u00e7\u00e3o dela com salt e ' + nf(ITERACOES) + ' itera\u00e7\u00f5es' +
-        (TEM_WEBCRYPTO ? ' (PBKDF2 pelo WebCrypto)' : ' (SHA-256 encadeado)') + '. ' +
-        'Isso separa os dados entre contas, mas <b>n\u00e3o protege contra quem tem ' +
-        'acesso a este computador</b>: sem servidor, n\u00e3o existe segredo do lado do ' +
-        'cliente. Tamb\u00e9m n\u00e3o h\u00e1 recupera\u00e7\u00e3o de senha, porque n\u00e3o h\u00e1 e-mail para enviar.</p>' +
-      '</details>' +
-
-      (quantas ? '<div class="ent-contador">' + quantas +
-        (quantas > 1 ? ' contas neste navegador' : ' conta neste navegador') + '</div>' : '') +
+      cartaoSeguranca(naNuvem) +
 
     '</div></section>';
 
   return '<div class="entrada">' + vitrine + formulario + '</div>';
+}
+
+/* O que acontece com a senha e com os dados, dito na tela e nao no README.
+   O texto muda conforme onde a conta esta sendo verificada, porque as duas
+   situacoes sao honestamente diferentes — e prometer a mais seria mentira. */
+function cartaoSeguranca(naNuvem) {
+  if (naNuvem) {
+    return '<div class="ent-modo ent-modo--nuvem">' +
+      '<span class="ent-modo-ic">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M6 10a6 6 0 1 1 11.3 2.8A4 4 0 0 1 17 20H7a4 4 0 0 1-1-7.9z"/></svg></span>' +
+      '<span>Conta guardada no servidor. A senha é conferida lá, não neste navegador, ' +
+      'e os seus dados abrem no celular e no computador.</span></div>' +
+
+      '<details class="ent-aviso">' +
+        '<summary>O que fica guardado sobre você</summary>' +
+        '<p>Seu nome, seu e-mail, as unidades que você cadastrar, o histórico do medidor ' +
+        'e as suas conversas com o assistente. Cada linha guarda o dono, e o banco só devolve ' +
+        'as linhas de quem está logado — ninguém lê a unidade de ninguém. ' +
+        'Dá para apagar tudo de uma vez em <b>Configurações → Banco de dados</b>.</p>' +
+      '</details>';
+  }
+
+  const quantas = Object.keys(contas()).length;
+  return '<div class="ent-modo">' +
+    '<span class="ent-modo-ic">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4"/></svg></span>' +
+    '<span>Este Solaris está rodando <b>sem servidor</b>: a conta vale só neste navegador.</span></div>' +
+
+    '<details class="ent-aviso">' +
+      '<summary>O que isso significa para a sua senha</summary>' +
+      '<p>A senha nunca é gravada — só uma derivação dela com salt e ' + nf(ITERACOES) + ' iterações' +
+      (TEM_WEBCRYPTO ? ' (PBKDF2 pelo WebCrypto)' : ' (SHA-256 encadeado)') + '. ' +
+      'Isso separa os dados entre contas, mas <b>não protege contra quem tem acesso a este ' +
+      'computador</b>: sem servidor, não existe segredo do lado do cliente. Também não há ' +
+      'recuperação de senha, porque não há servidor para mandar o e-mail.</p>' +
+    '</details>' +
+
+    (quantas ? '<div class="ent-contador">' + quantas +
+      (quantas > 1 ? ' contas neste navegador' : ' conta neste navegador') + '</div>' : '');
 }
 
 /* um item da lista de argumentos, na coluna da esquerda */
@@ -387,32 +481,53 @@ function campoEntrada(id, rotulo, tipo, autocomplete, dica) {
     '</label>';
 }
 
-/* envio do formulário */
+/* envio do formulario */
 async function enviarLogin(ev) {
   ev.preventDefault();
   if (ocupado) return;
   const criar = modoLogin === 'criar';
+  const recuperar = modoLogin === 'recuperar';
   const nome = criar ? ($('#auNome') || {}).value : '';
   const email = ($('#auEmail') || {}).value;
-  const senha = ($('#auSenha') || {}).value;
+  const senha = recuperar ? '' : ($('#auSenha') || {}).value;
   const manter = criar ? true : !!(($('#auManter') || {}).checked);
 
-  ocupado = true; erroLogin = ''; renderLogin();
+  ocupado = true; erroLogin = ''; avisoLogin = ''; renderLogin();
   try {
-    let migrou = false;
+    if (recuperar) {
+      await Banco.impl.authRecuperarSenha(normalizarEmail(email));
+      ocupado = false;
+      modoLogin = 'entrar';
+      /* A mesma mensagem sai com e-mail cadastrado ou nao: dizer "esse e-mail
+         nao existe" entregaria quais contas existem para quem quisesse
+         descobrir. */
+      avisoLogin = 'Se houver conta com esse e-mail, o link de troca de senha já está a caminho.';
+      renderLogin();
+      return;
+    }
+
     if (criar) {
-      const eraVisitante = ehVisitante();
       const c = await criarConta(nome, email, senha);
-      if (eraVisitante) migrou = await migrarDoVisitante(c.id);
-      /* conta nova nunca comeca com as unidades de demonstracao dentro */
-      if (!await Banco.estado(c.id)) await Banco.salvarEstado(c.id, { exemplos: false, perfil: null });
-      await entrar(email, senha, true);
-    } else await entrar(email, senha, manter);
+      /* Conta nova comeca vazia: sem unidade de demonstracao dentro e sem
+         nenhum dado de quem usou este navegador antes. */
+      if (!await Banco.estado(c.id)) {
+        await Banco.salvarEstado(c.id, { exemplos: false, perfil: null, perfilCliente: null });
+      }
+    } else {
+      await entrar(email, senha, manter);
+    }
     ocupado = false;
-    await aoEntrar(migrou);
+    await aoEntrar();
   } catch (e) {
     ocupado = false;
-    erroLogin = e.message || 'Não deu para continuar.';
+    /* Cadastro que exige confirmacao por e-mail nao e erro da pessoa: ela fez
+       tudo certo e so falta clicar no link. Vai como aviso, nao como falha. */
+    if (e && e.confirmacaoPendente) {
+      modoLogin = 'entrar';
+      avisoLogin = e.message;
+    } else {
+      erroLogin = (e && e.message) || 'Não deu para continuar.';
+    }
     renderLogin();
     const alvo = $('#auSenha'); if (alvo) { alvo.focus(); alvo.select(); }
   }

@@ -44,7 +44,9 @@ const IC = {
   chevron: 'M9 6l6 6-6 6',
   lixo: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
   lapis: 'M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM14 6l4 4',
-  camera: 'M3 8a2 2 0 0 1 2-2h2.5L9 4h6l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z'
+  camera: 'M3 8a2 2 0 0 1 2-2h2.5L9 4h6l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z',
+  ia: 'M12 3a6 6 0 0 0-3.4 10.9c.5.5.9 1.3.9 2.1h5c0-.8.4-1.6.9-2.1A6 6 0 0 0 12 3zM10 19.5h4',
+  mapa: 'M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5zM9 4v13M15 6.5v13'
 };
 function ico(d, sz, cor, sw) {
   return '<svg width="' + (sz || 16) + '" height="' + (sz || 16) + '" viewBox="0 0 24 24" fill="none" stroke="' + (cor || 'currentColor') + '" stroke-width="' + (sw || 1.8) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"/></svg>';
@@ -59,13 +61,15 @@ const TELAS = {
   equipamentos: ['Desagregação por IA', 'Seus aparelhos'], cadastro: ['Novo aparelho', 'Cadastrar consumo'],
   alertas: ['Regras e limites', 'Alertas e metas'], relatorio: ['Fechamento do mês', 'Relatório mensal'],
   config: ['Unidade e tarifa', 'Configurações'],
-  unidade: ['Nova unidade', 'Cadastrar unidade']
+  unidade: ['Nova unidade', 'Cadastrar unidade'],
+  assistente: ['Pergunte sobre a sua energia', 'Assistente']
 };
 const NAV = [
   { k: 'painel', label: 'Painel', icon: IC.painel },
   { k: 'historico', label: 'Histórico', icon: IC.historico },
   { k: 'equipamentos', label: 'Aparelhos', icon: IC.aparelhos },
   { k: 'cadastro', label: 'Cadastrar', icon: IC.mais },
+  { k: 'assistente', label: 'Assistente', icon: IC.ia },
   { k: 'alertas', label: 'Alertas e metas', icon: IC.sino },
   { k: 'relatorio', label: 'Relatório', icon: IC.papel },
   { k: 'config', label: 'Configurações', icon: IC.ajustes }
@@ -121,19 +125,11 @@ function cardConta() {
   const s = sessao();
   if (!s) return '';
   const inicial = (s.nome || '?').trim().charAt(0).toUpperCase();
-  if (ehVisitante()) {
-    return '<button class="conta conta--entrar" data-act="auth-abrir">' +
-      '<span class="conta-av conta-av--vis">' +
-      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-      '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>' +
-      '<span class="conta-txt"><span class="conta-nome">Entrar</span>' +
-      '<span class="conta-mail">Opcional · salvar em conta própria</span></span>' +
-      '</button>';
-  }
+  /* Sem modo visitante, todo mundo aqui tem conta: sobrou um caso so. */
   return '<div class="conta">' +
     '<span class="conta-av">' + esc(inicial) + '</span>' +
     '<span class="conta-txt"><span class="conta-nome">' + esc(s.nome) + '</span>' +
-    '<span class="conta-mail">' + esc(s.email) + '</span></span>' +
+    '<span class="conta-mail">' + esc(s.email || '') + '</span></span>' +
     '<button class="conta-sair" data-act="sair" title="Sair da conta" aria-label="Sair da conta">' +
     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
     '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>' +
@@ -689,6 +685,8 @@ function vConfig() {
     '<dl class="kvs" style="margin-top:18px">' +
     kv('Unidade', esc(u.nome)) +
     kv('Perfil', esc(u.tipo)) +
+    kv('Cidade', esc(u.cidade ? (cidade(u.cidade) || {}).nome || '—' : 'Não informada')) +
+    kv('Distribuidora', esc(u.distribuidora)) +
     kv('Potência instalada', nf(u.potenciaKwp, 1) + ' kWp', true) +
     kv('Painéis', u.paineis + ' painéis', true) +
     kv('Investimento', brl(u.investimento), true) +
@@ -698,7 +696,7 @@ function vConfig() {
     '<div class="' + (v.desempenho < 85 ? 'note note--bad' : 'note note--good') + '" style="margin-top:12px">' +
     '<span class="note-dot"></span><div>' +
     '<div class="note-t">Saúde do sistema: ' + pct(v.desempenho) + ' do esperado para este telhado</div>' +
-    '<div class="note-s">Em ' + MESES[v.m] + ' a irradiação da região é ' + nf(IRRADIACAO_SP[v.m], 1) +
+    '<div class="note-s">Em ' + MESES[v.m] + ' a irradiação da região é ' + nf(IRRADIACAO_REGIAO[v.m], 1) +
     ' kWh/m² por dia, o que daria ' + nf(v.potencial) + ' kWh num telhado ideal. O seu (' + esc(u.condicaoTelhado) +
     ') aproveita ' + pct(v.aproveitaTelhado) + ' disso, então o esperado são ' + nf(v.esperada) + ' kWh — e ele entregou ' +
     nf(v.cheio.tg) + '. ' +
@@ -710,7 +708,56 @@ function vConfig() {
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">' +
     '<div style="font-size:12.5px;color:var(--faint);max-width:44ch">Aparelhos cadastrados, metas e tarifa ficam salvos neste navegador.</div>' +
     '<button class="danger-btn" data-act="reset-tudo">Apagar meus dados</button></div>' +
-    '</section>' + cardUnidades() + cardExemplos() + cardFonte() + cardBanco() + '</div>';
+    '</section>' + cardAssistente() + cardUnidades() + cardExemplos() + cardFonte() + cardBanco() + '</div>';
+}
+
+/* O que o assistente sabe sobre a pessoa, e o botao para mudar.
+
+   Esta tela existe por uma razao simples: um sistema que guarda um perfil
+   seu para decidir como falar com voce tem que te mostrar esse perfil. Se a
+   pessoa nao consegue ver nem corrigir o que foi guardado, o papo rapido do
+   cadastro deixa de ser um cadastro e vira uma coleta. */
+function cardAssistente() {
+  const p = perfilCliente();
+  const ligado = !agenteIndisponivel();
+
+  const rotuloDe = (idPergunta, valor) => {
+    const q = PERGUNTAS_PERFIL.filter(x => x.id === idPergunta)[0];
+    if (!q) return null;
+    const o = q.opcoes.filter(x => x.v === valor)[0];
+    return o ? o.r : null;
+  };
+
+  const linhas = p
+    ? PERGUNTAS_PERFIL.map(q => {
+        const r = rotuloDe(q.id, p[q.id]);
+        return kv(q.pergunta.replace(/\?$/, ''), r ? esc(r) : '<i style="color:var(--faint)">não respondeu</i>');
+      }).join('') +
+      (p.livre ? kv('Contou também', esc(p.livre)) : '')
+    : '';
+
+  return '<section class="card s6"><div class="card-head"><div>' +
+    '<h2>Seu assistente</h2>' +
+    '<div class="card-sub">O que ele sabe sobre você — e é só isso que ele usa para escolher o tom</div></div>' +
+    '<span class="pill ' + (ligado ? 'pill--good' : 'pill--neutral') + '">' +
+    (ligado ? 'Ligado' : 'Desligado') + '</span></div>' +
+
+    (p
+      ? '<dl class="kvs" style="margin-top:var(--e4)">' + linhas + '</dl>'
+      : '<div style="font-size:var(--t-sm);color:var(--muted);margin-top:var(--e4);line-height:var(--lh-body);max-width:60ch">' +
+        'Você ainda não respondeu o papo rápido. Sem ele o assistente continua funcionando, ' +
+        'só responde igual para todo mundo.</div>') +
+
+    '<div style="display:flex;gap:var(--e3);flex-wrap:wrap;margin-top:var(--e4)">' +
+    '<button class="dark-btn" data-act="perfil-refazer">' + ico(IC.troca, 13, 'currentColor', 2.2) +
+    (p ? 'Refazer o papo' : 'Responder agora') + '</button>' +
+    (ligado ? '<button class="ghost-btn" data-act="nav" data-tela="assistente">Abrir o assistente</button>' : '') +
+    '</div>' +
+
+    (ligado
+      ? ''
+      : '<div class="softbox" style="margin-top:var(--e4)">' + esc(agenteIndisponivel()) + '</div>') +
+    '</section>';
 }
 
 /* liga e desliga as unidades de demonstracao */
@@ -838,7 +885,7 @@ function vPrimeiraUnidade() {
 function previaUnidade() {
   const n = S.nova;
   const a = ARQUETIPOS[n.arquetipo], tel = TELHADOS.filter(t => t.k === n.telhado)[0] || TELHADOS[1];
-  const irr = soma(IRRADIACAO_SP) / 12;
+  const irr = soma(IRRADIACAO_REGIAO) / 12;
   const geracao = n.potenciaKwp * irr * RAZAO_DESEMPENHO * tel.fator * 30;
   const cobertura = n.consumoMes > 0 ? clamp((geracao / n.consumoMes) * 100, 0, 999) : 0;
   const contaSem = n.consumoMes * n.tarifa + n.consumoMes * 0.0189 + a.ilum;
@@ -935,6 +982,49 @@ function blocoFotoConta() {
     '<input type="file" id="fotoConta" accept="image/*" data-act="foto-conta" class="sr"></label></div>';
 }
 
+/* A cidade, e a distribuidora que vem junto com ela.
+
+   Antes isto era uma caixa de texto onde a pessoa digitava "CPFL" e o sistema
+   nao sabia mais nada. Errar aqui nao e detalhe: quem mora em Piedade e
+   atendido pela Neoenergia Elektro, e se o sistema achar que e CPFL o
+   assistente vai citar o telefone errado e o mes de reajuste errado.
+
+   Escolhendo a cidade, o Solaris ja sabe a distribuidora, quando a tarifa
+   dela e reajustada e como e o consumo tipico do lugar. Quem esta fora da
+   regiao mapeada escolhe "Outra cidade" e digita a distribuidora na mao. */
+function blocoCidade(n) {
+  const lista = cidadesPorDistancia();
+  const fora = n.cidade === 'outra';
+  const opcoes = lista.map(c =>
+    '<option value="' + esc(c.id) + '"' + (n.cidade === c.id ? ' selected' : '') + '>' +
+    esc(c.nome) + (c.distancia ? ' · ' + c.distancia + ' km de Sorocaba' : '') +
+    '</option>').join('');
+
+  const d = fora ? null : distribuidoraDaCidade(n.cidade);
+
+  return '<div class="field"><label class="field-lbl" for="unCidade">Cidade</label>' +
+    '<select class="text-in" id="unCidade" data-fid="unCidade" data-in="unCidade" style="max-width:340px">' +
+    opcoes +
+    '<option value="outra"' + (fora ? ' selected' : '') + '>Outra cidade</option>' +
+    '</select>' +
+    '<div class="dica">Define a irradiação usada no cálculo e quem entrega a sua energia.</div>' +
+
+    (d
+      ? '<div class="dist-cx">' +
+        '<span class="dist-ic">' + ico(IC.raio, 15, 'currentColor', 2) + '</span>' +
+        '<span><b>' + esc(d.nome) + '</b> atende essa cidade.' +
+        '<span class="dist-d">Reajuste ' + esc(d.vigencia) + '. Emergência: ' + esc(d.telefone) + '.</span>' +
+        '</span></div>'
+      : '<div style="margin-top:var(--e3)">' +
+        '<label class="field-lbl" for="unDistribuidora">Distribuidora</label>' +
+        '<input class="text-in" id="unDistribuidora" data-fid="unDistribuidora" data-in="unDistribuidora" ' +
+        'type="text" value="' + esc(n.distribuidora) + '" placeholder="Quem manda a conta" ' +
+        'autocomplete="off" style="max-width:340px">' +
+        '<div class="dica">Fora da região de Sorocaba o Solaris ainda calcula tudo, mas o ' +
+        'assistente não vai saber os prazos e os canais dessa distribuidora.</div></div>') +
+    '</div>';
+}
+
 function vUnidade() {
   const n = S.nova, p = previaUnidade(), at = passoAtual();
   const pode = passoCompleto(1) && passoCompleto(2);
@@ -958,9 +1048,9 @@ function vUnidade() {
     }).join('');
     corpo = blocoFotoConta() +
       campo('unNome', 'Nome da unidade', 'Como você quer ver no menu — “Minha casa”, “Loja do centro”.', n.nome) +
+      blocoCidade(n) +
       campo('unConsumo', 'Consumo médio por mês (kWh)', 'Pegue a média dos últimos 12 meses — costuma vir num gráfico na própria conta.', n.consumoMes, true) +
       campo('unTarifa', 'Tarifa (R$ por kWh)', 'Divida o valor total pela quantidade de kWh, ou procure por “tarifa” na conta.', n.tarifa, true) +
-      campo('unDistribuidora', 'Distribuidora', 'Quem manda a conta: Enel, CPFL, Light, Cemig…', n.distribuidora) +
       '<div class="field"><span class="field-lbl">Como a energia é usada</span>' +
       '<div class="dica">Isso define a curva de consumo hora a hora, sem você digitar 24 números.</div>' +
       '<div class="opts">' + arqs + '</div></div>';
@@ -1070,7 +1160,7 @@ function ajudaCard(at) {
     '<h2>Como o cálculo funciona</h2>' +
     '<div style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:10px">' +
     'A geração não é chute nem um número que você digita: vem da irradiação média da região (' +
-    nf(soma(IRRADIACAO_SP) / 12, 1) + ' kWh/m² por dia), da potência que você informou, de ' +
+    nf(soma(IRRADIACAO_REGIAO) / 12, 1) + ' kWh/m² por dia), da potência que você informou, de ' +
     pct(RAZAO_DESEMPENHO * 100) + ' de rendimento típico do inversor e da condição do telhado.' +
     '<br><br>O consumo hora a hora vem do arquétipo escolhido, ajustado para bater com a média mensal da sua conta. ' +
     'Depois disso o sistema calcula sozinho autoconsumo, injeção, créditos e Fio B.' +

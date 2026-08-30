@@ -464,3 +464,25 @@ input[type=range]{width:100%;margin:var(--e2) 0 0;accent-color:var(--sun);cursor
   background-image:repeating-linear-gradient(135deg,
     rgba(21,24,28,.45) 0 2px, transparent 2px 5px);
 }
+
+/* A distribuidora que veio junto com a cidade escolhida.
+
+   Nao e um aviso e nao flutua: e o resultado de uma escolha que a pessoa
+   acabou de fazer, entao fica encostado no campo, com fundo e sem sombra. */
+.dist-cx{
+  display:flex;gap:var(--e2);align-items:flex-start;
+  margin-top:var(--e3);padding:var(--e3);
+  border-radius:var(--r-md);background:var(--ground-2);
+  font-size:var(--t-sm);color:var(--ink-2);line-height:var(--lh-snug);
+  max-width:340px;
+}
+.dist-ic{flex-shrink:0;color:var(--faint);margin-top:1px}
+.dist-cx b{color:var(--ink);font-weight:600}
+.dist-d{display:block;margin-top:var(--e1);font-size:var(--t-xs);color:var(--muted)}
+
+/* O <select> herda a caixa dos campos de texto, mas o navegador desenha a
+   seta sozinho e ela some sem padding a direita. */
+select.text-in{
+  height:44px;padding-right:var(--e6);
+  background:var(--surface);cursor:pointer;
+}

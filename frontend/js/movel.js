@@ -12,14 +12,19 @@
 */
 'use strict';
 
+/* Cinco abas e o limite do polegar numa barra inferior; a sexta encolhe o
+   alvo de toque abaixo do aceitavel. Como o assistente e a novidade que
+   precisa ser encontrada, ele entra como aba e "Metas" desce para o Mais —
+   metas se ajustam uma vez por mes, o assistente se abre todo dia. */
 const MTABS = [
   { k: 'painel', label: 'Painel', icon: IC.painel },
   { k: 'historico', label: 'Histórico', icon: IC.historico },
   { k: 'aparelhos', label: 'Aparelhos', icon: IC.aparelhos },
-  { k: 'metas', label: 'Metas', icon: IC.sino },
+  { k: 'assistente', label: 'Assistente', icon: IC.ia },
   { k: 'mais', label: 'Mais', icon: 'M5 12h.01M12 12h.01M19 12h.01' }
 ];
 const MMENU = [
+  { k: 'metas', t: 'Metas e alertas', s: 'O limite do mês e as regras que avisam', icon: IC.sino },
   { k: 'conta', t: 'Conta do mês', s: 'Fatura detalhada e economia do ano', icon: IC.papel },
   { k: 'cadastro', t: 'Cadastrar aparelho', s: 'Estime o consumo de algo que a IA não viu', icon: IC.mais },
   { k: 'config', t: 'Configurações', s: 'Tarifa, distribuidora e sistema solar', icon: IC.ajustes }
@@ -28,18 +33,19 @@ const MMENU = [
 function vMovel() {
   const v = visao(), u = unidade();
   const sub = S.msub;
-  const titulos = { painel: saudacao(), historico: 'Histórico', aparelhos: 'Seus aparelhos', metas: 'Metas e alertas', mais: 'Mais' };
-  const subT = { conta: 'Conta de ' + MESES[v.m], cadastro: 'Novo aparelho', config: 'Configurações' };
+  const titulos = { painel: saudacao(), historico: 'Histórico', aparelhos: 'Seus aparelhos', assistente: 'Assistente', mais: 'Mais' };
+  const subT = { conta: 'Conta de ' + MESES[v.m], cadastro: 'Novo aparelho', config: 'Configurações', metas: 'Metas e alertas' };
   const titulo = sub ? subT[sub] : titulos[S.tab];
 
   let corpo = '';
   if (sub === 'conta') corpo = mConta();
   else if (sub === 'cadastro') corpo = mCadastro();
   else if (sub === 'config') corpo = mConfig();
+  else if (sub === 'metas') corpo = mMetas();
   else if (S.tab === 'painel') corpo = mPainel();
   else if (S.tab === 'historico') corpo = mHistorico();
   else if (S.tab === 'aparelhos') corpo = mAparelhos();
-  else if (S.tab === 'metas') corpo = mMetas();
+  else if (S.tab === 'assistente') corpo = vAssistente();
   else corpo = mMais();
 
   const tabs = MTABS.map(t => '<button class="mob-tab" data-act="mtab" data-k="' + t.k + '"' +
@@ -164,22 +170,14 @@ function mMais() {
       '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + esc(u.nome) + '</span>' +
       '<span class="mob-menu-s" style="display:block">' + esc(u.tipo) + '</span></span></button>';
   }).join('');
-  /* sem sessao nao ha cartao de conta para mostrar. Na pratica sempre
-     existe uma (o site entra como visitante sozinho), mas a tela nao
-     pode quebrar se for chamada fora do fluxo normal. */
-  const s = sessao() || { nome: '', email: null };
-  const conta = !sessao() ? '' : ehVisitante()
-    ? '<button class="mob-menu" data-act="auth-abrir">' +
-    '<span class="conta-av conta-av--vis">' +
-    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-    '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>' +
-    '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">Entrar</span>' +
-    '<span class="mob-menu-s" style="display:block">Opcional · salvar em conta própria</span></span>' +
-    ico(IC.chevron, 15, 'var(--n-400)', 2.2) + '</button>'
-    : '<div class="mob-card" style="display:flex;align-items:center;gap:12px">' +
+  /* Sem modo visitante, quem chegou aqui tem conta. A guarda continua
+     porque a tela nao pode quebrar se for chamada fora do fluxo normal. */
+  const s = sessao();
+  const conta = !s ? '' :
+    '<div class="mob-card" style="display:flex;align-items:center;gap:12px">' +
     '<span class="conta-av">' + esc((s.nome || '?').charAt(0).toUpperCase()) + '</span>' +
     '<span style="flex:1;min-width:0"><span class="mob-menu-t" style="display:block">' + esc(s.nome) + '</span>' +
-    '<span class="mob-menu-s" style="display:block">' + esc(s.email) + '</span></span>' +
+    '<span class="mob-menu-s" style="display:block">' + esc(s.email || '') + '</span></span>' +
     '<button class="link-btn" data-act="sair">Sair</button></div>';
   return '<div class="mob-col">' + conta + menu +
     '<h2 style="margin-top:10px">Trocar de unidade</h2>' + uns + '</div>';
@@ -240,6 +238,7 @@ function mConfig() {
     (S.tarifa[S.perfil] != null ? '<button class="link-btn" style="margin-top:8px" data-act="reset-tarifa">Voltar para a tarifa da distribuidora</button>' : '') +
     '</div>' +
     '<div class="mob-card">' +
+    '<div class="mob-rowline"><span>Cidade</span><b>' + esc(u.cidade ? (cidade(u.cidade) || {}).nome || '—' : '—') + '</b></div>' +
     '<div class="mob-rowline"><span>Distribuidora</span><b>' + esc(u.distribuidora) + '</b></div>' +
     '<div class="mob-rowline"><span>Compensação</span><b class="mono">R$ ' + nf(u.tarifaComp, 2) + '</b></div>' +
     '<div class="mob-rowline"><span>Potência</span><b class="mono">' + nf(u.potenciaKwp, 1) + ' kWp</b></div>' +

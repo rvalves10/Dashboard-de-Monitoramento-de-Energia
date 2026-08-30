@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="css/componentes.css">
 <link rel="stylesheet" href="css/telas.css">
 <link rel="stylesheet" href="css/conta.css">
+<link rel="stylesheet" href="css/assistente.css">
 <link rel="stylesheet" href="css/movel.css">
 <link rel="stylesheet" href="css/responsivo.css">
 <link rel="stylesheet" href="css/impressao.css">
@@ -53,20 +54,32 @@
   a lógica de domínio, e por último a interface. Cada camada só usa o que já
   foi carregado antes dela.
 
-  banco-de-dados/banco.js   abre o IndexedDB: contas, estado e leituras
-  backend/motor.js          a simulação física, as tarifas e a Lei 14.300
-  backend/login.js          contas, sessão e derivação de senha
-  backend/leitor.js         lê a conta de luz por foto (OCR sob demanda)
-  frontend/js/telas.js      as telas da versão ampla
-  frontend/js/movel.js      a mesma coisa em coluna única, para tela estreita
-  frontend/js/controle.js   eventos, rotas, o tique do medidor e os avisos
+  banco-de-dados/config.js         url do Supabase e modelo do assistente
+  banco-de-dados/dados/…           cidades, distribuidoras e irradiação da região
+  banco-de-dados/local.js          IndexedDB: o banco de reserva, sem rede
+  banco-de-dados/supabase.js       Postgres na nuvem: contas, estado e leituras
+  banco-de-dados/banco.js          escolhe qual dos dois responde
+  backend/motor.js                 a simulação física, as tarifas e a Lei 14.300
+  backend/login.js                 contas, sessão e a tela de entrada
+  backend/leitor.js                lê a conta de luz por foto (OCR sob demanda)
+  backend/agente.js                o assistente: contexto, perfil e conversa
+  frontend/js/telas.js             as telas da versão ampla
+  frontend/js/movel.js             a mesma coisa em coluna única, para tela estreita
+  frontend/js/assistente.js        o papo do cadastro e a tela de conversa
+  frontend/js/controle.js          eventos, rotas, o tique do medidor e os avisos
 -->
+<script src="../banco-de-dados/config.js"></script>
+<script src="../banco-de-dados/dados/regiao-sorocaba.js"></script>
+<script src="../banco-de-dados/local.js"></script>
+<script src="../banco-de-dados/supabase.js"></script>
 <script src="../banco-de-dados/banco.js"></script>
 <script src="../backend/motor.js"></script>
 <script src="../backend/login.js"></script>
 <script src="../backend/leitor.js"></script>
+<script src="../backend/agente.js"></script>
 <script src="js/telas.js"></script>
 <script src="js/movel.js"></script>
+<script src="js/assistente.js"></script>
 <script src="js/controle.js"></script>
 </body>
 </html>

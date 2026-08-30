@@ -39,12 +39,28 @@ function corpoPrimeiroCadastro() {
     '</div>';
 }
 
+/* O assistente sem a casca do site. Conta recem-criada ainda nao tem menu
+   lateral nem painel, mas e exatamente o momento em que a pessoa mais tem
+   pergunta: o que e kWp, onde acha o consumo medio na conta. Barrar o
+   assistente ate haver unidade seria esconder a ajuda de quem mais precisa. */
+function corpoAssistenteSolo() {
+  return '<div class="cadastro-solo">' +
+    '<header class="cadastro-solo-topo">' +
+      '<button class="link-btn" data-act="nav" data-tela="painel">' +
+      ico(IC.volta, 14, 'currentColor', 2.4) + 'Voltar</button>' +
+      '<h1>Assistente</h1>' +
+    '</header>' +
+    '<div class="cadastro-solo-corpo">' + vAssistente() + '</div>' +
+    '</div>';
+}
+
 function corpoAmplo() {
   let tela = '';
   if (S.tela === 'painel') tela = vPainel();
   else if (S.tela === 'historico') tela = vHistorico();
   else if (S.tela === 'equipamentos') tela = vEquip();
   else if (S.tela === 'cadastro') tela = vCadastro();
+  else if (S.tela === 'assistente') tela = vAssistente();
   else if (S.tela === 'alertas') tela = vAlertas();
   else if (S.tela === 'relatorio') tela = vRelatorio();
   else if (S.tela === 'unidade') tela = vUnidade();
@@ -54,10 +70,28 @@ function corpoAmplo() {
 
 let _ultimoModo = null;
 function render() {
-  /* sem sessão não existe app: a tela de login é a única coisa renderizada */
+  /* A ordem destas tres portas e o desenho do produto, e nao pode mudar:
+
+       1. sem sessao -> tela de entrada. E a unica porta do site: ninguem
+          mais entra sem conta.
+       2. com sessao e sem o papo rapido -> as cinco perguntas. Acontece uma
+          vez na vida da conta, e e o que da ao assistente com quem falar.
+       3. com papo feito e sem unidade -> cadastro da primeira unidade.
+
+     So depois das tres existe painel para desenhar. */
   if (!sessao()) { renderLogin(); return; }
   document.body.classList.remove('vista-login');
   const root = $('#root');
+
+  if (!perfilRespondido()) {
+    root.innerHTML = vBoasVindas();
+    document.body.classList.remove('vista-celular');
+    _ultimoModo = telaEstreita();
+    const foco = $('[data-fid="perfilLivre"]');
+    if (foco) foco.focus({ preventScroll: true });
+    return;
+  }
+
   const ativo = document.activeElement;
   const fid = ativo && ativo.dataset ? ativo.dataset.fid : null;
   const caret = ativo && ativo.selectionStart != null ? ativo.selectionStart : null;
@@ -66,7 +100,10 @@ function render() {
      nesse estado: o convite e o proprio formulario de cadastro. */
   ajustarPerfil();
   if (semUnidade()) {
-    root.innerHTML = S.tela === 'unidade' ? corpoPrimeiroCadastro() : vPrimeiraUnidade();
+    root.innerHTML = S.tela === 'unidade' ? corpoPrimeiroCadastro()
+      : S.tela === 'assistente' ? corpoAssistenteSolo()
+      : vPrimeiraUnidade();
+    ligarAssistente();
     document.body.classList.remove('vista-celular');
     _ultimoModo = telaEstreita();
     if (fid) { const a = $('[data-fid="' + fid + '"]'); if (a) a.focus({ preventScroll: true }); }
@@ -88,6 +125,7 @@ function render() {
     }
   }
   ligarGraficos();
+  ligarAssistente();
   preencherCardBanco();
   atualizarHash();
 }
@@ -97,20 +135,32 @@ function render() {
 async function preencherCardBanco() {
   if (!$('#cardBanco')) return;
   const est = await Banco.estatisticas();
+
   const motor = $('#bancoMotor');
   if (motor) {
     motor.textContent = est.motor;
-    motor.className = 'pill ' + (Banco.usandoIndexedDB ? 'pill--good' : 'pill--warn');
+    /* Verde para os dois bancos de verdade; ambar so para a reserva de
+       localStorage, que e o unico caso em que alguma coisa deixa de existir. */
+    motor.className = 'pill ' + (Banco.motor === 'localStorage' ? 'pill--warn' : 'pill--good');
   }
 
   const tamanho = est.bytes ? (est.bytes > 1048576
-    ? nf(est.bytes / 1048576, 1) + ' MB' : nf(est.bytes / 1024) + ' KB') : '\u2014';
-  const numeros = [
-    ['Leituras gravadas', nf(est.leituras), 'uma por minuto, \u00faltimos ' + est.janelaDias + ' dias'],
-    ['Contas', nf(est.contas), est.contas === 1 ? 'cadastrada neste navegador' : 'cadastradas neste navegador'],
-    ['Espa\u00e7o em disco', tamanho, 'estimado pelo navegador'],
-    ['Tabelas', '3', 'contas, estado e leituras']
-  ];
+    ? nf(est.bytes / 1048576, 1) + ' MB' : nf(est.bytes / 1024) + ' KB') : '—';
+
+  const numeros = Banco.online
+    ? [
+      ['Leituras gravadas', nf(est.leituras), 'uma por minuto, últimos ' + est.janelaDias + ' dias'],
+      ['Onde', 'Supabase', 'Postgres, com RLS por conta'],
+      ['Seus aparelhos', 'Só seus', 'ninguém mais lê as suas linhas'],
+      ['Tabelas', '7', 'perfis, estado, leituras, conversa, cidades…']
+    ]
+    : [
+      ['Leituras gravadas', nf(est.leituras), 'uma por minuto, últimos ' + est.janelaDias + ' dias'],
+      ['Contas', nf(est.contas), est.contas === 1 ? 'cadastrada neste navegador' : 'cadastradas neste navegador'],
+      ['Espaço em disco', tamanho, 'estimado pelo navegador'],
+      ['Tabelas', '3', 'contas, estado e leituras']
+    ];
+
   const g = $('#bancoNumeros');
   if (g) g.innerHTML = numeros.map(n =>
     '<div class="bd-cel"><div class="bd-k">' + n[0] + '</div>' +
@@ -119,14 +169,25 @@ async function preencherCardBanco() {
 
   const alvo = $('#bancoGrafico');
   if (!alvo) return;
+
+  /* Por que o site esta no banco local, quando esta. Sem esta linha, quem
+     configurou o Supabase e nao percebeu que ele nao respondeu acharia que
+     os dados subiram — e eles nao subiram. */
+  const nota = (!Banco.online && est.motivo)
+    ? '<div class="bd-nota">' + esc(est.motivo) + '</div>' : '';
+  const falha = est.falha
+    ? '<div class="bd-nota bd-nota--ruim">A última gravação no servidor falhou: ' +
+      esc(est.falha) + '</div>' : '';
+
   if (!Banco.usandoIndexedDB) {
-    alvo.innerHTML = '<div class="bd-vazio">Este navegador n\u00e3o liberou o IndexedDB, ent\u00e3o o sistema est\u00e1 usando o armazenamento simples como reserva. Tudo funciona, mas o hist\u00f3rico minuto a minuto n\u00e3o \u00e9 gravado.</div>';
+    alvo.innerHTML = nota + '<div class="bd-vazio">Este navegador não liberou o IndexedDB, então o sistema está usando o armazenamento simples como reserva. Tudo funciona, mas o histórico minuto a minuto não é gravado.</div>';
     return;
   }
+
   const linhas = await Banco.leituras(contaAtual(), Date.now() - 2 * 3600000);
   if (linhas.length < 2) {
-    alvo.innerHTML = '<div class="bd-vazio">O banco come\u00e7a a gravar assim que o painel fica aberto \u2014 uma leitura por minuto. Volte aqui daqui a pouco e o gr\u00e1fico aparece.' +
-      (linhas.length ? ' J\u00e1 h\u00e1 ' + linhas.length + ' leitura registrada.' : '') + '</div>';
+    alvo.innerHTML = nota + falha + '<div class="bd-vazio">O banco começa a gravar assim que o painel fica aberto — uma leitura por minuto. Volte aqui daqui a pouco e o gráfico aparece.' +
+      (linhas.length ? ' Já há ' + linhas.length + ' leitura registrada.' : '') + '</div>';
     return;
   }
   const maxV = Math.max.apply(null, linhas.map(l => Math.max(l.c, l.g))) * 1.1 || 1;
@@ -134,18 +195,47 @@ async function preencherCardBanco() {
   const cam = arr => caminho(arr, maxV, W, H);
   const c0 = new Date(linhas[0].t), c1 = new Date(linhas[linhas.length - 1].t);
   const hhmm = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-  alvo.innerHTML =
-    '<div class="bd-graf-t">' + linhas.length + ' leituras reais do banco \u00b7 ' + hhmm(c0) + ' at\u00e9 ' + hhmm(c1) + '</div>' +
+  alvo.innerHTML = nota + falha +
+    '<div class="bd-graf-t">' + linhas.length + ' leituras reais do banco · ' + hhmm(c0) + ' até ' + hhmm(c1) + '</div>' +
     '<svg viewBox="0 0 720 96" preserveAspectRatio="none" style="width:100%;height:96px;margin-top:10px">' +
     '<path d="' + caminho(linhas.map(l => l.g), maxV, W, H, true) + '" fill="rgba(237,162,43,.16)"/>' +
     '<path d="' + cam(linhas.map(l => l.g)) + '" fill="none" stroke="var(--sun)" stroke-width="2" stroke-linejoin="round"/>' +
     '<path d="' + cam(linhas.map(l => l.c)) + '" fill="none" stroke="var(--grid)" stroke-width="1.8" stroke-linejoin="round"/>' +
     '</svg>' +
-    '<div class="bd-pe"><span>Cada ponto \u00e9 uma linha na tabela <code>leituras</code></span>' +
+    '<div class="bd-pe"><span>Cada ponto é uma linha na tabela <code>leituras</code></span>' +
     '<span class="bd-acoes">' +
-    '<button class="danger-btn" data-act="limpar-leituras">Apagar hist\u00f3rico desta conta</button>' +
-    '<button class="danger-btn" data-act="apagar-banco">Apagar tudo do banco</button>' +
+    '<button class="danger-btn" data-act="limpar-leituras">Apagar histórico desta conta</button>' +
+    '<button class="danger-btn" data-act="apagar-banco">' +
+    (Banco.online ? 'Apagar todos os meus dados' : 'Apagar tudo do banco') + '</button>' +
     '</span></div>';
+}
+
+/* ---------- o assistente ----------
+   A tela inteira e redesenhada a cada mudanca de estado, entao o formulario
+   precisa ser religado toda vez — mesma razao de os botoes usarem data-act
+   em vez de onclick. A rolagem vai para o fim porque a mensagem que interessa
+   e sempre a ultima. */
+function ligarAssistente() {
+  const f = $('#formAgente');
+  if (f && !f.dataset.ligado) {
+    f.dataset.ligado = '1';
+    f.addEventListener('submit', ev => {
+      ev.preventDefault();
+      enviarPergunta((AGENTE.rascunho || '').trim());
+    });
+  }
+  const rolo = $('#chatRolo');
+  if (rolo) rolo.scrollTop = rolo.scrollHeight;
+}
+
+async function enviarPergunta(texto) {
+  if (!texto || AGENTE.ocupado) return;
+  AGENTE.rascunho = '';
+  render();                 /* mostra a pergunta e os tres pontinhos na hora */
+  await perguntarAoAgente(texto);
+  render();
+  const campo = $('#agenteEntrada');
+  if (campo) campo.focus();
 }
 
 /* ---------- gráficos interativos ---------- */
@@ -506,26 +596,62 @@ const ACOES = {
     else aviso('Fonte: simulação', 'O painel voltou a calcular a leitura.', 'sun');
     salvar(); render();
   },
-  'auth-modo': el => { modoLogin = el.dataset.v; erroLogin = ''; renderLogin(); },
-  'auth-abrir': () => { modoLogin = 'entrar'; erroLogin = ''; renderLogin(); },
-  'auth-visitante': () => { entrarComoVisitante(); aoEntrar(); },
-  'auth-voltar': () => {
-    if (!sessao()) { entrarComoVisitante(); aoEntrar(); return; }
-    document.body.classList.remove('vista-login');
+  'auth-modo': el => { modoLogin = el.dataset.v; erroLogin = ''; avisoLogin = ''; renderLogin(); },
+  'auth-abrir': () => { modoLogin = 'entrar'; erroLogin = ''; avisoLogin = ''; renderLogin(); },
+  sair: () => {
+    if (!window.confirm(Banco.online
+      ? 'Sair da conta? Seus dados continuam guardados no servidor.'
+      : 'Sair da conta? Seus dados continuam salvos neste navegador.')) return;
+    sair();
+    /* a tela de entrada e a unica porta do site, entao sair leva de volta
+       para ela — e nao para um painel de demonstracao */
+    S = JSON.parse(JSON.stringify(PADRAO));
+    AGENTE.mensagens = []; AGENTE.carregada = false; AGENTE.rascunho = '';
+    _visao = null; _cacheLedger.clear();
+    modoLogin = 'entrar'; erroLogin = ''; avisoLogin = '';
+    renderLogin();
+  },
+
+  /* ---------- o papo rapido do cadastro ---------- */
+  'perfil-responder': el => {
+    ONBOARD.respostas[el.dataset.id] = el.dataset.v;
+    ONBOARD.passo++;
     render();
   },
-  sair: () => {
-    const visitante = ehVisitante();
-    const aviso = visitante
-      ? 'Voltar para a tela de entrada? O que você fez continua salvo neste navegador.'
-      : 'Sair da conta? Seus dados continuam salvos neste navegador.';
-    if (!window.confirm(aviso)) return;
-    sair();
-    /* a tela de entrada e a porta do site, entao sair leva de volta para ela */
-    S = JSON.parse(JSON.stringify(PADRAO));
-    _visao = null; _cacheLedger.clear();
-    modoLogin = 'entrar'; erroLogin = '';
-    renderLogin();
+  /* Pular grava a ausencia, nao um valor inventado: perfil sem resposta faz
+     o assistente ser generico naquele ponto, que e o correto. */
+  'perfil-pular': el => {
+    delete ONBOARD.respostas[el.dataset.id];
+    ONBOARD.passo++;
+    render();
+  },
+  'perfil-voltar': () => { ONBOARD.passo = Math.max(0, ONBOARD.passo - 1); render(); },
+  'perfil-terminar': async () => {
+    const r = Object.assign({}, ONBOARD.respostas);
+    if (ONBOARD.livre.trim()) r.livre = ONBOARD.livre.trim();
+    await salvarPerfilCliente(r);
+    render();
+    const s = sessao();
+    aviso('Anotado, ' + String(s.nome || '').split(' ')[0],
+      semUnidade()
+        ? 'Agora cadastre sua unidade e o assistente passa a falar dos seus números.'
+        : 'O assistente já está falando do seu jeito. Dá para mudar em Configurações.', 'good');
+  },
+  'perfil-refazer': () => {
+    const p = perfilCliente() || {};
+    ONBOARD.passo = 0;
+    ONBOARD.respostas = Object.assign({}, p);
+    ONBOARD.livre = p.livre || '';
+    S.perfilCliente = null;      /* volta para a porta 2 do render() */
+    salvar(); render();
+  },
+
+  /* ---------- o assistente ---------- */
+  'agente-sugestao': el => enviarPergunta(el.dataset.v),
+  'agente-limpar': async () => {
+    if (!window.confirm('Apagar esta conversa? O assistente esquece o que foi dito aqui.')) return;
+    await limparConversaDoAgente();
+    render();
   },
   'limpar-leituras': async () => {
     if (!window.confirm('Apagar o hist\u00f3rico de leituras desta conta? O painel continua funcionando \u2014 s\u00f3 o registro minuto a minuto some.')) return;
@@ -584,7 +710,7 @@ document.addEventListener('keydown', ev => {
   if (el && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); (ACOES[el.dataset.act] || function () { })(el); return; }
   if (ev.target.tagName === 'INPUT' || ev.metaKey || ev.ctrlKey || ev.altKey) return;
   if (ev.key === 'Escape') { if (S.msub) { S.msub = null; render(); } else if (S.detalhe) { S.detalhe = null; render(); } return; }
-  if (ev.key >= '1' && ev.key <= '7' && !telaEstreita()) irPara(TELA_ORDEM[+ev.key - 1]);
+  if (ev.key >= '1' && ev.key <= '8' && !telaEstreita()) irPara(TELA_ORDEM[+ev.key - 1]);
 });
 
 /* entradas contínuas */
@@ -592,6 +718,21 @@ document.addEventListener('input', ev => {
   const el = ev.target;
   if (!el.dataset || !el.dataset.in) return;
   const campo = el.dataset.in;
+
+  /* O rascunho do chat mora no AGENTE, e nao no estado da conta: pergunta
+     pela metade nao e configuracao e nao tem por que ir para o banco. */
+  if (campo === 'agente') { AGENTE.rascunho = el.value; return; }
+  if (campo === 'perfilLivre') { ONBOARD.livre = el.value; return; }
+
+  /* Trocar a cidade troca a distribuidora mostrada logo abaixo, entao esta
+     precisa redesenhar — as outras nao, para nao piscar a cada tecla. */
+  if (campo === 'unCidade') {
+    S.nova.cidade = el.value;
+    if (el.value !== 'outra') S.nova.distribuidora = '';
+    salvar(); render();
+    return;
+  }
+
   if (campo === 'nome') { S.novo.nome = el.value; S.salvo = false; syncCadastro(); salvar(); return; }
   if (campo === 'pot' || campo === 'horas' || campo === 'dias') {
     S.novo[campo] = Number(el.value); S.salvo = false; syncCadastro(); salvar(); return;
@@ -727,27 +868,43 @@ function iniciarRelogios() {
 }
 
 /* chamado quando uma sessão acabou de ser aberta */
-async function aoEntrar(migrou) {
+async function aoEntrar() {
   document.body.classList.remove('vista-login');
   S = JSON.parse(JSON.stringify(PADRAO));
   await carregar();
+  await sincronizarPerfilDoServidor();
   if (!uni(S.perfil)) S.perfil = 'residencial';
   if (!TELAS[S.tela]) S.tela = 'painel';
   if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
   _visao = null; _cacheLedger.clear();
+  AGENTE.mensagens = []; AGENTE.carregada = false; AGENTE.rascunho = '';
   render();
+  carregarConversa().then(() => { if (S.tela === 'assistente' || S.tab === 'assistente') render(); });
+
   const s = sessao();
+  const primeiro = String(s.nome || '').split(' ')[0];
+
+  /* Tres estados, tres primeiras frases diferentes. Dizer "medidor conectado"
+     para quem ainda nao cadastrou nada seria mentira. */
+  if (!perfilRespondido()) return;   /* a propria tela ja explica o que fazer */
   if (semUnidade()) {
-    aviso('Conta criada', 'Cadastre sua primeira unidade para o Solaris começar a calcular.', 'good');
+    aviso('Tudo pronto, ' + primeiro, 'Cadastre sua primeira unidade para o Solaris começar a calcular.', 'good');
     return;
   }
-  if (ehVisitante()) {
-    aviso('Medidor conectado', nf(visao().mtd.tc) + ' kWh no mês até agora · dados de demonstração.', 'good');
-  } else {
-    aviso('Bem-vindo, ' + s.nome.split(' ')[0],
-      migrou ? 'As unidades que você cadastrou vieram junto.'
-        : 'Medidor conectado · ' + nf(visao().mtd.tc) + ' kWh no mês até agora.', 'good');
-  }
+  aviso('Bem-vindo, ' + primeiro,
+    'Medidor conectado · ' + nf(visao().mtd.tc) + ' kWh no mês até agora.', 'good');
+}
+
+/* O perfil do papo rapido vive em dois lugares quando ha servidor: no estado
+   da conta (que a tela le) e na tabela propria (que a Edge Function le). Se a
+   pessoa respondeu no celular e abriu no computador, o estado local vem sem
+   ele — entao buscamos no servidor antes de decidir mostrar as perguntas de
+   novo. Perguntar duas vezes a mesma coisa e a forma mais rapida de fazer
+   alguem desconfiar de um sistema. */
+async function sincronizarPerfilDoServidor() {
+  if (!Banco.online || perfilRespondido()) return;
+  const doServidor = await Banco.perfilConversa(contaAtual());
+  if (doServidor && doServidor.em) { S.perfilCliente = doServidor; salvar(); }
 }
 
 /* ---------- partida ---------- */
@@ -757,15 +914,20 @@ async function iniciar() {
   if (!$('#root')) return;
   await Banco.iniciar();
   await carregarContas();
-  /* A porta de entrada e a tela de login. Quem so quer olhar entra sem
-     criar conta, num clique - o botao esta la. */
-  if (!carregarSessao()) {
+
+  /* A porta de entrada e a tela de login, e nao ha mais como contorna-la.
+     restaurarSessao() cobre os dois modos: com Supabase confere o token no
+     servidor (renovando se preciso), sem Supabase le a sessao do navegador. */
+  const s = await restaurarSessao();
+  if (!s) {
     modoLogin = 'entrar';
     renderLogin();
     iniciarRelogios();
     return;
   }
+
   await carregar();
+  await sincronizarPerfilDoServidor();
   if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
   if (!uni(S.perfil)) S.perfil = 'residencial';
   if (!TELAS[S.tela]) S.tela = 'painel';
@@ -773,6 +935,10 @@ async function iniciar() {
   lerHash();
   render();
   iniciarRelogios();
+  carregarConversa().then(() => { if (S.tela === 'assistente' || S.tab === 'assistente') render(); });
+
+  /* O aviso de abertura so faz sentido quando ha o que medir. */
+  if (!perfilRespondido() || semUnidade()) return;
   const v = visao();
   setTimeout(() => {
     aviso('Medidor conectado', 'Lendo ' + unidade().nome + ' em tempo real · ' + nf(v.mtd.tc) + ' kWh no mês até agora.', 'good');
