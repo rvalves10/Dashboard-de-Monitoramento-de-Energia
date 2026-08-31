@@ -1,0 +1,87 @@
+/* movel.css
+   Como o site se comporta em tela estreita. E o mesmo site, nao um app.
+   Parte do sistema de design do Solaris. A ordem em que os arquivos
+   de CSS entram no index.html importa: base, componentes, telas,
+   responsivo e impressao, nessa sequencia. */
+
+/* ============================================================
+   TELA ESTREITA - a mesma logica, outra casca
+   Sem moldura de celular: isto e o proprio site se adaptando, nao a
+   simulacao de um aplicativo.
+   ============================================================ */
+.mob{
+  display:flex;flex-direction:column;
+  min-height:100vh;min-height:100dvh;
+  background:var(--ground);color:var(--ink-2);
+}
+.mob-head{
+  padding:calc(var(--e5) + env(safe-area-inset-top)) var(--e5) var(--e3);
+  flex-shrink:0;background:var(--ground);
+  position:sticky;top:0;z-index:10;
+  border-bottom:1px solid var(--line);
+}
+.mob-back{display:inline-flex;align-items:center;gap:5px;font-size:var(--t-sm);font-weight:600;color:var(--sun-ink);margin-bottom:var(--e1)}
+/* O titulo vem primeiro e o nome da unidade embaixo, como contexto. O
+   contrario - rotulinho em caixa-alta por cima do titulo - e a assinatura
+   de tela gerada por maquina, e nao ajuda ninguem a se localizar. */
+.mob-title{font-family:var(--f-display);font-weight:700;font-size:var(--t-xl);letter-spacing:-.03em;color:var(--ink)}
+.mob-unit{font-size:var(--t-sm);color:var(--faint);margin-top:3px}
+.mob-body{flex:1;padding:var(--e4) var(--e4) var(--e6)}
+.mob-col{display:flex;flex-direction:column;gap:var(--e3)}
+.mob-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--e4)}
+.mob-col>h2,.mob-card h2{font-size:var(--t-base);font-weight:700;letter-spacing:-.01em}
+.mob-card h3{font-size:var(--t-sm);font-weight:700;color:var(--ink)}
+
+.mob-hero{
+  color:var(--on-dark);border-radius:var(--r-lg);padding:var(--e5);
+  background:var(--dark);
+}
+.mob-hero-k{font-size:var(--t-sm);color:var(--on-dark-soft);font-weight:500}
+.mob-hero-v{display:flex;align-items:baseline;gap:6px;margin-top:var(--e2)}
+.mob-hero-v .cur{font-family:var(--f-display);font-size:var(--t-lg);color:var(--on-dark-soft)}
+.mob-hero-v .num{font-family:var(--f-display);font-weight:700;font-size:var(--t-3xl);letter-spacing:-.035em;line-height:.92;font-variant-numeric:tabular-nums}
+.mob-hero-s{font-size:var(--t-sm);color:var(--on-dark-soft);margin-top:var(--e3);line-height:var(--lh-body)}
+.mob-live{display:flex;align-items:center;gap:7px;margin-top:var(--e4);padding-top:var(--e3);border-top:1px solid rgba(242,244,246,.14);font-size:var(--t-xs);color:var(--on-dark-soft)}
+.mob-live b{font-family:var(--f-mono);font-weight:500;color:var(--on-dark)}
+
+.mob-grid2{display:grid;grid-template-columns:1fr 1fr;gap:var(--e2)}
+.mob-tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--e3) var(--e4)}
+.mob-tile-k{font-size:var(--t-xs);color:var(--faint)}
+.mob-tile-v{font-family:var(--f-display);font-weight:700;font-size:var(--t-lg);letter-spacing:-.03em;color:var(--ink);margin-top:4px;line-height:1;font-variant-numeric:tabular-nums}
+.mob-tile-s{font-size:var(--t-xs);color:var(--faint);margin-top:3px}
+
+.mob-seg{display:flex;background:var(--ground-2);border-radius:var(--r-md);padding:3px}
+.mob-seg button{flex:1;padding:8px 0;border-radius:var(--r-sm);font-size:var(--t-sm);font-weight:600;color:var(--muted);text-align:center}
+.mob-seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink)}
+
+.mob-rowline{display:flex;justify-content:space-between;gap:var(--e3);font-size:var(--t-sm);padding:var(--e2) 0;border-top:1px solid var(--line)}
+.mob-rowline:first-child{border-top:0}
+.mob-rowline span:first-child{color:var(--muted)}
+
+.mob-menu{display:flex;align-items:center;gap:var(--e3);width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--e3) var(--e4);transition:border-color .14s var(--curva)}
+.mob-menu:hover{border-color:var(--n-500)}
+.mob-menu-ic{width:34px;height:34px;border-radius:var(--r-sm);background:var(--ground-2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mob-menu-t{font-size:var(--t-sm);font-weight:600;color:var(--ink)}
+.mob-menu-s{font-size:var(--t-xs);color:var(--faint);margin-top:2px}
+
+.mob-tabs{
+  display:flex;flex-shrink:0;position:sticky;bottom:0;z-index:10;
+  background:var(--surface);
+  border-top:1px solid var(--line);
+  padding:var(--e1) var(--e1) calc(var(--e2) + env(safe-area-inset-bottom));
+}
+.mob-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:var(--e2) 0 2px;min-width:0;position:relative;color:var(--faint);transition:color .14s var(--curva)}
+.mob-tab[aria-current="page"]{color:var(--sun-ink)}
+/* tracinho em cima marca a aba ativa */
+.mob-tab[aria-current="page"]::before{
+  content:"";position:absolute;top:-4px;left:50%;transform:translateX(-50%);
+  width:22px;height:3px;border-radius:0 0 2px 2px;background:var(--sun);
+}
+.mob-tab span{font-size:var(--t-xs);font-weight:500;white-space:nowrap}
+.mob-tab[aria-current="page"] span{font-weight:600}
+
+.mob-hbars{display:flex;align-items:flex-end;gap:2px;margin-top:var(--e4)}
+.mob-hbars .hbar-pair{height:100px;gap:1px}
+/* 12px e o piso de legibilidade do sistema, e cabe: motor.js so rotula
+   um dia a cada cinco no mes, entao sobra espaco de sobra. */
+.mob-hbars .hbar-lbl{font-size:var(--t-xs)}

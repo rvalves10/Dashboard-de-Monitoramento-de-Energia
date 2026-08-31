@@ -1,0 +1,25 @@
+/* impressao.css
+   Como o relatorio sai no papel e no PDF.
+   Parte do sistema de design do Solaris. A ordem em que os arquivos
+   de CSS entram no index.html importa: base, componentes, telas,
+   responsivo e impressao, nessa sequencia. */
+
+@media print{
+  @page{margin:14mm}
+  body{background:#fff;color:#000;font-size:11pt;line-height:1.5}
+  .rail,.topbar,.toasts,.no-print,.mob-tabs{display:none !important}
+  .app{display:block}
+  .page{padding:0}
+  /* No papel o cartao escuro gasta tinta e piora a leitura: vira branco
+     com borda, como o resto. */
+  .card{border-color:#BBB;break-inside:avoid}
+  .card--dark,.hero,.detect{background:#fff !important;color:#000 !important;border:1px solid #BBB}
+  .card--dark h2,.card--dark h3,.card--dark .big,.hero-cur{color:#000 !important}
+  .hero-line,.hero-kicker,.card--dark .card-sub{color:#333 !important}
+  .grid12{display:block}
+  .s3,.s4,.s5,.s7,.s8,.s12{width:100%}
+  .s3,.s4,.s5{margin-top:10px}
+  .print-head{display:flex !important}
+  a{text-decoration:none;color:#000}
+}
+.print-head{display:none;align-items:center;gap:var(--e2);margin-bottom:var(--e5);padding-bottom:var(--e3);border-bottom:1px solid var(--line)}

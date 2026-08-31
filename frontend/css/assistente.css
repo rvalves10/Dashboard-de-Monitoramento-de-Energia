@@ -1,0 +1,247 @@
+/* assistente.css — as duas telas de conversa
+
+   O papo rapido do cadastro e o assistente compartilham a peca central: a
+   fala. Ela e a mesma nos dois lugares de proposito — quem responde as cinco
+   perguntas ja aprendeu a ler a tela do assistente antes de chegar nela.
+
+   Duas regras da casa que mandam aqui:
+
+   AMBAR E GERACAO SOLAR, e nada mais. Nenhuma bolha, nenhum botao desta tela
+   e ambar: se fosse, a conversa pareceria estar falando do sol. O assistente
+   e neutro — tinta escura para o que voce disse, papel com borda para o que
+   ele respondeu.
+
+   OU BORDA, OU SOMBRA. As bolhas tem borda e nao tem sombra. A unica coisa
+   que flutua de verdade nestas telas e o aviso do canto, que ja mora em
+   componentes.css. */
+
+/* ============================================================
+   A FALA — usada nas duas telas
+   ============================================================ */
+
+.fala{
+  max-width:min(62ch, 88%);
+  padding:var(--e3) var(--e4);
+  border-radius:var(--r-md);
+  font-size:var(--t-base);
+  line-height:var(--lh-body);
+}
+.fala p{margin:0}
+.fala p + p{margin-top:var(--e3)}
+.fala b{font-weight:600}
+
+/* O que o assistente diz: papel com borda, alinhado a esquerda. */
+.fala--ia{
+  background:var(--surface);
+  border:1px solid var(--line);
+  color:var(--ink-2);
+  border-bottom-left-radius:var(--r-xs);
+}
+
+/* O que voce diz: tinta escura, alinhado a direita. O contraste entre as
+   duas e o que deixa a conversa legivel de relance, sem precisar de rotulo
+   "voce" e "assistente" em cima de cada linha. */
+.fala--eu{
+  background:var(--dark);
+  color:var(--on-dark);
+  border-bottom-right-radius:var(--r-xs);
+  margin-left:auto;
+}
+.fala--pulou{background:var(--ground-2);color:var(--faint);border:1px solid var(--line)}
+
+/* A razao da pergunta, dentro da propria bolha. Fica junto de quem pergunta
+   porque e ali que a duvida aparece — em nota de rodape ninguem le. */
+.fala-porque{
+  display:block;margin-top:var(--e2);
+  font-size:var(--t-xs);color:var(--faint);line-height:var(--lh-snug);
+}
+
+/* ============================================================
+   1. O PAPO RAPIDO
+   ============================================================ */
+
+.boas{
+  min-height:100vh;min-height:100dvh;
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:var(--e8) var(--e5);
+  background:var(--ground);
+}
+.boas-cx{width:100%;max-width:640px}
+
+.boas-topo h1{
+  font-size:var(--t-2xl);letter-spacing:-.028em;
+}
+.boas-d{
+  margin-top:var(--e3);color:var(--muted);
+  font-size:var(--t-base);line-height:var(--lh-body);max-width:62ch;
+}
+
+/* Quantas faltam. Sem isto, cinco perguntas parecem um questionario sem fim
+   — e a pessoa sai no meio. */
+.boas-trilha{display:flex;align-items:center;gap:var(--e3);margin-top:var(--e5)}
+.boas-barra{
+  flex:1;height:4px;border-radius:var(--r-pill);
+  background:var(--ground-2);overflow:hidden;
+}
+/* Barra de dado anima largura de proposito: e a excecao deliberada da regra
+   de so animar transform, porque scaleX distorceria o canto arredondado. */
+.boas-barra i{
+  display:block;height:100%;border-radius:var(--r-pill);
+  background:var(--ink);
+  transition:width .32s var(--curva);
+}
+.boas-cont{font-size:var(--t-xs);color:var(--faint);font-variant-numeric:tabular-nums}
+
+.boas-conversa{
+  display:flex;flex-direction:column;gap:var(--e5);
+  margin-top:var(--e6);
+}
+.fala-par{display:flex;flex-direction:column;gap:var(--e2)}
+
+.fala-ops{display:flex;flex-direction:column;gap:var(--e2);margin-top:var(--e2)}
+.fala-op{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--e3);
+  padding:var(--e3) var(--e4);
+  border:1px solid var(--line);border-radius:var(--r-md);
+  background:var(--surface);
+  font-size:var(--t-base);color:var(--ink-2);
+  transition:border-color .14s var(--curva), background .14s var(--curva);
+}
+.fala-op svg{color:var(--n-400);flex-shrink:0}
+.fala-op:hover{border-color:var(--ink);background:var(--n-25)}
+.fala-op:hover svg{color:var(--ink)}
+
+.boas-livre{margin-top:var(--e5)}
+.boas-livre textarea{width:100%;resize:vertical;min-height:96px;line-height:var(--lh-body)}
+
+.boas-pe{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--e3);
+  margin-top:var(--e6);padding-top:var(--e4);
+  border-top:1px solid var(--line);
+}
+
+/* ============================================================
+   2. O ASSISTENTE
+   ============================================================ */
+
+.chat{display:block}
+.chat-cx{padding:var(--e5) var(--e6) var(--e5)}
+
+.chat-topo{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:var(--e4);
+  padding-bottom:var(--e4);border-bottom:1px solid var(--line);
+}
+
+/* Altura fixa com rolagem propria: a barra de escrever tem que ficar sempre
+   no mesmo lugar. Se a pagina inteira rolasse, ela fugiria da tela conforme
+   a conversa crescesse. */
+.chat-rolo{
+  display:flex;flex-direction:column;gap:var(--e4);
+  height:min(52vh, 480px);
+  overflow-y:auto;
+  padding:var(--e5) var(--e1) var(--e5) 0;
+  scroll-behavior:smooth;
+}
+/* As falas encostam no pe, como em qualquer conversa: a mensagem mais nova
+   fica junto de onde se escreve. Feito com margem automatica no primeiro
+   filho, e nao com justify-content:flex-end, porque este ultimo corta o topo
+   quando a conversa passa da altura da caixa. */
+.chat-rolo > :first-child{margin-top:auto}
+
+.chat-vazio{
+  margin:auto;text-align:center;max-width:52ch;
+  padding:var(--e5) 0;
+}
+.chat-vazio-ic{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:52px;height:52px;border-radius:var(--r-lg);
+  background:var(--ground-2);margin-bottom:var(--e4);
+}
+.chat-vazio-ic--off{opacity:.7}
+.chat-vazio h3{font-family:var(--f-display);font-size:var(--t-lg);color:var(--ink);letter-spacing:-.018em}
+.chat-vazio p{
+  margin-top:var(--e3);color:var(--muted);
+  font-size:var(--t-sm);line-height:var(--lh-body);
+}
+
+/* Sugestoes de partida. Tela de chat vazia e a coisa mais intimidante de
+   qualquer produto com IA: sem elas ninguem sabe o que da para perguntar. */
+.chat-sugs{
+  display:flex;flex-wrap:wrap;gap:var(--e2);justify-content:center;
+  margin-top:var(--e5);
+}
+.chat-sug{
+  padding:var(--e2) var(--e3);
+  border:1px solid var(--line);border-radius:var(--r-pill);
+  background:var(--surface);
+  font-size:var(--t-sm);color:var(--ink-2);
+  transition:border-color .14s var(--curva), background .14s var(--curva);
+}
+.chat-sug:hover{border-color:var(--ink);background:var(--n-25)}
+
+/* Os tres pontinhos. Anima so opacidade, e so aparece enquanto a resposta
+   esta mesmo sendo gerada — animacao que pulsa sem nada acontecendo por tras
+   e enfeite, e enfeite nao entra em painel de medicao. */
+.fala--digitando{
+  display:flex;gap:5px;align-items:center;
+  width:auto;padding:var(--e4);
+}
+.fala--digitando span{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--n-400);
+  animation:pontinho 1.2s var(--curva) infinite;
+}
+.fala--digitando span:nth-child(2){animation-delay:.15s}
+.fala--digitando span:nth-child(3){animation-delay:.3s}
+@keyframes pontinho{
+  0%,60%,100%{opacity:.35}
+  30%{opacity:1}
+}
+
+.chat-barra{
+  display:flex;gap:var(--e2);align-items:center;
+  padding-top:var(--e4);border-top:1px solid var(--line);
+}
+.chat-in{
+  flex:1;height:46px;
+  padding:0 var(--e4);
+  border:1px solid var(--line);border-radius:var(--r-md);
+  background:var(--surface);
+  font-size:var(--t-base);color:var(--ink);
+}
+.chat-in::placeholder{color:var(--faint)}
+.chat-in:focus{outline:none;border-color:var(--ink);box-shadow:var(--anel-foco)}
+.chat-in[disabled]{background:var(--ground-2);color:var(--faint)}
+
+.chat-enviar{
+  width:46px;height:46px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:var(--r-md);
+  background:var(--dark);color:var(--on-dark);
+  transition:background .14s var(--curva);
+}
+.chat-enviar:hover:not([disabled]){background:var(--dark-2)}
+.chat-enviar[disabled]{opacity:.5;cursor:progress}
+
+/* O aviso de que a resposta e gerada. Fica no rodape e nao num modal: quem
+   usa todo dia nao pode ter que fechar um aviso a cada visita. */
+.chat-rodape{
+  margin-top:var(--e3);
+  font-size:var(--t-xs);color:var(--faint);line-height:var(--lh-snug);
+  max-width:70ch;
+}
+
+/* ---------- tela estreita ---------- */
+@media (max-width:760px){
+  .boas{padding:var(--e6) var(--e4) var(--e7)}
+  .boas-topo h1{font-size:var(--t-xl)}
+  .fala{max-width:100%}
+
+  .chat-cx{padding:var(--e4);border-radius:var(--r-lg)}
+  /* No celular a barra de abas ja come o pe da tela, entao a conversa usa o
+     que sobra em vez de altura fixa. */
+  .chat-rolo{height:auto;min-height:38vh;max-height:56vh}
+  .chat-topo{flex-direction:column;gap:var(--e2)}
+  .chat-sugs{justify-content:flex-start}
+  .chat-sug{text-align:left}
+}

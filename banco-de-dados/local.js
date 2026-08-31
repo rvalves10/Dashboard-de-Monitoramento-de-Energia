@@ -1,0 +1,338 @@
+/* local.js — o banco que mora no navegador
+
+   E o IndexedDB: contas, estado e leituras gravados na maquina de quem usa.
+   Ate a versao passada este era O banco do Solaris. Hoje ele e a RESERVA:
+   quando o Supabase esta configurado, quem responde e o supabase.js; quando
+   nao esta — sem internet, sem credenciais, ou site aberto com duplo clique
+   direto do disco — quem responde e este arquivo.
+
+   Os dois expoem exatamente a mesma interface, e o banco.js escolhe entre
+   eles. Nada acima da camada de banco sabe qual dos dois atendeu, e essa e a
+   razao de o site continuar abrindo sem rede.
+
+   Sao tres tabelas:
+     contas    quem pode entrar. A chave e o e-mail.
+     estado    o que cada conta configurou: unidades, aparelhos, metas, tarifa.
+     leituras  o historico do medidor, uma linha por minuto.
+
+   A tabela de leituras e a razao de existir um banco aqui. Uma leitura por
+   minuto da 1.440 linhas por dia e mais de dez mil por semana. Isso nao cabe
+   em localStorage. Guardamos sete dias e podamos o resto sozinho.
+
+   Se o IndexedDB nao abrir (navegador velho, aba anonima em alguns casos),
+   tudo cai automaticamente para localStorage e o site continua funcionando.
+   So o historico minuto a minuto deixa de existir, e a tela avisa.
+
+   Tudo aqui e assincrono, entao quase toda funcao devolve Promise.
+*/
+'use strict';
+
+const BD_NOME = 'solaris';
+const BD_VERSAO = 1;
+const DIAS_HISTORICO = 7;      /* leituras mais velhas que isso são podadas */
+const INTERVALO_LEITURA = 60;  /* segundos entre gravações */
+
+let _bd = null;
+let _bdFalhou = false;
+
+function temIndexedDB() {
+  try { return typeof indexedDB !== 'undefined' && indexedDB !== null; } catch (e) { return false; }
+}
+
+function abrirBanco() {
+  if (_bd) return Promise.resolve(_bd);
+  if (_bdFalhou || !temIndexedDB()) return Promise.resolve(null);
+
+  return new Promise(resolve => {
+    let pedido;
+    try { pedido = indexedDB.open(BD_NOME, BD_VERSAO); }
+    catch (e) { _bdFalhou = true; return resolve(null); }
+
+    /* se o navegador travar a abertura (modo privado do Firefox, por
+       exemplo), não deixamos o app pendurado esperando */
+    const desistir = setTimeout(() => { _bdFalhou = true; resolve(null); }, 3000);
+
+    pedido.onupgradeneeded = ev => {
+      const bd = ev.target.result;
+      if (!bd.objectStoreNames.contains('contas')) {
+        bd.createObjectStore('contas', { keyPath: 'id' });
+      }
+      if (!bd.objectStoreNames.contains('estado')) {
+        bd.createObjectStore('estado', { keyPath: 'conta' });
+      }
+      if (!bd.objectStoreNames.contains('leituras')) {
+        const s = bd.createObjectStore('leituras', { keyPath: 'id', autoIncrement: true });
+        s.createIndex('porConta', ['conta', 't']);
+        s.createIndex('porTempo', 't');
+      }
+    };
+    pedido.onsuccess = () => { clearTimeout(desistir); _bd = pedido.result; resolve(_bd); };
+    pedido.onerror = () => { clearTimeout(desistir); _bdFalhou = true; resolve(null); };
+    pedido.onblocked = () => { clearTimeout(desistir); _bdFalhou = true; resolve(null); };
+  });
+}
+
+/* envelopa uma transação numa promise, sempre resolvendo:
+   uma falha de banco nunca deve derrubar a tela */
+function transacao(tabela, modo, fn) {
+  return abrirBanco().then(bd => {
+    if (!bd) return null;
+    return new Promise(resolve => {
+      let resultado = null;
+      let t;
+      try { t = bd.transaction(tabela, modo); }
+      catch (e) { return resolve(null); }
+      t.oncomplete = () => resolve(resultado);
+      t.onerror = () => resolve(null);
+      t.onabort = () => resolve(null);
+      try {
+        const pedido = fn(t.objectStore(tabela));
+        if (pedido) pedido.onsuccess = () => { resultado = pedido.result; };
+      } catch (e) { resolve(null); }
+    });
+  });
+}
+
+const bdLer = (tabela, chave) => transacao(tabela, 'readonly', s => s.get(chave));
+const bdTodos = tabela => transacao(tabela, 'readonly', s => s.getAll());
+const bdGravar = (tabela, valor) => transacao(tabela, 'readwrite', s => s.put(valor));
+const bdApagar = (tabela, chave) => transacao(tabela, 'readwrite', s => s.delete(chave));
+const bdContar = tabela => transacao(tabela, 'readonly', s => s.count());
+const bdEsvaziar = tabela => transacao(tabela, 'readwrite', s => s.clear());
+
+/* ---------- reserva em localStorage ----------
+   Mesma interface, para o app não precisar saber qual dos dois está
+   respondendo. Só entra em ação se o IndexedDB não abrir. */
+const PREFIXO_RESERVA = 'solaris.bd.';
+function reservaLer(tabela, chave) {
+  try { const r = localStorage.getItem(PREFIXO_RESERVA + tabela + '.' + chave); return r ? JSON.parse(r) : undefined; }
+  catch (e) { return undefined; }
+}
+function reservaGravar(tabela, chave, valor) {
+  try { localStorage.setItem(PREFIXO_RESERVA + tabela + '.' + chave, JSON.stringify(valor)); } catch (e) { }
+}
+function reservaApagar(tabela, chave) {
+  try { localStorage.removeItem(PREFIXO_RESERVA + tabela + '.' + chave); } catch (e) { }
+}
+function reservaEsvaziar(tabela) {
+  const p = PREFIXO_RESERVA + tabela + '.', apagar = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf(p) === 0) apagar.push(k);
+    }
+    apagar.forEach(k => localStorage.removeItem(k));
+  } catch (e) { }
+  return apagar.length;
+}
+function reservaTodos(tabela) {
+  const fora = [], p = PREFIXO_RESERVA + tabela + '.';
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf(p) === 0) fora.push(JSON.parse(localStorage.getItem(k)));
+    }
+  } catch (e) { }
+  return fora;
+}
+
+/* ---------- a interface, identica a do supabase.js ---------- */
+
+const BancoLocal = {
+  pronto: false,
+  usandoIndexedDB: false,
+
+  async iniciar() {
+    const bd = await abrirBanco();
+    this.usandoIndexedDB = !!bd;
+    this.pronto = true;
+    await this.migrarDoLocalStorage();
+    await this.podarLeituras();
+    return this.usandoIndexedDB;
+  },
+
+  /* contas */
+  async contas() {
+    if (!this.usandoIndexedDB) return reservaTodos('contas');
+    return (await bdTodos('contas')) || [];
+  },
+  async conta(id) {
+    if (!this.usandoIndexedDB) return reservaLer('contas', id);
+    return await bdLer('contas', id);
+  },
+  async salvarConta(c) {
+    if (!this.usandoIndexedDB) return reservaGravar('contas', c.id, c);
+    return await bdGravar('contas', c);
+  },
+  async apagarConta(id) {
+    if (!this.usandoIndexedDB) return reservaApagar('contas', id);
+    return await bdApagar('contas', id);
+  },
+
+  /* estado do app, um por conta */
+  async estado(conta) {
+    const r = this.usandoIndexedDB ? await bdLer('estado', conta) : reservaLer('estado', conta);
+    return r ? r.dados : null;
+  },
+  async salvarEstado(conta, dados) {
+    const reg = { conta: conta, dados: dados, em: Date.now() };
+    if (!this.usandoIndexedDB) return reservaGravar('estado', conta, reg);
+    return await bdGravar('estado', reg);
+  },
+  async apagarEstado(conta) {
+    if (!this.usandoIndexedDB) return reservaApagar('estado', conta);
+    return await bdApagar('estado', conta);
+  },
+
+  /* leituras do medidor — só no IndexedDB, é o que justifica o banco */
+  async registrarLeitura(conta, cons, ger) {
+    if (!this.usandoIndexedDB) return null;
+    return await transacao('leituras', 'readwrite', s => s.add({
+      conta: conta, t: Date.now(),
+      c: Math.round(cons * 1000) / 1000,
+      g: Math.round(ger * 1000) / 1000
+    }));
+  },
+
+  /* últimas leituras de uma conta, da mais antiga para a mais nova */
+  async leituras(conta, desdeMs, limite) {
+    if (!this.usandoIndexedDB) return [];
+    const bd = await abrirBanco();
+    if (!bd) return [];
+    const inicio = desdeMs || (Date.now() - 2 * 3600000);
+    return new Promise(resolve => {
+      const fora = [];
+      let t;
+      try { t = bd.transaction('leituras', 'readonly'); } catch (e) { return resolve([]); }
+      const faixa = IDBKeyRange.bound([conta, inicio], [conta, Date.now() + 1]);
+      const cur = t.objectStore('leituras').index('porConta').openCursor(faixa);
+      cur.onsuccess = ev => {
+        const c = ev.target.result;
+        if (!c || (limite && fora.length >= limite)) return resolve(fora);
+        fora.push(c.value);
+        c.continue();
+      };
+      cur.onerror = () => resolve(fora);
+      t.onerror = () => resolve(fora);
+    });
+  },
+
+  async contarLeituras() {
+    if (!this.usandoIndexedDB) return 0;
+    return (await bdContar('leituras')) || 0;
+  },
+
+  /* poda o que passou da janela de histórico */
+  async podarLeituras() {
+    if (!this.usandoIndexedDB) return 0;
+    const bd = await abrirBanco();
+    if (!bd) return 0;
+    const corte = Date.now() - DIAS_HISTORICO * 86400000;
+    return new Promise(resolve => {
+      let n = 0, t;
+      try { t = bd.transaction('leituras', 'readwrite'); } catch (e) { return resolve(0); }
+      const cur = t.objectStore('leituras').index('porTempo').openCursor(IDBKeyRange.upperBound(corte));
+      cur.onsuccess = ev => {
+        const c = ev.target.result;
+        if (!c) return;
+        c.delete(); n++; c.continue();
+      };
+      t.oncomplete = () => resolve(n);
+      t.onerror = () => resolve(n);
+    });
+  },
+
+  async limparLeituras(conta) {
+    if (!this.usandoIndexedDB) return 0;
+    const linhas = await this.leituras(conta, 0);
+    for (const l of linhas) await bdApagar('leituras', l.id);
+    return linhas.length;
+  },
+
+  /* Apaga TUDO: contas, estado e leituras, das duas vias de armazenamento.
+     Existe porque "apagar meus dados" so limpava o localStorage enquanto o
+     estado de verdade morava no IndexedDB — os dados voltavam no proximo
+     salvamento e ninguem entendia por que.
+
+     Nao ha desfazer. Quem chama tem que ter confirmado antes. */
+  async apagarTudo() {
+    const antes = await this.estatisticas();
+    if (this.usandoIndexedDB) {
+      for (const t of ['contas', 'estado', 'leituras']) {
+        try { await bdEsvaziar(t); } catch (e) { }
+      }
+    }
+    for (const t of ['contas', 'estado', 'leituras']) reservaEsvaziar(t);
+    /* as chaves soltas que o app guarda fora das tabelas */
+    try {
+      const soltas = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.indexOf('solaris.') === 0) soltas.push(k);
+      }
+      soltas.forEach(k => localStorage.removeItem(k));
+    } catch (e) { }
+    return antes;
+  },
+
+  /* ---------- migração ----------
+     Traz o que estava em localStorage e marca para não repetir. */
+  async migrarDoLocalStorage() {
+    let marca;
+    try { marca = localStorage.getItem('solaris.migrado.v1'); } catch (e) { return; }
+    if (marca) return;
+
+    try {
+      /* contas */
+      const raw = localStorage.getItem('solaris.contas.v1');
+      if (raw) {
+        const todas = JSON.parse(raw);
+        for (const id of Object.keys(todas)) await this.salvarConta(todas[id]);
+      }
+      /* estados: solaris.v2, solaris.v2.<conta> */
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k || k.indexOf('solaris.v2') !== 0) continue;
+        const conta = k === 'solaris.v2' ? 'visitante' : k.slice('solaris.v2.'.length);
+        const dados = JSON.parse(localStorage.getItem(k));
+        const jaTem = await this.estado(conta);
+        if (!jaTem) await this.salvarEstado(conta, dados);
+      }
+      localStorage.setItem('solaris.migrado.v1', String(Date.now()));
+    } catch (e) { /* migração é conveniência, não pode quebrar a abertura */ }
+  },
+
+  /* ---------- o que so existe com servidor ----------
+     Estao aqui para o repasse do banco.js nunca cair em undefined. Cada uma
+     explica o que falta, em vez de falhar calada. */
+  authRecuperarSenha() {
+    return Promise.reject(new Error(
+      'Sem servidor não há recuperação de senha: não existe de onde mandar o e-mail. ' +
+      'Configure o Supabase em banco-de-dados/config.js para ter essa opção.'));
+  },
+  authSessao() { return Promise.resolve(null); },
+  authSair() { return Promise.resolve(); },
+  perfilConversa() { return Promise.resolve(null); },
+  salvarPerfilConversa() { return Promise.resolve(null); },
+  historicoConversa() { return Promise.resolve([]); },
+  salvarMensagem() { return Promise.resolve(null); },
+  limparConversa() { return Promise.resolve(null); },
+
+  /* números para mostrar em Configurações */
+  async estatisticas() {
+    const nContas = (await this.contas()).length;
+    const nLeituras = await this.contarLeituras();
+    let bytes = null;
+    try {
+      if (navigator.storage && navigator.storage.estimate) {
+        const e = await navigator.storage.estimate();
+        bytes = e.usage || null;
+      }
+    } catch (e) { }
+    return {
+      motor: this.usandoIndexedDB ? 'IndexedDB (neste navegador)' : 'localStorage (reserva)',
+      contas: nContas, leituras: nLeituras, bytes: bytes,
+      janelaDias: DIAS_HISTORICO, intervaloSeg: INTERVALO_LEITURA
+    };
+  }
+};

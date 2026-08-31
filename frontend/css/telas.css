@@ -1,0 +1,488 @@
+/* telas.css
+   Estilos de cada tela: painel, historico, aparelhos, alertas, relatorio.
+   Parte do sistema de design do Solaris. A ordem em que os arquivos
+   de CSS entram no index.html importa: base, componentes, telas,
+   responsivo e impressao, nessa sequencia. */
+
+/* ---------- painel: o bloco da economia ----------
+   E o unico bloco escuro do conteudo, e por isso ele nao precisa de
+   brilho nem de halo para chamar atencao: ja e a coisa mais escura da
+   tela. O ambar aparece so na barra do dia, que e geracao de verdade. */
+.hero{padding:var(--e6)}
+.hero-in{position:relative}
+.hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--e4);flex-wrap:wrap}
+.hero-kicker{font-size:var(--t-sm);color:var(--on-dark-soft);font-weight:500}
+.delta{
+  display:inline-flex;align-items:center;gap:5px;border-radius:var(--r-pill);padding:3px var(--e2);
+  font-size:var(--t-xs);font-weight:600;background:rgba(95,202,154,.14);color:var(--good-on-dark);
+}
+.delta--down{background:rgba(174,63,39,.20);color:#E9A99B}
+.delta--down svg{transform:rotate(180deg)}
+.hero-money{display:flex;align-items:baseline;gap:var(--e2);margin-top:var(--e3)}
+.hero-cur{font-family:var(--f-display);font-weight:400;font-size:var(--t-xl);color:var(--on-dark-soft)}
+.hero-line{font-size:var(--t-sm);color:var(--on-dark-soft);margin-top:var(--e4);max-width:56ch;line-height:var(--lh-body)}
+
+/* Sete colunas: os ultimos sete dias. A de hoje e a unica ambar. */
+.spark{display:flex;align-items:flex-end;gap:5px;height:78px;margin-top:var(--e6)}
+.spark-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0}
+/* A escala comeca no zero, entao meses parecidos produzem barras
+   parecidas mesmo. Isso e honesto: quem resolve isso esticando a base
+   inventa uma diferenca que nao existe. O que da para melhorar e o
+   contraste, para a variacao real ficar legivel. */
+.spark-bar{
+  width:100%;border-radius:3px 3px 0 0;background:rgba(242,244,246,.30);
+  transition:background .16s var(--curva),height .5s var(--curva);
+}
+.spark-col:hover .spark-bar{background:rgba(242,244,246,.46)}
+.spark-col.is-now .spark-bar{background:var(--sun)}
+.spark-lbl{font-family:var(--f-mono);font-size:var(--t-xs);color:var(--on-dark-faint)}
+.spark-col.is-now .spark-lbl{color:var(--sun-lite);font-weight:600}
+
+/* ---------- donut: quanto do consumo o sol cobriu ---------- */
+.donut-wrap{display:flex;align-items:center;gap:var(--e6);margin-top:var(--e4);flex-wrap:wrap}
+.donut{position:relative;width:128px;height:128px;flex-shrink:0}
+.donut svg{transform:rotate(-90deg)}
+.donut-ring{transition:stroke-dasharray 1s var(--curva)}
+.donut-mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut-pct{font-family:var(--f-display);font-weight:700;font-size:var(--t-2xl);letter-spacing:-.035em;line-height:1;color:var(--ink)}
+.donut-cap{font-size:var(--t-xs);color:var(--faint);margin-top:2px}
+.split{display:flex;flex-direction:column;gap:var(--e3);min-width:0}
+.split-row-top{display:flex;align-items:center;gap:7px}
+.split-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.split-lbl{font-size:var(--t-sm);color:var(--muted)}
+.split-val{font-family:var(--f-mono);font-size:var(--t-md);font-weight:500;margin-top:2px;color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* ---------- kpi ---------- */
+.kpi-top{display:flex;align-items:center;gap:7px}
+.kpi-lbl{font-size:var(--t-sm);color:var(--muted);font-weight:500}
+.kpi-val{display:flex;align-items:baseline;gap:5px;margin-top:var(--e3)}
+.kpi-unit{font-size:var(--t-sm);color:var(--faint);font-weight:500}
+.kpi-note{font-size:var(--t-xs);color:var(--faint);margin-top:var(--e2);line-height:var(--lh-snug);max-width:46ch}
+
+/* ---------- graficos ---------- */
+.chart{position:relative;margin-top:var(--e4)}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart-axis{display:flex;justify-content:space-between;margin-top:6px;font-family:var(--f-mono);font-size:var(--t-xs);color:var(--faint)}
+.now-line{stroke:var(--n-500);stroke-width:1;stroke-dasharray:3 3}
+.now-dot{transform-box:fill-box;transform-origin:center}
+
+/* Dica flutuante: sombra sem borda, porque de fato paira sobre o grafico. */
+.tip{
+  position:absolute;z-index:40;pointer-events:none;opacity:0;transform:translate(-50%,-116%);
+  background:var(--dark);color:var(--on-dark);border-radius:var(--r-sm);padding:var(--e2) var(--e3);
+  font-size:var(--t-xs);line-height:var(--lh-snug);white-space:nowrap;box-shadow:var(--elev-alto);
+  transition:opacity .12s var(--curva);
+}
+.tip.on{opacity:1}
+.tip b{font-family:var(--f-mono);font-weight:500;color:var(--sun-lite)}
+.tip i{font-style:normal;font-family:var(--f-mono);color:#9FB3D6}
+
+/* barras do historico: consumo (rede) ao lado de geracao (sol) */
+.hbars{display:flex;align-items:flex-end;gap:4px;margin-top:var(--e6)}
+.hbar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;cursor:default}
+.hbar-pair{display:flex;align-items:flex-end;gap:2px;height:148px;width:100%}
+.hbar-pair i{display:block;width:100%;border-radius:2px 2px 0 0;transition:height .45s var(--curva),opacity .14s var(--curva)}
+.hbar-c{background:var(--grid)}
+.hbar-g{background:var(--sun)}
+.hbar:hover .hbar-pair i{opacity:.75}
+.hbar-saldo{width:100%;height:3px;border-radius:2px}
+.hbar-lbl{font-family:var(--f-mono);font-size:var(--t-xs);color:var(--faint);height:14px;white-space:nowrap}
+
+.compare-lbl{display:flex;justify-content:space-between;font-size:var(--t-sm);color:var(--muted);margin-bottom:7px}
+.track{height:10px;background:var(--ground-2);border-radius:var(--r-pill);overflow:hidden}
+.track i{display:block;height:100%;border-radius:var(--r-pill);transition:width .6s var(--curva)}
+
+.note{display:flex;gap:var(--e3);padding:var(--e3) var(--e4);border-radius:var(--r-md)}
+.note-dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.note-t{font-size:var(--t-sm);font-weight:600;color:var(--ink)}
+.note-s{font-size:var(--t-sm);margin-top:2px;line-height:var(--lh-snug);max-width:64ch}
+.note--good{background:var(--good-bg)}
+.note--good .note-dot{background:var(--good)}
+.note--good .note-s{color:#3D5F51}
+.note--bad{background:var(--bad-bg)}
+.note--bad .note-dot{background:var(--bad)}
+.note--bad .note-s{color:#7C3E2B}
+.note--sun{background:var(--ground-2)}
+.note--sun .note-dot{background:var(--sun)}
+.note--sun .note-s{color:var(--muted)}
+
+/* ---------- para onde vai a energia ---------- */
+.mixbar{display:flex;height:12px;border-radius:var(--r-xs);overflow:hidden;margin-top:var(--e5);gap:2px}
+.mixbar i{display:block;transition:width .5s var(--curva)}
+.toplist{display:flex;flex-direction:column;gap:1px;margin-top:var(--e4)}
+.toprow{display:flex;align-items:center;gap:var(--e3);width:100%;padding:var(--e2) var(--e2);border-radius:var(--r-sm);transition:background .13s var(--curva)}
+.toprow:hover{background:var(--ground-2)}
+.toprow-bar{width:4px;height:32px;border-radius:2px;flex-shrink:0}
+.toprow-name{font-size:var(--t-sm);font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toprow-sub{font-size:var(--t-xs);color:var(--faint)}
+.toprow-num{font-family:var(--f-mono);font-size:var(--t-sm);font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+.toprow-cash{font-size:var(--t-xs);color:var(--faint)}
+
+/* ---------- tabela de aparelhos ---------- */
+.eq-head,.eq-row{display:grid;grid-template-columns:28px minmax(0,1fr) 96px 84px 58px 32px;gap:var(--e3);align-items:center}
+.eq-head{padding:0 var(--e3) var(--e2);font-size:var(--t-xs);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--line)}
+.eq-list{display:flex;flex-direction:column;gap:1px;margin-top:6px}
+.eq-row{
+  width:100%;padding:var(--e3);border-radius:var(--r-sm);border:1px solid transparent;
+  transition:background .13s var(--curva),border-color .13s var(--curva);
+}
+.eq-row:hover{background:var(--ground-2)}
+.eq-row[aria-expanded="true"]{background:var(--surface);border-color:var(--n-500)}
+.eq-pos{font-family:var(--f-mono);font-size:var(--t-xs);color:var(--faint)}
+.eq-name{display:flex;align-items:center;gap:7px;min-width:0}
+.eq-name b{font-size:var(--t-sm);font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eq-meta{font-size:var(--t-xs);color:var(--faint);margin-top:2px}
+/* display:block e obrigatorio: no HTML isto e um <span>, e um span inline
+   ignora altura - a barra de participacao ficava com 0px e nunca aparecia. */
+.eq-track{display:block;height:6px;background:var(--ground-2);border-radius:var(--r-pill);overflow:hidden}
+.eq-track i{display:block;height:100%;border-radius:var(--r-pill);transition:width .5s var(--curva)}
+.eq-pct{font-size:var(--t-xs);color:var(--faint);margin-top:4px}
+.eq-kwh{font-family:var(--f-mono);font-size:var(--t-sm);font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+.eq-cash{font-size:var(--t-xs);color:var(--faint)}
+.eq-trend{font-family:var(--f-mono);font-size:var(--t-xs);font-weight:500}
+.eq-kill{opacity:0;color:var(--faint);padding:4px;border-radius:var(--r-xs);transition:opacity .13s var(--curva),color .13s var(--curva),background .13s var(--curva)}
+.eq-row:hover .eq-kill,.eq-kill:focus-visible{opacity:1}
+.eq-kill:hover{color:var(--bad);background:var(--bad-bg)}
+
+.detect{display:flex;align-items:center;gap:var(--e4);background:var(--dark);color:var(--on-dark);border-radius:var(--r-lg);padding:var(--e4) var(--e5);flex-wrap:wrap}
+.detect-ic{width:34px;height:34px;border-radius:var(--r-sm);background:rgba(217,119,6,.20);color:var(--sun-lite);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.detect-t{font-size:var(--t-base);font-weight:600}
+.detect-s{font-size:var(--t-sm);color:var(--on-dark-soft);margin-top:2px}
+.detect-btns{display:flex;gap:var(--e2);flex-shrink:0}
+.btn-no{padding:7px var(--e4);border-radius:var(--r-md);font-size:var(--t-sm);font-weight:600;border:1px solid rgba(242,244,246,.26);color:var(--on-dark-soft);transition:color .14s var(--curva),border-color .14s var(--curva)}
+.btn-no:hover{color:var(--on-dark);border-color:var(--on-dark)}
+.btn-yes{padding:7px var(--e4);border-radius:var(--r-md);font-size:var(--t-sm);font-weight:600;background:var(--sun);color:var(--n-900);transition:background .14s var(--curva)}
+.btn-yes:hover{background:var(--sun-lite)}
+
+.empty{background:var(--ground-2);border:1px dashed var(--line-2);border-radius:var(--r-lg);padding:var(--e7) var(--e6);text-align:center}
+.empty-t{font-size:var(--t-base);font-weight:600;color:var(--ink-2);margin-top:var(--e3)}
+.empty-s{font-size:var(--t-sm);color:var(--faint);margin-top:6px;line-height:var(--lh-body);max-width:52ch;margin-left:auto;margin-right:auto}
+
+.det-head{display:flex;align-items:flex-start;gap:var(--e3)}
+.det-chip{width:40px;height:40px;border-radius:var(--r-sm);flex-shrink:0}
+.det-name{font-family:var(--f-display);font-weight:700;font-size:var(--t-md);letter-spacing:-.015em;line-height:var(--lh-snug);color:var(--ink)}
+.det-loc{font-size:var(--t-sm);color:var(--faint);margin-top:2px}
+.det-x{color:var(--faint);padding:2px;transition:color .14s var(--curva)}
+.det-x:hover{color:var(--ink)}
+/* Sem cartao dentro de cartao: os dados do aparelho sao so um bloco de
+   fundo levemente diferente, sem borda e sem sombra propria. */
+.det-facts{display:grid;grid-template-columns:1fr 1fr;gap:var(--e2);margin-top:var(--e5)}
+.fact{background:var(--ground-2);border-radius:var(--r-sm);padding:var(--e2) var(--e3)}
+.fact-k{font-size:var(--t-xs);color:var(--faint)}
+.fact-v{font-family:var(--f-mono);font-size:var(--t-base);font-weight:500;color:var(--ink);margin-top:2px}
+.prof{display:flex;align-items:flex-end;gap:2px;height:52px}
+.prof i{display:block;flex:1;border-radius:1px;transition:height .4s var(--curva)}
+.tips{display:flex;flex-direction:column;gap:var(--e3)}
+.tip-row{display:flex;gap:var(--e2)}
+.tip-row svg{flex-shrink:0;margin-top:3px}
+.tip-txt{font-size:var(--t-sm);line-height:var(--lh-body);max-width:64ch}
+.tip-txt b{font-weight:600;color:var(--ink)}
+.tip-txt span{color:var(--muted)}
+
+/* ---------- formulario ---------- */
+.field{margin-top:var(--e5)}
+.field:first-of-type{margin-top:var(--e5)}
+/* display:block e obrigatorio: <label> e inline por padrao, e como o
+   campo ao lado tem largura maxima, os dois dividiam a mesma linha —
+   o rotulo ficava colado na lateral esquerda do input. */
+.field-lbl{display:block;font-size:var(--t-sm);font-weight:600;color:var(--ink-2)}
+.text-in{
+  width:100%;height:42px;margin-top:6px;padding:0 var(--e3);border-radius:var(--r-md);
+  border:1px solid var(--line-2);background:var(--surface);
+  font-family:var(--f-body);font-size:var(--t-base);color:var(--ink);outline:none;
+  transition:border-color .14s var(--curva),box-shadow .14s var(--curva);
+}
+.text-in:focus{border-color:var(--sun-ink);box-shadow:var(--anel-foco)}
+.text-in::placeholder{color:var(--faint)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:var(--e2)}
+.chip{
+  padding:6px var(--e3);border-radius:var(--r-sm);font-size:var(--t-sm);font-weight:500;
+  border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);
+  transition:border-color .13s var(--curva),background .13s var(--curva),color .13s var(--curva);
+}
+.chip:hover{border-color:var(--n-500)}
+.chip[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--on-dark)}
+.slider-head{display:flex;justify-content:space-between;align-items:baseline;gap:var(--e3)}
+.slider-val{font-family:var(--f-mono);font-size:var(--t-base);font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;margin:var(--e2) 0 0;accent-color:var(--sun);cursor:pointer;height:22px}
+.slider-ends{display:flex;justify-content:space-between;font-size:var(--t-xs);color:var(--faint);margin-top:2px}
+.sliders{display:flex;flex-direction:column;gap:var(--e5)}
+.est-bar{height:8px;background:rgba(242,244,246,.14);border-radius:var(--r-pill);overflow:hidden;margin-top:var(--e5)}
+.est-bar i{display:block;height:100%;border-radius:var(--r-pill);background:var(--sun);transition:width .4s var(--curva)}
+.saved{display:flex;align-items:center;gap:7px;margin-top:var(--e3);font-size:var(--t-sm);color:var(--good-on-dark)}
+.preset{display:flex;align-items:center;justify-content:space-between;gap:var(--e3);width:100%;padding:var(--e2) var(--e2);border-radius:var(--r-sm);transition:background .13s var(--curva)}
+.preset:hover{background:var(--ground-2)}
+.preset-n{font-size:var(--t-sm);font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.preset-d{font-size:var(--t-xs);color:var(--faint);margin-top:2px}
+
+/* ---------- alertas ---------- */
+.goal-track{position:relative;height:12px;background:var(--ground-2);border-radius:var(--r-pill);margin-top:var(--e6)}
+.goal-fill{height:100%;border-radius:var(--r-pill);transition:width .5s var(--curva),background .3s var(--curva)}
+.goal-mark{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);border-radius:1px}
+.goal-mark::after{content:attr(data-l);position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:var(--t-xs);color:var(--faint);white-space:nowrap;font-family:var(--f-mono)}
+.rule-row{display:flex;align-items:center;gap:var(--e3);width:100%;padding:var(--e3) var(--e2);border-radius:var(--r-sm);transition:background .13s var(--curva)}
+.rule-row:hover{background:var(--ground-2)}
+.rule-t{font-size:var(--t-sm);font-weight:600;color:var(--ink);line-height:var(--lh-snug)}
+.rule-s{font-size:var(--t-xs);color:var(--faint);margin-top:2px;max-width:56ch}
+.tog{width:40px;height:23px;border-radius:var(--r-pill);flex-shrink:0;padding:3px;display:flex;transition:background .18s var(--curva);background:var(--n-300);justify-content:flex-start}
+.tog[aria-pressed="true"]{background:var(--good);justify-content:flex-end}
+.tog i{display:block;width:17px;height:17px;border-radius:50%;background:#fff}
+
+/* O alerta ja e um bloco colorido inteiro. Nao leva tambem uma faixa na
+   lateral: cor de fundo e ponto ja dizem a gravidade. */
+.feed{display:flex;flex-direction:column;gap:var(--e2);margin-top:var(--e4)}
+.feed-item{display:flex;gap:var(--e3);padding:var(--e3) var(--e4);border-radius:var(--r-md);border:1px solid}
+.feed-item--alto{background:var(--bad-bg);border-color:var(--bad-line)}
+.feed-item--alto .feed-dot{background:var(--bad)}
+.feed-item--medio{background:var(--warn-bg);border-color:var(--warn-line)}
+.feed-item--medio .feed-dot{background:var(--warn)}
+.feed-item--bom{background:var(--good-bg);border-color:var(--good-line)}
+.feed-item--bom .feed-dot{background:var(--good)}
+.feed-dot{width:8px;height:8px;border-radius:50%;margin-top:7px;flex-shrink:0}
+.feed-t{display:flex;align-items:baseline;gap:var(--e2);flex-wrap:wrap}
+.feed-t b{font-size:var(--t-base);font-weight:600;color:var(--ink)}
+.feed-t span{font-size:var(--t-xs);color:var(--muted)}
+.feed-x{font-size:var(--t-sm);color:var(--ink-2);margin-top:3px;line-height:var(--lh-body);max-width:70ch}
+.feed-close{
+  flex-shrink:0;align-self:flex-start;padding:5px;border-radius:var(--r-xs);color:var(--muted);
+  opacity:.6;transition:opacity .13s var(--curva),background .13s var(--curva),color .13s var(--curva);
+}
+.feed-item:hover .feed-close,.feed-close:focus-visible{opacity:1}
+.feed-close:hover{background:rgba(21,24,28,.08);color:var(--ink)}
+
+/* ---------- relatorio ---------- */
+.inv-head,.inv-row{display:grid;grid-template-columns:1fr 150px 130px;gap:var(--e3)}
+.inv-head{margin-top:var(--e6);padding-bottom:var(--e2);font-size:var(--t-xs);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+.inv-row{padding:var(--e3) 0;border-top:1px solid var(--line);font-size:var(--t-sm)}
+.inv-row--total{padding:var(--e4) 0 var(--e1);border-top:2px solid var(--ink);font-size:var(--t-md);font-weight:700;color:var(--ink)}
+.inv-row--credit{color:var(--good)}
+.inv-q{font-family:var(--f-mono);font-size:var(--t-xs);color:var(--muted)}
+.inv-v{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+.leaf{display:flex;gap:var(--e3);background:var(--good-bg);border-radius:var(--r-md);padding:var(--e4) var(--e5);margin-top:var(--e6)}
+.leaf-t{font-size:var(--t-base);font-weight:600;color:#1C5940}
+.leaf-s{font-size:var(--t-sm);color:#3D5F51;margin-top:3px;line-height:var(--lh-body);max-width:66ch}
+.ybars{display:flex;align-items:flex-end;gap:4px;height:100px;margin-top:var(--e5)}
+.ybar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.ybar i{display:block;width:100%;border-radius:2px 2px 0 0;background:var(--n-300);transition:height .5s var(--curva)}
+.ybar.is-now i{background:var(--sun)}
+.ybar span{font-family:var(--f-mono);font-size:var(--t-xs);color:var(--faint)}
+
+/* ---------- config ---------- */
+.kv{display:flex;justify-content:space-between;align-items:baseline;gap:var(--e5);font-size:var(--t-sm)}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;text-align:right;font-weight:600;color:var(--ink)}
+.kv dd.mono{font-weight:500}
+.kvs{display:flex;flex-direction:column;gap:var(--e3);margin:0}
+.softbox{background:var(--ground-2);border-radius:var(--r-md);padding:var(--e3) var(--e4);margin-top:var(--e5);font-size:var(--t-sm);color:var(--muted);line-height:var(--lh-body);max-width:70ch}
+.softbox b{color:var(--ink);font-weight:600}
+.unit--nova{color:var(--on-dark-faint);border:1px dashed rgba(242,244,246,.22);margin-top:var(--e1);justify-content:center;gap:6px}
+.unit--nova:hover{color:var(--on-dark);border-color:rgba(242,244,246,.45)}
+.unit--nova .unit-name{font-weight:600;font-size:var(--t-xs)}
+
+.un-list{display:flex;flex-direction:column;gap:1px;margin-top:var(--e4)}
+.un-row{display:flex;align-items:center;gap:var(--e3);padding:var(--e3);border-radius:var(--r-sm);transition:background .13s var(--curva)}
+.un-row:hover{background:var(--ground-2)}
+.un-row>span:first-child{flex:1;min-width:0}
+.un-meta{display:block;font-size:var(--t-xs);color:var(--faint);margin-top:2px}
+
+.dica{font-size:var(--t-xs);color:var(--faint);margin-top:5px;line-height:var(--lh-snug);max-width:56ch}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:var(--e2)}
+.opt{
+  display:block;width:100%;padding:var(--e3) var(--e4);border-radius:var(--r-md);text-align:left;
+  border:1px solid var(--line-2);background:var(--surface);
+  transition:border-color .13s var(--curva),background .13s var(--curva);
+}
+.opt:hover{border-color:var(--n-500)}
+.opt[aria-pressed="true"]{border-color:var(--ink);background:var(--ground-2)}
+.opt-t{display:block;font-size:var(--t-sm);font-weight:600;color:var(--ink)}
+.opt-d{display:block;font-size:var(--t-xs);color:var(--muted);margin-top:3px;line-height:var(--lh-snug);max-width:62ch}
+
+.danger-btn{font-size:var(--t-sm);font-weight:600;color:var(--bad);transition:color .14s var(--curva)}
+.danger-btn:hover{color:#8A3320;text-decoration:underline;text-underline-offset:3px}
+
+/* ---------- avisos flutuantes ----------
+   Estes de fato pairam sobre a pagina, entao levam sombra e nao borda. */
+.toasts{position:fixed;right:var(--e5);bottom:var(--e5);z-index:200;display:flex;flex-direction:column;gap:var(--e2);max-width:min(360px,calc(100vw - 40px))}
+/* Em tela estreita a barra de abas mora no rodape. Sem esta folga o aviso
+   cai em cima dela e tapa a navegacao inteira. */
+@media (max-width:760px){
+  .toasts{
+    left:var(--e4);right:var(--e4);max-width:none;
+    bottom:calc(72px + env(safe-area-inset-bottom));
+  }
+}
+.toast{
+  display:flex;gap:var(--e3);color:var(--on-dark);border-radius:var(--r-md);padding:var(--e3) var(--e4);
+  background:var(--dark);box-shadow:var(--elev-alto);
+  animation:slidein .3s var(--curva);
+}
+.toast.out{animation:slideout .24s var(--curva) forwards}
+.toast-dot{width:7px;height:7px;border-radius:50%;margin-top:7px;flex-shrink:0;background:var(--sun)}
+.toast--good .toast-dot{background:var(--good-on-dark)}
+.toast--bad .toast-dot{background:#E9A99B}
+.toast-t{font-size:var(--t-sm);font-weight:600}
+.toast-s{font-size:var(--t-xs);color:var(--on-dark-soft);margin-top:2px;line-height:var(--lh-snug)}
+
+/* ---------- animacoes ----------
+   So transform e opacity. Animar largura ou altura obriga o navegador a
+   recalcular o layout a cada quadro, e ai trava. */
+@keyframes beat{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes slidein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes slideout{to{opacity:0;transform:translateX(20px)}}
+/* Comeca em .4 e nao em 0: assim o conteudo nunca fica invisivel, nem
+   por um instante. Numa maquina lenta, animacao que parte do zero deixa
+   a tela em branco bem na hora em que a pessoa esta olhando. */
+@keyframes fadeup{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* A entrada e enfeite: o conteudo ja esta visivel, isto so suaviza a
+   troca de tela. Por isso backwards e nao forwards - nada fica invisivel
+   se a animacao nao rodar. */
+.enter>*{animation:fadeup .28s var(--curva) backwards}
+.enter>*:nth-child(1){animation-delay:.01s}
+.enter>*:nth-child(2){animation-delay:.03s}
+.enter>*:nth-child(3){animation-delay:.05s}
+.enter>*:nth-child(4){animation-delay:.07s}
+.enter>*:nth-child(5){animation-delay:.09s}
+.enter>*:nth-child(n+6){animation-delay:.11s}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+}
+
+/* ---------- cadastro em passos ----------
+   A trilha nao e enfeite: ela responde "quanto falta", que e a pergunta
+   que faz a pessoa desistir no meio de um formulario. */
+.trilha{list-style:none;display:flex;gap:var(--e2);margin:0;padding:0;flex-wrap:wrap}
+.trilha-item{flex:1;min-width:150px}
+.trilha-item button,.trilha-item>span{
+  display:flex;align-items:center;gap:var(--e2);width:100%;
+  padding:var(--e2) var(--e3);border-radius:var(--r-md);
+  border:1px solid var(--line);background:var(--surface);text-align:left;
+  transition:border-color .14s var(--curva),background .14s var(--curva);
+}
+.trilha-item button:hover{border-color:var(--n-500)}
+.trilha-item>span{opacity:.55;cursor:default}
+.trilha-n{
+  width:22px;height:22px;border-radius:50%;flex-shrink:0;
+  display:grid;place-items:center;
+  font-size:var(--t-xs);font-weight:700;font-variant-numeric:tabular-nums;
+  background:var(--ground-2);color:var(--muted);
+}
+.trilha-t{font-size:var(--t-sm);font-weight:600;color:var(--muted);line-height:var(--lh-snug)}
+.trilha-item--atual button{border-color:var(--ink);background:var(--surface)}
+.trilha-item--atual .trilha-n{background:var(--ink);color:var(--on-dark)}
+.trilha-item--atual .trilha-t{color:var(--ink)}
+.trilha-item--feito .trilha-n{background:var(--good);color:#fff}
+.trilha-item--feito .trilha-t{color:var(--ink-2)}
+
+.passo-nav{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--e4);
+  margin-top:var(--e6);padding-top:var(--e5);border-top:1px solid var(--line);flex-wrap:wrap;
+}
+.passo-nav-fim{display:flex;align-items:center;gap:var(--e3);margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.passo-falta{font-size:var(--t-xs);color:var(--faint);max-width:34ch;text-align:right;line-height:var(--lh-snug)}
+
+/* ---------- escolher os aparelhos que existem ---------- */
+.apsel-topo{display:flex;align-items:baseline;justify-content:space-between;gap:var(--e3);flex-wrap:wrap}
+.apsel-grade{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--e2);margin-top:var(--e3)}
+@media (max-width:720px){.apsel-grade{grid-template-columns:1fr}}
+.apsel{
+  display:flex;align-items:flex-start;gap:var(--e3);width:100%;
+  padding:var(--e3);border-radius:var(--r-md);
+  border:1px solid var(--line-2);background:var(--surface);
+  transition:border-color .13s var(--curva),background .13s var(--curva);
+}
+.apsel:hover{border-color:var(--n-500)}
+.apsel-cx{
+  width:20px;height:20px;border-radius:var(--r-xs);flex-shrink:0;margin-top:1px;
+  display:grid;place-items:center;
+  border:1.5px solid var(--line-2);background:var(--surface);color:#fff;
+  transition:background .13s var(--curva),border-color .13s var(--curva);
+}
+.apsel[aria-pressed="true"]{border-color:var(--ink);background:var(--ground-2)}
+.apsel[aria-pressed="true"] .apsel-cx{background:var(--good);border-color:var(--good)}
+.apsel-txt{min-width:0}
+.apsel-n{display:block;font-size:var(--t-sm);font-weight:600;color:var(--ink)}
+.apsel-d{display:block;font-size:var(--t-xs);color:var(--faint);margin-top:2px}
+
+/* ---------- foto da conta de luz ---------- */
+.foto-cx{
+  display:flex;align-items:center;gap:var(--e3);flex-wrap:wrap;
+  padding:var(--e4);border-radius:var(--r-md);margin-top:var(--e4);
+  border:1px dashed var(--line-2);background:var(--ground-2);
+}
+.foto-ic{
+  width:38px;height:38px;border-radius:var(--r-sm);flex-shrink:0;
+  display:grid;place-items:center;background:var(--surface);color:var(--muted);
+}
+.foto-txt{flex:1;min-width:180px}
+.foto-t{display:flex;align-items:center;gap:6px;font-size:var(--t-sm);font-weight:600;color:var(--ink)}
+.foto-d{font-size:var(--t-xs);color:var(--muted);margin-top:3px;line-height:var(--lh-body);max-width:62ch}
+.foto-btn{
+  display:inline-flex;align-items:center;gap:6px;flex-shrink:0;cursor:pointer;
+  height:36px;padding:0 var(--e4);border-radius:var(--r-md);
+  background:var(--dark);color:var(--on-dark);font-size:var(--t-sm);font-weight:600;
+  transition:background .14s var(--curva);
+}
+.foto-btn:hover{background:var(--dark-2)}
+.foto-outra{cursor:pointer;margin-top:var(--e2)}
+.foto-cx--lendo,.foto-cx--ok,.foto-cx--erro{display:block;border-style:solid}
+.foto-cx--ok{background:var(--good-bg);border-color:var(--good-line)}
+.foto-cx--ok .foto-t{color:var(--good)}
+.foto-cx--erro{background:var(--bad-bg);border-color:var(--bad-line)}
+.foto-cx--erro .foto-t{color:var(--bad)}
+.foto-barra{height:5px;border-radius:var(--r-pill);background:var(--ground-2);overflow:hidden;margin:var(--e2) 0}
+.foto-barra i{display:block;height:100%;border-radius:var(--r-pill);background:var(--sun);transition:width .3s var(--curva)}
+
+/* ---------- medido x estimado ----------
+   Hachura em vez de cor diferente: cor ja significa consumo ou geracao, e
+   sobrecarregar a cor com um segundo significado confunde os dois. */
+.aviso-est{
+  display:flex;gap:var(--e2);align-items:flex-start;
+  background:var(--ground-2);border-radius:var(--r-md);
+  padding:var(--e3);margin-top:var(--e3);
+  font-size:var(--t-xs);color:var(--muted);line-height:var(--lh-body);max-width:88ch;
+}
+.aviso-est svg{flex-shrink:0;margin-top:2px;color:var(--sun-ink)}
+.aviso-est b{color:var(--ink);font-weight:600}
+.hbar--est .hbar-pair i,.ybar--est i,.spark-col--est .spark-bar{
+  background-image:repeating-linear-gradient(135deg,
+    rgba(255,255,255,.55) 0 2px, transparent 2px 5px);
+  opacity:.75;
+}
+/* a divisoria cai na primeira barra medida, e diz onde o medidor comecou */
+.hbar--corte{position:relative}
+.hbar--corte::before{
+  content:"";position:absolute;left:-3px;top:0;bottom:18px;
+  border-left:1px dashed var(--n-400);
+}
+.swatch--est{
+  background:var(--n-300);
+  background-image:repeating-linear-gradient(135deg,
+    rgba(255,255,255,.75) 0 2px, transparent 2px 5px);
+}
+.card--dark .spark-col--est .spark-bar{
+  background-image:repeating-linear-gradient(135deg,
+    rgba(21,24,28,.45) 0 2px, transparent 2px 5px);
+}
+
+/* A distribuidora que veio junto com a cidade escolhida.
+
+   Nao e um aviso e nao flutua: e o resultado de uma escolha que a pessoa
+   acabou de fazer, entao fica encostado no campo, com fundo e sem sombra. */
+.dist-cx{
+  display:flex;gap:var(--e2);align-items:flex-start;
+  margin-top:var(--e3);padding:var(--e3);
+  border-radius:var(--r-md);background:var(--ground-2);
+  font-size:var(--t-sm);color:var(--ink-2);line-height:var(--lh-snug);
+  max-width:340px;
+}
+.dist-ic{flex-shrink:0;color:var(--faint);margin-top:1px}
+.dist-cx b{color:var(--ink);font-weight:600}
+.dist-d{display:block;margin-top:var(--e1);font-size:var(--t-xs);color:var(--muted)}
+
+/* O <select> herda a caixa dos campos de texto, mas o navegador desenha a
+   seta sozinho e ela some sem padding a direita. */
+select.text-in{
+  height:44px;padding-right:var(--e6);
+  background:var(--surface);cursor:pointer;
+}

@@ -1,0 +1,330 @@
+/* conta.css
+   Tela de entrada, cartao da conta e o painel do banco de dados.
+   Parte do sistema de design do Solaris. A ordem em que os arquivos
+   de CSS entram no index.html importa: base, componentes, telas,
+   responsivo e impressao, nessa sequencia. */
+
+body.vista-login{background:var(--dark)}
+
+/* ============================================================
+   TELA DE ENTRADA
+   E a primeira coisa que a pessoa ve, entao ela carrega o peso de
+   explicar o que o site faz. Duas colunas no desktop: a esquerda
+   diz o que e, a direita deixa entrar. No celular vira uma coluna,
+   com a vitrine encolhida em cima.
+   ============================================================ */
+.entrada{
+  min-height:100vh;min-height:100dvh;
+  display:grid;grid-template-columns:1.05fr .95fr;
+  background:var(--dark);color:var(--on-dark);
+}
+
+/* ---------- coluna da esquerda: o que o site faz ---------- */
+.ent-vitrine{
+  position:relative;display:flex;align-items:center;
+  padding:var(--e8) 6vw;
+  background:var(--dark);
+}
+.ent-vitrine-in{position:relative;max-width:470px}
+
+.ent-marca{display:flex;align-items:center;gap:var(--e3)}
+.ent-ic{
+  width:42px;height:42px;border-radius:var(--r-md);flex-shrink:0;display:grid;place-items:center;
+  background:var(--sun);color:var(--n-900);
+}
+.ent-nome{font-family:var(--f-display);font-weight:800;font-size:var(--t-lg);letter-spacing:-.025em;line-height:1}
+.ent-tag{font-size:var(--t-xs);color:var(--on-dark-faint);margin-top:3px;line-height:1.2}
+
+/* Manchete curta, por isso pode ser grande. Frase longa em corpo de
+   display come a tela inteira e nao sobra nada acima da dobra. */
+.ent-titulo{
+  font-family:var(--f-display);font-weight:800;
+  font-size:clamp(32px,3.6vw,46px);letter-spacing:-.035em;line-height:1.06;
+  margin:var(--e7) 0 0;
+  /* A vitrine e escura: sem isto o titulo herda a tinta preta do h1 e
+     some no fundo. */
+  color:var(--on-dark);
+}
+.ent-linha{font-size:var(--t-md);color:var(--on-dark-soft);line-height:var(--lh-body);margin:var(--e4) 0 0;max-width:46ch}
+
+.ent-lista{list-style:none;margin:var(--e7) 0 0;padding:0;display:flex;flex-direction:column;gap:var(--e5)}
+.ent-lista li{display:flex;gap:var(--e3);align-items:flex-start}
+.ent-li-ic{
+  width:30px;height:30px;border-radius:var(--r-sm);flex-shrink:0;display:grid;place-items:center;
+  background:rgba(217,119,6,.22);color:var(--sun-lite);
+}
+.ent-lista b{display:block;font-size:var(--t-base);font-weight:600;color:var(--on-dark)}
+.ent-lista span{display:block;font-size:var(--t-sm);color:var(--on-dark-soft);margin-top:3px;line-height:var(--lh-body);max-width:44ch}
+
+.ent-rodape{
+  display:flex;align-items:center;gap:var(--e2);margin-top:var(--e7);
+  font-size:var(--t-sm);color:var(--on-dark-faint);
+}
+
+/* ---------- coluna da direita: entrar ---------- */
+.ent-form{
+  display:flex;align-items:center;justify-content:center;
+  padding:var(--e8) 5vw;background:var(--ground);color:var(--ink-2);
+}
+.ent-cx{width:100%;max-width:376px}
+
+.ent-abas{display:flex;background:var(--ground-2);border-radius:var(--r-md);padding:3px;gap:2px}
+.ent-abas button{
+  flex:1;padding:9px 0;border-radius:var(--r-sm);text-align:center;
+  font-size:var(--t-sm);font-weight:600;color:var(--muted);
+  transition:background .16s var(--curva),color .16s var(--curva);
+}
+.ent-abas button[aria-selected="true"]{background:var(--surface);color:var(--ink)}
+.ent-abas button:not([aria-selected="true"]):hover{color:var(--ink)}
+
+.ent-sub{font-size:var(--t-sm);color:var(--muted);line-height:var(--lh-body);margin:var(--e4) 0 0;max-width:44ch}
+
+.ent-campos{display:flex;flex-direction:column;gap:var(--e3);margin-top:var(--e5)}
+.ent-campo{display:flex;flex-direction:column;gap:6px}
+.ent-campo>span{font-size:var(--t-sm);font-weight:600;color:var(--ink-2)}
+.ent-campo input{
+  height:44px;padding:0 var(--e3);border-radius:var(--r-md);width:100%;
+  border:1px solid var(--line-2);background:var(--surface);
+  font-family:var(--f-body);font-size:var(--t-base);color:var(--ink);outline:none;
+  transition:border-color .14s var(--curva),box-shadow .14s var(--curva);
+}
+.ent-campo input:focus{border-color:var(--sun-ink);box-shadow:var(--anel-foco)}
+.ent-campo input::placeholder{color:var(--faint)}
+
+.ent-check{display:flex;align-items:center;gap:var(--e2);font-size:var(--t-sm);color:var(--muted);cursor:pointer}
+.ent-check input{accent-color:var(--sun);width:16px;height:16px;cursor:pointer;flex-shrink:0}
+
+.ent-erro{
+  display:flex;gap:var(--e2);align-items:flex-start;
+  background:var(--bad-bg);border:1px solid var(--bad-line);color:#7C3E2B;
+  border-radius:var(--r-md);padding:var(--e3);font-size:var(--t-sm);line-height:var(--lh-snug);
+}
+.ent-erro svg{flex-shrink:0;margin-top:2px}
+
+.ent-botao{
+  height:46px;border-radius:var(--r-md);background:var(--dark);color:var(--on-dark);
+  font-size:var(--t-base);font-weight:600;margin-top:var(--e1);
+  display:flex;align-items:center;justify-content:center;gap:var(--e2);
+  transition:background .14s var(--curva);
+}
+.ent-botao:hover:not([disabled]){background:var(--dark-2)}
+.ent-botao[disabled]{opacity:.6;cursor:progress}
+.ent-girando{
+  width:15px;height:15px;border-radius:50%;flex-shrink:0;
+  border:2px solid rgba(242,244,246,.3);border-top-color:var(--on-dark);
+  animation:girar .7s linear infinite;
+}
+@keyframes girar{to{transform:rotate(360deg)}}
+
+.ent-ou{display:flex;align-items:center;gap:var(--e3);margin:var(--e6) 0 var(--e4);color:var(--faint);font-size:var(--t-xs)}
+.ent-ou::before,.ent-ou::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* O caminho de teste. Fica visivel de proposito: durante o teste de campo
+   ninguem deveria travar numa tela de cadastro. */
+/* Confirmacao — recuperacao de senha enviada, cadastro esperando e-mail.
+   Mesma forma da caixa de erro, cor invertida: quem ja aprendeu a ler uma
+   nao precisa aprender a outra. */
+.ent-ok{
+  display:flex;gap:var(--e2);align-items:flex-start;
+  background:var(--good-bg);border:1px solid var(--good-line);color:var(--good);
+  border-radius:var(--r-md);padding:var(--e3);font-size:var(--t-sm);line-height:var(--lh-snug);
+}
+.ent-ok svg{flex-shrink:0;margin-top:2px}
+
+/* Onde a conta esta sendo guardada. E informacao de confianca, entao fica
+   visivel sem precisar abrir nada — o detalhe e que vai no <details>. */
+.ent-modo{
+  display:flex;gap:var(--e2);align-items:flex-start;margin-top:var(--e5);
+  padding:var(--e3);border-radius:var(--r-md);
+  background:var(--ground-2);
+  font-size:var(--t-xs);color:var(--muted);line-height:var(--lh-snug);
+}
+.ent-modo b{color:var(--ink);font-weight:600}
+.ent-modo-ic{flex-shrink:0;color:var(--faint);margin-top:1px}
+.ent-modo--nuvem{background:var(--good-bg);color:#2C5F49}
+.ent-modo--nuvem .ent-modo-ic{color:var(--good)}
+.ent-modo--nuvem b{color:var(--good)}
+
+/* Sem a saida de visitante, este link e a unica porta de quem esqueceu a
+   senha. Discreto, mas nao escondido. */
+.ent-link-voltar{
+  display:block;width:100%;text-align:center;margin-top:var(--e4);
+  font-size:var(--t-sm);font-weight:500;color:var(--muted);
+  text-decoration:underline;text-underline-offset:3px;
+}
+.ent-link-voltar:hover{color:var(--ink)}
+
+.ent-aviso{margin-top:var(--e6);border-top:1px solid var(--line);padding-top:var(--e4)}
+.ent-aviso summary{
+  font-size:var(--t-sm);font-weight:600;color:var(--muted);cursor:pointer;
+  list-style:none;display:flex;align-items:center;gap:7px;
+}
+.ent-aviso summary::-webkit-details-marker{display:none}
+.ent-aviso summary::before{content:"\203A";font-size:var(--t-md);transition:transform .18s var(--curva)}
+.ent-aviso[open] summary::before{transform:rotate(90deg)}
+.ent-aviso summary:hover{color:var(--ink)}
+.ent-aviso p{font-size:var(--t-xs);color:var(--muted);line-height:var(--lh-body);margin:var(--e3) 0 0;max-width:52ch}
+.ent-aviso b{color:var(--ink)}
+
+.ent-contador{font-size:var(--t-xs);color:var(--faint);text-align:center;margin-top:var(--e4)}
+
+/* ---------- uma coluna quando nao cabe duas ---------- */
+@media (max-width:900px){
+  .entrada{grid-template-columns:1fr}
+  .ent-vitrine{padding:var(--e7) var(--e6) var(--e6);align-items:flex-start}
+  .ent-vitrine-in{max-width:none}
+  .ent-titulo{font-size:30px;margin-top:var(--e5);max-width:20ch}
+  .ent-linha{font-size:var(--t-base)}
+  /* no celular a lista de argumentos rouba a tela toda; fica so o essencial */
+  .ent-lista{display:none}
+  .ent-rodape{margin-top:var(--e5)}
+  .ent-form{padding:var(--e7) var(--e6) var(--e8)}
+  .ent-cx{max-width:420px;margin:0 auto}
+}
+@media (max-width:420px){
+  .ent-titulo{font-size:26px}
+  .ent-vitrine{padding:var(--e6) var(--e5)}
+  .ent-form{padding:var(--e6) var(--e5) var(--e7)}
+}
+
+/* cartao da conta no menu lateral */
+.conta{display:flex;align-items:center;gap:var(--e2);padding:var(--e2) var(--e2);border-radius:var(--r-md);
+  border:1px solid rgba(242,244,246,.13)}
+.conta-av{
+  width:30px;height:30px;border-radius:var(--r-sm);flex-shrink:0;display:grid;place-items:center;
+  background:var(--sun);color:var(--n-900);
+  font-family:var(--f-display);font-weight:700;font-size:var(--t-base);
+}
+.conta-av--vis{background:rgba(242,244,246,.16);color:var(--on-dark-soft)}
+.conta-txt{flex:1;min-width:0}
+.conta-nome{display:block;font-size:var(--t-sm);font-weight:600;color:var(--on-dark);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conta-mail{display:block;font-size:var(--t-xs);color:var(--on-dark-faint);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conta-sair{color:var(--on-dark-faint);padding:5px;border-radius:var(--r-xs);flex-shrink:0;transition:color .14s var(--curva),background .14s var(--curva)}
+.conta-sair:hover{color:var(--on-dark);background:rgba(242,244,246,.1)}
+.conta--entrar{width:100%;text-align:left;transition:background .14s var(--curva),border-color .14s var(--curva)}
+.conta--entrar:hover{background:rgba(242,244,246,.09);border-color:rgba(242,244,246,.26)}
+.conta--entrar .conta-nome{color:var(--sun-lite)}
+
+.auth-voltar{
+  display:inline-flex;align-items:center;gap:5px;font-size:var(--t-sm);font-weight:600;
+  color:var(--sun-ink);margin-bottom:var(--e4);transition:color .14s var(--curva);
+}
+.auth-voltar:hover{color:var(--sun-deeper)}
+
+@media (max-width:1040px){
+  .conta{justify-content:center;padding:var(--e2)}
+  .conta-txt{display:none}
+  .conta-sair{display:none}
+}
+@media (max-width:760px){
+  .auth-cx{max-width:none;border-radius:var(--r-lg);padding:var(--e6) var(--e5)}
+}
+
+/* ============================================================
+   BANCO DE DADOS
+   ============================================================ */
+.bd-grade{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--e2);margin-top:var(--e5)}
+@media(max-width:900px){.bd-grade{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.bd-cel{background:var(--ground-2);border-radius:var(--r-md);padding:var(--e3) var(--e4)}
+.bd-k{font-size:var(--t-xs);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+.bd-v{font-family:var(--f-display);font-weight:700;font-size:var(--t-xl);letter-spacing:-.03em;margin-top:6px;
+  line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
+.bd-s{font-size:var(--t-xs);color:var(--faint);margin-top:4px;line-height:var(--lh-snug)}
+
+.bd-graf{margin-top:var(--e5)}
+.bd-graf-t{font-size:var(--t-sm);color:var(--muted)}
+.bd-pe{display:flex;align-items:center;justify-content:space-between;gap:var(--e3);flex-wrap:wrap;margin-top:var(--e2);
+  font-size:var(--t-xs);color:var(--faint)}
+.bd-pe code{font-family:var(--f-mono);font-size:var(--t-xs);background:var(--ground-2);
+  padding:2px 6px;border-radius:var(--r-xs)}
+/* Por que o site caiu para o banco local, ou o que falhou na ultima
+   gravacao. Some quando esta tudo certo. */
+.bd-nota{
+  background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn);
+  border-radius:var(--r-md);padding:var(--e3);margin-bottom:var(--e3);
+  font-size:var(--t-xs);line-height:var(--lh-snug);
+}
+.bd-nota--ruim{background:var(--bad-bg);border-color:var(--bad-line);color:var(--bad)}
+
+.bd-vazio{background:var(--ground-2);border:1px dashed var(--line-2);border-radius:var(--r-md);
+  padding:var(--e5);font-size:var(--t-sm);color:var(--muted);line-height:var(--lh-body);margin-top:6px;max-width:66ch}
+
+@media print{ .card{box-shadow:none} }
+
+/* ============================================================
+   PRIMEIRA UNIDADE
+   Conta nova comeca vazia de proposito. Esta tela pede a primeira
+   unidade em vez de mostrar um painel com zeros.
+   ============================================================ */
+.comecar{
+  min-height:100vh;min-height:100dvh;
+  display:flex;align-items:center;justify-content:center;
+  padding:var(--e8) var(--e6);background:var(--ground);
+}
+.comecar-cx{width:100%;max-width:520px;text-align:center}
+
+.comecar-ic{
+  width:52px;height:52px;border-radius:var(--r-lg);margin:0 auto;
+  display:grid;place-items:center;
+  background:var(--sun);color:var(--n-900);
+}
+.comecar-cx h1{
+  font-family:var(--f-display);font-weight:800;
+  font-size:clamp(27px,3.4vw,34px);letter-spacing:-.03em;line-height:1.1;
+  margin:var(--e6) 0 0;
+}
+.comecar-d{
+  font-size:var(--t-md);color:var(--muted);line-height:var(--lh-body);
+  margin:var(--e4) auto 0;max-width:46ch;
+}
+.comecar-d b{color:var(--ink);font-weight:600}
+
+.comecar-precisa{
+  text-align:left;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-lg);padding:var(--e5);margin-top:var(--e6);
+}
+.comecar-precisa-t{font-size:var(--t-sm);font-weight:700;color:var(--ink)}
+.comecar-precisa ul{margin:var(--e3) 0 0;padding-left:var(--e5);display:flex;flex-direction:column;gap:7px}
+.comecar-precisa li{font-size:var(--t-sm);color:var(--ink-2);line-height:var(--lh-body)}
+.comecar-precisa li b{font-weight:600;color:var(--ink)}
+.comecar-precisa-p{font-size:var(--t-xs);color:var(--faint);margin-top:var(--e3);line-height:var(--lh-snug)}
+
+.comecar-botao{width:100%;height:48px;margin-top:var(--e6);border-radius:var(--r-md);font-size:var(--t-base)}
+.comecar-ou{
+  display:flex;align-items:center;gap:var(--e3);margin:var(--e6) 0 var(--e3);
+  color:var(--faint);font-size:var(--t-xs);
+}
+.comecar-ou::before,.comecar-ou::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.comecar-exemplo{
+  width:100%;height:44px;border-radius:var(--r-md);
+  border:1px solid var(--line-2);background:var(--surface);
+  font-size:var(--t-sm);font-weight:600;color:var(--ink-2);
+  transition:border-color .14s var(--curva),color .14s var(--curva);
+}
+.comecar-exemplo:hover{border-color:var(--n-500);color:var(--ink)}
+.comecar-exemplo-d{
+  font-size:var(--t-xs);color:var(--faint);margin:var(--e2) auto 0;
+  line-height:var(--lh-snug);max-width:44ch;
+}
+
+@media (max-width:520px){
+  .comecar{padding:var(--e6) var(--e5);align-items:flex-start}
+  .comecar-cx h1{font-size:26px}
+}
+
+/* o formulario de unidade quando ainda nao existe menu lateral */
+.cadastro-solo{min-height:100vh;min-height:100dvh;background:var(--ground);padding:var(--e7) 5vw var(--e8)}
+.cadastro-solo-topo{max-width:1100px;margin:0 auto var(--e6)}
+.cadastro-solo-topo h1{
+  font-family:var(--f-display);font-weight:700;font-size:clamp(25px,2.8vw,32px);
+  letter-spacing:-.03em;margin:var(--e3) 0 0;
+}
+.cadastro-solo-corpo{max-width:1100px;margin:0 auto}
+@media (max-width:640px){ .cadastro-solo{padding:var(--e6) var(--e5) var(--e7)} }
+
+/* Os dois botoes de apagar ficam juntos, a direita. O .bd-pe usa
+   space-between, e sem agrupar eles se espalhavam pela linha inteira. */
+.bd-acoes{display:flex;align-items:center;gap:var(--e5);flex-wrap:wrap}
