@@ -70,7 +70,7 @@ Solaris/
 │   ├── design/           o desenho original, antes de virar código
 │   └── app-futuro/       fase 2: o que fazer quando virar aplicativo
 │
-└── testes/               148 testes que rodam no navegador
+└── testes/               164 testes que rodam no navegador
 ```
 
 **São seis pastas, e é para continuar assim.** Ferramentas e firmware moram

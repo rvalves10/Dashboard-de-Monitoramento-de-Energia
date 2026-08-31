@@ -44,7 +44,7 @@ const SOLARIS_CONFIG = {
 
     /* Qual modelo do Gemini responde. A Edge Function so aceita modelos desta
        familia, para um erro de digitacao aqui nao virar chamada estranha. */
-    modelo: 'gemini-3.5-flash',
+    modelo: 'gemini-3.6-flash',
 
     /* Quantas mensagens do historico vao junto em cada pergunta. Alto demais
        fica caro e lento; baixo demais o assistente esquece o assunto. */
