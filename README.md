@@ -37,7 +37,7 @@ Se preferir um arquivo só para mandar por e-mail ou WhatsApp, use
 Suba o servidor local com `node backend/ferramentas/servidor.mjs` e abra
 **`http://localhost:8080/testes/index.html`**. (Abrindo o arquivo direto do
 disco também roda, mas o painel do banco de dados fica limitado.)
-Devem aparecer **129 de 129 testes passando**, tudo verde.
+Devem aparecer **148 de 148 testes passando**, tudo verde.
 
 ---
 
@@ -87,6 +87,18 @@ certa de cada uma, a irradiação da região e o perfil de consumo do lugar.
 Quem mora em Piedade é atendido pela Neoenergia Elektro, não pela CPFL — e
 o sistema sabe disso.
 
+**A conta de verdade, ao lado da calculada.** Na tela de Relatório você
+informa o total que veio numa fatura de papel, e o Solaris mostra o que ele
+calculou para o mesmo mês, com a diferença em porcentagem. É a única coisa no
+sistema que não é autorreferente — sem isso, ele confere consigo mesmo.
+
+**Aviso antes do reajuste.** No mês em que a sua distribuidora reajusta a
+tarifa, o sistema avisa e manda conferir na fatura. Ele não chuta o valor
+novo: tarifa velha é pior que tarifa nenhuma.
+
+**Levar os dados embora.** Em Configurações, dois botões baixam tudo que o
+Solaris guarda sobre você — em JSON e em CSV.
+
 **Relatório que imprime limpo.** `Ctrl+P` na tela de Relatório.
 
 ---
@@ -132,7 +144,7 @@ Solaris/
 │
 ├── skills/               instruções que padronizam o trabalho com IA
 ├── documentacao/         mapa, como ligar o Supabase, teste de campo, banca
-└── testes/               129 testes, rodam no navegador
+└── testes/               148 testes, rodam no navegador
 ```
 
 **Cada camada tem o seu `LEIA-ME.md`** explicando o que faz, o que não faz e
@@ -226,6 +238,17 @@ O prompt inteiro é uma função pura no fim de
 `banco-de-dados/supabase/functions/agente/index.ts`. Dá para ler, discutir e
 corrigir como qualquer outro código — que é o oposto de um prompt escondido.
 
+**Ele também fala primeiro.** Uma vez por semana escreve sozinho um parágrafo
+no painel: o que está acontecendo com a conta, em reais, e uma coisa concreta
+para fazer nesta semana. Quem mais precisa do assistente é justamente quem
+não sabe o que perguntar.
+
+**E sai do site.** A Edge Function `avisos`, agendada por `pg_cron`, compara
+o consumo do mês com a meta e manda e-mail quando vai estourar — porque o
+consumo alto acontece quando ninguém está com o painel aberto. Um e-mail por
+mês, no máximo: sistema que avisa a mesma coisa todo dia vira spam, e aí a
+pessoa não lê nem os avisos que importam.
+
 ---
 
 ## A região de Sorocaba
@@ -312,6 +335,7 @@ Abra `app-futuro/previa-app.html` para ver como ficaria.
 | 5 · Gente de fora | **Em andamento: teste de campo de 7 a 30 dias** |
 | 6 · Banca | Deck pronto — falta preencher validação e ensaiar |
 | 7 · Nuvem e IA | Supabase, assistente Gemini e a base da região — feito |
+| 8 · Provar o cálculo | Comparação com a fatura pronta — **falta informar contas reais** |
 
 ## Combinado do grupo
 

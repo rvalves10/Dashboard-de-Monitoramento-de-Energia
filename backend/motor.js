@@ -432,9 +432,15 @@ const PADRAO = {
   perfil: 'residencial', tela: 'painel', periodo: 'mes', vista: 'desktop',
   tab: 'painel', msub: null, detalhe: null,
   metas: { residencial: 300, negocio: 1700 },
-  regras: { meta: true, salto: true, solar: true, standby: false },
+  regras: { meta: true, salto: true, solar: true, standby: false, reajuste: true },
   tarifa: { residencial: null, negocio: null },
   extras: [], removidos: [], respondidas: {}, dispensados: [], unidades: [],
+  /* As contas de luz de verdade que a pessoa informou, para comparar com o
+     que o Solaris calculou. Uma por unidade e por mes. E o unico dado do
+     sistema que nao foi calculado nem simulado: veio da fatura de papel. */
+  faturas: [],
+  /* O resumo que o assistente escreve sozinho, uma vez por semana. */
+  resumo: null,
   /* As duas unidades de demonstracao (Casa das Acacias e a padaria) so
      aparecem quando isto e verdadeiro. O visitante ve; conta nova nao,
      porque conta nova nao tem casa nenhuma cadastrada ainda. */
@@ -456,6 +462,8 @@ const PADRAO = {
     passo: 1
   },
   novo: { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: 'Sala' },
+  /* o formulario de conferencia da conta de luz: qual mes e quanto veio */
+  fatura: { mes: '', total: '' },
   editando: null, salvo: false,
   medidor: { ativo: false, endereco: '192.168.4.1' }
 };
@@ -954,6 +962,79 @@ function caminho(vals, max, w, hh, fechar) {
   return d.trim();
 }
 
+/* ---------- a conta fechada de um mes do ledger ----------
+   Estava escrita dentro da tela de Relatorio. Virou funcao porque agora tem
+   dois leitores — o relatorio e a comparacao com a fatura de verdade — e
+   duas copias da mesma formula sao duas chances de elas se afastarem. */
+function contaDoMes(linha, u, t) {
+  if (!linha || !u) return 0;
+  const faturado = Math.max(linha.faturado, 0);
+  const bandeira = linha.rede * 0.0189;
+  return faturado * t + bandeira + u.ilum + linha.fioB;
+}
+
+/* ---------- as faturas de verdade ----------
+   A pessoa informa o total que veio na conta de luz de um mes fechado, e o
+   sistema mostra o proprio calculo ao lado. E a unica prova de que o motor
+   acerta — sem ela, todo numero do Solaris e autorreferente. */
+function faturas() {
+  return (S.faturas || []).filter(f => f.perfil === S.perfil);
+}
+function faturaDe(y, m) {
+  return faturas().filter(f => f.y === y && f.m === m)[0] || null;
+}
+function salvarFatura(y, m, total) {
+  const v = Number(total);
+  if (!isFinite(v) || v <= 0) return null;
+  const reg = { perfil: S.perfil, y: y, m: m, total: v, em: Date.now() };
+  S.faturas = (S.faturas || []).filter(f => !(f.perfil === S.perfil && f.y === y && f.m === m)).concat([reg]);
+  return reg;
+}
+function removerFatura(y, m) {
+  S.faturas = (S.faturas || []).filter(f => !(f.perfil === S.perfil && f.y === y && f.m === m));
+}
+
+/* O que o Solaris calculou para o mesmo mes, e a diferenca.
+   Devolve null quando o mes nao esta no ledger da unidade. */
+function conferirFatura(f) {
+  if (!f) return null;
+  const v = visao(), u = unidade(), t = tarifaAtual();
+  const linha = v.ledger.linhas.filter(l => l.y === f.y && l.m === f.m)[0];
+  if (!linha) return null;
+  const calculado = contaDoMes(linha, u, t);
+  const erro = f.total > 0 ? ((calculado - f.total) / f.total) * 100 : 0;
+  return {
+    y: f.y, m: f.m, real: f.total, calculado: calculado,
+    erro: erro, medido: linha.medido, parcial: linha.parcial
+  };
+}
+/* Todas as conferencias possiveis, da mais recente para a mais antiga. */
+function conferencias() {
+  return faturas()
+    .map(conferirFatura)
+    .filter(Boolean)
+    .sort((a, b) => (b.y * 12 + b.m) - (a.y * 12 + a.m));
+}
+/* Quanto o motor erra, na media, contra as faturas informadas. E o numero
+   que a banca vai pedir — e ate existir fatura, a resposta honesta e null. */
+function erroMedioDoMotor() {
+  const c = conferencias();
+  if (!c.length) return null;
+  return soma(c.map(x => Math.abs(x.erro))) / c.length;
+}
+
+/* Os meses fechados que ainda nao tem fatura informada, do mais recente para
+   o mais antigo. O mes corrente nao entra: ele ainda nao fechou, e comparar
+   meio mes com uma fatura inteira nao compara nada. */
+function mesesSemFatura(limite) {
+  const v = visao();
+  return v.ledger.linhas
+    .filter(l => !(l.y === v.y && l.m === v.m))
+    .filter(l => !faturaDe(l.y, l.m))
+    .slice(-(limite || 6))
+    .reverse();
+}
+
 /* alertas derivados do estado real */
 function alertas() {
   const v = visao(), u = unidade(), t = tarifaAtual(), eq = aparelhos();
@@ -980,6 +1061,32 @@ function alertas() {
     const madrugada = soma(dia.cons.slice(0, 5));
     out.push({ id: 'standby', tipo: 'medio', titulo: 'Madrugada consumiu ' + nf(madrugada, 1) + ' kWh', quando: 'entre 0h e 5h', txt: 'Com quase tudo desligado, esse piso é o standby da casa: ' + brl(madrugada * 30 * t) + ' por mês só de aparelhos em espera.' });
   }
+  /* O reajuste anual e a coisa que mais muda a conta sem a pessoa ter mudado
+     nada em casa — e ela so descobre quando a fatura chega. A base da regiao
+     sabe o mes de cada distribuidora, entao da para avisar antes.
+
+     Nao chutamos o VALOR novo: tarifa velha e pior que tarifa nenhuma. O que
+     o alerta faz e mandar conferir na propria conta e atualizar aqui. */
+  if (S.regras.reajuste) {
+    const idDist = idDaDistribuidora(u.distribuidora);
+    const faltam = idDist ? mesesAteReajuste(idDist, v.data) : null;
+    if (faltam !== null && faltam <= 1) {
+      const d = distribuidora(idDist);
+      const mesReajuste = MESES[d.reajusteMes - 1];
+      out.push({
+        id: 'reajuste',
+        tipo: 'medio',
+        titulo: faltam === 0
+          ? 'A ' + d.nome + ' reajusta a tarifa este mes'
+          : 'A ' + d.nome + ' reajusta a tarifa mes que vem',
+        quando: mesReajuste + ', todo ano',
+        txt: 'A partir do reajuste a sua conta muda de patamar sem voce ter mudado nada em casa. ' +
+          'Quando a proxima fatura chegar, confira a tarifa (R$ por kWh) e atualize em Configuracoes — ' +
+          'todo o calculo do Solaris depende desse numero. Hoje ele esta em ' + brl(t, 2) + ' por kWh.'
+      });
+    }
+  }
+
   const melhor = v.md.dias.slice(0, Math.ceil(v.hDec / 24)).slice().sort((a, b) => b.tg - a.tg)[0];
   if (melhor) out.push({ id: 'melhor', tipo: 'bom', titulo: 'Melhor dia de geração do mês', quando: 'dia ' + melhor.dia, txt: 'Os painéis entregaram ' + nf(melhor.tg, 1) + ' kWh — céu limpo praticamente o dia inteiro.' });
 

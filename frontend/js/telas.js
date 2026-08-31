@@ -247,7 +247,10 @@ function vPainel() {
     '<span>' + u.mesesOperacao + ' meses · ' + brl(v.economiaTotal) + ' economizados</span>' +
     '<span>faltam ' + nf(Math.max(0, mesesPay - u.mesesOperacao) / 12, 1) + ' anos</span></div></section>';
 
-  return '<div class="grid12 enter">' + hero + donut + kpis + curva + desagreg +
+  /* O resumo entra logo abaixo do bloco da economia: e o primeiro lugar onde
+     o olho para depois do numero grande, e e texto — dilui a parede de
+     numeros em vez de somar mais uma. Some sozinho quando nao existe. */
+  return '<div class="grid12 enter">' + hero + donut + cardResumo() + kpis + curva + desagreg +
     '<div class="s5 stack">' + conta + payback + '</div></div>';
 }
 function linhaSplit(cor, lbl, val) {
@@ -547,7 +550,8 @@ function vAlertas() {
     ['meta', 'Avisar quando eu passar de 80% da meta', 'Notificação no app e por e-mail'],
     ['salto', 'Alertar aparelho com salto acima de 10%', 'Comparado com a média de quatro semanas'],
     ['solar', 'Sugerir melhor horário para usar o sol', 'Uma vez por dia, às 9h'],
-    ['standby', 'Relatar consumo em standby da madrugada', 'Resumo semanal aos domingos']
+    ['standby', 'Relatar consumo em standby da madrugada', 'Resumo semanal aos domingos'],
+    ['reajuste', 'Avisar quando a distribuidora reajustar a tarifa', 'No mês do reajuste da ' + esc(unidade().distribuidora)]
   ].map(r => '<button class="rule-row" data-act="regra" data-k="' + r[0] + '">' +
     '<span style="flex:1;min-width:0"><span class="rule-t" style="display:block">' + r[1] + '</span>' +
     '<span class="rule-s" style="display:block">' + r[2] + '</span></span>' +
@@ -645,6 +649,7 @@ function vRelatorio() {
       ? '<div class="card-sub">Barra hachurada é mês anterior ao cadastro: estimativa, não leitura.</div>' : '') +
     '<div class="big big-30" style="margin-top:8px">' + brl(soma(meses.map(x => x.economia))) + '</div>' +
     '<div class="ybars">' + ybars + '</div></section>' +
+    cardConferencia() +
     '<section class="card" style="padding:20px 22px 22px"><h2>Saldo de créditos</h2>' +
     '<div class="big big-30" style="margin-top:8px">' + nf(v.creditos) + ' kWh</div>' +
     '<div style="font-size:12.5px;color:var(--faint);margin-top:6px;line-height:1.5">' +
@@ -653,6 +658,76 @@ function vRelatorio() {
       : 'Esta unidade consome mais do que gera, então tudo o que é injetado volta no mesmo ciclo: não sobra saldo. Neste mês os créditos abateram ' + brl(l.usado * t) + '.') +
     '</div></section>' +
     '</div></div>';
+}
+
+/* ---------- a conta de verdade, ao lado da calculada ----------
+
+   Este cartao e a resposta para a pergunta que a banca vai fazer primeiro:
+   "e bate?". Ate existir uma fatura de papel informada aqui, todo numero do
+   Solaris e autorreferente — ele confere consigo mesmo.
+
+   So mes FECHADO entra. Comparar meio mes corrente com uma fatura inteira
+   nao compara nada, e daria um erro enorme que nao e erro do motor. */
+function cardConferencia() {
+  const lista = conferencias();
+  const medio = erroMedioDoMotor();
+  const pendentes = mesesSemFatura(6);
+
+  const linhas = lista.slice(0, 6).map(c => {
+    const bom = Math.abs(c.erro) <= 10;
+    return '<div class="conf-row">' +
+      '<span class="conf-mes">' + MES3[c.m] + '/' + String(c.y).slice(2) +
+      (c.medido ? '' : '<i title="mês anterior ao cadastro da unidade: reconstrução">*</i>') + '</span>' +
+      '<span class="conf-par"><b>' + brl(c.real) + '</b><i>na fatura</i></span>' +
+      '<span class="conf-par"><b>' + brl(c.calculado) + '</b><i>o Solaris</i></span>' +
+      '<span class="conf-erro ' + (bom ? 'conf-erro--bom' : 'conf-erro--ruim') + '">' +
+      (c.erro >= 0 ? '+' : '−') + nf(Math.abs(c.erro), 1) + '%</span>' +
+      '<button class="eq-kill" style="opacity:1" data-act="remover-fatura" data-y="' + c.y + '" data-m="' + c.m + '" ' +
+      'aria-label="Remover a fatura de ' + MES3[c.m] + '">' + ico(IC.x, 13, 'currentColor', 2.2) + '</button>' +
+      '</div>';
+  }).join('');
+
+  const opcoes = pendentes.map(l =>
+    '<option value="' + l.y + '-' + l.m + '"' + (S.fatura.mes === l.y + '-' + l.m ? ' selected' : '') + '>' +
+    MESES[l.m].charAt(0).toUpperCase() + MESES[l.m].slice(1) + ' de ' + l.y + '</option>').join('');
+
+  const formulario = pendentes.length
+    ? '<div class="conf-form">' +
+      '<label class="sr" for="confMes">Mês da fatura</label>' +
+      '<select class="text-in" id="confMes" data-fid="confMes" data-in="confMes">' +
+      (S.fatura.mes ? '' : '<option value="">Escolha o mês…</option>') + opcoes + '</select>' +
+      '<label class="sr" for="confTotal">Total que veio na fatura</label>' +
+      '<input class="text-in" id="confTotal" data-fid="confTotal" data-in="confTotal" type="text" ' +
+      'inputmode="decimal" placeholder="R$ 214,80" value="' + esc(S.fatura.total) + '" autocomplete="off">' +
+      '<button class="dark-btn" data-act="salvar-fatura"' +
+      (S.fatura.mes && numeroBR(S.fatura.total) > 0 ? '' : ' disabled') + '>Comparar</button>' +
+      '</div>'
+    : '<div class="dica" style="margin-top:var(--e3)">Todos os meses fechados já têm fatura informada.</div>';
+
+  return '<section class="card no-print" style="padding:20px 22px 22px">' +
+    '<h2>Confere com a sua conta?</h2>' +
+
+    (medio === null
+      ? '<div class="card-sub">Informe o total de uma conta de luz que já chegou. É a única forma de saber se o cálculo do Solaris acerta.</div>'
+      : '<div style="display:flex;align-items:baseline;gap:var(--e2);margin-top:var(--e3)">' +
+        '<span class="big big-30">' + nf(medio, 1) + '%</span>' +
+        '<span style="font-size:var(--t-sm);color:var(--muted)">de erro médio em ' +
+        lista.length + (lista.length > 1 ? ' faturas' : ' fatura') + '</span></div>' +
+        '<div style="font-size:var(--t-xs);color:var(--faint);margin-top:var(--e1);line-height:var(--lh-snug)">' +
+        (medio <= 10
+          ? 'Dentro do que se espera de uma estimativa a partir do padrão de consumo.'
+          : 'Acima de 10%: confira se a tarifa e o consumo médio cadastrados batem com a fatura.') +
+        '</div>') +
+
+    (linhas ? '<div class="conf-lista">' + linhas + '</div>' : '') +
+    formulario +
+
+    (lista.some(c => !c.medido)
+      ? '<div style="font-size:var(--t-xs);color:var(--faint);margin-top:var(--e3);line-height:var(--lh-snug)">' +
+        '* mês anterior ao cadastro da unidade: o Solaris reconstruiu esse período, não mediu. ' +
+        'A comparação vale menos aí.</div>'
+      : '') +
+    '</section>';
 }
 
 /* ---------- configurações ---------- */
@@ -784,6 +859,18 @@ function cardBanco() {
     '<span class="pill pill--neutral" id="bancoMotor">carregando…</span></div>' +
     '<div class="bd-grade" id="bancoNumeros"></div>' +
     '<div class="bd-graf" id="bancoGrafico"></div>' +
+
+    /* Levar os dados embora nao e enfeite de LGPD: e o que impede o Solaris
+       de virar uma armadilha para quem usou por seis meses. Fica junto do
+       banco, que e onde a pessoa vem quando quer saber o que esta guardado. */
+    '<div class="bd-sair">' +
+    '<div><div class="bd-sair-t">Seus dados são seus</div>' +
+    '<div class="bd-sair-s">Baixe tudo o que o Solaris guarda sobre você — unidades, aparelhos, ' +
+    'metas, o histórico do medidor e as conversas com o assistente.</div></div>' +
+    '<div class="bd-sair-acoes">' +
+    '<button class="ghost-btn" data-act="exportar-json">' + ico(IC.papel, 13, 'currentColor', 1.9) + 'Baixar tudo (JSON)</button>' +
+    '<button class="ghost-btn" data-act="exportar-csv">' + ico(IC.historico, 13, 'currentColor', 1.9) + 'Leituras (CSV)</button>' +
+    '</div></div>' +
     '</section>';
 }
 

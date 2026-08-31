@@ -160,6 +160,7 @@ function contextoDoPainel() {
 const AGENTE = {
   mensagens: [],      /* { papel: 'pessoa'|'assistente', texto } */
   rascunho: '',       /* o que esta digitado e ainda nao foi enviado */
+  gerandoResumo: false,
   ocupado: false,
   erro: null,
   carregada: false
@@ -230,6 +231,67 @@ async function perguntarAoAgente(texto) {
   Banco.salvarMensagem(conta, 'assistente', resposta);
 
   return resposta;
+}
+
+/* ---------- o assistente que fala primeiro ----------
+
+   O assistente so respondia quando perguntavam. Mas quem mais precisa dele e
+   justamente quem nao sabe o que perguntar — o mesmo motivo de existirem as
+   sugestoes de partida na tela vazia.
+
+   Uma vez por semana ele escreve sozinho um paragrafo sobre o mes: o que
+   subiu, o que pesa e o que da para fazer. Fica gravado no estado, e a tela
+   mostra o que esta gravado.
+
+   POR QUE UMA VEZ POR SEMANA, e nao a cada abertura: gerar a cada
+   carregamento de pagina custaria caro, demoraria e diria a mesma coisa —
+   os numeros de uma casa nao mudam de manha para a tarde. */
+const DIAS_ENTRE_RESUMOS = 7;
+
+function resumoDaSemana() {
+  return (S && S.resumo) || null;
+}
+
+/* So gera quando faz sentido: ha assistente, ha unidade, e o resumo que
+   existe ja envelheceu ou fala de outro mes. */
+function precisaDeResumo() {
+  if (agenteIndisponivel() || semUnidade()) return false;
+  const r = resumoDaSemana();
+  if (!r || !r.em) return true;
+  const v = visao();
+  if (r.perfil !== S.perfil) return true;
+  if (r.y !== v.y || r.m !== v.m) return true;
+  return (Date.now() - r.em) > DIAS_ENTRE_RESUMOS * 86400000;
+}
+
+/* Roda em segundo plano: a tela nao espera por ele. Se falhar, nao mostra
+   erro nenhum — resumo e um extra, e um extra que falha nao pode virar uma
+   caixa vermelha no painel de quem so queria ver o consumo. */
+async function gerarResumoSemana() {
+  if (!precisaDeResumo() || AGENTE.gerandoResumo) return null;
+  AGENTE.gerandoResumo = true;
+
+  const v = visao(), u = semUnidade() ? null : unidade();
+  const r = await Banco.chamarAgente({
+    tipo: 'resumo',
+    pergunta: 'Escreva o resumo da semana para esta pessoa.',
+    modelo: (SOLARIS_CONFIG.agente && SOLARIS_CONFIG.agente.modelo) || undefined,
+    cidade: (u && u.cidade) || null,
+    painel: contextoDoPainel(),
+    historico: []
+  });
+
+  AGENTE.gerandoResumo = false;
+  if (!r || !r.ok || !r.dados || !r.dados.texto) return null;
+
+  S.resumo = {
+    texto: r.dados.texto,
+    perfil: S.perfil,
+    y: v.y, m: v.m,
+    em: Date.now()
+  };
+  salvar();
+  return S.resumo;
 }
 
 async function limparConversaDoAgente() {

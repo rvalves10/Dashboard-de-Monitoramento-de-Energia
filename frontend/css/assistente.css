@@ -245,3 +245,47 @@
   .chat-sugs{justify-content:flex-start}
   .chat-sug{text-align:left}
 }
+
+/* ============================================================
+   3. O RESUMO QUE ELE ESCREVE SOZINHO
+
+   Fica no painel, no meio de cartoes cheios de numero. Por isso ele e a
+   unica peca da tela feita de texto corrido, com largura de leitura: e o
+   contraste que faz o olho parar nele.
+
+   Sem borda de destaque e sem cor de fundo diferente. A tentacao aqui e
+   pintar o cartao de IA com um gradiente roxo; isso e enfeite, e enfeite
+   nao entra em painel de medicao.
+   ============================================================ */
+.resumo{padding:var(--e5) var(--e6) var(--e5)}
+
+.resumo-topo{
+  display:flex;align-items:center;gap:var(--e3);
+  flex-wrap:wrap;
+}
+.resumo-topo h2{flex:1;min-width:0}
+.resumo-ic{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;flex-shrink:0;
+  border-radius:var(--r-sm);
+  background:var(--ground-2);color:var(--ink-2);
+}
+.resumo-quando{font-size:var(--t-xs);color:var(--faint)}
+
+.resumo-texto{
+  margin-top:var(--e4);
+  max-width:74ch;
+  font-size:var(--t-base);line-height:var(--lh-body);color:var(--ink-2);
+}
+.resumo-texto p + p{margin-top:var(--e3)}
+.resumo-texto b{color:var(--ink);font-weight:600}
+
+.resumo-abrir{
+  display:inline-flex;align-items:center;gap:var(--e1);
+  margin-top:var(--e4);
+}
+
+@media (max-width:760px){
+  .resumo{padding:var(--e4)}
+  .resumo-topo h2{flex-basis:100%}
+}

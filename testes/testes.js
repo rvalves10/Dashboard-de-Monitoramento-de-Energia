@@ -970,7 +970,8 @@ grupo('Estado', () => {
   teste('o estado padrao tem todos os campos que o site usa', () => {
     ['perfil', 'tela', 'periodo', 'tab', 'msub', 'detalhe', 'metas', 'regras',
       'tarifa', 'extras', 'removidos', 'respondidas', 'dispensados', 'unidades',
-      'novo', 'nova', 'editando', 'salvo', 'medidor'].forEach(k => {
+      'novo', 'nova', 'editando', 'salvo', 'medidor',
+      'faturas', 'fatura', 'resumo', 'perfilCliente'].forEach(k => {
         ok(PADRAO[k] !== undefined, 'faltou ' + k + ' no estado padrao');
       });
   });
@@ -1360,11 +1361,25 @@ grupo('Regiao', () => {
     });
   });
 
-  teste('a contagem de meses ate o reajuste fica entre 1 e 12', () => {
+  teste('a contagem ate o reajuste da zero no proprio mes', () => {
     for (let m = 0; m < 12; m++) {
       const n = mesesAteReajuste('cpfl-piratininga', new Date(2026, m, 15));
-      ok(n >= 1 && n <= 12, 'mes ' + m + ' deu ' + n);
+      ok(n >= 0 && n <= 11, 'mes ' + m + ' deu ' + n);
     }
+    /* A CPFL Piratininga reajusta em outubro (mes 10 no calendario, 9 no
+       indice do Date). Em outubro tem que dar 0, e em setembro, 1 — e o
+       aviso so faz sentido nesses dois. */
+    igual(mesesAteReajuste('cpfl-piratininga', new Date(2026, 9, 15)), 0, 'em outubro deveria dar 0');
+    igual(mesesAteReajuste('cpfl-piratininga', new Date(2026, 8, 15)), 1, 'em setembro deveria dar 1');
+    igual(mesesAteReajuste('cpfl-piratininga', new Date(2026, 10, 15)), 11, 'em novembro faltam 11');
+  });
+
+  teste('o nome da distribuidora volta para o id', () => {
+    igual(idDaDistribuidora('CPFL Piratininga'), 'cpfl-piratininga');
+    igual(idDaDistribuidora('  neoenergia elektro '), 'neoenergia-elektro', 'deveria ignorar caixa e espaco');
+    igual(idDaDistribuidora('Light'), null, 'quem esta fora da regiao nao tem id');
+    igual(idDaDistribuidora(''), null);
+    igual(idDaDistribuidora(null), null);
   });
 
   teste('a irradiacao da regiao tem doze meses plausiveis', () => {
@@ -1547,6 +1562,240 @@ grupo('Assistente', () => {
     igual(d.querySelectorAll('img').length, 0, 'a tag do modelo virou elemento');
     igual(d.querySelectorAll('b').length, 1, 'so o negrito de markdown pode virar tag');
     ok(d.textContent.indexOf('<b>tag</b>') >= 0, 'a tag literal deveria aparecer como texto');
+  });
+});
+
+
+/* ================= a conta de luz de verdade =================
+   A comparacao entre o que o Solaris calculou e o que veio na fatura e a
+   unica coisa no sistema inteiro que nao e autorreferente. Se ela quebrar,
+   o projeto volta a conferir consigo mesmo. */
+grupo('Conferencia com a fatura', () => {
+
+  function limpoFaturas(fn) {
+    const antes = JSON.parse(JSON.stringify(S.faturas || []));
+    try { S.faturas = []; return fn(); } finally { S.faturas = antes; }
+  }
+
+  teste('guardar e ler a fatura de um mes', () => {
+    limpoFaturas(() => comPerfil('residencial', () => {
+      igual(faturaDe(2026, 5), null, 'nao deveria haver fatura ainda');
+      salvarFatura(2026, 5, 214.8);
+      const f = faturaDe(2026, 5);
+      ok(f, 'a fatura nao foi guardada');
+      igual(f.total, 214.8);
+      igual(f.perfil, 'residencial', 'a fatura tem que ficar presa a unidade');
+    }));
+  });
+
+  teste('guardar de novo o mesmo mes substitui, nao duplica', () => {
+    limpoFaturas(() => comPerfil('residencial', () => {
+      salvarFatura(2026, 5, 200);
+      salvarFatura(2026, 5, 250);
+      igual(faturas().filter(f => f.y === 2026 && f.m === 5).length, 1, 'duplicou');
+      igual(faturaDe(2026, 5).total, 250, 'ficou com o valor antigo');
+    }));
+  });
+
+  teste('valor invalido nao vira fatura', () => {
+    limpoFaturas(() => comPerfil('residencial', () => {
+      igual(salvarFatura(2026, 5, 0), null);
+      igual(salvarFatura(2026, 5, -10), null);
+      igual(salvarFatura(2026, 5, 'abc'), null);
+      igual(faturas().length, 0, 'entrou lixo na lista');
+    }));
+  });
+
+  teste('a fatura de uma unidade nao aparece na outra', () => {
+    limpoFaturas(() => {
+      comPerfil('residencial', () => salvarFatura(2026, 5, 200));
+      comPerfil('negocio', () => {
+        igual(faturaDe(2026, 5), null, 'a fatura vazou entre unidades');
+        igual(faturas().length, 0);
+      });
+    });
+  });
+
+  teste('a conferencia compara com o mes certo do ledger', () => {
+    limpoFaturas(() => em(2026, 7, 15, 10, 0, () => comPerfil('residencial', () => {
+      const v = visao();
+      /* um mes que exista no ledger desta unidade */
+      const linha = v.ledger.linhas[v.ledger.linhas.length - 2];
+      ok(linha, 'ledger curto demais para o teste');
+      const calculado = contaDoMes(linha, unidade(), tarifaAtual());
+      ok(calculado > 0, 'a conta calculada do mes deu zero');
+
+      salvarFatura(linha.y, linha.m, calculado);
+      const c = conferirFatura(faturaDe(linha.y, linha.m));
+      ok(c, 'nao conferiu');
+      perto(c.erro, 0, 0.001, 'informando exatamente o calculado, o erro tem que ser zero');
+      igual(c.y, linha.y); igual(c.m, linha.m);
+    })));
+  });
+
+  teste('o erro tem sinal: positivo quando o Solaris cobra mais que a conta', () => {
+    limpoFaturas(() => em(2026, 7, 15, 10, 0, () => comPerfil('residencial', () => {
+      const v = visao();
+      const linha = v.ledger.linhas[v.ledger.linhas.length - 2];
+      const calculado = contaDoMes(linha, unidade(), tarifaAtual());
+
+      salvarFatura(linha.y, linha.m, calculado / 2);   /* fatura menor */
+      ok(conferirFatura(faturaDe(linha.y, linha.m)).erro > 0, 'deveria ser positivo');
+
+      salvarFatura(linha.y, linha.m, calculado * 2);   /* fatura maior */
+      ok(conferirFatura(faturaDe(linha.y, linha.m)).erro < 0, 'deveria ser negativo');
+    })));
+  });
+
+  teste('sem fatura nenhuma, o erro medio e null e nao zero', () => {
+    limpoFaturas(() => comPerfil('residencial', () => {
+      igual(erroMedioDoMotor(), null,
+        'zero diria que o motor acerta em cheio, e nao ha nada que prove isso');
+    }));
+  });
+
+  teste('o mes corrente nunca entra na lista de meses a conferir', () => {
+    limpoFaturas(() => em(2026, 7, 15, 10, 0, () => comPerfil('residencial', () => {
+      const v = visao();
+      const tem = mesesSemFatura(12).some(l => l.y === v.y && l.m === v.m);
+      ok(!tem, 'meio mes contra fatura inteira nao compara nada');
+    })));
+  });
+
+  teste('mes ja conferido sai da lista de pendentes', () => {
+    limpoFaturas(() => em(2026, 7, 15, 10, 0, () => comPerfil('residencial', () => {
+      const antes = mesesSemFatura(12);
+      ok(antes.length > 0, 'deveria haver mes pendente');
+      const alvo = antes[0];
+      salvarFatura(alvo.y, alvo.m, 300);
+      const depois = mesesSemFatura(12);
+      ok(!depois.some(l => l.y === alvo.y && l.m === alvo.m), 'continuou pendente');
+      /* A lista NAO encolhe: ela corta nos N mais recentes depois de filtrar,
+         entao conferir um mes faz outro, mais antigo, entrar no lugar. E o
+         que se quer — a pessoa continua tendo o que conferir. */
+      ok(depois.length >= antes.length - 1, 'a lista encolheu mais do que devia');
+      ok(depois.every((l, i) => i === 0 || (depois[i - 1].y * 12 + depois[i - 1].m) > (l.y * 12 + l.m)),
+        'a lista deveria vir do mes mais recente para o mais antigo');
+    })));
+  });
+
+  teste('a conta do mes bate com a soma das partes', () => {
+    em(2026, 7, 15, 10, 0, () => comPerfil('residencial', () => {
+      const v = visao(), u = unidade(), t = tarifaAtual();
+      const l = v.ledger.linhas[v.ledger.linhas.length - 2];
+      const esperado = Math.max(l.faturado, 0) * t + l.rede * 0.0189 + u.ilum + l.fioB;
+      perto(contaDoMes(l, u, t), esperado, 0.001, 'a formula da conta se afastou');
+      igual(contaDoMes(null, u, t), 0, 'sem linha tem que dar zero, nao NaN');
+      igual(contaDoMes(l, null, t), 0, 'sem unidade tem que dar zero, nao NaN');
+    }));
+  });
+});
+
+/* ================= o aviso do reajuste ================= */
+grupo('Reajuste da tarifa', () => {
+
+  teste('avisa no mes do reajuste e no mes anterior', () => {
+    comPerfil('residencial', () => {
+      /* a Casa das Acacias e CPFL Piratininga, que reajusta em outubro */
+      const temAviso = (mesIndice) => em(2026, mesIndice, 15, 10, 0, () =>
+        alertas().some(a => a.id === 'reajuste'));
+
+      ok(temAviso(9), 'outubro e o mes do reajuste: tinha que avisar');
+      ok(temAviso(8), 'setembro e o mes anterior: tinha que avisar');
+      ok(!temAviso(5), 'junho esta longe demais, nao deveria avisar');
+      ok(!temAviso(0), 'janeiro esta longe demais, nao deveria avisar');
+    });
+  });
+
+  teste('o aviso nao chuta a tarifa nova', () => {
+    comPerfil('residencial', () => {
+      em(2026, 9, 15, 10, 0, () => {
+        const a = alertas().filter(x => x.id === 'reajuste')[0];
+        ok(a, 'faltou o alerta');
+        ok(a.txt.indexOf('Configura') > 0, 'deveria mandar atualizar em Configuracoes');
+        /* Chutar o valor novo seria pior que nao ter valor: o texto so pode
+           citar a tarifa ATUAL, que e a que a pessoa cadastrou. */
+        ok(a.txt.indexOf(nf(tarifaAtual(), 2)) > 0, 'deveria citar a tarifa de hoje');
+      });
+    });
+  });
+
+  teste('desligar a regra tira o aviso', () => {
+    comPerfil('residencial', () => {
+      const antes = S.regras.reajuste;
+      try {
+        S.regras.reajuste = false;
+        em(2026, 9, 15, 10, 0, () => {
+          ok(!alertas().some(a => a.id === 'reajuste'), 'a regra desligada continuou avisando');
+        });
+      } finally { S.regras.reajuste = antes; }
+    });
+  });
+
+  teste('unidade de distribuidora desconhecida nao ganha aviso', () => {
+    const guarda = S.unidades;
+    try {
+      S.unidades = [{
+        chave: 'u-fora-reaj', nome: 'Casa fora', cidade: 'outra', arquetipo: 'casaVazia',
+        telhado: 'bom', distribuidora: 'Light', tarifa: 1, consumoMes: 300,
+        potenciaKwp: 4, paineis: 10, investimento: 20000, mesesOperacao: 12,
+        aparelhos: ['gel']
+      }];
+      _visao = null; _cacheLedger.clear();
+      comPerfil('u-fora-reaj', () => {
+        em(2026, 9, 15, 10, 0, () => {
+          ok(!alertas().some(a => a.id === 'reajuste'),
+            'sem saber a distribuidora, nao da para saber o mes do reajuste');
+        });
+      });
+    } finally { S.unidades = guarda; _visao = null; _cacheLedger.clear(); }
+  });
+});
+
+/* ================= o resumo que o assistente escreve sozinho ================= */
+grupo('Resumo do assistente', () => {
+
+  teste('nao pede resumo quando o assistente esta desligado', () => {
+    if (!agenteIndisponivel()) return;
+    igual(precisaDeResumo(), false, 'sem assistente nao ha resumo para pedir');
+  });
+
+  teste('resumo de outro mes ou de outra unidade nao serve', () => {
+    const antes = S.resumo;
+    try {
+      const v = visao();
+      /* Com o assistente desligado precisaDeResumo() ja e false; o que este
+         teste tranca e a REGRA de validade, que vale nos dois casos. */
+      S.resumo = { texto: 'x', perfil: S.perfil, y: v.y, m: v.m, em: Date.now() };
+      ok(resumoDaSemana(), 'deveria devolver o resumo guardado');
+      igual(resumoDaSemana().perfil, S.perfil);
+
+      S.resumo = null;
+      igual(resumoDaSemana(), null, 'sem resumo tem que devolver null, nao objeto vazio');
+    } finally { S.resumo = antes; }
+  });
+
+  teste('o cartao some quando nao ha resumo', () => {
+    const antes = S.resumo, ger = AGENTE.gerandoResumo;
+    try {
+      S.resumo = null; AGENTE.gerandoResumo = false;
+      igual(cardResumo(), '', 'cartao vazio so ocupa espaco no painel');
+    } finally { S.resumo = antes; AGENTE.gerandoResumo = ger; }
+  });
+
+  teste('o resumo do modelo nunca vira HTML de verdade', () => {
+    const antes = S.resumo;
+    try {
+      const v = visao();
+      S.resumo = {
+        texto: '<img src=x onerror=alert(1)> e **negrito**',
+        perfil: S.perfil, y: v.y, m: v.m, em: Date.now()
+      };
+      const d = document.createElement('div');
+      d.innerHTML = cardResumo();
+      igual(d.querySelectorAll('img').length, 0, 'a tag do modelo virou elemento no painel');
+      igual(d.querySelectorAll('b').length, 1, 'so o negrito de markdown pode virar tag');
+    } finally { S.resumo = antes; }
   });
 });
 

@@ -486,3 +486,37 @@ select.text-in{
   height:44px;padding-right:var(--e6);
   background:var(--surface);cursor:pointer;
 }
+
+/* ---------- a conta de verdade, ao lado da calculada ----------
+   Quatro colunas por linha: o mes, o que veio na fatura, o que o Solaris
+   calculou e a diferenca. A diferenca e o unico numero colorido — verde ou
+   vermelho aqui nao falam de energia, falam de acerto do calculo, entao nao
+   conflitam com a regra do ambar. */
+.conf-lista{
+  display:flex;flex-direction:column;
+  margin-top:var(--e4);border-top:1px solid var(--line);
+}
+.conf-row{
+  display:grid;
+  grid-template-columns:auto 1fr 1fr auto auto;
+  align-items:center;gap:var(--e3);
+  padding:var(--e3) 0;border-bottom:1px solid var(--line);
+}
+.conf-mes{
+  font-family:var(--f-mono);font-size:var(--t-xs);
+  color:var(--muted);white-space:nowrap;
+}
+.conf-mes i{font-style:normal;color:var(--faint)}
+.conf-par{display:flex;flex-direction:column;min-width:0}
+.conf-par b{font-size:var(--t-sm);font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.conf-par i{font-style:normal;font-size:var(--t-xs);color:var(--faint)}
+.conf-erro{
+  font-family:var(--f-mono);font-size:var(--t-sm);font-weight:500;
+  white-space:nowrap;
+}
+.conf-erro--bom{color:var(--good)}
+.conf-erro--ruim{color:var(--bad)}
+
+.conf-form{display:flex;flex-direction:column;gap:var(--e2);margin-top:var(--e4)}
+.conf-form select,.conf-form input{height:42px}
+.conf-form .dark-btn{justify-content:center;height:42px}
