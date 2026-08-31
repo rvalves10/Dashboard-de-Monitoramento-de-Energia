@@ -1404,9 +1404,32 @@ grupo('Regiao', () => {
    falha apareceria em producao como "nao salva", sem erro nenhum no console. */
 grupo('Escolha do banco', () => {
 
-  teste('sem credenciais, o Supabase nem e tentado', () => {
-    igual(supabaseConfigurado(), false,
-      'config.js do repositorio deveria vir sem credenciais preenchidas');
+  /* Este teste cobrava que config.js viesse sem credencial. Errado: assim
+     que alguem preenchesse o arquivo — que e o objetivo dele — o teste
+     falharia sem nada estar quebrado. O que interessa e a REGRA, e ela e que
+     meia configuracao nao vale: sem url, sem chave ou com chave curta demais
+     o site tem que continuar no banco local em vez de tentar falar com um
+     endereco que nao existe. */
+  teste('meia configuracao do Supabase nao conta como configurada', () => {
+    const real = SOLARIS_CONFIG.supabase;
+    const naoVale = [
+      { url: '', chaveAnon: '' },
+      { url: 'https://x.supabase.co', chaveAnon: '' },
+      { url: '', chaveAnon: 'sb_publishable_umachavelongaobastante' },
+      { url: 'https://x.supabase.co', chaveAnon: 'curta' },
+      { url: 'nao-e-url', chaveAnon: 'sb_publishable_umachavelongaobastante' }
+    ];
+    try {
+      naoVale.forEach((c, i) => {
+        SOLARIS_CONFIG.supabase = c;
+        igual(supabaseConfigurado(), false, 'caso ' + i + ' deveria ser recusado');
+      });
+      SOLARIS_CONFIG.supabase = { url: 'https://x.supabase.co', chaveAnon: 'sb_publishable_umachavelongaobastante' };
+      /* a pagina de testes forca o modo local, entao mesmo completa a
+         configuracao nao liga — e e exatamente isso que protege o banco */
+      igual(supabaseConfigurado(), false, 'a suite tem que rodar sempre no banco local');
+      igual(window.SOLARIS_MODO_LOCAL, true, 'a trava do modo local sumiu da pagina de testes');
+    } finally { SOLARIS_CONFIG.supabase = real; }
   });
 
   /* Assincrono de proposito, como o grupo Banco: os testes sincronos rodam

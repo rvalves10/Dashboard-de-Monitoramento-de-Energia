@@ -79,9 +79,16 @@ function render() {
        3. com papo feito e sem unidade -> cadastro da primeira unidade.
 
      So depois das tres existe painel para desenhar. */
+  /* Sem #root nao ha onde desenhar. A suite de testes carrega estes mesmos
+     scripts numa pagina sem a casca do site, so para exercitar as funcoes —
+     e ela recebe eventos de resize como qualquer pagina. Sem esta guarda, um
+     resize la dentro chamava render() e estourava em innerHTML de null.
+     iniciar() ja fazia a mesma checagem; faltava aqui. */
+  const root = $('#root');
+  if (!root) return;
+
   if (!sessao()) { renderLogin(); return; }
   document.body.classList.remove('vista-login');
-  const root = $('#root');
 
   if (!perfilRespondido()) {
     root.innerHTML = vBoasVindas();

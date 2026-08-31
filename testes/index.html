@@ -59,6 +59,18 @@ code{font-family:'IBM Plex Mono',monospace;background:var(--ground);padding:2px 
 <!-- Carrega tudo com um carimbo de tempo: a suite nunca deve rodar
      contra codigo em cache. Sequencial, porque a ordem importa. -->
 <script>
+/* A SUITE NUNCA FALA COM O BANCO DE VERDADE.
+
+   Ela cria conta, troca senha, grava leitura e chama Banco.apagarTudo(). Com
+   as credenciais do Supabase preenchidas em config.js, tudo isso aconteceria
+   no Postgres de producao so porque alguem abriu esta pagina — e "apagar
+   tudo" apagaria os dados do teste de campo inteiro.
+
+   Esta linha, antes de qualquer script, faz supabaseConfigurado() devolver
+   false e a suite rodar contra o IndexedDB. O caminho do Supabase e conferido
+   a mao, no site, com o roteiro de documentacao/ligar-supabase-e-gemini.md. */
+window.SOLARIS_MODO_LOCAL = true;
+
 (function () {
   var v = '?t=' + Date.now();
   var arquivos = [

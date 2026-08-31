@@ -7,3 +7,6 @@ Solaris-publicar.html
 
 # gerado por backend/ferramentas/instalar-skills.mjs — a fonte e skills/
 .claude/skills/
+
+# estado de trabalho da CLI do Supabase (supabase link)
+banco-de-dados/supabase/.temp/

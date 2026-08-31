@@ -535,6 +535,8 @@ async function enviarLogin(ev) {
 
 function renderLogin() {
   const root = $('#root');
+  /* Mesma razao do render(): a pagina de testes nao tem casca. */
+  if (!root) return;
   const foco = document.activeElement ? document.activeElement.id : null;
   const vals = {};
   ['auNome', 'auEmail', 'auSenha'].forEach(id => { const e = $('#' + id); if (e) vals[id] = e.value; });
