@@ -56,7 +56,9 @@ Solaris/
 │   ├── local.js          IndexedDB
 │   ├── esquema.sql       tabelas, RLS e os dados da região
 │   ├── dados/            regiao-sorocaba.js
-│   └── supabase/functions/agente/   a Edge Function que fala com o Gemini
+│   └── supabase/functions/
+│       ├── agente/       a Edge Function que fala com o Gemini
+│       └── avisos/       o e-mail diario de meta, agendado por pg_cron
 │
 ├── skills/               instruções que padronizam o trabalho com IA
 │   ├── solaris-visual/   regras de aparência
@@ -68,7 +70,7 @@ Solaris/
 │   ├── design/           o desenho original, antes de virar código
 │   └── app-futuro/       fase 2: o que fazer quando virar aplicativo
 │
-└── testes/               129 testes que rodam no navegador
+└── testes/               148 testes que rodam no navegador
 ```
 
 **São seis pastas, e é para continuar assim.** Ferramentas e firmware moram

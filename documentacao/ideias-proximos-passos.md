@@ -1,183 +1,206 @@
 # Ideias para o Solaris
 
 Escrito depois da entrada do Supabase, do assistente de IA e da base da
-região de Sorocaba. São sugestões, não plano fechado — cada uma diz **que
-problema real resolve**, porque ideia que não resolve problema só gasta
-sprint.
+região de Sorocaba. Cada item diz **que problema real resolve**, porque ideia
+que não resolve problema só gasta sprint.
 
-Estão em ordem de retorno pelo esforço. As três primeiras cabem no semestre.
-
----
-
-## 1. Comparar com a conta de luz de verdade — a que falta para a banca
-
-**O problema.** O sistema calcula geração, créditos, Fio B e projeta a
-próxima conta. Ninguém nunca conferiu esse número contra uma fatura de papel.
-Na banca, a primeira pergunta vai ser exatamente essa: *"e bate?"*. Hoje a
-resposta honesta é "não sabemos".
-
-**O que fazer.** A tela do leitor de conta já lê a fatura por foto. Falta
-guardar o que foi lido como uma **medição de referência** e mostrar, no
-Relatório, uma linha só:
-
-```
-Sua conta de julho:   R$ 214,80   (foto da fatura)
-O Solaris previu:     R$ 209,00   (erro de 2,7%)
-```
-
-Uma tabela com três meses reais de um integrante do grupo resolve a sprint 2,
-que está aberta desde o começo, e vale mais na apresentação do que qualquer
-funcionalidade nova.
-
-**Esforço**: baixo. O leitor já existe; falta uma tabela e uma tela.
+O grupo passou os olhos e decidiu: **cinco entraram, três ficaram de fora.**
+As cinco estão implementadas e este documento virou o registro do que foi
+feito e do porquê — mais o que ficou para trás, com o motivo.
 
 ---
 
-## 2. O assistente que fala primeiro
+## Feitas
 
-**O problema.** O assistente só responde quando perguntam. Mas quem mais
+### 1. Comparar com a conta de luz de verdade
+
+**O problema.** O sistema calculava geração, créditos, Fio B e projetava a
+próxima conta, e ninguém nunca tinha conferido esse número contra uma fatura
+de papel. Na banca, a primeira pergunta ia ser exatamente essa: *"e bate?"*.
+A resposta honesta era "não sabemos".
+
+**O que existe agora.** Na tela de **Relatório**, o cartão *"Confere com a sua
+conta?"*: você escolhe um mês fechado, digita o total que veio na fatura, e o
+Solaris mostra o que ele calculou ao lado, com a diferença em porcentagem. O
+número grande do cartão é o **erro médio do motor** contra todas as faturas
+informadas.
+
+Três decisões dentro disso:
+
+- **Só mês fechado entra.** Comparar meio mês corrente com uma fatura inteira
+  não compara nada, e daria um erro enorme que não é erro do motor.
+- **Mês anterior ao cadastro da unidade sai marcado com asterisco.** Ali o
+  Solaris reconstruiu o período, não mediu — a comparação vale menos, e a
+  tela diz isso.
+- **Sem fatura nenhuma, o erro médio é `null`, não zero.** Zero diria que o
+  motor acerta em cheio, e não há nada que prove isso.
+
+`conferirFatura()` e `erroMedioDoMotor()` estão em `backend/motor.js`. A conta
+de um mês virou a função `contaDoMes()`, usada tanto pelo relatório quanto
+pela comparação: duas cópias da mesma fórmula são duas chances de elas se
+afastarem.
+
+---
+
+### 2. O assistente que fala primeiro
+
+**O problema.** O assistente só respondia quando perguntavam. Mas quem mais
 precisa dele é justamente quem não sabe o que perguntar — o mesmo motivo de
-existirem as sugestões de partida.
+existirem as sugestões de partida na tela vazia.
 
-**O que fazer.** Uma vez por semana, ou quando um alerta grave aparece, o
-sistema manda a pergunta pelo próprio agente e guarda a resposta como um
-**resumo da semana** no painel:
+**O que existe agora.** Uma vez por semana ele escreve sozinho um parágrafo
+sobre o mês, que aparece no painel logo abaixo do bloco da economia: o que
+está acontecendo com a conta, em reais, e **uma** coisa concreta para fazer
+esta semana, ligada à rotina que a pessoa contou no cadastro.
 
-> *"Richard, sua conta deve fechar em R$ 250 este mês, R$ 30 acima da meta.
-> O ar-condicionado subiu 14% — foram cinco dias acima de 30 °C. Se você
-> ligar ele às 14h em vez das 18h, o painel cobre metade."*
-
-Os dados para isso já estão todos no contexto que a função monta. A diferença
-é o gatilho: em vez de a pessoa perguntar, o sistema pergunta por ela.
-
-**Esforço**: baixo-médio. Reaproveita a Edge Function inteira; muda o
-gatilho e onde a resposta aparece.
-
-**Cuidado**: gerar isso a cada carregamento de página custaria caro e
-diria a mesma coisa. Uma vez por semana, gravado, e a tela mostra o que
-está gravado.
+- **Uma vez por semana**, não a cada abertura: gerar a cada carregamento de
+  página custaria caro, demoraria e diria a mesma coisa — os números de uma
+  casa não mudam de manhã para a tarde.
+- **Roda em segundo plano.** A tela não espera por ele, e se falhar não
+  aparece erro nenhum: resumo é um extra, e um extra que falha não pode virar
+  uma caixa vermelha no painel de quem só queria ver o consumo.
+- **A Edge Function trata `tipo: 'resumo'` diferente de uma resposta**: não
+  leva histórico junto, não faz pergunta no fim e tem teto de tokens menor.
+  Ele não está conversando — está avisando.
 
 ---
 
-## 3. Alerta que sai do site
+### 3. Alerta que sai do site
 
-**O problema.** O painel avisa que a meta vai estourar — mas só para quem
-está com o site aberto. O consumo alto acontece quando ninguém está olhando.
+**O problema.** O painel avisa que a meta vai estourar, mas só para quem está
+com o site aberto. O consumo alto acontece quando ninguém está olhando.
 
-**O que fazer.** Supabase tem **Database Webhooks** e agendamento por
-`pg_cron`. Uma rotina diária compara projeção com meta e dispara e-mail (ou
-WhatsApp, via um serviço) quando passar do limite.
+**O que existe agora.** A Edge Function `avisos`, agendável por `pg_cron`,
+que roda uma vez por dia: lê as leituras do mês que subiram, estima o
+fechamento, compara com a meta e manda um e-mail quando vai estourar.
 
-**Esforço**: médio. Exige escolher um serviço de envio e cuidar para não
-virar spam — um aviso por semana, no máximo, e com botão de desligar.
+Duas coisas que decidem se isso é útil ou irritante:
+
+- **Um e-mail por mês e por conta.** A tabela `avisos_enviados` garante isso.
+  Um sistema que avisa a mesma coisa todo dia por duas semanas não avisa nada:
+  a pessoa cria uma regra no e-mail e nunca mais lê nenhum aviso nosso,
+  inclusive os que importam.
+- **A projeção daqui é mais grosseira que a do painel, e é de propósito.** O
+  motor mora no navegador; portar ele para o servidor seria manter duas
+  cópias da mesma física — a pior coisa que dá para fazer com um cálculo que
+  a banca vai questionar. Aqui a conta é `potência média medida × 24 h ×
+  dias do mês`, suficiente para decidir *se* vale incomodar a pessoa. O
+  número fino ela vê no painel, e o e-mail manda ela para lá.
+
+**O risco dessa conta, dito com todas as letras:** o medidor só grava
+enquanto a aba está aberta. Se a pessoa só abre o Solaris de dia, a média
+fica puxada para cima e a projeção exagera. Por isso a função exige uma
+amostra mínima e espalhada — 200 leituras cobrindo 12 horas diferentes — e
+pula a conta quando não tem isso. **Menos avisos é melhor que aviso errado:**
+quem recebe alarme falso desliga o alarme.
+
+**Falta um passo para funcionar:** uma chave do [Resend](https://resend.com)
+(ou outro serviço de e-mail) e o agendamento. Está em
+[`ligar-supabase-e-gemini.md`](ligar-supabase-e-gemini.md).
 
 ---
 
-## 4. Tarifa que se atualiza sozinha
+### 4. Tarifa que se atualiza sozinha
 
 **O problema.** A base da região guarda **quando** cada distribuidora
-reajusta, mas não **quanto**, de propósito: valor de tarifa velho é pior que
-nenhum. Só que isso deixa a pessoa responsável por atualizar à mão, e ela não
-vai lembrar.
+reajusta, mas não **quanto** — valor de tarifa velho é pior que nenhum. Só
+que isso deixava a pessoa responsável por atualizar à mão, e ela não ia
+lembrar.
 
-**O que fazer.** No mês do reajuste da distribuidora dela, o sistema avisa:
-*"a CPFL Piratininga reajustou a tarifa em outubro. Confira o valor na sua
-conta e atualize aqui."* Um campo, um botão, e o cálculo inteiro se ajusta.
+**O que existe agora.** No mês do reajuste da distribuidora dela, e no mês
+anterior, entra um alerta: *"A CPFL Piratininga reajusta a tarifa este mês.
+Quando a próxima fatura chegar, confira a tarifa e atualize em
+Configurações — todo o cálculo do Solaris depende desse número."*
 
-Isso é honesto — não inventa número — e resolve o problema de verdade, que é
-a pessoa esquecer.
+Ele cita a tarifa **atual**, a que a pessoa cadastrou. **Não chuta a nova.**
+Isso é honesto, e resolve o problema de verdade, que é a pessoa esquecer.
 
-**Esforço**: baixo. `mesesAteReajuste()` já existe em
-`banco-de-dados/dados/regiao-sorocaba.js`.
-
----
-
-## 5. Comparar com vizinhos parecidos
-
-**O problema.** "Você gastou 310 kWh" não diz se é muito ou pouco. Falta
-referência.
-
-**O que fazer.** Com várias contas no mesmo Postgres, dá para responder:
-*"casas com 4 pessoas em Sorocaba e sistema de ~5 kWp gastam em média 340 kWh.
-Você está 9% abaixo."*
-
-**Esforço**: médio.
-
-**O cuidado que decide se isto pode existir.** Comparação entre pessoas é
-o tipo de funcionalidade que vaza dado sem ninguém perceber. As regras
-mínimas: agregado nunca sai com menos de **20 unidades** no grupo; nada de
-mostrar unidade individual; a consulta roda numa *view* com `security
-definer` que só devolve média, nunca linha. E a pessoa escolhe participar —
-não entra ligado.
+A regra liga e desliga em Alertas e metas, como as outras.
 
 ---
 
-## 6. O medidor de verdade
-
-**O problema.** A sprint 4 diz "software feito, falta montar o hardware". O
-`firmware/solaris-medidor.ino` está escrito e o painel já sabe ler dele
-(Configurações → Fonte da leitura). Ninguém montou.
-
-**O que fazer.** Montar **um**. Um ESP32 com sensor SCT-013 num quadro real,
-por uma semana, gravando no Supabase. Um dia de leitura verdadeira ao lado da
-simulação, no mesmo gráfico, vale mais na banca do que qualquer slide.
-
-**Esforço**: médio, e é hardware — o risco é o prazo de entrega da peça,
-não o código.
-
----
-
-## 7. Exportar o que é da pessoa
+### 7. Exportar o que é da pessoa
 
 **O problema.** Os dados agora estão num servidor nosso. Quem entrega dado
 para um sistema tem que conseguir tirar de volta.
 
-**O que fazer.** Um botão em Configurações que baixa um `.json` com tudo:
-unidades, aparelhos, metas, histórico do medidor e as conversas. E um
-`.csv` das leituras, que abre no Excel.
+**O que existe agora.** Em **Configurações → Banco de dados**, dois botões:
 
-**Esforço**: baixo. Os dados já estão todos acessíveis pelo `Banco`.
+- **Baixar tudo (JSON)** — unidades, aparelhos, metas, tarifas, o perfil do
+  assistente, o histórico do medidor e as conversas. Se está guardado, sai.
+- **Leituras (CSV)** — o histórico minuto a minuto, que abre no Excel.
 
-Vale dizer: isto não é enfeite de LGPD. É o que impede o Solaris de virar uma
-armadilha para quem usou por seis meses.
+Isto não é enfeite de LGPD: é o que impede o Solaris de virar uma armadilha
+para quem usou por seis meses.
 
 ---
 
-## 8. Aplicativo de verdade (PWA)
+## Deixadas de fora
 
-**O problema.** O site funciona bem no celular, mas mora numa aba. Ninguém
-abre uma aba todo dia.
+Não por serem ruins — por decisão do grupo, e cada uma tem um custo que
+explica a decisão.
 
-**O que fazer.** Um `manifest.json` e um service worker transformam o Solaris
-em algo que se instala na tela inicial e abre sem barra de navegador. É o
-menor passo entre "site" e "aplicativo", e não exige loja nem framework.
+### 5. Comparar com vizinhos parecidos
 
-**Esforço**: baixo — mas **cuidado com o que ele quebra**: service worker
-serve arquivo de cache, e cache velho é a origem de "mudei o código e o site
-não mudou". Só depois do congelamento da semana 13, e com versão no nome do
+*"Casas com 4 pessoas em Sorocaba gastam em média 340 kWh; você está 9%
+abaixo."*
+
+**Por que ficou de fora.** Comparação entre pessoas é o tipo de
+funcionalidade que vaza dado sem ninguém perceber, e fazer direito exige
+regras que o projeto ainda não tem: agregado só com 20+ unidades no grupo,
+consulta numa *view* `security definer` que devolve média e nunca linha, e
+participação opcional. Além disso, ela só começa a funcionar quando houver
+muitas contas — e hoje há o teste de campo.
+
+Se voltar, comece por essas regras, não pela tela.
+
+### 6. O medidor de verdade
+
+O `firmware/solaris-medidor.ino` está escrito e o painel já sabe ler dele.
+Falta montar: um ESP32 com sensor SCT-013 num quadro real.
+
+**Por que ficou de fora.** É hardware, e o risco é o prazo de entrega da
+peça, não o código. Continua sendo a coisa que mais valeria na banca — um dia
+de leitura verdadeira ao lado da simulação, no mesmo gráfico, vale mais que
+qualquer slide. Fica aqui registrada para quando houver tempo de comprar.
+
+### 8. Aplicativo de verdade (PWA)
+
+**Por que ficou de fora.** Um service worker serve arquivo de cache, e cache
+velho é a origem de "mudei o código e o site não mudou" — o pior defeito
+possível durante um teste de campo, porque some quando você vai investigar.
+Se voltar, só depois do congelamento da semana 13, e com versão no nome do
 cache.
 
 O que já existe sobre virar aplicativo está em `documentacao/app-futuro/`.
 
 ---
 
-## O que eu NÃO faria
-
-Ideias que parecem boas e cobram caro:
+## O que eu continuo não fazendo
 
 **Framework.** React ou Vue resolveriam um problema que este projeto não tem
-(o estado cabe num objeto) e criariam um que ele não tem hoje: o site deixaria
-de abrir com duplo clique.
+(o estado cabe num objeto) e criariam um que ele não tem hoje: o site
+deixaria de abrir com duplo clique.
 
-**Deixar o assistente executar ações.** "Assistente, muda minha meta para 280"
-soa ótimo até ele mudar a meta errada. Modelo de linguagem erra; ele pode
-sugerir a mudança com um botão do lado, e a pessoa clica.
+**Deixar o assistente executar ações.** *"Assistente, muda minha meta para
+280"* soa ótimo até ele mudar a meta errada. Modelo de linguagem erra; ele
+pode sugerir a mudança com um botão do lado, e a pessoa clica.
 
-**Mais um gráfico no painel.** O painel já mostra economia, autossuficiência,
-consumo, geração, CO₂, créditos, curva do dia, divisão por aparelho, conta e
-retorno. O próximo gráfico não vai ser lido. Se sobrar tempo, gaste no item 1
-desta lista.
+**Mais um gráfico no painel.** Ele já mostra economia, autossuficiência,
+consumo, geração, CO₂, créditos, curva do dia, divisão por aparelho, conta,
+retorno e agora o resumo do assistente. O próximo gráfico não vai ser lido.
 
 **Trocar a paleta.** A ordem das cores dos aparelhos foi conferida por script
 para daltonismo. Mexer ali sem refazer a conferência desfaz um trabalho que
 ninguém vê e todo mundo sente.
+
+---
+
+## O que sobrou de verdade para a banca
+
+Das cinco feitas, a **1** é a que muda a conversa com a banca — e ela só
+funciona se alguém do grupo **informar faturas de verdade**. Três meses reais
+de um integrante, na tela de Relatório, e a pergunta *"e bate?"* deixa de não
+ter resposta.
+
+É a única tarefa desta lista que o código não resolve sozinho.

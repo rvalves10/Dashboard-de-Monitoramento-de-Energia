@@ -137,6 +137,21 @@ create table if not exists public.cidades (
 );
 
 
+-- Quais avisos por e-mail ja foram mandados para cada conta.
+--
+-- Existe por uma razao so: nao mandar o mesmo aviso duas vezes. Um sistema
+-- que avisa "voce vai estourar a meta" todo dia durante duas semanas nao
+-- avisa nada — vira spam, a pessoa cria uma regra no e-mail e nunca mais le
+-- nenhum aviso nosso, inclusive os que importam.
+create table if not exists public.avisos_enviados (
+  id          bigint generated always as identity primary key,
+  conta       uuid not null references auth.users(id) on delete cascade,
+  tipo        text not null,        -- 'meta' por enquanto
+  referencia  text not null,        -- o que identifica o caso: '2026-08'
+  em          timestamptz not null default now(),
+  unique (conta, tipo, referencia)
+);
+
 -- ============================================================
 -- 3. SEGURANCA (RLS)
 --
@@ -150,6 +165,7 @@ alter table public.estado          enable row level security;
 alter table public.leituras        enable row level security;
 alter table public.perfil_conversa enable row level security;
 alter table public.conversas       enable row level security;
+alter table public.avisos_enviados enable row level security;
 alter table public.distribuidoras  enable row level security;
 alter table public.cidades         enable row level security;
 
@@ -181,6 +197,13 @@ begin
   if not exists (select 1 from pg_policies where tablename = 'conversas' and policyname = 'conversa propria') then
     create policy "conversa propria" on public.conversas
       for all to authenticated using (auth.uid() = conta) with check (auth.uid() = conta);
+  end if;
+
+  -- So leitura, e so os proprios: quem manda o aviso e a funcao agendada,
+  -- que roda com chave de servico e passa por cima do RLS de proposito.
+  if not exists (select 1 from pg_policies where tablename = 'avisos_enviados' and policyname = 'avisos proprios') then
+    create policy "avisos proprios" on public.avisos_enviados
+      for select to authenticated using (auth.uid() = conta);
   end if;
 
   -- Conhecimento da regiao: qualquer um le, ninguem escreve pelo site.
@@ -324,4 +347,6 @@ on conflict (id) do update set
 select
   (select count(*) from public.distribuidoras) as distribuidoras,
   (select count(*) from public.cidades)        as cidades,
-  (select count(*) from pg_policies where schemaname = 'public') as politicas_rls;
+  (select count(*) from pg_policies where schemaname = 'public') as politicas_rls,
+  (select count(*) from information_schema.tables
+     where table_schema = 'public') as tabelas;

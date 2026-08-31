@@ -113,6 +113,12 @@ Deno.serve(async (req: Request) => {
 
   const modelo = MODELOS.has(String(corpo.modelo)) ? String(corpo.modelo) : MODELO_PADRAO;
 
+  /* Dois trabalhos, o mesmo contexto. 'resposta' e a conversa: alguem
+     perguntou. 'resumo' e o assistente falando primeiro, uma vez por semana,
+     sem ninguem ter perguntado nada — e por isso ele nao responde como se
+     estivesse num papo, nem leva historico junto. */
+  const tipo: 'resposta' | 'resumo' = corpo.tipo === 'resumo' ? 'resumo' : 'resposta';
+
   /* Os numeros ao vivo do painel so existem no navegador (o medidor roda la),
      entao eles vem no corpo. O que e dado guardado — perfil e regiao — a
      funcao busca no banco, para o cliente nao poder inventar contexto. */
@@ -143,10 +149,10 @@ Deno.serve(async (req: Request) => {
   /* ---------- 4. o prompt ----------
      Tres blocos, nesta ordem: quem ele e, com quem esta falando, e o que
      esta acontecendo agora na casa da pessoa. */
-  const instrucao = montarInstrucao(nomeUsuario, perfil, cidade, painel);
+  const instrucao = montarInstrucao(nomeUsuario, perfil, cidade, painel, tipo);
 
   const conteudo = [
-    ...historico.slice(-12).map((m: { papel: string; texto: string }) => ({
+    ...(tipo === 'resumo' ? [] : historico).slice(-12).map((m: { papel: string; texto: string }) => ({
       role: m.papel === 'assistente' ? 'model' : 'user',
       parts: [{ text: String(m.texto || '').slice(0, 4000) }]
     })),
@@ -165,7 +171,9 @@ Deno.serve(async (req: Request) => {
       contents: conteudo,
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 900,
+        /* O resumo e um paragrafo, nao um artigo: teto menor sai mais barato e
+           impede o modelo de encher linguica quando nao ha muito a dizer. */
+        maxOutputTokens: tipo === 'resumo' ? 500 : 900,
         /* Resposta de painel e para ler rapido. Sem este teto o modelo
            escreve tres paragrafos onde cabia uma frase. */
         topP: 0.95
@@ -213,7 +221,8 @@ function montarInstrucao(
   nome: string,
   perfil: Record<string, string>,
   cidade: any,
-  painel: Record<string, unknown>
+  painel: Record<string, unknown>,
+  tipo: 'resposta' | 'resumo' = 'resposta'
 ): string {
   const linhas: string[] = [];
 
@@ -306,9 +315,31 @@ function montarInstrucao(
       'Ajude a cadastrar antes de falar de economia — pergunte o consumo medio da conta de luz e a potencia do sistema.');
   }
 
-  linhas.push('',
-    'Se perguntarem algo fora de energia, conta de luz, energia solar ou do proprio Solaris, ' +
-    'responda com simpatia que esse nao e o seu assunto e volte para o que voce sabe.');
+  /* ---- o que fazer com tudo isso ---- */
+  if (tipo === 'resumo') {
+    linhas.push('',
+      'A SUA TAREFA AGORA E OUTRA: ninguem perguntou nada.',
+      '',
+      'Escreva, por conta propria, um resumo curto do mes desta pessoa — dois paragrafos, ' +
+      'no maximo cinco frases no total. Ele aparece direto no painel dela, sem ela ter pedido.',
+      '',
+      'A estrutura que funciona:',
+      '1. O que esta acontecendo com a conta dela neste mes, em reais.',
+      '2. UMA coisa concreta que ela pode fazer esta semana, ligada a rotina que ela contou.',
+      '',
+      'Regras deste formato:',
+      '- Comece pelo nome dela. Nao comece com "Ola" nem com "Resumo do mes:".',
+      '- Nao faca pergunta no fim. Ela nao esta conversando com voce agora.',
+      '- Nao repita o painel inteiro: ele esta logo ali do lado, com todos os numeros. ' +
+        'Escolha o que importa e diga por que importa.',
+      '- Use **negrito** em no maximo duas expressoes, e so em coisa que muda decisao.',
+      '- Se nao houver nada digno de nota, diga isso em uma frase. Inventar um alerta ' +
+        'que nao existe e a forma mais rapida de a pessoa parar de ler os proximos.');
+  } else {
+    linhas.push('',
+      'Se perguntarem algo fora de energia, conta de luz, energia solar ou do proprio Solaris, ' +
+      'responda com simpatia que esse nao e o seu assunto e volte para o que voce sabe.');
+  }
 
   return linhas.join('\n');
 }

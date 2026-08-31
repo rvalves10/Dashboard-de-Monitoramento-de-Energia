@@ -117,6 +117,39 @@ function telaFechoBoasVindas(primeiro) {
     '</div></div>';
 }
 
+/* ---------- o resumo que ele escreve sozinho ----------
+   Aparece no painel, uma vez por semana. Nao aparece quando nao existe: um
+   cartao vazio dizendo "ainda nao ha resumo" so ocupa espaco. */
+function cardResumo() {
+  const r = resumoDaSemana();
+  if (!r || r.perfil !== S.perfil) {
+    /* Enquanto o primeiro esta sendo escrito, um lugar reservado com os tres
+       pontinhos: some sozinho quando o texto chega. */
+    return AGENTE.gerandoResumo
+      ? '<section class="card s12 resumo"><div class="resumo-topo">' +
+        '<span class="resumo-ic">' + ico(IC.ia, 15, 'currentColor', 1.9) + '</span>' +
+        '<h2>O assistente está olhando o seu mês…</h2></div>' +
+        '<div class="fala fala--digitando" style="border:0;padding:var(--e3) 0">' +
+        '<span></span><span></span><span></span></div></section>'
+      : '';
+  }
+
+  const dias = Math.floor((Date.now() - r.em) / 86400000);
+  const quando = dias === 0 ? 'hoje' : dias === 1 ? 'ontem' : 'há ' + dias + ' dias';
+
+  return '<section class="card s12 resumo">' +
+    '<div class="resumo-topo">' +
+    '<span class="resumo-ic">' + ico(IC.ia, 15, 'currentColor', 1.9) + '</span>' +
+    '<h2>O que o assistente reparou</h2>' +
+    '<span class="resumo-quando">escrito ' + quando + '</span>' +
+    '<button class="link-btn no-print" data-act="resumo-refazer">Atualizar</button>' +
+    '</div>' +
+    '<div class="resumo-texto">' + textoDaFala(r.texto) + '</div>' +
+    '<button class="link-btn no-print resumo-abrir" data-act="nav" data-tela="assistente">' +
+    'Perguntar mais sobre isso' + ico(IC.seta, 13, 'currentColor', 2.2) + '</button>' +
+    '</section>';
+}
+
 /* ---------- 2. o assistente ---------- */
 
 function vAssistente() {

@@ -328,3 +328,18 @@ body.vista-login{background:var(--dark)}
 /* Os dois botoes de apagar ficam juntos, a direita. O .bd-pe usa
    space-between, e sem agrupar eles se espalhavam pela linha inteira. */
 .bd-acoes{display:flex;align-items:center;gap:var(--e5);flex-wrap:wrap}
+
+/* Levar os dados embora. Fica no rodape do cartao do banco, que e onde a
+   pessoa vem quando quer saber o que esta guardado sobre ela. */
+.bd-sair{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--e5);
+  flex-wrap:wrap;
+  margin-top:var(--e5);padding-top:var(--e4);
+  border-top:1px solid var(--line);
+}
+.bd-sair-t{font-size:var(--t-sm);font-weight:600;color:var(--ink)}
+.bd-sair-s{
+  font-size:var(--t-xs);color:var(--muted);
+  line-height:var(--lh-snug);max-width:52ch;margin-top:var(--e1);
+}
+.bd-sair-acoes{display:flex;gap:var(--e2);flex-wrap:wrap}

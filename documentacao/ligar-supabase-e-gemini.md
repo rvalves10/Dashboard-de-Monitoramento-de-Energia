@@ -3,8 +3,9 @@
 Passo a passo para sair do Solaris rodando só no navegador e chegar no
 Solaris com banco na nuvem e assistente de IA funcionando.
 
-**Leva uns 20 minutos.** Você só precisa fazer isso **uma vez** — depois é o
-grupo inteiro usando o mesmo projeto.
+**Leva uns 20 minutos** (mais 10 se quiser o aviso por e-mail, que é
+opcional). Você só precisa fazer isso **uma vez** — depois é o grupo inteiro
+usando o mesmo projeto.
 
 > **Enquanto você não fizer nada disso, o Solaris continua funcionando.**
 > Ele abre, calcula, grava no banco do navegador e mostra tudo. O que não
@@ -23,6 +24,8 @@ grupo inteiro usando o mesmo projeto.
 | Sem recuperação de senha | "Esqueci minha senha" manda e-mail |
 | Histórico de 7 dias | Histórico de 90 dias |
 | Sem assistente | Assistente de IA que conhece o cliente |
+| — | Resumo semanal escrito por ele, direto no painel |
+| — | Aviso por e-mail quando a meta vai estourar (opcional) |
 
 ---
 
@@ -137,6 +140,11 @@ supabase secrets list       # mostra o NOME do segredo, nunca o valor
 No site, entre com uma conta e abra **Assistente**. Se aparecer a tela de
 perguntas em vez do aviso de desligado, funcionou.
 
+> **Já publicou antes?** A função mudou quando entrou o resumo semanal: ela
+> passou a tratar `tipo: 'resumo'` diferente de uma pergunta. Rode
+> `supabase functions deploy agente` de novo, senão o resumo do painel sai
+> com cara de resposta de conversa.
+
 Deu erro? **Supabase → Edge Functions → agente → Logs** mostra o motivo. Os
 dois mais comuns:
 
@@ -165,6 +173,80 @@ publique a função de novo.
 `memoria` é quantas mensagens anteriores vão junto de cada pergunta. Mais
 memória custa mais e responde mais devagar; menos memória faz o assistente
 esquecer o assunto no meio da conversa.
+
+---
+
+## Parte 3 — o aviso por e-mail (opcional, 10 minutos)
+
+O painel avisa que a meta vai estourar, mas só para quem está com o site
+aberto — e o consumo alto acontece quando ninguém está olhando. A Edge
+Function `avisos` resolve isso: roda uma vez por dia no servidor, compara o
+consumo do mês com a meta e manda um e-mail.
+
+**Pode pular.** Todo o resto do Solaris funciona sem isso.
+
+### 3.1 Uma conta de e-mail transacional
+
+Crie uma conta no [Resend](https://resend.com) (o plano gratuito manda 100
+e-mails por dia, muito mais do que este projeto precisa) e pegue a chave.
+
+Para testar sem domínio próprio, o Resend deixa enviar de
+`onboarding@resend.dev` — mas **só para o e-mail da sua própria conta**. Para
+mandar para os participantes do teste de campo, é preciso verificar um
+domínio no painel do Resend.
+
+### 3.2 Os três segredos
+
+```bash
+cd banco-de-dados
+
+supabase secrets set RESEND_API_KEY=re_xxxxxxxx
+supabase secrets set AVISOS_REMETENTE="Solaris <avisos@seu-dominio.com>"
+
+# um segredo so nosso, para ninguem na internet disparar os e-mails do projeto
+supabase secrets set AVISOS_SEGREDO=$(openssl rand -hex 24)
+
+supabase functions deploy avisos --no-verify-jwt
+```
+
+O `--no-verify-jwt` é necessário porque quem chama não é uma pessoa logada, e
+sim o agendador do banco. Em troca, a função exige o `AVISOS_SEGREDO` num
+cabeçalho — sem ele, devolve 401.
+
+### 3.3 Agendar
+
+No SQL Editor, trocando `SEU_REF` e o segredo:
+
+```sql
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
+
+select cron.schedule('solaris-avisos', '0 12 * * *', $$
+  select net.http_post(
+    url     := 'https://SEU_REF.supabase.co/functions/v1/avisos',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-solaris-segredo', 'O_MESMO_SEGREDO'),
+    body    := '{}'::jsonb
+  );
+$$);
+```
+
+12h UTC é 9h da manhã em Sorocaba.
+
+### 3.4 Conferir sem esperar o dia seguinte
+
+Chame à mão com `{"seco": true}`: ela calcula tudo e devolve **o que
+mandaria**, sem mandar e-mail nenhum.
+
+```bash
+curl -X POST "https://SEU_REF.supabase.co/functions/v1/avisos"   -H "x-solaris-segredo: O_MESMO_SEGREDO"   -H "Content-Type: application/json"   -d '{"seco": true}'
+```
+
+Se voltar `casos: 0`, ou ninguém está para estourar a meta, ou ainda não há
+leituras suficientes — a função exige 200 leituras cobrindo 12 horas
+diferentes do dia antes de confiar na média. Deixe o painel aberto um tempo e
+tente de novo.
 
 ---
 

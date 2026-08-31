@@ -250,12 +250,27 @@ function cidadesPorDistancia() {
 }
 
 /* Quantos meses faltam para a proxima conta vir reajustada. Serve para o
-   assistente avisar antes, e nao depois que a pessoa levou o susto. */
+   sistema avisar antes, e nao depois que a pessoa levou o susto.
+
+   ZERO significa "e este mes". Antes o mes do proprio reajuste devolvia 12,
+   que e o contrario do que interessa: e justamente no mes do reajuste que a
+   conta muda de patamar e a pessoa precisa conferir a tarifa. */
 function mesesAteReajuste(idDistribuidora, hoje) {
   const d = distribuidora(idDistribuidora);
   if (!d || !d.reajusteMes) return null;
   const agora = hoje || new Date();
   const mesAtual = agora.getMonth() + 1;
   const diff = d.reajusteMes - mesAtual;
-  return diff > 0 ? diff : diff + 12;
+  return diff >= 0 ? diff : diff + 12;
+}
+
+/* O id da distribuidora a partir do nome que esta na unidade. A unidade
+   guarda o nome ("CPFL Piratininga") porque e o que a pessoa le na tela; para
+   consultar prazo e telefone precisamos do id de volta. */
+function idDaDistribuidora(nome) {
+  const alvo = String(nome || '').trim().toLowerCase();
+  if (!alvo) return null;
+  const achou = Object.keys(DISTRIBUIDORAS).filter(k =>
+    DISTRIBUIDORAS[k].nome.toLowerCase() === alvo)[0];
+  return achou || null;
 }

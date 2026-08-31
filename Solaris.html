@@ -863,6 +863,40 @@ select.text-in{
   background:var(--surface);cursor:pointer;
 }
 
+/* ---------- a conta de verdade, ao lado da calculada ----------
+   Quatro colunas por linha: o mes, o que veio na fatura, o que o Solaris
+   calculou e a diferenca. A diferenca e o unico numero colorido — verde ou
+   vermelho aqui nao falam de energia, falam de acerto do calculo, entao nao
+   conflitam com a regra do ambar. */
+.conf-lista{
+  display:flex;flex-direction:column;
+  margin-top:var(--e4);border-top:1px solid var(--line);
+}
+.conf-row{
+  display:grid;
+  grid-template-columns:auto 1fr 1fr auto auto;
+  align-items:center;gap:var(--e3);
+  padding:var(--e3) 0;border-bottom:1px solid var(--line);
+}
+.conf-mes{
+  font-family:var(--f-mono);font-size:var(--t-xs);
+  color:var(--muted);white-space:nowrap;
+}
+.conf-mes i{font-style:normal;color:var(--faint)}
+.conf-par{display:flex;flex-direction:column;min-width:0}
+.conf-par b{font-size:var(--t-sm);font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.conf-par i{font-style:normal;font-size:var(--t-xs);color:var(--faint)}
+.conf-erro{
+  font-family:var(--f-mono);font-size:var(--t-sm);font-weight:500;
+  white-space:nowrap;
+}
+.conf-erro--bom{color:var(--good)}
+.conf-erro--ruim{color:var(--bad)}
+
+.conf-form{display:flex;flex-direction:column;gap:var(--e2);margin-top:var(--e4)}
+.conf-form select,.conf-form input{height:42px}
+.conf-form .dark-btn{justify-content:center;height:42px}
+
 
 /* ===== frontend/css/conta.css ===== */
 /* conta.css
@@ -1196,6 +1230,21 @@ body.vista-login{background:var(--dark)}
    space-between, e sem agrupar eles se espalhavam pela linha inteira. */
 .bd-acoes{display:flex;align-items:center;gap:var(--e5);flex-wrap:wrap}
 
+/* Levar os dados embora. Fica no rodape do cartao do banco, que e onde a
+   pessoa vem quando quer saber o que esta guardado sobre ela. */
+.bd-sair{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--e5);
+  flex-wrap:wrap;
+  margin-top:var(--e5);padding-top:var(--e4);
+  border-top:1px solid var(--line);
+}
+.bd-sair-t{font-size:var(--t-sm);font-weight:600;color:var(--ink)}
+.bd-sair-s{
+  font-size:var(--t-xs);color:var(--muted);
+  line-height:var(--lh-snug);max-width:52ch;margin-top:var(--e1);
+}
+.bd-sair-acoes{display:flex;gap:var(--e2);flex-wrap:wrap}
+
 
 /* ===== frontend/css/assistente.css ===== */
 /* assistente.css — as duas telas de conversa
@@ -1444,6 +1493,50 @@ body.vista-login{background:var(--dark)}
   .chat-topo{flex-direction:column;gap:var(--e2)}
   .chat-sugs{justify-content:flex-start}
   .chat-sug{text-align:left}
+}
+
+/* ============================================================
+   3. O RESUMO QUE ELE ESCREVE SOZINHO
+
+   Fica no painel, no meio de cartoes cheios de numero. Por isso ele e a
+   unica peca da tela feita de texto corrido, com largura de leitura: e o
+   contraste que faz o olho parar nele.
+
+   Sem borda de destaque e sem cor de fundo diferente. A tentacao aqui e
+   pintar o cartao de IA com um gradiente roxo; isso e enfeite, e enfeite
+   nao entra em painel de medicao.
+   ============================================================ */
+.resumo{padding:var(--e5) var(--e6) var(--e5)}
+
+.resumo-topo{
+  display:flex;align-items:center;gap:var(--e3);
+  flex-wrap:wrap;
+}
+.resumo-topo h2{flex:1;min-width:0}
+.resumo-ic{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;flex-shrink:0;
+  border-radius:var(--r-sm);
+  background:var(--ground-2);color:var(--ink-2);
+}
+.resumo-quando{font-size:var(--t-xs);color:var(--faint)}
+
+.resumo-texto{
+  margin-top:var(--e4);
+  max-width:74ch;
+  font-size:var(--t-base);line-height:var(--lh-body);color:var(--ink-2);
+}
+.resumo-texto p + p{margin-top:var(--e3)}
+.resumo-texto b{color:var(--ink);font-weight:600}
+
+.resumo-abrir{
+  display:inline-flex;align-items:center;gap:var(--e1);
+  margin-top:var(--e4);
+}
+
+@media (max-width:760px){
+  .resumo{padding:var(--e4)}
+  .resumo-topo h2{flex-basis:100%}
 }
 
 
@@ -1947,14 +2040,29 @@ function cidadesPorDistancia() {
 }
 
 /* Quantos meses faltam para a proxima conta vir reajustada. Serve para o
-   assistente avisar antes, e nao depois que a pessoa levou o susto. */
+   sistema avisar antes, e nao depois que a pessoa levou o susto.
+
+   ZERO significa "e este mes". Antes o mes do proprio reajuste devolvia 12,
+   que e o contrario do que interessa: e justamente no mes do reajuste que a
+   conta muda de patamar e a pessoa precisa conferir a tarifa. */
 function mesesAteReajuste(idDistribuidora, hoje) {
   const d = distribuidora(idDistribuidora);
   if (!d || !d.reajusteMes) return null;
   const agora = hoje || new Date();
   const mesAtual = agora.getMonth() + 1;
   const diff = d.reajusteMes - mesAtual;
-  return diff > 0 ? diff : diff + 12;
+  return diff >= 0 ? diff : diff + 12;
+}
+
+/* O id da distribuidora a partir do nome que esta na unidade. A unidade
+   guarda o nome ("CPFL Piratininga") porque e o que a pessoa le na tela; para
+   consultar prazo e telefone precisamos do id de volta. */
+function idDaDistribuidora(nome) {
+  const alvo = String(nome || '').trim().toLowerCase();
+  if (!alvo) return null;
+  const achou = Object.keys(DISTRIBUIDORAS).filter(k =>
+    DISTRIBUIDORAS[k].nome.toLowerCase() === alvo)[0];
+  return achou || null;
 }
 
 
@@ -3361,9 +3469,15 @@ const PADRAO = {
   perfil: 'residencial', tela: 'painel', periodo: 'mes', vista: 'desktop',
   tab: 'painel', msub: null, detalhe: null,
   metas: { residencial: 300, negocio: 1700 },
-  regras: { meta: true, salto: true, solar: true, standby: false },
+  regras: { meta: true, salto: true, solar: true, standby: false, reajuste: true },
   tarifa: { residencial: null, negocio: null },
   extras: [], removidos: [], respondidas: {}, dispensados: [], unidades: [],
+  /* As contas de luz de verdade que a pessoa informou, para comparar com o
+     que o Solaris calculou. Uma por unidade e por mes. E o unico dado do
+     sistema que nao foi calculado nem simulado: veio da fatura de papel. */
+  faturas: [],
+  /* O resumo que o assistente escreve sozinho, uma vez por semana. */
+  resumo: null,
   /* As duas unidades de demonstracao (Casa das Acacias e a padaria) so
      aparecem quando isto e verdadeiro. O visitante ve; conta nova nao,
      porque conta nova nao tem casa nenhuma cadastrada ainda. */
@@ -3385,6 +3499,8 @@ const PADRAO = {
     passo: 1
   },
   novo: { nome: '', cat: 'Climatização', pot: 1400, horas: 3, dias: 30, comodo: 'Sala' },
+  /* o formulario de conferencia da conta de luz: qual mes e quanto veio */
+  fatura: { mes: '', total: '' },
   editando: null, salvo: false,
   medidor: { ativo: false, endereco: '192.168.4.1' }
 };
@@ -3883,6 +3999,79 @@ function caminho(vals, max, w, hh, fechar) {
   return d.trim();
 }
 
+/* ---------- a conta fechada de um mes do ledger ----------
+   Estava escrita dentro da tela de Relatorio. Virou funcao porque agora tem
+   dois leitores — o relatorio e a comparacao com a fatura de verdade — e
+   duas copias da mesma formula sao duas chances de elas se afastarem. */
+function contaDoMes(linha, u, t) {
+  if (!linha || !u) return 0;
+  const faturado = Math.max(linha.faturado, 0);
+  const bandeira = linha.rede * 0.0189;
+  return faturado * t + bandeira + u.ilum + linha.fioB;
+}
+
+/* ---------- as faturas de verdade ----------
+   A pessoa informa o total que veio na conta de luz de um mes fechado, e o
+   sistema mostra o proprio calculo ao lado. E a unica prova de que o motor
+   acerta — sem ela, todo numero do Solaris e autorreferente. */
+function faturas() {
+  return (S.faturas || []).filter(f => f.perfil === S.perfil);
+}
+function faturaDe(y, m) {
+  return faturas().filter(f => f.y === y && f.m === m)[0] || null;
+}
+function salvarFatura(y, m, total) {
+  const v = Number(total);
+  if (!isFinite(v) || v <= 0) return null;
+  const reg = { perfil: S.perfil, y: y, m: m, total: v, em: Date.now() };
+  S.faturas = (S.faturas || []).filter(f => !(f.perfil === S.perfil && f.y === y && f.m === m)).concat([reg]);
+  return reg;
+}
+function removerFatura(y, m) {
+  S.faturas = (S.faturas || []).filter(f => !(f.perfil === S.perfil && f.y === y && f.m === m));
+}
+
+/* O que o Solaris calculou para o mesmo mes, e a diferenca.
+   Devolve null quando o mes nao esta no ledger da unidade. */
+function conferirFatura(f) {
+  if (!f) return null;
+  const v = visao(), u = unidade(), t = tarifaAtual();
+  const linha = v.ledger.linhas.filter(l => l.y === f.y && l.m === f.m)[0];
+  if (!linha) return null;
+  const calculado = contaDoMes(linha, u, t);
+  const erro = f.total > 0 ? ((calculado - f.total) / f.total) * 100 : 0;
+  return {
+    y: f.y, m: f.m, real: f.total, calculado: calculado,
+    erro: erro, medido: linha.medido, parcial: linha.parcial
+  };
+}
+/* Todas as conferencias possiveis, da mais recente para a mais antiga. */
+function conferencias() {
+  return faturas()
+    .map(conferirFatura)
+    .filter(Boolean)
+    .sort((a, b) => (b.y * 12 + b.m) - (a.y * 12 + a.m));
+}
+/* Quanto o motor erra, na media, contra as faturas informadas. E o numero
+   que a banca vai pedir — e ate existir fatura, a resposta honesta e null. */
+function erroMedioDoMotor() {
+  const c = conferencias();
+  if (!c.length) return null;
+  return soma(c.map(x => Math.abs(x.erro))) / c.length;
+}
+
+/* Os meses fechados que ainda nao tem fatura informada, do mais recente para
+   o mais antigo. O mes corrente nao entra: ele ainda nao fechou, e comparar
+   meio mes com uma fatura inteira nao compara nada. */
+function mesesSemFatura(limite) {
+  const v = visao();
+  return v.ledger.linhas
+    .filter(l => !(l.y === v.y && l.m === v.m))
+    .filter(l => !faturaDe(l.y, l.m))
+    .slice(-(limite || 6))
+    .reverse();
+}
+
 /* alertas derivados do estado real */
 function alertas() {
   const v = visao(), u = unidade(), t = tarifaAtual(), eq = aparelhos();
@@ -3909,6 +4098,32 @@ function alertas() {
     const madrugada = soma(dia.cons.slice(0, 5));
     out.push({ id: 'standby', tipo: 'medio', titulo: 'Madrugada consumiu ' + nf(madrugada, 1) + ' kWh', quando: 'entre 0h e 5h', txt: 'Com quase tudo desligado, esse piso é o standby da casa: ' + brl(madrugada * 30 * t) + ' por mês só de aparelhos em espera.' });
   }
+  /* O reajuste anual e a coisa que mais muda a conta sem a pessoa ter mudado
+     nada em casa — e ela so descobre quando a fatura chega. A base da regiao
+     sabe o mes de cada distribuidora, entao da para avisar antes.
+
+     Nao chutamos o VALOR novo: tarifa velha e pior que tarifa nenhuma. O que
+     o alerta faz e mandar conferir na propria conta e atualizar aqui. */
+  if (S.regras.reajuste) {
+    const idDist = idDaDistribuidora(u.distribuidora);
+    const faltam = idDist ? mesesAteReajuste(idDist, v.data) : null;
+    if (faltam !== null && faltam <= 1) {
+      const d = distribuidora(idDist);
+      const mesReajuste = MESES[d.reajusteMes - 1];
+      out.push({
+        id: 'reajuste',
+        tipo: 'medio',
+        titulo: faltam === 0
+          ? 'A ' + d.nome + ' reajusta a tarifa este mes'
+          : 'A ' + d.nome + ' reajusta a tarifa mes que vem',
+        quando: mesReajuste + ', todo ano',
+        txt: 'A partir do reajuste a sua conta muda de patamar sem voce ter mudado nada em casa. ' +
+          'Quando a proxima fatura chegar, confira a tarifa (R$ por kWh) e atualize em Configuracoes — ' +
+          'todo o calculo do Solaris depende desse numero. Hoje ele esta em ' + brl(t, 2) + ' por kWh.'
+      });
+    }
+  }
+
   const melhor = v.md.dias.slice(0, Math.ceil(v.hDec / 24)).slice().sort((a, b) => b.tg - a.tg)[0];
   if (melhor) out.push({ id: 'melhor', tipo: 'bom', titulo: 'Melhor dia de geração do mês', quando: 'dia ' + melhor.dia, txt: 'Os painéis entregaram ' + nf(melhor.tg, 1) + ' kWh — céu limpo praticamente o dia inteiro.' });
 
@@ -4957,6 +5172,7 @@ function contextoDoPainel() {
 const AGENTE = {
   mensagens: [],      /* { papel: 'pessoa'|'assistente', texto } */
   rascunho: '',       /* o que esta digitado e ainda nao foi enviado */
+  gerandoResumo: false,
   ocupado: false,
   erro: null,
   carregada: false
@@ -5027,6 +5243,67 @@ async function perguntarAoAgente(texto) {
   Banco.salvarMensagem(conta, 'assistente', resposta);
 
   return resposta;
+}
+
+/* ---------- o assistente que fala primeiro ----------
+
+   O assistente so respondia quando perguntavam. Mas quem mais precisa dele e
+   justamente quem nao sabe o que perguntar — o mesmo motivo de existirem as
+   sugestoes de partida na tela vazia.
+
+   Uma vez por semana ele escreve sozinho um paragrafo sobre o mes: o que
+   subiu, o que pesa e o que da para fazer. Fica gravado no estado, e a tela
+   mostra o que esta gravado.
+
+   POR QUE UMA VEZ POR SEMANA, e nao a cada abertura: gerar a cada
+   carregamento de pagina custaria caro, demoraria e diria a mesma coisa —
+   os numeros de uma casa nao mudam de manha para a tarde. */
+const DIAS_ENTRE_RESUMOS = 7;
+
+function resumoDaSemana() {
+  return (S && S.resumo) || null;
+}
+
+/* So gera quando faz sentido: ha assistente, ha unidade, e o resumo que
+   existe ja envelheceu ou fala de outro mes. */
+function precisaDeResumo() {
+  if (agenteIndisponivel() || semUnidade()) return false;
+  const r = resumoDaSemana();
+  if (!r || !r.em) return true;
+  const v = visao();
+  if (r.perfil !== S.perfil) return true;
+  if (r.y !== v.y || r.m !== v.m) return true;
+  return (Date.now() - r.em) > DIAS_ENTRE_RESUMOS * 86400000;
+}
+
+/* Roda em segundo plano: a tela nao espera por ele. Se falhar, nao mostra
+   erro nenhum — resumo e um extra, e um extra que falha nao pode virar uma
+   caixa vermelha no painel de quem so queria ver o consumo. */
+async function gerarResumoSemana() {
+  if (!precisaDeResumo() || AGENTE.gerandoResumo) return null;
+  AGENTE.gerandoResumo = true;
+
+  const v = visao(), u = semUnidade() ? null : unidade();
+  const r = await Banco.chamarAgente({
+    tipo: 'resumo',
+    pergunta: 'Escreva o resumo da semana para esta pessoa.',
+    modelo: (SOLARIS_CONFIG.agente && SOLARIS_CONFIG.agente.modelo) || undefined,
+    cidade: (u && u.cidade) || null,
+    painel: contextoDoPainel(),
+    historico: []
+  });
+
+  AGENTE.gerandoResumo = false;
+  if (!r || !r.ok || !r.dados || !r.dados.texto) return null;
+
+  S.resumo = {
+    texto: r.dados.texto,
+    perfil: S.perfil,
+    y: v.y, m: v.m,
+    em: Date.now()
+  };
+  salvar();
+  return S.resumo;
 }
 
 async function limparConversaDoAgente() {
@@ -5310,7 +5587,10 @@ function vPainel() {
     '<span>' + u.mesesOperacao + ' meses · ' + brl(v.economiaTotal) + ' economizados</span>' +
     '<span>faltam ' + nf(Math.max(0, mesesPay - u.mesesOperacao) / 12, 1) + ' anos</span></div></section>';
 
-  return '<div class="grid12 enter">' + hero + donut + kpis + curva + desagreg +
+  /* O resumo entra logo abaixo do bloco da economia: e o primeiro lugar onde
+     o olho para depois do numero grande, e e texto — dilui a parede de
+     numeros em vez de somar mais uma. Some sozinho quando nao existe. */
+  return '<div class="grid12 enter">' + hero + donut + cardResumo() + kpis + curva + desagreg +
     '<div class="s5 stack">' + conta + payback + '</div></div>';
 }
 function linhaSplit(cor, lbl, val) {
@@ -5610,7 +5890,8 @@ function vAlertas() {
     ['meta', 'Avisar quando eu passar de 80% da meta', 'Notificação no app e por e-mail'],
     ['salto', 'Alertar aparelho com salto acima de 10%', 'Comparado com a média de quatro semanas'],
     ['solar', 'Sugerir melhor horário para usar o sol', 'Uma vez por dia, às 9h'],
-    ['standby', 'Relatar consumo em standby da madrugada', 'Resumo semanal aos domingos']
+    ['standby', 'Relatar consumo em standby da madrugada', 'Resumo semanal aos domingos'],
+    ['reajuste', 'Avisar quando a distribuidora reajustar a tarifa', 'No mês do reajuste da ' + esc(unidade().distribuidora)]
   ].map(r => '<button class="rule-row" data-act="regra" data-k="' + r[0] + '">' +
     '<span style="flex:1;min-width:0"><span class="rule-t" style="display:block">' + r[1] + '</span>' +
     '<span class="rule-s" style="display:block">' + r[2] + '</span></span>' +
@@ -5708,6 +5989,7 @@ function vRelatorio() {
       ? '<div class="card-sub">Barra hachurada é mês anterior ao cadastro: estimativa, não leitura.</div>' : '') +
     '<div class="big big-30" style="margin-top:8px">' + brl(soma(meses.map(x => x.economia))) + '</div>' +
     '<div class="ybars">' + ybars + '</div></section>' +
+    cardConferencia() +
     '<section class="card" style="padding:20px 22px 22px"><h2>Saldo de créditos</h2>' +
     '<div class="big big-30" style="margin-top:8px">' + nf(v.creditos) + ' kWh</div>' +
     '<div style="font-size:12.5px;color:var(--faint);margin-top:6px;line-height:1.5">' +
@@ -5716,6 +5998,76 @@ function vRelatorio() {
       : 'Esta unidade consome mais do que gera, então tudo o que é injetado volta no mesmo ciclo: não sobra saldo. Neste mês os créditos abateram ' + brl(l.usado * t) + '.') +
     '</div></section>' +
     '</div></div>';
+}
+
+/* ---------- a conta de verdade, ao lado da calculada ----------
+
+   Este cartao e a resposta para a pergunta que a banca vai fazer primeiro:
+   "e bate?". Ate existir uma fatura de papel informada aqui, todo numero do
+   Solaris e autorreferente — ele confere consigo mesmo.
+
+   So mes FECHADO entra. Comparar meio mes corrente com uma fatura inteira
+   nao compara nada, e daria um erro enorme que nao e erro do motor. */
+function cardConferencia() {
+  const lista = conferencias();
+  const medio = erroMedioDoMotor();
+  const pendentes = mesesSemFatura(6);
+
+  const linhas = lista.slice(0, 6).map(c => {
+    const bom = Math.abs(c.erro) <= 10;
+    return '<div class="conf-row">' +
+      '<span class="conf-mes">' + MES3[c.m] + '/' + String(c.y).slice(2) +
+      (c.medido ? '' : '<i title="mês anterior ao cadastro da unidade: reconstrução">*</i>') + '</span>' +
+      '<span class="conf-par"><b>' + brl(c.real) + '</b><i>na fatura</i></span>' +
+      '<span class="conf-par"><b>' + brl(c.calculado) + '</b><i>o Solaris</i></span>' +
+      '<span class="conf-erro ' + (bom ? 'conf-erro--bom' : 'conf-erro--ruim') + '">' +
+      (c.erro >= 0 ? '+' : '−') + nf(Math.abs(c.erro), 1) + '%</span>' +
+      '<button class="eq-kill" style="opacity:1" data-act="remover-fatura" data-y="' + c.y + '" data-m="' + c.m + '" ' +
+      'aria-label="Remover a fatura de ' + MES3[c.m] + '">' + ico(IC.x, 13, 'currentColor', 2.2) + '</button>' +
+      '</div>';
+  }).join('');
+
+  const opcoes = pendentes.map(l =>
+    '<option value="' + l.y + '-' + l.m + '"' + (S.fatura.mes === l.y + '-' + l.m ? ' selected' : '') + '>' +
+    MESES[l.m].charAt(0).toUpperCase() + MESES[l.m].slice(1) + ' de ' + l.y + '</option>').join('');
+
+  const formulario = pendentes.length
+    ? '<div class="conf-form">' +
+      '<label class="sr" for="confMes">Mês da fatura</label>' +
+      '<select class="text-in" id="confMes" data-fid="confMes" data-in="confMes">' +
+      (S.fatura.mes ? '' : '<option value="">Escolha o mês…</option>') + opcoes + '</select>' +
+      '<label class="sr" for="confTotal">Total que veio na fatura</label>' +
+      '<input class="text-in" id="confTotal" data-fid="confTotal" data-in="confTotal" type="text" ' +
+      'inputmode="decimal" placeholder="R$ 214,80" value="' + esc(S.fatura.total) + '" autocomplete="off">' +
+      '<button class="dark-btn" data-act="salvar-fatura"' +
+      (S.fatura.mes && numeroBR(S.fatura.total) > 0 ? '' : ' disabled') + '>Comparar</button>' +
+      '</div>'
+    : '<div class="dica" style="margin-top:var(--e3)">Todos os meses fechados já têm fatura informada.</div>';
+
+  return '<section class="card no-print" style="padding:20px 22px 22px">' +
+    '<h2>Confere com a sua conta?</h2>' +
+
+    (medio === null
+      ? '<div class="card-sub">Informe o total de uma conta de luz que já chegou. É a única forma de saber se o cálculo do Solaris acerta.</div>'
+      : '<div style="display:flex;align-items:baseline;gap:var(--e2);margin-top:var(--e3)">' +
+        '<span class="big big-30">' + nf(medio, 1) + '%</span>' +
+        '<span style="font-size:var(--t-sm);color:var(--muted)">de erro médio em ' +
+        lista.length + (lista.length > 1 ? ' faturas' : ' fatura') + '</span></div>' +
+        '<div style="font-size:var(--t-xs);color:var(--faint);margin-top:var(--e1);line-height:var(--lh-snug)">' +
+        (medio <= 10
+          ? 'Dentro do que se espera de uma estimativa a partir do padrão de consumo.'
+          : 'Acima de 10%: confira se a tarifa e o consumo médio cadastrados batem com a fatura.') +
+        '</div>') +
+
+    (linhas ? '<div class="conf-lista">' + linhas + '</div>' : '') +
+    formulario +
+
+    (lista.some(c => !c.medido)
+      ? '<div style="font-size:var(--t-xs);color:var(--faint);margin-top:var(--e3);line-height:var(--lh-snug)">' +
+        '* mês anterior ao cadastro da unidade: o Solaris reconstruiu esse período, não mediu. ' +
+        'A comparação vale menos aí.</div>'
+      : '') +
+    '</section>';
 }
 
 /* ---------- configurações ---------- */
@@ -5847,6 +6199,18 @@ function cardBanco() {
     '<span class="pill pill--neutral" id="bancoMotor">carregando…</span></div>' +
     '<div class="bd-grade" id="bancoNumeros"></div>' +
     '<div class="bd-graf" id="bancoGrafico"></div>' +
+
+    /* Levar os dados embora nao e enfeite de LGPD: e o que impede o Solaris
+       de virar uma armadilha para quem usou por seis meses. Fica junto do
+       banco, que e onde a pessoa vem quando quer saber o que esta guardado. */
+    '<div class="bd-sair">' +
+    '<div><div class="bd-sair-t">Seus dados são seus</div>' +
+    '<div class="bd-sair-s">Baixe tudo o que o Solaris guarda sobre você — unidades, aparelhos, ' +
+    'metas, o histórico do medidor e as conversas com o assistente.</div></div>' +
+    '<div class="bd-sair-acoes">' +
+    '<button class="ghost-btn" data-act="exportar-json">' + ico(IC.papel, 13, 'currentColor', 1.9) + 'Baixar tudo (JSON)</button>' +
+    '<button class="ghost-btn" data-act="exportar-csv">' + ico(IC.historico, 13, 'currentColor', 1.9) + 'Leituras (CSV)</button>' +
+    '</div></div>' +
     '</section>';
 }
 
@@ -6603,6 +6967,39 @@ function telaFechoBoasVindas(primeiro) {
     '</div></div>';
 }
 
+/* ---------- o resumo que ele escreve sozinho ----------
+   Aparece no painel, uma vez por semana. Nao aparece quando nao existe: um
+   cartao vazio dizendo "ainda nao ha resumo" so ocupa espaco. */
+function cardResumo() {
+  const r = resumoDaSemana();
+  if (!r || r.perfil !== S.perfil) {
+    /* Enquanto o primeiro esta sendo escrito, um lugar reservado com os tres
+       pontinhos: some sozinho quando o texto chega. */
+    return AGENTE.gerandoResumo
+      ? '<section class="card s12 resumo"><div class="resumo-topo">' +
+        '<span class="resumo-ic">' + ico(IC.ia, 15, 'currentColor', 1.9) + '</span>' +
+        '<h2>O assistente está olhando o seu mês…</h2></div>' +
+        '<div class="fala fala--digitando" style="border:0;padding:var(--e3) 0">' +
+        '<span></span><span></span><span></span></div></section>'
+      : '';
+  }
+
+  const dias = Math.floor((Date.now() - r.em) / 86400000);
+  const quando = dias === 0 ? 'hoje' : dias === 1 ? 'ontem' : 'há ' + dias + ' dias';
+
+  return '<section class="card s12 resumo">' +
+    '<div class="resumo-topo">' +
+    '<span class="resumo-ic">' + ico(IC.ia, 15, 'currentColor', 1.9) + '</span>' +
+    '<h2>O que o assistente reparou</h2>' +
+    '<span class="resumo-quando">escrito ' + quando + '</span>' +
+    '<button class="link-btn no-print" data-act="resumo-refazer">Atualizar</button>' +
+    '</div>' +
+    '<div class="resumo-texto">' + textoDaFala(r.texto) + '</div>' +
+    '<button class="link-btn no-print resumo-abrir" data-act="nav" data-tela="assistente">' +
+    'Perguntar mais sobre isso' + ico(IC.seta, 13, 'currentColor', 2.2) + '</button>' +
+    '</section>';
+}
+
 /* ---------- 2. o assistente ---------- */
 
 function vAssistente() {
@@ -6858,6 +7255,7 @@ function render() {
   ligarGraficos();
   ligarAssistente();
   preencherCardBanco();
+  talvezResumir();
   atualizarHash();
 }
 
@@ -6941,6 +7339,58 @@ async function preencherCardBanco() {
     '</span></div>';
 }
 
+/* Habilita o botao de comparar sem redesenhar a tela: o campo de texto
+   perderia o foco no meio da digitacao. Mesma razao das outras sync*. */
+function syncFatura() {
+  const b = $('[data-act="salvar-fatura"]');
+  if (b) b.disabled = !(S.fatura.mes && numeroBR(S.fatura.total) > 0);
+}
+
+/* ---------- levar os dados embora ----------
+
+   Quem entrega dado para um sistema tem que conseguir tirar de volta. Isso
+   deixou de ser detalhe quando os dados sairam da maquina da pessoa e foram
+   para um servidor nosso: sem exportacao, o Solaris vira uma armadilha para
+   quem usou por seis meses. */
+function carimbo() {
+  const d = new Date();
+  const dd = n => String(n).padStart(2, '0');
+  return d.getFullYear() + dd(d.getMonth() + 1) + dd(d.getDate());
+}
+
+function baixar(nome, conteudo, tipo) {
+  try {
+    const blob = new Blob([conteudo], { type: tipo + ';charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = nome;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    /* o navegador ainda esta lendo o blob no instante do clique */
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  } catch (e) {
+    aviso('Não consegui gerar o arquivo', 'Seu navegador bloqueou o download.', 'bad');
+  }
+}
+
+/* Tudo que o Solaris guarda sobre a pessoa, num objeto so. Inclui o
+   historico do medidor e as conversas com o assistente — se esta guardado, sai. */
+async function montarExportacao() {
+  const s = sessao() || {};
+  const leituras = await Banco.leituras(contaAtual(), 0);
+  const conversa = await Banco.historicoConversa(contaAtual(), 500);
+  return {
+    exportadoEm: new Date().toISOString(),
+    solaris: { versao: 2, banco: Banco.motor },
+    conta: { nome: s.nome || null, email: s.email || null },
+    perfilDoAssistente: perfilCliente(),
+    configuracao: JSON.parse(JSON.stringify(S)),
+    leituras: leituras.map(l => ({ quando: new Date(l.t).toISOString(), consumoKw: l.c, geracaoKw: l.g })),
+    conversas: conversa
+  };
+}
+
 /* ---------- o assistente ----------
    A tela inteira e redesenhada a cada mudanca de estado, entao o formulario
    precisa ser religado toda vez — mesma razao de os botoes usarem data-act
@@ -6957,6 +7407,20 @@ function ligarAssistente() {
   }
   const rolo = $('#chatRolo');
   if (rolo) rolo.scrollTop = rolo.scrollHeight;
+}
+
+/* O resumo semanal e pedido em segundo plano, e so uma vez por sessao mesmo
+   que a tela seja redesenhada cem vezes — render() roda a cada tique. */
+let _resumoPedido = false;
+function talvezResumir() {
+  if (_resumoPedido || !precisaDeResumo()) return;
+  _resumoPedido = true;
+  /* gerarResumoSemana liga AGENTE.gerandoResumo antes do primeiro await,
+     entao o render adiado ja pega os tres pontinhos. Adiado de proposito:
+     chamar render() de dentro de render() e reentrancia, e o dia em que
+     alguem acrescentar uma condicao aqui vira laco infinito. */
+  gerarResumoSemana().then(() => render());
+  setTimeout(render, 0);
 }
 
 async function enviarPergunta(texto) {
@@ -7338,6 +7802,7 @@ const ACOES = {
        para ela — e nao para um painel de demonstracao */
     S = JSON.parse(JSON.stringify(PADRAO));
     AGENTE.mensagens = []; AGENTE.carregada = false; AGENTE.rascunho = '';
+    _resumoPedido = false;
     _visao = null; _cacheLedger.clear();
     modoLogin = 'entrar'; erroLogin = ''; avisoLogin = '';
     renderLogin();
@@ -7377,8 +7842,60 @@ const ACOES = {
     salvar(); render();
   },
 
+  /* ---------- a conta de luz de verdade ---------- */
+  'salvar-fatura': () => {
+    const partes = String(S.fatura.mes || '').split('-');
+    const y = Number(partes[0]), m = Number(partes[1]);
+    const total = numeroBR(S.fatura.total);
+    if (!(total > 0) || !isFinite(y) || !isFinite(m)) return;
+
+    salvarFatura(y, m, total);
+    S.fatura = { mes: '', total: '' };
+    salvar(); render();
+
+    const c = conferirFatura(faturaDe(y, m));
+    if (!c) return;
+    const dentro = Math.abs(c.erro) <= 10;
+    aviso(
+      dentro ? 'O cálculo bateu' : 'O cálculo ficou fora por ' + nf(Math.abs(c.erro), 1) + '%',
+      'Fatura de ' + MESES[m] + ': ' + brl(c.real) + ' na conta, ' + brl(c.calculado) + ' no Solaris. ' +
+      (dentro
+        ? 'Diferença de ' + nf(Math.abs(c.erro), 1) + '%.'
+        : 'Confira se a tarifa e o consumo médio cadastrados batem com a fatura.'),
+      dentro ? 'good' : 'sun');
+  },
+  'remover-fatura': el => {
+    removerFatura(Number(el.dataset.y), Number(el.dataset.m));
+    salvar(); render();
+  },
+
+  /* ---------- levar os dados embora ---------- */
+  'exportar-json': async () => {
+    const dados = await montarExportacao();
+    baixar('solaris-' + carimbo() + '.json', JSON.stringify(dados, null, 2), 'application/json');
+    aviso('Dados exportados', 'O arquivo tem tudo que o Solaris guarda sobre você.', 'good');
+  },
+  'exportar-csv': async () => {
+    const linhas = await Banco.leituras(contaAtual(), 0);
+    if (!linhas.length) {
+      aviso('Nada para exportar', 'Ainda não há leitura gravada. Deixe o painel aberto alguns minutos.', 'sun');
+      return;
+    }
+    const csv = ['quando,consumo_kw,geracao_kw']
+      .concat(linhas.map(l => new Date(l.t).toISOString() + ',' + l.c + ',' + l.g))
+      .join('\n');
+    baixar('solaris-leituras-' + carimbo() + '.csv', csv, 'text/csv');
+    aviso('Leituras exportadas', nf(linhas.length) + ' linhas, prontas para abrir no Excel.', 'good');
+  },
+
   /* ---------- o assistente ---------- */
   'agente-sugestao': el => enviarPergunta(el.dataset.v),
+  'resumo-refazer': async () => {
+    S.resumo = null;
+    render();
+    await gerarResumoSemana();
+    render();
+  },
   'agente-limpar': async () => {
     if (!window.confirm('Apagar esta conversa? O assistente esquece o que foi dito aqui.')) return;
     await limparConversaDoAgente();
@@ -7453,6 +7970,12 @@ document.addEventListener('input', ev => {
   /* O rascunho do chat mora no AGENTE, e nao no estado da conta: pergunta
      pela metade nao e configuracao e nao tem por que ir para o banco. */
   if (campo === 'agente') { AGENTE.rascunho = el.value; return; }
+
+  /* O total da fatura muda so o estado do botao (habilitado ou nao), entao
+     nao redesenha a tela a cada tecla — o campo perderia o foco. Quem cuida
+     de habilitar e a syncFatura, como as outras sync* deste arquivo. */
+  if (campo === 'confTotal') { S.fatura.total = el.value; syncFatura(); salvar(); return; }
+  if (campo === 'confMes') { S.fatura.mes = el.value; syncFatura(); salvar(); return; }
   if (campo === 'perfilLivre') { ONBOARD.livre = el.value; return; }
 
   /* Trocar a cidade troca a distribuidora mostrada logo abaixo, entao esta
@@ -7609,6 +8132,7 @@ async function aoEntrar() {
   if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
   _visao = null; _cacheLedger.clear();
   AGENTE.mensagens = []; AGENTE.carregada = false; AGENTE.rascunho = '';
+  _resumoPedido = false;
   render();
   carregarConversa().then(() => { if (S.tela === 'assistente' || S.tab === 'assistente') render(); });
 

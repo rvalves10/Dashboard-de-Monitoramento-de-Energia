@@ -134,6 +134,7 @@ function render() {
   ligarGraficos();
   ligarAssistente();
   preencherCardBanco();
+  talvezResumir();
   atualizarHash();
 }
 
@@ -217,6 +218,58 @@ async function preencherCardBanco() {
     '</span></div>';
 }
 
+/* Habilita o botao de comparar sem redesenhar a tela: o campo de texto
+   perderia o foco no meio da digitacao. Mesma razao das outras sync*. */
+function syncFatura() {
+  const b = $('[data-act="salvar-fatura"]');
+  if (b) b.disabled = !(S.fatura.mes && numeroBR(S.fatura.total) > 0);
+}
+
+/* ---------- levar os dados embora ----------
+
+   Quem entrega dado para um sistema tem que conseguir tirar de volta. Isso
+   deixou de ser detalhe quando os dados sairam da maquina da pessoa e foram
+   para um servidor nosso: sem exportacao, o Solaris vira uma armadilha para
+   quem usou por seis meses. */
+function carimbo() {
+  const d = new Date();
+  const dd = n => String(n).padStart(2, '0');
+  return d.getFullYear() + dd(d.getMonth() + 1) + dd(d.getDate());
+}
+
+function baixar(nome, conteudo, tipo) {
+  try {
+    const blob = new Blob([conteudo], { type: tipo + ';charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = nome;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    /* o navegador ainda esta lendo o blob no instante do clique */
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  } catch (e) {
+    aviso('Não consegui gerar o arquivo', 'Seu navegador bloqueou o download.', 'bad');
+  }
+}
+
+/* Tudo que o Solaris guarda sobre a pessoa, num objeto so. Inclui o
+   historico do medidor e as conversas com o assistente — se esta guardado, sai. */
+async function montarExportacao() {
+  const s = sessao() || {};
+  const leituras = await Banco.leituras(contaAtual(), 0);
+  const conversa = await Banco.historicoConversa(contaAtual(), 500);
+  return {
+    exportadoEm: new Date().toISOString(),
+    solaris: { versao: 2, banco: Banco.motor },
+    conta: { nome: s.nome || null, email: s.email || null },
+    perfilDoAssistente: perfilCliente(),
+    configuracao: JSON.parse(JSON.stringify(S)),
+    leituras: leituras.map(l => ({ quando: new Date(l.t).toISOString(), consumoKw: l.c, geracaoKw: l.g })),
+    conversas: conversa
+  };
+}
+
 /* ---------- o assistente ----------
    A tela inteira e redesenhada a cada mudanca de estado, entao o formulario
    precisa ser religado toda vez — mesma razao de os botoes usarem data-act
@@ -233,6 +286,20 @@ function ligarAssistente() {
   }
   const rolo = $('#chatRolo');
   if (rolo) rolo.scrollTop = rolo.scrollHeight;
+}
+
+/* O resumo semanal e pedido em segundo plano, e so uma vez por sessao mesmo
+   que a tela seja redesenhada cem vezes — render() roda a cada tique. */
+let _resumoPedido = false;
+function talvezResumir() {
+  if (_resumoPedido || !precisaDeResumo()) return;
+  _resumoPedido = true;
+  /* gerarResumoSemana liga AGENTE.gerandoResumo antes do primeiro await,
+     entao o render adiado ja pega os tres pontinhos. Adiado de proposito:
+     chamar render() de dentro de render() e reentrancia, e o dia em que
+     alguem acrescentar uma condicao aqui vira laco infinito. */
+  gerarResumoSemana().then(() => render());
+  setTimeout(render, 0);
 }
 
 async function enviarPergunta(texto) {
@@ -614,6 +681,7 @@ const ACOES = {
        para ela — e nao para um painel de demonstracao */
     S = JSON.parse(JSON.stringify(PADRAO));
     AGENTE.mensagens = []; AGENTE.carregada = false; AGENTE.rascunho = '';
+    _resumoPedido = false;
     _visao = null; _cacheLedger.clear();
     modoLogin = 'entrar'; erroLogin = ''; avisoLogin = '';
     renderLogin();
@@ -653,8 +721,60 @@ const ACOES = {
     salvar(); render();
   },
 
+  /* ---------- a conta de luz de verdade ---------- */
+  'salvar-fatura': () => {
+    const partes = String(S.fatura.mes || '').split('-');
+    const y = Number(partes[0]), m = Number(partes[1]);
+    const total = numeroBR(S.fatura.total);
+    if (!(total > 0) || !isFinite(y) || !isFinite(m)) return;
+
+    salvarFatura(y, m, total);
+    S.fatura = { mes: '', total: '' };
+    salvar(); render();
+
+    const c = conferirFatura(faturaDe(y, m));
+    if (!c) return;
+    const dentro = Math.abs(c.erro) <= 10;
+    aviso(
+      dentro ? 'O cálculo bateu' : 'O cálculo ficou fora por ' + nf(Math.abs(c.erro), 1) + '%',
+      'Fatura de ' + MESES[m] + ': ' + brl(c.real) + ' na conta, ' + brl(c.calculado) + ' no Solaris. ' +
+      (dentro
+        ? 'Diferença de ' + nf(Math.abs(c.erro), 1) + '%.'
+        : 'Confira se a tarifa e o consumo médio cadastrados batem com a fatura.'),
+      dentro ? 'good' : 'sun');
+  },
+  'remover-fatura': el => {
+    removerFatura(Number(el.dataset.y), Number(el.dataset.m));
+    salvar(); render();
+  },
+
+  /* ---------- levar os dados embora ---------- */
+  'exportar-json': async () => {
+    const dados = await montarExportacao();
+    baixar('solaris-' + carimbo() + '.json', JSON.stringify(dados, null, 2), 'application/json');
+    aviso('Dados exportados', 'O arquivo tem tudo que o Solaris guarda sobre você.', 'good');
+  },
+  'exportar-csv': async () => {
+    const linhas = await Banco.leituras(contaAtual(), 0);
+    if (!linhas.length) {
+      aviso('Nada para exportar', 'Ainda não há leitura gravada. Deixe o painel aberto alguns minutos.', 'sun');
+      return;
+    }
+    const csv = ['quando,consumo_kw,geracao_kw']
+      .concat(linhas.map(l => new Date(l.t).toISOString() + ',' + l.c + ',' + l.g))
+      .join('\n');
+    baixar('solaris-leituras-' + carimbo() + '.csv', csv, 'text/csv');
+    aviso('Leituras exportadas', nf(linhas.length) + ' linhas, prontas para abrir no Excel.', 'good');
+  },
+
   /* ---------- o assistente ---------- */
   'agente-sugestao': el => enviarPergunta(el.dataset.v),
+  'resumo-refazer': async () => {
+    S.resumo = null;
+    render();
+    await gerarResumoSemana();
+    render();
+  },
   'agente-limpar': async () => {
     if (!window.confirm('Apagar esta conversa? O assistente esquece o que foi dito aqui.')) return;
     await limparConversaDoAgente();
@@ -729,6 +849,12 @@ document.addEventListener('input', ev => {
   /* O rascunho do chat mora no AGENTE, e nao no estado da conta: pergunta
      pela metade nao e configuracao e nao tem por que ir para o banco. */
   if (campo === 'agente') { AGENTE.rascunho = el.value; return; }
+
+  /* O total da fatura muda so o estado do botao (habilitado ou nao), entao
+     nao redesenha a tela a cada tecla — o campo perderia o foco. Quem cuida
+     de habilitar e a syncFatura, como as outras sync* deste arquivo. */
+  if (campo === 'confTotal') { S.fatura.total = el.value; syncFatura(); salvar(); return; }
+  if (campo === 'confMes') { S.fatura.mes = el.value; syncFatura(); salvar(); return; }
   if (campo === 'perfilLivre') { ONBOARD.livre = el.value; return; }
 
   /* Trocar a cidade troca a distribuidora mostrada logo abaixo, entao esta
@@ -885,6 +1011,7 @@ async function aoEntrar() {
   if (S.medidor) { MEDIDOR.ativo = !!S.medidor.ativo; MEDIDOR.endereco = S.medidor.endereco || MEDIDOR.endereco; }
   _visao = null; _cacheLedger.clear();
   AGENTE.mensagens = []; AGENTE.carregada = false; AGENTE.rascunho = '';
+  _resumoPedido = false;
   render();
   carregarConversa().then(() => { if (S.tela === 'assistente' || S.tab === 'assistente') render(); });
 
