@@ -47,14 +47,24 @@ const GEMINI = 'https://generativelanguage.googleapis.com/v1beta/models';
 /* Modelos aceitos. A lista existe porque o nome do modelo vem do config.js,
    que e um arquivo do site: sem allowlist, um erro de digitacao la viraria
    uma chamada estranha na nossa conta do Google. */
-const MODELOS = new Set([
-  'gemini-3.7-flash',
+/* Modelos aceitos, EM ORDEM DE PREFERENCIA. A lista existe por dois motivos.
+
+   O primeiro: o nome do modelo vem do config.js, que e um arquivo do site.
+   Sem allowlist, um erro de digitacao la viraria uma chamada estranha na
+   nossa conta do Google.
+
+   O segundo apareceu na pratica. O assistente parou de responder do nada, e
+   a causa era o Google devolvendo 503 ("sobrecarregado") so para um modelo,
+   de forma consistente — os outros respondiam normal. Depender de um nome so
+   deixa o assistente inteiro na mao da capacidade de um modelo especifico.
+   Por isso esta lista tambem e a cadeia de reserva. */
+const MODELOS = [
   'gemini-3.6-flash',
-  'gemini-3.5-flash',
   'gemini-3.5-flash-lite',
-  'gemini-2.5-flash'
-]);
-const MODELO_PADRAO = 'gemini-3.5-flash';
+  'gemini-3.7-flash',
+  'gemini-3.5-flash'
+];
+const MODELO_PADRAO = 'gemini-3.6-flash';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -111,7 +121,13 @@ Deno.serve(async (req: Request) => {
     return responder({ erro: 'Essa mensagem e longa demais. Tente resumir.' }, 400);
   }
 
-  const modelo = MODELOS.has(String(corpo.modelo)) ? String(corpo.modelo) : MODELO_PADRAO;
+  const modelo = MODELOS.indexOf(String(corpo.modelo)) >= 0 ? String(corpo.modelo) : MODELO_PADRAO;
+
+  /* O pedido comeca no modelo escolhido e, se ele estiver sem capacidade,
+     tenta o proximo da lista. So no maximo dois: se dois modelos seguidos
+     recusarem, o problema nao e capacidade e insistir so faz a pessoa
+     esperar mais. */
+  const cadeia = [modelo, ...MODELOS.filter(m => m !== modelo)].slice(0, 2);
 
   /* Dois trabalhos, o mesmo contexto. 'resposta' e a conversa: alguem
      perguntou. 'resumo' e o assistente falando primeiro, uma vez por semana,
@@ -159,38 +175,77 @@ Deno.serve(async (req: Request) => {
     { role: 'user', parts: [{ text: pergunta }] }
   ];
 
-  /* ---------- 5. o Google ---------- */
-  const rGemini = await fetch(`${GEMINI}/${modelo}:generateContent`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': CHAVE_GEMINI
-    },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: instrucao }] },
-      contents: conteudo,
-      generationConfig: {
-        temperature: 0.7,
-        /* O resumo e um paragrafo, nao um artigo: teto menor sai mais barato e
-           impede o modelo de encher linguica quando nao ha muito a dizer. */
-        maxOutputTokens: tipo === 'resumo' ? 500 : 900,
-        /* Resposta de painel e para ler rapido. Sem este teto o modelo
-           escreve tres paragrafos onde cabia uma frase. */
-        topP: 0.95
-      },
-      safetySettings: []
-    })
-  });
+  /* ---------- 5. o Google ----------
+     Percorre a cadeia: 429 e 503 sao falta de capacidade e valem uma segunda
+     tentativa em outro modelo; 400, 403 e 404 sao configuracao errada, e ai
+     insistir so esconde o problema de quem precisa consertar. */
+  let rGemini: Response | null = null;
+  let modeloUsado = cadeia[0];
+  let ultimoStatus = 0;
+  let ultimoBruto = '';
 
-  if (!rGemini.ok) {
-    const detalhe = await rGemini.text().catch(() => '');
-    console.error('gemini falhou', rGemini.status, detalhe.slice(0, 500));
-    /* A mensagem para a tela nao repete o erro do Google: ele vem em ingles e
-       as vezes traz pedaco de configuracao nossa dentro. */
-    const msg = rGemini.status === 429
+  for (const candidato of cadeia) {
+    modeloUsado = candidato;
+    const r = await fetch(`${GEMINI}/${candidato}:generateContent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': CHAVE_GEMINI
+      },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: instrucao }] },
+        contents: conteudo,
+        generationConfig: {
+          temperature: 0.7,
+          /* O resumo e um paragrafo, nao um artigo: teto menor sai mais barato e
+             impede o modelo de encher linguica quando nao ha muito a dizer. */
+          maxOutputTokens: tipo === 'resumo' ? 500 : 900,
+          topP: 0.95
+        },
+        safetySettings: []
+      })
+    });
+
+    if (r.ok) { rGemini = r; break; }
+
+    ultimoStatus = r.status;
+    ultimoBruto = await r.text().catch(() => '');
+    console.error('gemini falhou', candidato, r.status, ultimoBruto.slice(0, 300));
+
+    const vaiTentarOutro = r.status === 429 || r.status === 503;
+    if (!vaiTentarOutro) break;
+  }
+
+  if (!rGemini) {
+    /* A mensagem que a pessoa le nao repete o erro do Google: ele vem em
+       ingles e as vezes traz pedaco de configuracao nossa dentro.
+
+       Mas engolir o motivo inteiro foi um erro de projeto: quando o
+       assistente parou de responder, quem cuida do sistema ficou sem nada
+       para investigar — a Edge Function nao tem tela de log, e o unico
+       sintoma era "tente de novo daqui a pouco", que nao e sintoma nenhum.
+
+       Entao vai junto um `diagnostico`: o status do Google e o que ele
+       significa em portugues. Sem chave, sem corpo cru, sem prompt. */
+    const porStatus: Record<number, string> = {
+      400: `O Google recusou o pedido para o modelo "${modeloUsado}". ` +
+           'Costuma ser nome de modelo que nao existe mais, ou formato que ele nao aceita.',
+      403: 'A chave do Gemini foi recusada: invalida, revogada, ou sem permissao para este modelo. ' +
+           'Confira em aistudio.google.com/apikey e refaca o `supabase secrets set GEMINI_API_KEY`.',
+      404: `O modelo "${modeloUsado}" nao existe para esta chave. ` +
+           'Veja os modelos disponiveis em ai.google.dev/gemini-api/docs/models e ajuste ' +
+           '`agente.modelo` em banco-de-dados/config.js (e a lista MODELOS desta funcao).',
+      429: 'Cota do Gemini estourada em todos os modelos tentados.',
+      500: 'O Google teve um problema interno.',
+      503: `Sem capacidade no Google para os modelos tentados (${cadeia.join(', ')}).`
+    };
+    const diagnostico = porStatus[ultimoStatus] || `O Google respondeu HTTP ${ultimoStatus}.`;
+
+    const msg = ultimoStatus === 429
       ? 'O assistente recebeu muitas perguntas ao mesmo tempo. Tente de novo em alguns segundos.'
-      : 'O assistente nao conseguiu responder agora. Tente de novo daqui a pouco.';
-    return responder({ erro: msg }, 502);
+      : 'O assistente nao conseguiu responder agora.';
+
+    return responder({ erro: msg, diagnostico, status: ultimoStatus, modelo: modeloUsado }, 502);
   }
 
   const dados = await rGemini.json();
@@ -203,7 +258,7 @@ Deno.serve(async (req: Request) => {
     return responder({ erro: 'O assistente ficou sem resposta para essa. Tente perguntar de outro jeito.' }, 502);
   }
 
-  return responder({ texto, modelo });
+  return responder({ texto, modelo: modeloUsado });
 });
 
 

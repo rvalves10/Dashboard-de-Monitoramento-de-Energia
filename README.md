@@ -37,7 +37,7 @@ Se preferir um arquivo só para mandar por e-mail ou WhatsApp, use
 Suba o servidor local com `node backend/ferramentas/servidor.mjs` e abra
 **`http://localhost:8080/testes/index.html`**. (Abrindo o arquivo direto do
 disco também roda, mas o painel do banco de dados fica limitado.)
-Devem aparecer **148 de 148 testes passando**, tudo verde.
+Devem aparecer **164 de 164 testes passando**, tudo verde.
 
 ---
 
@@ -68,6 +68,13 @@ automatizado, não coincidência. Você pode discordar da IA e corrigir.
 **Conta de luz de verdade.** Compensa créditos mês a mês, respeita o mínimo
 faturável e cobra o Fio B da Lei 14.300 sobre a energia compensada. Aplicar a
 lei derrubou a economia declarada da casa de R$ 172 para R$ 139 por mês.
+
+**Não precisa ter painel no telhado.** No cadastro você diz se já tem
+sistema solar ou não. Quem ainda não tem acompanha o consumo do mesmo jeito e
+ganha a resposta que estava procurando: um cartão que dimensiona o sistema
+para o consumo dela, estima o investimento e diz em quantos anos ele se paga
+— já com o Fio B da Lei 14.300 descontado, que é a parte que a maioria dos
+sites de orçamento não conta.
 
 **Cadastro da sua unidade.** Você informa o que está na conta de luz e na
 nota do instalador; o resto o sistema calcula, inclusive a geração esperada,
@@ -144,7 +151,7 @@ Solaris/
 │
 ├── skills/               instruções que padronizam o trabalho com IA
 ├── documentacao/         mapa, como ligar o Supabase, teste de campo, banca
-└── testes/               148 testes, rodam no navegador
+└── testes/               164 testes, rodam no navegador
 ```
 
 **Cada camada tem o seu `LEIA-ME.md`** explicando o que faz, o que não faz e

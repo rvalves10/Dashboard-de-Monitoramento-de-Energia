@@ -428,7 +428,7 @@ function syncCadastro() {
   }
 }
 function syncMeta() {
-  const v = visao(), meta = S.metas[S.perfil], t = tarifaAtual();
+  const v = visao(), meta = metaAtual(), t = tarifaAtual();
   txt('#metaLbl', telaEstreita() ? nf(meta) : nf(meta) + ' kWh');
   txt('#metaCusto', '≈ ' + brl(meta * t));
   const f = $('#metaFill');
@@ -618,9 +618,32 @@ const ACOES = {
     salvar(); render();
   },
   'nova-telhado': el => { S.nova.telhado = el.dataset.v; salvar(); render(); },
+  /* Trocar a resposta muda as perguntas do passo 2, entao redesenha. Quem
+     dizia ter sistema e volta atras nao leva os numeros antigos junto: eles
+     ficariam guardados e voltariam se ela mudasse de ideia de novo, o que e
+     pior do que perder um campo digitado. */
+  'nova-solar': el => {
+    const tem = el.dataset.v === 'sim';
+    S.nova.temSolar = tem;
+    if (!tem) { S.nova.potenciaKwp = 0; S.nova.paineis = 0; S.nova.investimento = 0; }
+    else if (!(S.nova.potenciaKwp > 0)) {
+      const p = JSON.parse(JSON.stringify(PADRAO.nova));
+      S.nova.potenciaKwp = p.potenciaKwp; S.nova.paineis = p.paineis; S.nova.investimento = p.investimento;
+    }
+    salvar(); render();
+  },
   'salvar-unidade': () => {
     const n = S.nova;
-    if (n.nome.trim().length < 2 || !(n.potenciaKwp > 0) || !(n.consumoMes > 0)) return;
+    /* A MESMA regra que habilita o botao, e nao uma copia dela.
+
+       Aqui havia uma segunda condicao, escrita a mao, que exigia potencia
+       maior que zero. Quando entrou a unidade sem sistema solar, o botao
+       passou a habilitar (passoCompleto ja sabia do caso novo) e esta acao
+       continuou recusando — calada, sem erro nenhum na tela. Clicar em
+       "Criar minha unidade" simplesmente nao fazia nada.
+
+       Duas copias da mesma regra sempre se afastam. Agora e uma so. */
+    if (!(passoCompleto(1) && passoCompleto(2))) return;
     const chave = 'u' + Date.now().toString(36);
     /* passo e estado do formulario, nao da unidade — nao vai para o banco.
        aparelhos vira lista explicita: unidade nova nasce com o que a pessoa
@@ -638,7 +661,9 @@ const ACOES = {
     S.nova = JSON.parse(JSON.stringify(PADRAO.nova));
     _visao = null; _cacheLedger.clear();
     salvar(); render();
-    aviso(u.nome + ' criada', 'Gerando ' + nf(u.geracaoMes) + ' kWh/mês para um consumo de ' + nf(u.consumoMes) + ' kWh. O painel já está mostrando ela.', 'good');
+    aviso(u.nome + ' criada', u.temSolar === false
+      ? 'Consumo de ' + nf(u.consumoMes) + ' kWh por mês. O painel já mostra para onde ele vai — e quanto um sistema solar traria de volta.'
+      : 'Gerando ' + nf(u.geracaoMes) + ' kWh/mês para um consumo de ' + nf(u.consumoMes) + ' kWh. O painel já está mostrando ela.', 'good');
   },
   'remover-unidade': el => {
     const chave = el.dataset.chave;

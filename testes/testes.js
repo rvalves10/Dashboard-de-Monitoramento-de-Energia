@@ -1799,6 +1799,264 @@ grupo('Resumo do assistente', () => {
   });
 });
 
+
+/* ================= unidade sem sistema solar =================
+   Metade do Solaris fala de painel: economia, autossuficiencia, creditos,
+   retorno do investimento. Quem ainda nao instalou nada tem que conseguir
+   usar o resto — e e justamente essa pessoa que mais tem o que ganhar com a
+   pergunta "vale a pena?".
+
+   O motor nao ganhou caso especial: geracao zero atravessa tudo. Estes
+   testes existem para garantir que continua assim. */
+grupo('Sem sistema solar', () => {
+
+  const SEM = {
+    chave: 'u-sem-solar', nome: 'Casa sem painel', cidade: 'sorocaba',
+    arquetipo: 'casaVazia', telhado: 'bom', distribuidora: '',
+    tarifa: 0.98, consumoMes: 380, temSolar: false,
+    potenciaKwp: 0, paineis: 0, investimento: 0, mesesOperacao: 12,
+    aparelhos: ['gel', 'chu', 'ar'], criadaEm: null
+  };
+
+  function comSemSolar(fn) {
+    const guardaU = S.unidades, guardaP = S.perfil, guardaE = S.exemplos;
+    try {
+      S.unidades = [JSON.parse(JSON.stringify(SEM))];
+      S.exemplos = false;
+      S.perfil = 'u-sem-solar';
+      _visao = null; _cacheLedger.clear(); _cacheMes.clear();
+      return fn();
+    } finally {
+      S.unidades = guardaU; S.perfil = guardaP; S.exemplos = guardaE;
+      _visao = null; _cacheLedger.clear(); _cacheMes.clear();
+    }
+  }
+
+  teste('a unidade nasce sem painel e sem investimento', () => {
+    const u = montarUnidade(SEM);
+    igual(u.temSolar, false);
+    igual(u.potenciaKwp, 0, 'nao pode inventar potencia');
+    igual(u.paineis, 0);
+    igual(u.investimento, 0);
+    igual(u.geracaoMes, 0, 'sem painel a geracao tem que ser zero');
+  });
+
+  /* Unidade cadastrada antes desta versao nao tem o campo. Se o padrao
+     fosse false, o painel de quem ja usava perderia os paineis sozinho. */
+  teste('unidade antiga, sem o campo, continua com painel', () => {
+    const antiga = Object.assign({}, SEM);
+    delete antiga.temSolar;
+    antiga.potenciaKwp = 4; antiga.paineis = 9;
+    const u = montarUnidade(antiga);
+    igual(u.temSolar, true, 'a falta do campo tem que valer "tem painel"');
+    ok(u.geracaoMes > 0, 'e a geracao tem que continuar sendo calculada');
+  });
+
+  teste('o motor nao estoura com geracao zero', () => {
+    comSemSolar(() => em(2026, 7, 15, 14, 0, () => {
+      const v = visao();
+      const numeros = [v.mtd.tc, v.mtd.tg, v.economia, v.creditos, v.autoPct,
+        v.contaProj, v.co2, v.desempenho, v.projConsumo, v.projGeracao];
+      numeros.forEach((n, i) => {
+        ok(isFinite(n), 'numero ' + i + ' da visao virou ' + n);
+      });
+      igual(v.mtd.tg, 0, 'nao pode gerar sem painel');
+      igual(v.creditos, 0, 'nao pode haver credito sem injecao');
+      perto(v.economia, 0, 0.001, 'nao pode economizar sem painel');
+    }));
+  });
+
+  teste('a conta de quem nao tem painel e a de quem so compra da rede', () => {
+    comSemSolar(() => em(2026, 7, 15, 14, 0, () => {
+      const v = visao();
+      /* sem geracao, a projecao com sol e a projecao sem sol tem que coincidir */
+      perto(v.contaProj, v.semSolarProj, 0.02, 'as duas contas deveriam ser a mesma');
+    }));
+  });
+
+  teste('a simulacao dimensiona o sistema para cobrir o consumo', () => {
+    comSemSolar(() => em(2026, 7, 15, 14, 0, () => {
+      const sim = simulacaoSolar('u-sem-solar');
+      ok(sim, 'nao simulou');
+      ok(sim.kwp > 0 && sim.kwp < 30, 'potencia implausivel: ' + sim.kwp);
+      ok(sim.paineis > 0 && sim.paineis < 100, 'paineis implausiveis: ' + sim.paineis);
+      /* dimensionado para cobrir: perto de 100% do consumo, nao o dobro */
+      ok(sim.cobertura > 90 && sim.cobertura < 115,
+        'cobertura fora do alvo: ' + nf(sim.cobertura, 1) + '%');
+    }));
+  });
+
+  teste('a simulacao devolve dinheiro coerente', () => {
+    comSemSolar(() => em(2026, 7, 15, 14, 0, () => {
+      const sim = simulacaoSolar('u-sem-solar');
+      ok(sim.contaDepois < sim.contaHoje, 'a conta tinha que cair');
+      ok(sim.economiaMes > 0, 'sem economia nao ha o que decidir');
+      perto(sim.economiaMes, sim.contaHoje - sim.contaDepois, 0.001,
+        'a economia tem que ser a diferenca das duas contas');
+      igual(sim.economiaAno, sim.economiaMes * 12);
+      ok(sim.investimento > 5000 && sim.investimento < 120000,
+        'investimento implausivel: ' + sim.investimento);
+      ok(sim.paybackAnos > 1 && sim.paybackAnos < 30,
+        'payback implausivel: ' + nf(sim.paybackAnos, 1) + ' anos');
+    }));
+  });
+
+  /* A conta nunca cai a zero: o minimo faturavel e a iluminacao publica
+     continuam sendo cobrados de quem tem painel. Prometer conta zero e o
+     erro mais comum de quem vende solar. */
+  teste('a simulacao nao promete conta zerada', () => {
+    comSemSolar(() => em(2026, 7, 15, 14, 0, () => {
+      const sim = simulacaoSolar('u-sem-solar');
+      const u = unidade();
+      ok(sim.contaDepois > u.ilum, 'a conta depois tem que incluir a iluminacao publica');
+      ok(sim.contaDepois >= u.minFatura * tarifaAtual() * 0.9,
+        'o minimo faturavel nao pode desaparecer');
+    }));
+  });
+
+  teste('a Lei 14.300 entra na simulacao de quem instalaria hoje', () => {
+    comSemSolar(() => em(2026, 7, 15, 14, 0, () => {
+      const sim = simulacaoSolar('u-sem-solar');
+      /* instalando hoje nao ha direito adquirido: paga o degrau do ano */
+      igual(sim.percFioB, percentualFioB(2026, false), 'usou o degrau errado');
+      ok(sim.fioB > 0, 'em 2026 o Fio B nao pode ser zero para quem instala agora');
+    }));
+  });
+
+  teste('o custo por kWp respeita a faixa da fonte', () => {
+    /* ABSOLAR/ANEEL 2026: R$ 4.300 a R$ 5.700 por kWp no residencial, com
+       ganho de escala. Se alguem mexer nas constantes sem olhar a fonte,
+       este teste avisa. */
+    ok(custoPorKwp(3) <= 5200 && custoPorKwp(3) >= 4300, '3 kWp fora da faixa: ' + custoPorKwp(3));
+    ok(custoPorKwp(15) <= 4300 && custoPorKwp(15) >= 3000, '15 kWp fora da faixa: ' + custoPorKwp(15));
+    ok(custoPorKwp(15) < custoPorKwp(3), 'sistema maior tem que sair mais barato por kWp');
+    /* fora da faixa medida, nao extrapola para o absurdo */
+    ok(custoPorKwp(0.5) === custoPorKwp(3), 'abaixo de 3 kWp deveria travar no piso');
+    ok(custoPorKwp(50) === custoPorKwp(15), 'acima de 15 kWp deveria travar no teto');
+  });
+
+  teste('sem consumo informado nao ha o que simular', () => {
+    const guarda = S.unidades, guardaP = S.perfil;
+    try {
+      S.unidades = [Object.assign({}, SEM, { consumoMes: 0 })];
+      S.perfil = 'u-sem-solar'; _visao = null; _cacheLedger.clear(); _cacheMes.clear();
+      igual(simulacaoSolar('u-sem-solar'), null, 'simular sem consumo seria inventar');
+    } finally {
+      S.unidades = guarda; S.perfil = guardaP;
+      _visao = null; _cacheLedger.clear(); _cacheMes.clear();
+    }
+  });
+
+  /* ---------- o que a tela mostra ---------- */
+
+  teste('o painel troca o donut e o payback pela simulacao', () => {
+    comSemSolar(() => em(2026, 7, 15, 14, 0, () => {
+      const d = document.createElement('div');
+      d.innerHTML = vPainel();
+      const txt = d.textContent;
+      ok(txt.indexOf('Vale a pena instalar?') > 0, 'faltou o cartao da simulacao');
+      ok(txt.indexOf('Autossuficiência') < 0, 'o donut nao faz sentido sem painel');
+      ok(txt.indexOf('Retorno do investimento') < 0, 'nao ha investimento para retornar');
+      ok(txt.indexOf('Você economizou') < 0, 'nao ha economia para anunciar');
+    }));
+  });
+
+  teste('a fatura nao lista as linhas de compensacao zeradas', () => {
+    comSemSolar(() => em(2026, 7, 15, 14, 0, () => {
+      const d = document.createElement('div');
+      d.innerHTML = vRelatorio();
+      const txt = d.textContent;
+      ok(txt.indexOf('Consumo registrado no medidor') > 0, 'a linha do consumo tem que ficar');
+      ok(txt.indexOf('Total a pagar') > 0, 'o total tem que ficar');
+      ok(txt.indexOf('Energia injetada na rede') < 0, 'linha zerada e ruido na fatura');
+      ok(txt.indexOf('Créditos usados neste mês') < 0, 'linha zerada e ruido na fatura');
+      ok(txt.indexOf('Saldo de créditos') < 0, 'nao ha credito sem injecao');
+    }));
+  });
+
+  teste('todas as telas desenham sem painel, nas duas cascas', () => {
+    comSemSolar(() => em(2026, 7, 15, 14, 0, () => {
+      const guardaTela = S.tela, guardaTab = S.tab;
+      try {
+        ['painel', 'historico', 'equipamentos', 'cadastro', 'alertas',
+          'relatorio', 'config', 'assistente'].forEach(t => {
+            S.tela = t;
+            const html = corpoAmplo();
+            ok(html.length > 500, t + ': desenhou vazio');
+            ok(html.indexOf('NaN') < 0, t + ': NaN foi parar na tela');
+            ok(html.indexOf('undefined') < 0, t + ': undefined foi parar na tela');
+          });
+        ['painel', 'historico', 'aparelhos', 'assistente', 'mais'].forEach(t => {
+          S.tab = t;
+          const html = vMovel();
+          ok(html.length > 300, 'movel/' + t + ': desenhou vazio');
+          ok(html.indexOf('NaN') < 0, 'movel/' + t + ': NaN foi parar na tela');
+        });
+      } finally { S.tela = guardaTela; S.tab = guardaTab; }
+    }));
+  });
+
+  teste('o cadastro pula as perguntas de sistema quando nao ha sistema', () => {
+    const guarda = JSON.parse(JSON.stringify(S.nova));
+    try {
+      S.nova.temSolar = false;
+      S.nova.nome = 'Casa'; S.nova.consumoMes = 300; S.nova.tarifa = 1;
+      S.nova.potenciaKwp = 0; S.nova.paineis = 0;
+      ok(passoCompleto(2), 'o passo 2 nao pode exigir potencia de quem nao tem sistema');
+      igual(tituloDoPasso(2).titulo, 'Seu telhado', 'o titulo tem que acompanhar a pergunta');
+
+      S.nova.passo = 2;
+      const d = document.createElement('div');
+      d.innerHTML = vUnidade();
+      ok(!d.querySelector('#unPotencia'), 'nao pode pedir kWp de quem nao tem painel');
+      ok(!d.querySelector('#unInvestimento'), 'nao pode pedir quanto custou');
+      ok(d.querySelector('#unMeses'), 'o tempo de acompanhamento continua sendo pedido');
+
+      S.nova.temSolar = true;
+      igual(passoCompleto(2), false, 'com sistema, a potencia volta a ser obrigatoria');
+    } finally { S.nova = guarda; }
+  });
+
+  /* Este teste existe por causa de um defeito real: passoCompleto() ja sabia
+     da unidade sem sistema, mas a acao de salvar tinha uma copia da regra
+     escrita a mao que continuava exigindo potencia. O botao habilitava e o
+     clique nao fazia nada. Testar a REGRA nao pegava; so testar a ACAO pega. */
+  teste('o botao de criar unidade realmente cria, com e sem sistema', () => {
+    const guardaU = S.unidades, guardaN = JSON.parse(JSON.stringify(S.nova));
+    const guardaP = S.perfil, guardaT = S.tela;
+    try {
+      [false, true].forEach(tem => {
+        S.unidades = [];
+        S.nova = JSON.parse(JSON.stringify(PADRAO.nova));
+        S.nova.nome = tem ? 'Com painel' : 'Sem painel';
+        S.nova.consumoMes = 380; S.nova.tarifa = 0.98; S.nova.temSolar = tem;
+        if (!tem) { S.nova.potenciaKwp = 0; S.nova.paineis = 0; S.nova.investimento = 0; }
+
+        ok(passoCompleto(1) && passoCompleto(2),
+          (tem ? 'com' : 'sem') + ' sistema: o botao deveria estar habilitado');
+        ACOES['salvar-unidade']();
+        igual(S.unidades.length, 1,
+          (tem ? 'com' : 'sem') + ' sistema: o clique nao criou a unidade');
+        igual(uni(S.perfil).temSolar, tem, 'a unidade nasceu com o campo errado');
+      });
+    } finally {
+      S.unidades = guardaU; S.nova = guardaN; S.perfil = guardaP; S.tela = guardaT;
+      _visao = null; _cacheLedger.clear(); _cacheMes.clear();
+    }
+  });
+
+  teste('o assistente sabe que nao ha painel', () => {
+    comSemSolar(() => em(2026, 7, 15, 14, 0, () => {
+      igual(contextoDoPainel().temSolar, false, 'o contexto tem que dizer que nao ha painel');
+      const g = sugestoesDoAgente();
+      ok(g.some(x => x.toLowerCase().indexOf('vale a pena') >= 0),
+        'a primeira pergunta de quem nao tem painel e essa');
+      ok(!g.some(x => x.indexOf('rendendo o esperado') >= 0),
+        'nao da para perguntar do rendimento de um sistema que nao existe');
+    }));
+  });
+});
+
 function rodar() {
   const alvo = document.getElementById('saida');
   const grupos = {};

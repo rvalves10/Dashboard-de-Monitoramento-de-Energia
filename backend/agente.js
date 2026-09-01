@@ -137,6 +137,7 @@ function contextoDoPainel() {
   return {
     unidade: u.nome,
     tipo: u.tipo,
+    temSolar: u.temSolar !== false,
     cidade: u.cidade || null,
     distribuidora: u.distribuidora,
     potenciaKwp: nf(u.potenciaKwp, 1),
@@ -304,6 +305,16 @@ async function limparConversaDoAgente() {
    qualquer produto com IA: ninguem sabe o que da para perguntar. Estas sao
    escolhidas pelo estado real do sistema, entao mudam junto com ele. */
 function sugestoesDoAgente() {
+  if (!semUnidade() && unidade().temSolar === false) {
+    /* Quem ainda nao tem painel tem outras perguntas — e a principal delas e
+       a que o Solaris consegue responder com os numeros dela na mao. */
+    const sim = simulacaoSolar(S.perfil);
+    const fora = ['Vale a pena instalar energia solar na minha conta?'];
+    if (sim) fora.push('Em quanto tempo um sistema de ' + nf(sim.kwp, 1) + ' kWp se pagaria?');
+    fora.push('O que eu mudo hoje para gastar menos, sem instalar nada?');
+    fora.push('Por que minha conta veio ' + brl(visao().contaProj) + ' esse mês?');
+    return fora;
+  }
   if (semUnidade()) {
     return [
       'Como eu descubro meu consumo médio na conta de luz?',

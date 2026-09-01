@@ -18,9 +18,14 @@ participar.
    o assistente saber com quem está falando.
 3. Responda as **cinco perguntas rápidas** que aparecem em seguida. Levam
    meio minuto, não são sobre energia, e dá para pular qualquer uma.
-4. Cadastre a sua unidade. Tenha à mão uma conta de luz (consumo médio e
-   tarifa) e a nota do instalador (kWp e número de painéis). Não tem agora?
-   Coloque valores aproximados e corrija depois.
+4. Cadastre a sua unidade. Tenha à mão uma **conta de luz** (consumo médio e
+   tarifa). Se você **já tem sistema solar**, tenha também a nota do
+   instalador (kWp e número de painéis) — não tem agora? Coloque valores
+   aproximados e corrija depois.
+   **Se você não tem painel nenhum, marque "Ainda não tenho".** O Solaris
+   acompanha o seu consumo do mesmo jeito e ainda estima quanto um sistema
+   economizaria na sua conta. Testar esse caminho é tão importante quanto o
+   outro: é o perfil da maior parte das pessoas.
 5. Anote a data em que você começou.
 
 > **Deixe a aba aberta.** O sistema grava uma leitura do medidor por minuto.
@@ -46,6 +51,8 @@ travou** — isso é o dado mais valioso do teste inteiro.
 - [ ] Escolher a **sua cidade** no cadastro e conferir se a distribuidora que
       aparece é mesmo a que manda a sua conta
 - [ ] Abrir o **Assistente** e perguntar por que a conta veio no valor que veio
+- [ ] Sem painel? Conferir se o cartão **"Vale a pena instalar?"** faz sentido
+      para a sua casa — e se o valor estimado parece plausível
 - [ ] Abrir o site no celular e conferir se dá para usar
 
 ---

@@ -65,18 +65,30 @@ function mPainel() {
   const v = visao(), p = potenciaAgora();
   const dia = v.md.dias[v.data.getDate() - 1];
   const max = Math.max(Math.max.apply(null, dia.cons), Math.max.apply(null, dia.ger)) * 1.12 || 1;
-  const tiles = [
-    ['Consumo', nf(v.mtd.tc), 'kWh no mês'],
-    ['Geração', nf(v.mtd.tg), 'kWh no mês'],
-    ['CO₂ evitado', nf(v.co2, 1), 'kg neste mês'],
-    ['Créditos', nf(v.creditos), 'kWh na rede']
-  ].map(t => '<div class="mob-tile"><div class="mob-tile-k">' + t[0] + '</div><div class="mob-tile-v">' + t[1] + '</div><div class="mob-tile-s">' + t[2] + '</div></div>').join('');
+  const u = unidade();
+  /* sem painel, tres dos quatro numeros seriam zero */
+  const tiles = (u.temSolar === false
+    ? [
+      ['Consumo', nf(v.mtd.tc), 'kWh no mês'],
+      ['Conta', brl(v.contaProj), 'projeção do mês'],
+      ['Por dia', brl(v.contaProj / v.nd, 2), 'no ritmo de hoje'],
+      ['Tarifa', nf(tarifaAtual(), 2), 'R$ por kWh']
+    ]
+    : [
+      ['Consumo', nf(v.mtd.tc), 'kWh no mês'],
+      ['Geração', nf(v.mtd.tg), 'kWh no mês'],
+      ['CO₂ evitado', nf(v.co2, 1), 'kg neste mês'],
+      ['Créditos', nf(v.creditos), 'kWh na rede']
+    ]).map(t => '<div class="mob-tile"><div class="mob-tile-k">' + t[0] + '</div><div class="mob-tile-v">' + t[1] + '</div><div class="mob-tile-s">' + t[2] + '</div></div>').join('');
 
   return '<div class="mob-col">' +
     '<div class="mob-hero"><div style="position:relative">' +
-    '<div class="mob-hero-k">Economizado em ' + MESES[v.m] + '</div>' +
-    '<div class="mob-hero-v"><span class="cur">R$</span><span class="num">' + nf(v.economia) + '</span></div>' +
-    '<div class="mob-hero-s">O sol cobriu ' + pct(v.autoPct) + ' do seu consumo até agora</div>' +
+    '<div class="mob-hero-k">' + (u.temSolar === false ? 'Sua conta de ' + MESES[v.m] : 'Economizado em ' + MESES[v.m]) + '</div>' +
+    '<div class="mob-hero-v"><span class="cur">R$</span><span class="num">' +
+    nf(u.temSolar === false ? v.contaProj : v.economia) + '</span></div>' +
+    '<div class="mob-hero-s">' + (u.temSolar === false
+      ? 'Projeção do mês fechado, com ' + nf(v.projConsumo) + ' kWh'
+      : 'O sol cobriu ' + pct(v.autoPct) + ' do seu consumo até agora') + '</div>' +
     '<div class="mob-live"><span class="live-dot batendo"></span><span>Agora: consumindo <b id="mLiveC">' + nf(p.cons, 2) + ' kW</b> · gerando <b id="mLiveG">' + nf(p.ger, 2) + ' kW</b></span></div>' +
     '</div></div>' +
     '<div class="mob-card"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px">' +
@@ -139,7 +151,7 @@ function mAparelhos() {
 }
 
 function mMetas() {
-  const v = visao(), meta = S.metas[S.perfil];
+  const v = visao(), meta = metaAtual();
   const p = clamp((v.mtd.tc / meta) * 100, 0, 100);
   const acima = v.projConsumo > meta;
   const feed = alertas().slice(0, 4).map(a => '<div class="feed-item feed-item--' + a.tipo + '"><span class="feed-dot"></span>' +
@@ -229,6 +241,22 @@ function mCadastro() {
     '</div></div>';
 }
 
+/* A simulacao no celular: os mesmos numeros do cartao amplo, em coluna. */
+function mSimulacao() {
+  const sim = simulacaoSolar(S.perfil);
+  if (!sim) return '';
+  return '<div class="mob-card"><h3>Vale a pena instalar?</h3>' +
+    '<div class="mob-hero-v" style="margin-top:6px"><span class="num" style="font-size:30px;color:var(--ink)">' +
+    brl(sim.economiaMes) + '</span></div>' +
+    '<div style="font-size:12.5px;color:var(--muted);margin-top:2px">a menos por mês, de ' +
+    brl(sim.contaHoje) + ' para ' + brl(sim.contaDepois) + '</div>' +
+    '<div class="mob-rowline" style="margin-top:12px"><span>Sistema</span><b class="mono">' + nf(sim.kwp, 1) + ' kWp</b></div>' +
+    '<div class="mob-rowline"><span>Investimento</span><b class="mono">' + brl(sim.investimento) + '</b></div>' +
+    '<div class="mob-rowline"><span>Se paga em</span><b class="mono">' + (sim.paybackAnos ? nf(sim.paybackAnos, 1) + ' anos' : '—') + '</b></div>' +
+    '<div style="font-size:11.5px;color:var(--faint);margin-top:10px;line-height:1.5">' +
+    'Estimativa para decidir se vale pedir orçamento — não é orçamento.</div></div>';
+}
+
 function mConfig() {
   const v = visao(), u = unidade(), t = tarifaAtual();
   return '<div class="mob-col"><div class="mob-card">' +
@@ -241,9 +269,13 @@ function mConfig() {
     '<div class="mob-rowline"><span>Cidade</span><b>' + esc(u.cidade ? (cidade(u.cidade) || {}).nome || '—' : '—') + '</b></div>' +
     '<div class="mob-rowline"><span>Distribuidora</span><b>' + esc(u.distribuidora) + '</b></div>' +
     '<div class="mob-rowline"><span>Compensação</span><b class="mono">R$ ' + nf(u.tarifaComp, 2) + '</b></div>' +
-    '<div class="mob-rowline"><span>Potência</span><b class="mono">' + nf(u.potenciaKwp, 1) + ' kWp</b></div>' +
-    '<div class="mob-rowline"><span>Painéis</span><b class="mono">' + u.paineis + '</b></div>' +
+    (u.temSolar === false
+      ? '<div class="mob-rowline"><span>Sistema solar</span><b>Ainda não instalado</b></div>'
+      : '<div class="mob-rowline"><span>Potência</span><b class="mono">' + nf(u.potenciaKwp, 1) + ' kWp</b></div>' +
+        '<div class="mob-rowline"><span>Painéis</span><b class="mono">' + u.paineis + '</b></div>') +
     '<div class="mob-rowline"><span>Mínimo faturado</span><b class="mono">' + u.minFatura + ' kWh</b></div></div>' +
-    '<div class="softbox" style="margin-top:0">Sem geração solar sua conta seria <b>' + brl(v.semSolarProj) + '</b> por mês.</div>' +
+    (u.temSolar === false
+      ? mSimulacao()
+      : '<div class="softbox" style="margin-top:0">Sem geração solar sua conta seria <b>' + brl(v.semSolarProj) + '</b> por mês.</div>') +
     '<button class="danger-btn" style="padding:10px 0" data-act="reset-tudo">Apagar meus dados</button></div>';
 }

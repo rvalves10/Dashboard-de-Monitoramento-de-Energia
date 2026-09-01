@@ -175,12 +175,23 @@ function vPainel() {
   }).join('');
 
   const diasGratis = Math.round(v.economia / Math.max(t * (v.projConsumo / v.nd), .01));
-  const hero = '<section class="card card--dark hero s7"><div class="hero-in">' +
-    '<div class="hero-top"><span class="hero-kicker">Você economizou em ' + MESES[v.m] + '</span>' +
-    '<span class="delta' + (dEcon < 0 ? ' delta--down' : '') + '">' + ico(IC.cima, 12, 'currentColor', 2.6) + sinal(dEcon, 0) + '%</span></div>' +
-    '<div class="hero-money"><span class="hero-cur">R$</span><span class="big big-74" id="heroEcon">' + nf(v.economia) + '</span></div>' +
-    '<p class="hero-line">Equivale a ' + diasGratis + ' dias de energia de graça. Seu telhado cobriu ' + pct(v.autoPct) + ' de tudo que a unidade gastou até agora — e o mês deve fechar em ' + brl(v.economiaCheia) + '.</p>' +
-    '<div class="spark">' + spark + '</div></div></section>';
+
+  /* Sem painel no telhado não há economia para anunciar, e um "R$ 0" gigante
+     seria a pior primeira impressão possível. O número grande passa a ser o
+     que essa pessoa realmente quer saber: quanto vem na conta. */
+  const hero = u.temSolar === false
+    ? '<section class="card card--dark hero s7"><div class="hero-in">' +
+      '<div class="hero-top"><span class="hero-kicker">Sua conta de ' + MESES[v.m] + '</span></div>' +
+      '<div class="hero-money"><span class="hero-cur">R$</span><span class="big big-74" id="heroEcon">' + nf(v.contaProj) + '</span></div>' +
+      '<p class="hero-line">Projeção para o mês fechado, com ' + nf(v.projConsumo) + ' kWh de consumo. ' +
+      'Até agora foram ' + nf(v.mtd.tc) + ' kWh — uma média de ' + nf(v.mtd.tc / Math.max(v.mtd.dias, .1), 1) + ' kWh por dia.</p>' +
+      '<div class="spark">' + sparkContas(v, u, t) + '</div></div></section>'
+    : '<section class="card card--dark hero s7"><div class="hero-in">' +
+      '<div class="hero-top"><span class="hero-kicker">Você economizou em ' + MESES[v.m] + '</span>' +
+      '<span class="delta' + (dEcon < 0 ? ' delta--down' : '') + '">' + ico(IC.cima, 12, 'currentColor', 2.6) + sinal(dEcon, 0) + '%</span></div>' +
+      '<div class="hero-money"><span class="hero-cur">R$</span><span class="big big-74" id="heroEcon">' + nf(v.economia) + '</span></div>' +
+      '<p class="hero-line">Equivale a ' + diasGratis + ' dias de energia de graça. Seu telhado cobriu ' + pct(v.autoPct) + ' de tudo que a unidade gastou até agora — e o mês deve fechar em ' + brl(v.economiaCheia) + '.</p>' +
+      '<div class="spark">' + spark + '</div></div></section>';
 
   const dash = Math.round((clamp(v.autoPct, 0, 100) / 100) * 351.8);
   const donut = '<section class="card s5"><h2>Autossuficiência</h2>' +
@@ -197,12 +208,24 @@ function vPainel() {
     linhaSplit('var(--good-soft)', 'Injetado', nf(v.mtd.inj, 1) + ' kWh') +
     '</div></div></section>';
 
-  const kpis = [
-    { l: 'Consumo do mês', v: nf(v.mtd.tc), un: 'kWh', cor: 'var(--grid)', ic: IC.raio, n: 'Média de ' + nf(v.mtd.tc / Math.max(v.mtd.dias, .1), 1) + ' kWh por dia' },
-    { l: 'Geração solar', v: nf(v.mtd.tg), un: 'kWh', cor: 'var(--sun)', ic: IC.sol, n: u.paineis + ' painéis · ' + nf(u.potenciaKwp, 1) + ' kWp instalados' },
-    { l: 'CO₂ evitado', v: nf(v.co2, 1), un: 'kg', cor: 'var(--good)', ic: IC.folha, n: 'Como ' + nf(v.co2 / 0.12) + ' km de carro não rodados' },
-    { l: 'Créditos na rede', v: nf(v.creditos), un: 'kWh', cor: 'var(--violet)', ic: IC.troca, n: 'Válidos por 60 meses · ' + esc(u.distribuidora) }
-  ].map(k => '<section class="card card--tight s3"><div class="kpi-top">' + ico(k.ic, 15, k.cor, 1.9) + '<span class="kpi-lbl">' + k.l + '</span></div>' +
+  /* Geração, CO2 evitado e créditos são todos zero sem painel. Mostrar três
+     zeros seria desperdiçar metade do painel — as caixas passam a falar do
+     que existe: o custo do dia, o aparelho que mais pesa e a tarifa. */
+  const eq0 = eq.filter(e => !e.sintetico)[0];
+  const kpis = (u.temSolar === false
+    ? [
+      { l: 'Consumo do mês', v: nf(v.mtd.tc), un: 'kWh', cor: 'var(--grid)', ic: IC.raio, n: 'Média de ' + nf(v.mtd.tc / Math.max(v.mtd.dias, .1), 1) + ' kWh por dia' },
+      { l: 'Custo por dia', v: brl((v.contaProj / v.nd), 2).replace('R$ ', ''), un: 'R$', cor: 'var(--grid)', ic: IC.papel, n: 'No ritmo deste mês' },
+      { l: 'Quem mais pesa', v: eq0 ? nf((eq0.kwh / Math.max(v.projConsumo, 1)) * 100) : '—', un: '%', cor: eq0 ? eq0.cor : 'var(--faint)', ic: IC.aparelhos, n: eq0 ? esc(eq0.nome) : 'cadastre seus aparelhos' },
+      { l: 'Tarifa', v: nf(t, 2), un: 'R$/kWh', cor: 'var(--grid)', ic: IC.troca, n: esc(u.distribuidora) }
+    ]
+    : [
+      { l: 'Consumo do mês', v: nf(v.mtd.tc), un: 'kWh', cor: 'var(--grid)', ic: IC.raio, n: 'Média de ' + nf(v.mtd.tc / Math.max(v.mtd.dias, .1), 1) + ' kWh por dia' },
+      { l: 'Geração solar', v: nf(v.mtd.tg), un: 'kWh', cor: 'var(--sun)', ic: IC.sol, n: u.paineis + ' painéis · ' + nf(u.potenciaKwp, 1) + ' kWp instalados' },
+      { l: 'CO₂ evitado', v: nf(v.co2, 1), un: 'kg', cor: 'var(--good)', ic: IC.folha, n: 'Como ' + nf(v.co2 / 0.12) + ' km de carro não rodados' },
+      { l: 'Créditos na rede', v: nf(v.creditos), un: 'kWh', cor: 'var(--violet)', ic: IC.troca, n: 'Válidos por 60 meses · ' + esc(u.distribuidora) }
+    ]
+  ).map(k => '<section class="card card--tight s3"><div class="kpi-top">' + ico(k.ic, 15, k.cor, 1.9) + '<span class="kpi-lbl">' + k.l + '</span></div>' +
     '<div class="kpi-val"><span class="big big-32">' + k.v + '</span><span class="kpi-unit">' + k.un + '</span></div>' +
     '<div class="kpi-note">' + k.n + '</div></section>').join('');
 
@@ -233,7 +256,8 @@ function vPainel() {
     '<div style="display:flex;flex-direction:column;gap:9px">' +
     linhaConta('Energia da rede (' + nf(v.projRede) + ' kWh)', brl(v.projRede * t), 'var(--ink)') +
     linhaConta('Bandeira + iluminação pública', brl(v.projRede * 0.0189 + u.ilum), 'var(--ink)') +
-    linhaConta('Abatido por créditos solares', '− ' + brl(v.projUsado * t), 'var(--good)') +
+    (u.temSolar === false ? '' :
+      linhaConta('Abatido por créditos solares', '− ' + brl(v.projUsado * t), 'var(--good)')) +
     '</div></section>';
 
   const mesesPay = v.economiaTotal > 0 ? Math.round(u.investimento / (v.economiaTotal / u.mesesOperacao)) : 0;
@@ -250,9 +274,77 @@ function vPainel() {
   /* O resumo entra logo abaixo do bloco da economia: e o primeiro lugar onde
      o olho para depois do numero grande, e e texto — dilui a parede de
      numeros em vez de somar mais uma. Some sozinho quando nao existe. */
+  /* Sem painel, saem as duas peças que só existem por causa dele — o donut
+     de autossuficiência e o retorno do investimento — e entra a única
+     pergunta que essa pessoa tem: vale a pena instalar? */
+  if (u.temSolar === false) {
+    return '<div class="grid12 enter">' + hero + cardValeAPena() + cardResumo() + kpis + curva + desagreg +
+      '<div class="s5 stack">' + conta + '</div></div>';
+  }
   return '<div class="grid12 enter">' + hero + donut + cardResumo() + kpis + curva + desagreg +
     '<div class="s5 stack">' + conta + payback + '</div></div>';
 }
+/* As barrinhas do bloco grande, para quem não tem painel: em vez da economia
+   mês a mês (que seria uma fileira de zeros), o valor da conta. */
+function sparkContas(v, u, t) {
+  const meses = v.ledger.linhas.slice(-12);
+  const valores = meses.map(l => contaDoMes(l, u, t));
+  const maxV = Math.max.apply(null, valores) || 1;
+  return meses.map((l, i) => {
+    const est = !l.medido && !l.parcial;
+    return '<div class="spark-col' + (i === meses.length - 1 ? ' is-now' : '') + (est ? ' spark-col--est' : '') +
+      '" title="' + MES3[l.m] + ': ' + brl(valores[i]) + (est ? ' (estimado)' : '') + '">' +
+      '<span class="spark-bar" style="height:' + Math.round((valores[i] / maxV) * 52 + 6) + 'px"></span>' +
+      '<span class="spark-lbl">' + MES3[l.m] + '</span></div>';
+  }).join('');
+}
+
+/* ---------- vale a pena instalar? ----------
+
+   O cartão que só quem não tem sistema vê, e a coisa que o Solaris pode
+   responder melhor que qualquer site de orçamento: ele já sabe o consumo
+   real, a tarifa real, a condição do telhado e o sol da cidade.
+
+   O número grande é a economia por mês, e não o investimento: quem está
+   decidindo compara com a conta que paga hoje, não com o preço de um bem.
+   O preço vem logo abaixo, junto do tempo de retorno.
+
+   Âmbar aqui é legítimo: fala de energia que viria do sol. */
+function cardValeAPena() {
+  const sim = simulacaoSolar(S.perfil);
+  if (!sim) return '';
+
+  const anos = sim.paybackAnos;
+  return '<section class="card s5 vale">' +
+    '<div class="card-head"><div><h2>Vale a pena instalar?</h2>' +
+    '<div class="card-sub">Estimativa com o seu consumo, a sua tarifa e o sol da sua cidade</div></div></div>' +
+
+    '<div class="vale-num">' +
+    '<span class="big big-46">' + brl(sim.economiaMes) + '</span>' +
+    '<span class="vale-un">a menos por mês</span></div>' +
+    '<div class="vale-hoje">Sua conta cairia de ' + brl(sim.contaHoje) + ' para cerca de ' +
+    brl(sim.contaDepois) + '.</div>' +
+
+    '<dl class="kvs" style="margin-top:var(--e4)">' +
+    kv('Sistema que cobre seu consumo', nf(sim.kwp, 1) + ' kWp · ' + sim.paineis + ' painéis', true) +
+    kv('Investimento estimado', brl(sim.investimento), true) +
+    kv('Se paga em', anos ? nf(anos, 1) + ' anos' : '—', true) +
+    kv('Geraria por mês', nf(sim.geracaoMes) + ' kWh', true) +
+    '</dl>' +
+
+    '<div class="softbox" style="margin-top:var(--e4)">' +
+    (sim.percFioB > 0
+      ? 'Já com o <b>Fio B</b> da Lei 14.300 descontado: instalando hoje, você pagaria ' +
+        pct(sim.percFioB * 100) + ' dele sobre a energia compensada, cerca de ' + brl(sim.fioB, 2) + ' por mês.'
+      : 'Sem cobrança de Fio B neste ano.') +
+    '</div>' +
+
+    '<div class="vale-aviso">' + ico(IC.faisca, 13, 'currentColor', 2) +
+    '<span>Estimativa para você decidir se vale pedir orçamento — <b>não é orçamento</b>. ' +
+    'O preço real depende do telhado, do inversor e de quem instala.</span></div>' +
+    '</section>';
+}
+
 function linhaSplit(cor, lbl, val) {
   return '<div><div class="split-row-top"><span class="split-dot" style="background:' + cor + '"></span><span class="split-lbl">' + lbl + '</span></div><div class="split-val">' + val + '</div></div>';
 }
@@ -261,6 +353,11 @@ function linhaConta(l, v, cor) {
 }
 
 function graficoDia(dia, v) {
+  /* Sem painel nao ha serie de geracao: uma linha ambar deitada no zero, com
+     legenda "Geracao solar" ao lado, faz a pessoa procurar um defeito que nao
+     existe. Sai a serie, sai a legenda, e o subtitulo passa a falar do que o
+     grafico realmente mostra. */
+  const semSolar = unidade().temSolar === false;
   const max = Math.max(Math.max.apply(null, dia.cons), Math.max.apply(null, dia.ger)) * 1.15 || 1;
   const W = 720, H = 200;
   const grade = [0, 1, 2, 3].map(i => '<g><line x1="0" y1="' + i * 50 + '" x2="720" y2="' + i * 50 + '" stroke="var(--ground-2)" stroke-width="1"/>' +
@@ -270,22 +367,30 @@ function graficoDia(dia, v) {
   const nowY = H - (dia.ger[hr] / max) * H;
   const eixo = ['00h', '04h', '08h', '12h', '16h', '20h', '23h'].map(t => '<span>' + t + '</span>').join('');
   return '<section class="card s12"><div class="card-head"><div><h2>Hoje, hora a hora</h2>' +
-    '<div class="card-sub">Onde o sol cobre e onde a rede entra · a linha pontilhada vertical é agora</div></div>' +
-    '<div class="legend"><span><i class="swatch" style="background:var(--sun)"></i>Geração solar</span>' +
+    '<div class="card-sub">' + (semSolar
+      ? 'Como o seu consumo se distribui ao longo do dia · a linha pontilhada vertical é agora'
+      : 'Onde o sol cobre e onde a rede entra · a linha pontilhada vertical é agora') + '</div></div>' +
+    '<div class="legend">' +
+    (semSolar ? '' : '<span><i class="swatch" style="background:var(--sun)"></i>Geração solar</span>') +
     '<span><i class="swatch" style="background:var(--grid)"></i>Consumo</span></div></div>' +
     '<div class="chart" id="chartDia" data-max="' + max + '" tabindex="0" role="img" ' +
-    'aria-label="Curva de hoje. Geração máxima ' + nf(Math.max.apply(null, dia.ger), 2) + ' quilowatts por volta das ' +
-    dia.ger.indexOf(Math.max.apply(null, dia.ger)) + ' horas. Consumo máximo ' + nf(Math.max.apply(null, dia.cons), 2) +
+    'aria-label="Curva de hoje. ' +
+    (semSolar ? '' : 'Geração máxima ' + nf(Math.max.apply(null, dia.ger), 2) + ' quilowatts por volta das ' +
+      dia.ger.indexOf(Math.max.apply(null, dia.ger)) + ' horas. ') +
+    'Consumo máximo ' + nf(Math.max.apply(null, dia.cons), 2) +
     ' quilowatts por volta das ' + dia.cons.indexOf(Math.max.apply(null, dia.cons)) + ' horas. ' +
     'Use as setas para percorrer hora a hora.">' +
     '<svg viewBox="0 0 720 215" aria-hidden="true">' +
     '<defs><linearGradient id="gSol" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--sun)" stop-opacity="0.28"/><stop offset="100%" stop-color="var(--sun)" stop-opacity="0"/></linearGradient></defs>' +
     grade +
-    '<path d="' + caminho(dia.ger, max, W, H, true) + '" fill="url(#gSol)"/>' +
-    '<path d="' + caminho(dia.ger, max, W, H) + '" fill="none" stroke="var(--sun)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>' +
+    (semSolar ? '' :
+      '<path d="' + caminho(dia.ger, max, W, H, true) + '" fill="url(#gSol)"/>' +
+      '<path d="' + caminho(dia.ger, max, W, H) + '" fill="none" stroke="var(--sun)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>') +
     '<path d="' + caminho(dia.cons, max, W, H) + '" fill="none" stroke="var(--grid)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="5 4"/>' +
     '<line class="now-line" x1="' + nowX.toFixed(1) + '" y1="0" x2="' + nowX.toFixed(1) + '" y2="' + H + '"/>' +
-    '<circle class="now-dot" cx="' + nowX.toFixed(1) + '" cy="' + nowY.toFixed(1) + '" r="4.5" fill="var(--sun)" stroke="var(--ground-2)" stroke-width="2"/>' +
+    '<circle class="now-dot" cx="' + nowX.toFixed(1) + '" cy="' +
+    (semSolar ? (H - (dia.cons[hr] / max) * H) : nowY).toFixed(1) + '" r="4.5" fill="' +
+    (semSolar ? 'var(--grid)' : 'var(--sun)') + '" stroke="var(--ground-2)" stroke-width="2"/>' +
     '</svg><div class="tip" id="tipDia"></div></div>' +
     '<div class="chart-axis">' + eixo + '</div></section>';
 }
@@ -540,7 +645,7 @@ function sliderBloco(lbl, idLbl, valor, campo, min, max, step, val, esq, dir) {
 /* ---------- alertas e metas ---------- */
 function vAlertas() {
   const v = visao(), t = tarifaAtual();
-  const meta = S.metas[S.perfil];
+  const meta = metaAtual();
   const usado = v.mtd.tc, proj = v.projConsumo;
   const acima = proj > meta;
   const p = clamp((usado / meta) * 100, 0, 100);
@@ -599,16 +704,21 @@ function vRelatorio() {
   const semSolar = Math.max(l.cons, 0) * t + l.cons * 0.0189 + u.ilum;
   const arv = Math.round(v.co2 / 22 * 12);
 
+  /* Sem painel, as quatro linhas de compensação são todas zero. Fatura com
+     linha zerada não é fatura detalhada: é ruído que faz a pessoa procurar
+     um erro que não existe. */
   const linhas = [
-    ['Consumo registrado no medidor', nf(l.cons) + ' kWh', brl(l.cons * t), ''],
+    ['Consumo registrado no medidor', nf(l.cons) + ' kWh', brl(l.cons * t), '']
+  ].concat(u.temSolar === false ? [] : [
     ['Energia gerada e autoconsumida', '− ' + nf(l.auto) + ' kWh', '− ' + brl(l.auto * t), 'credit'],
     ['Energia injetada na rede', '− ' + nf(l.inj) + ' kWh', '− ' + brl(l.inj * u.tarifaComp), 'credit'],
     ['Créditos usados neste mês', '− ' + nf(l.usado) + ' kWh', '− ' + brl(l.usado * t), 'credit'],
-    ['Fio B sobre energia compensada (Lei 14.300)', pct(l.percFioB * 100) + ' de ' + brl(u.fioB, 2) + '/kWh', brl(l.fioB, 2), ''],
+    ['Fio B sobre energia compensada (Lei 14.300)', pct(l.percFioB * 100) + ' de ' + brl(u.fioB, 2) + '/kWh', brl(l.fioB, 2), '']
+  ]).concat([
     ['Bandeira amarela', '—', brl(bandeira, 2), ''],
     ['Contribuição de iluminação pública', '—', brl(u.ilum, 2), ''],
     ['Total a pagar', nf(faturado) + ' kWh faturados', brl(total), 'total']
-  ].map(r => '<div class="inv-row' + (r[3] === 'total' ? ' inv-row--total' : r[3] === 'credit' ? ' inv-row--credit' : '') + '">' +
+  ]).map(r => '<div class="inv-row' + (r[3] === 'total' ? ' inv-row--total' : r[3] === 'credit' ? ' inv-row--credit' : '') + '">' +
     '<span>' + r[0] + '</span><span class="inv-q">' + r[1] + '</span><span class="inv-v">' + r[2] + '</span></div>').join('');
 
   const meses = v.ledger.linhas.slice(-12);
@@ -625,10 +735,16 @@ function vRelatorio() {
     '<button class="ghost-btn no-print" data-act="imprimir">' + ico(IC.print, 14, 'currentColor', 1.9) + 'Imprimir</button></div>' +
     '<div class="inv-head"><span>Descrição</span><span>Quantidade</span><span style="text-align:right">Valor</span></div>' +
     linhas +
+    (u.temSolar === false
+      ? '<div class="leaf leaf--neutro">' + ico(IC.sol, 20, 'var(--sun-ink)', 1.9) +
+        '<div><div class="leaf-t">Esta unidade ainda não tem sistema solar</div>' +
+        '<div class="leaf-s">Todo o consumo vem da rede. No painel, o cartão “Vale a pena instalar?” ' +
+        'estima quanto um sistema dimensionado para o seu consumo tiraria desta conta.</div></div></div>'
+      :
     '<div class="leaf">' + ico(IC.folha, 20, 'var(--good)', 1.9) +
     '<div><div class="leaf-t">Sem os painéis, esta conta seria ' + brl(semSolar) + '</div>' +
     '<div class="leaf-s">Você vai pagar ' + brl(total) + ' — ' + pct(((semSolar - total) / Math.max(semSolar, 1)) * 100) + ' menor. No mês, ' +
-    nf(v.co2, 1) + ' kg de CO₂ deixaram de ir para a atmosfera, o mesmo que ' + arv + ' árvores absorvem em um mês.</div></div></div>' +
+    nf(v.co2, 1) + ' kg de CO₂ deixaram de ir para a atmosfera, o mesmo que ' + arv + ' árvores absorvem em um mês.</div></div></div>') +
     /* O relatorio e a peca que a pessoa imprime e leva para alguem. Se o mes
        ainda nao foi medido inteiro, isso precisa estar escrito nele, e nao
        so na tela — por isso entra no corpo do documento, nao num aviso. */
@@ -650,13 +766,14 @@ function vRelatorio() {
     '<div class="big big-30" style="margin-top:8px">' + brl(soma(meses.map(x => x.economia))) + '</div>' +
     '<div class="ybars">' + ybars + '</div></section>' +
     cardConferencia() +
+    (u.temSolar === false ? '' :
     '<section class="card" style="padding:20px 22px 22px"><h2>Saldo de créditos</h2>' +
     '<div class="big big-30" style="margin-top:8px">' + nf(v.creditos) + ' kWh</div>' +
     '<div style="font-size:12.5px;color:var(--faint);margin-top:6px;line-height:1.5">' +
     (v.creditos >= 1
       ? 'Energia injetada que ainda não foi usada. Vale por 60 meses e abate contas futuras — neste mês ela já derrubou ' + brl(l.usado * t) + '.'
       : 'Esta unidade consome mais do que gera, então tudo o que é injetado volta no mesmo ciclo: não sobra saldo. Neste mês os créditos abateram ' + brl(l.usado * t) + '.') +
-    '</div></section>' +
+    '</div></section>') +
     '</div></div>';
 }
 
@@ -756,18 +873,27 @@ function vConfig() {
       '. O degrau sobe até 2028 — no total já foram <b>' + brl(v.fioBTotal) + '</b> desde a entrada em operação.') +
     '</div></section>' +
 
-    '<section class="card s6" style="padding:24px 26px 26px"><h2>Unidade e sistema solar</h2>' +
+    '<section class="card s6" style="padding:24px 26px 26px"><h2>' +
+    (u.temSolar === false ? 'Unidade' : 'Unidade e sistema solar') + '</h2>' +
     '<dl class="kvs" style="margin-top:18px">' +
     kv('Unidade', esc(u.nome)) +
     kv('Perfil', esc(u.tipo)) +
     kv('Cidade', esc(u.cidade ? (cidade(u.cidade) || {}).nome || '—' : 'Não informada')) +
     kv('Distribuidora', esc(u.distribuidora)) +
-    kv('Potência instalada', nf(u.potenciaKwp, 1) + ' kWp', true) +
-    kv('Painéis', u.paineis + ' painéis', true) +
-    kv('Investimento', brl(u.investimento), true) +
-    kv('Em operação desde', MESES[inicio.getMonth()] + ' de ' + inicio.getFullYear() + ' · ' + u.mesesOperacao + ' meses') +
+    (u.temSolar === false
+      ? kv('Sistema solar', 'Ainda não instalado') +
+        kv('Telhado', esc(u.condicaoTelhado)) +
+        kv('Acompanhando desde', MESES[inicio.getMonth()] + ' de ' + inicio.getFullYear() + ' · ' + u.mesesOperacao + ' meses')
+      : kv('Potência instalada', nf(u.potenciaKwp, 1) + ' kWp', true) +
+        kv('Painéis', u.paineis + ' painéis', true) +
+        kv('Investimento', brl(u.investimento), true) +
+        kv('Em operação desde', MESES[inicio.getMonth()] + ' de ' + inicio.getFullYear() + ' · ' + u.mesesOperacao + ' meses')) +
     '</dl>' +
-    '<div class="softbox">Com a tarifa atual, sua conta média sem geração solar seria <b>' + brl(v.semSolarProj) + '</b> por mês. Com os painéis, a projeção é <b>' + brl(v.contaProj) + '</b>.</div>' +
+    (u.temSolar === false
+      ? '<div class="softbox">Com a tarifa atual, a projeção para o mês fechado é <b>' + brl(v.contaProj) + '</b>. ' +
+        'O painel mostra no cartão “Vale a pena instalar?” quanto disso um sistema solar traria de volta.</div>'
+      : '<div class="softbox">Com a tarifa atual, sua conta média sem geração solar seria <b>' + brl(v.semSolarProj) + '</b> por mês. Com os painéis, a projeção é <b>' + brl(v.contaProj) + '</b>.</div>') +
+    (u.temSolar === false ? '' :
     '<div class="' + (v.desempenho < 85 ? 'note note--bad' : 'note note--good') + '" style="margin-top:12px">' +
     '<span class="note-dot"></span><div>' +
     '<div class="note-t">Saúde do sistema: ' + pct(v.desempenho) + ' do esperado para este telhado</div>' +
@@ -778,7 +904,7 @@ function vConfig() {
     (v.desempenho < 85
       ? 'Abaixo do esperado: costuma ser sujeira nos módulos ou queda de rendimento do inversor.'
       : 'Dentro do esperado para as condições da instalação.') +
-    '</div></div></div>' +
+    '</div></div></div>') +
     '<hr class="rule" style="margin:22px 0 14px">' +
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">' +
     '<div style="font-size:12.5px;color:var(--faint);max-width:44ch">Aparelhos cadastrados, metas e tarifa ficam salvos neste navegador.</div>' +
@@ -882,7 +1008,9 @@ function cardUnidades() {
       const u = montarUnidade(f);
       return '<div class="un-row">' +
         '<span style="min-width:0"><b style="font-size:13.5px">' + esc(u.nome) + '</b>' +
-        '<span class="un-meta">' + esc(u.tipo) + ' · ' + nf(u.potenciaKwp, 1) + ' kWp · ' + nf(u.consumoMes) + ' kWh/mês</span></span>' +
+        '<span class="un-meta">' + esc(u.tipo) + ' · ' +
+        (u.temSolar === false ? 'sem sistema solar' : nf(u.potenciaKwp, 1) + ' kWp') +
+        ' · ' + nf(u.consumoMes) + ' kWh/mês</span></span>' +
         (S.perfil === f.chave ? '<span class="pill pill--good">Em uso</span>' : '') +
         '<button class="eq-kill" style="opacity:1" data-act="remover-unidade" data-chave="' + f.chave + '" ' +
         'aria-label="Remover ' + esc(u.nome) + '">' + ico(IC.lixo, 15, 'currentColor', 1.8) + '</button></div>';
@@ -1001,8 +1129,20 @@ function textoCobertura(p, n) {
 const PASSOS_UNIDADE = [
   { n: 1, titulo: 'Sua conta de luz', sub: 'Os números que já estão na fatura que chega todo mês.' },
   { n: 2, titulo: 'Seu sistema solar', sub: 'O que está na nota do instalador. O resto o sistema calcula.' },
+  /* o passo 2 troca de assunto para quem ainda não tem sistema */
   { n: 3, titulo: 'O que você tem ligado', sub: 'Só o que existe na sua unidade. É isso que o painel vai dividir.' }
 ];
+
+/* O passo 2 pergunta coisas diferentes conforme a resposta do passo 1, e o
+   título tem que acompanhar — senão a pessoa lê "Seu sistema solar" numa
+   tela que só pergunta do telhado. */
+function tituloDoPasso(n) {
+  const p = PASSOS_UNIDADE[n - 1];
+  if (n === 2 && S.nova.temSolar === false) {
+    return { titulo: 'Seu telhado', sub: 'Duas perguntas, e o Solaris já consegue simular um sistema para você.' };
+  }
+  return p;
+}
 
 function passoAtual() {
   return clamp(Number(S.nova.passo) || 1, 1, 3);
@@ -1011,7 +1151,9 @@ function passoAtual() {
 function passoCompleto(n) {
   const v = S.nova;
   if (n === 1) return v.nome.trim().length > 1 && v.consumoMes > 0 && v.tarifa > 0;
-  if (n === 2) return v.potenciaKwp > 0 && v.paineis > 0;
+  /* Sem sistema não há potência para informar: o passo 2 fecha com o que
+     ele realmente pede, que é o telhado (sempre tem um escolhido). */
+  if (n === 2) return v.temSolar === false || (v.potenciaKwp > 0 && v.paineis > 0);
   return true;
 }
 
@@ -1112,6 +1254,28 @@ function blocoCidade(n) {
     '</div>';
 }
 
+/* Já tem painel no telhado, ou ainda não?
+
+   Esta pergunta precisa vir cedo, no primeiro passo, porque ela muda o
+   cadastro inteiro: quem não tem não vai saber responder potência em kWp nem
+   quanto pagou, e travar a pessoa nessas perguntas é perdê-la ali.
+
+   E quem ainda não tem é justamente quem mais tem o que ganhar com o
+   Solaris: ele já vai saber o consumo, a tarifa, o telhado e o sol da cidade
+   dela — que é tudo o que falta para responder “vale a pena?”. */
+function blocoTemSolar(n) {
+  const opcao = (v, t, d) =>
+    '<button class="opt" data-act="nova-solar" data-v="' + v + '" aria-pressed="' + ((n.temSolar !== false) === (v === 'sim')) + '">' +
+    '<span class="opt-t">' + t + '</span><span class="opt-d">' + d + '</span></button>';
+
+  return '<div class="field"><span class="field-lbl">Você já tem sistema solar?</span>' +
+    '<div class="dica">Se ainda não tem, o Solaris acompanha o seu consumo do mesmo jeito — e calcula quanto um sistema economizaria na sua conta.</div>' +
+    '<div class="opts">' +
+    opcao('sim', 'Já tenho painéis instalados', 'Vou informar a potência e o que paguei, e o painel mostra a economia real.') +
+    opcao('nao', 'Ainda não tenho', 'O painel mostra para onde vai a sua energia e simula quanto um sistema traria de volta.') +
+    '</div></div>';
+}
+
 function vUnidade() {
   const n = S.nova, p = previaUnidade(), at = passoAtual();
   const pode = passoCompleto(1) && passoCompleto(2);
@@ -1136,21 +1300,34 @@ function vUnidade() {
     corpo = blocoFotoConta() +
       campo('unNome', 'Nome da unidade', 'Como você quer ver no menu — “Minha casa”, “Loja do centro”.', n.nome) +
       blocoCidade(n) +
+      blocoTemSolar(n) +
       campo('unConsumo', 'Consumo médio por mês (kWh)', 'Pegue a média dos últimos 12 meses — costuma vir num gráfico na própria conta.', n.consumoMes, true) +
       campo('unTarifa', 'Tarifa (R$ por kWh)', 'Divida o valor total pela quantidade de kWh, ou procure por “tarifa” na conta.', n.tarifa, true) +
       '<div class="field"><span class="field-lbl">Como a energia é usada</span>' +
       '<div class="dica">Isso define a curva de consumo hora a hora, sem você digitar 24 números.</div>' +
       '<div class="opts">' + arqs + '</div></div>';
   } else if (at === 2) {
+    const semSolar = n.temSolar === false;
     const tels = TELHADOS.map(t => '<button class="chip" data-act="nova-telhado" data-v="' + t.k + '" ' +
       'aria-pressed="' + (n.telhado === t.k) + '">' + t.rotulo + '</button>').join('');
-    corpo = '<div class="field"><span class="field-lbl">Condição do telhado</span>' +
-      '<div class="dica">Determina quanto do sol da região os painéis conseguem aproveitar.</div>' +
-      '<div class="chips">' + tels + '</div></div>' +
-      campo('unPotencia', 'Potência instalada (kWp)', 'Está na nota do instalador. Some a potência dos painéis e divida por mil.', n.potenciaKwp, true) +
-      campo('unPaineis', 'Quantidade de painéis', '', n.paineis, true) +
-      campo('unInvestimento', 'Quanto custou (R$)', 'Usado só para calcular em quanto tempo o sistema se paga.', n.investimento, true) +
-      campo('unMeses', 'Há quantos meses está ligado', 'Define se você tem direito adquirido pela Lei 14.300 e o histórico que o sistema monta.', n.mesesOperacao, true);
+    const blocoTelhado = '<div class="field"><span class="field-lbl">Condição do telhado</span>' +
+      '<div class="dica">' + (semSolar
+        ? 'Sem isso não dá para estimar quanto um sistema geraria aí. Se não souber, deixe como está — dá para corrigir depois.'
+        : 'Determina quanto do sol da região os painéis conseguem aproveitar.') + '</div>' +
+      '<div class="chips">' + tels + '</div></div>';
+
+    /* Quem não tem sistema não sabe responder kWp nem quanto pagou, e
+       perguntar assim mesmo é onde a pessoa desiste. Sobram duas perguntas
+       que ela sabe responder — e as duas são necessárias: o telhado para a
+       simulação, e o tempo para o histórico ter contra o que comparar. */
+    corpo = semSolar
+      ? blocoTelhado +
+        campo('unMeses', 'Há quantos meses você acompanha essa conta', 'Define o tamanho do histórico que o Solaris reconstrói para você comparar.', n.mesesOperacao, true)
+      : blocoTelhado +
+        campo('unPotencia', 'Potência instalada (kWp)', 'Está na nota do instalador. Some a potência dos painéis e divida por mil.', n.potenciaKwp, true) +
+        campo('unPaineis', 'Quantidade de painéis', '', n.paineis, true) +
+        campo('unInvestimento', 'Quanto custou (R$)', 'Usado só para calcular em quanto tempo o sistema se paga.', n.investimento, true) +
+        campo('unMeses', 'Há quantos meses está ligado', 'Define se você tem direito adquirido pela Lei 14.300 e o histórico que o sistema monta.', n.mesesOperacao, true);
   } else {
     const opcoes = aparelhosDoArquetipo(n.arquetipo);
     const marcados = Array.isArray(n.aparelhos) ? n.aparelhos : opcoes.map(e => e.id);
@@ -1188,8 +1365,8 @@ function vUnidade() {
 
   const form = '<section class="card s7" style="padding:24px 28px 28px">' +
     trilhaPassos() +
-    '<h2 style="margin-top:22px">' + PASSOS_UNIDADE[at - 1].titulo + '</h2>' +
-    '<div class="card-sub">' + PASSOS_UNIDADE[at - 1].sub + '</div>' +
+    '<h2 style="margin-top:22px">' + tituloDoPasso(at).titulo + '</h2>' +
+    '<div class="card-sub">' + tituloDoPasso(at).sub + '</div>' +
     corpo +
     '<div class="passo-nav">' + voltar + '<div class="passo-nav-fim">' + falta + avancar + '</div></div>' +
     '</section>';
@@ -1201,6 +1378,33 @@ function vUnidade() {
    é a geração; no terceiro, quanto do consumo os aparelhos marcados
    conseguem explicar. */
 function previaCard(n, p, at) {
+  /* Quem ainda não tem sistema não quer ver "o que o sistema vai calcular":
+     quer ver o que ele ganharia se instalasse. Como a unidade ainda não
+     existe, a prévia estima com os números que já estão no formulário. */
+  if (n.temSolar === false && at < 3) {
+    const tel = TELHADOS.filter(t => t.k === n.telhado)[0] || TELHADOS[1];
+    const porKwp = (soma(IRRADIACAO_REGIAO) / 12) * RAZAO_DESEMPENHO * tel.fator * 30;
+    const kwp = porKwp > 0 ? Math.round((n.consumoMes / porKwp) * 10) / 10 : 0;
+    const custo = Math.round((kwp * custoPorKwp(kwp)) / 100) * 100;
+    const contaHoje = n.consumoMes * n.tarifa + n.consumoMes * 0.0189 + (ARQUETIPOS[n.arquetipo] || ARQUETIPOS.casaVazia).ilum;
+
+    return '<section class="card card--dark" style="padding:24px 26px 26px">' +
+      '<h2>O que o Solaris vai te dizer</h2>' +
+      '<div style="font-size:13px;color:var(--on-dark-soft);margin-top:12px;line-height:1.55">' +
+      'Com o seu consumo e a sua tarifa, ele acompanha para onde vai cada quilowatt e ' +
+      'quanto vem na próxima conta — hoje, sem painel nenhum.</div>' +
+      (kwp > 0
+        ? '<hr style="border:0;height:1px;background:rgba(242,244,246,.14);margin:18px 0 14px">' +
+          '<div style="font-size:13px;color:var(--on-dark-soft);line-height:1.55">' +
+          'E responde a pergunta que interessa: um sistema de <b style="color:var(--on-dark)">' +
+          nf(kwp, 1) + ' kWp</b> cobriria o seu consumo, por volta de <b style="color:var(--on-dark)">' +
+          brl(custo) + '</b>. Hoje a sua conta é cerca de ' + brl(contaHoje) + ' por mês.</div>' +
+          '<div style="font-size:11.5px;color:var(--on-dark-faint);margin-top:10px;line-height:1.5">' +
+          'Estimativa para decidir se vale pedir orçamento — não é orçamento.</div>'
+        : '') +
+      '</section>';
+  }
+
   if (at === 3) {
     const opcoes = aparelhosDoArquetipo(n.arquetipo);
     const marcados = Array.isArray(n.aparelhos) ? n.aparelhos : opcoes.map(e => e.id);

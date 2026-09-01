@@ -452,6 +452,11 @@ const PADRAO = {
   perfilCliente: null,
   nova: {
     nome: '', cidade: 'sorocaba', arquetipo: 'casaVazia', telhado: 'bom', distribuidora: '',
+    /* Nem todo mundo que quer acompanhar a conta de luz tem painel no
+       telhado — e quem ainda nao tem e justamente quem mais precisa saber se
+       vale a pena. false faz o cadastro pular as perguntas do sistema e o
+       painel trocar a economia pela simulacao. */
+    temSolar: true,
     tarifa: 0.92, consumoMes: 300, potenciaKwp: 4.0, paineis: 9,
     investimento: 17000, mesesOperacao: 12,
     /* ids dos aparelhos que a pessoa marcou ter. null = ainda nao escolheu;
@@ -505,7 +510,7 @@ function salvar() {
    cálculo quebre no meio do caminho. */
 const UNIDADE_VAZIA = {
   chave: null, propria: false, arquetipo: 'casaVazia',
-  nome: 'Sem unidade', tipo: '—', curto: '—', cidade: null, distribuidora: '—',
+  nome: 'Sem unidade', tipo: '—', curto: '—', cidade: null, distribuidora: '—', temSolar: true,
   tarifa: 0, tarifaComp: 0, fioB: 0, ilum: 0, minFatura: 0,
   potenciaKwp: 0, paineis: 0, investimento: 0, mesesOperacao: 1,
   fatorInstalacao: 0, condicaoTelhado: '—',
@@ -623,6 +628,16 @@ function montarUnidade(f) {
   const nomeDistribuidora = (f.distribuidora && f.distribuidora.trim()) ||
     (dist ? dist.nome : 'Não informada');
 
+  /* Unidade sem sistema solar. Unidade salva antes desta versao nao tem o
+     campo, e ai vale true — senao o painel de quem ja usava perderia os
+     paineis de um dia para o outro.
+
+     Nao ha caso especial no calculo: geracao zero atravessa o motor inteiro
+     sem quebrar (alvoG vira 0, a curva do dia sai toda em zero, autoconsumo
+     e injecao dao 0 e a conta fica igual a de quem so compra da rede). O que
+     muda e o que a TELA conta, e quem decide isso e unidade().temSolar. */
+  const temSolar = f.temSolar !== false;
+
   return {
     chave: f.chave, propria: true, arquetipo: f.arquetipo,
     /* Quando esta unidade foi cadastrada no Solaris. Tudo antes disso e
@@ -634,10 +649,13 @@ function montarUnidade(f) {
     distribuidora: nomeDistribuidora,
     tarifa: f.tarifa, tarifaComp: +(f.tarifa * 0.86).toFixed(3), fioB: +(f.tarifa * 0.28).toFixed(3),
     ilum: a.ilum, minFatura: a.minFatura,
-    potenciaKwp: f.potenciaKwp, paineis: f.paineis, investimento: f.investimento,
+    temSolar: temSolar,
+    potenciaKwp: temSolar ? f.potenciaKwp : 0,
+    paineis: temSolar ? f.paineis : 0,
+    investimento: temSolar ? f.investimento : 0,
     mesesOperacao: Math.max(1, f.mesesOperacao),
     fatorInstalacao: telhado.fator, condicaoTelhado: telhado.rotulo.toLowerCase(),
-    consumoMes: f.consumoMes, geracaoMes: geracaoMes,
+    consumoMes: f.consumoMes, geracaoMes: temSolar ? geracaoMes : 0,
     metaPadrao: Math.round(f.consumoMes * 0.92),
     consumoH: a.consumoH.slice(), semana: a.semana.slice(), comodos: a.comodos.slice(),
     /* Só entra o que a pessoa marcou ter no cadastro. Unidade salva antes
@@ -652,6 +670,91 @@ function montarUnidade(f) {
       .filter(e => !Array.isArray(f.aparelhos) || f.aparelhos.indexOf(e.id) >= 0)
       .map(e => Object.assign({}, e, { fonte: 'ia' })),
     deteccoes: []
+  };
+}
+
+/* ---------- quanto custa instalar ----------
+
+   Numero externo, como a irradiacao — e como ela, marcado para conferencia.
+
+   DE ONDE VEM: levantamento da ABSOLAR (1o trimestre de 2026) cruzado com
+   dados da ANEEL para o segmento residencial, que poe o kWp instalado entre
+   R$ 4.300 e R$ 5.700 no pais. O mesmo levantamento mostra ganho de escala:
+   sistema de 3 kWp sai perto de R$ 5.000 por kWp, e de 15 kWp perto de
+   R$ 3.200. Interpolamos entre esses dois pontos.
+
+   PENDENTE DO GRUPO: pedir dois ou tres orcamentos de verdade em Sorocaba e
+   conferir. Preco de solar cai rapido e sobe com cambio; um numero de dois
+   anos atras engana mais do que ajuda.
+
+   ATENCAO: isto so alimenta a SIMULACAO de quem ainda nao tem sistema. Quem
+   ja instalou informa o que pagou de verdade no cadastro, e o payback dessa
+   pessoa usa o numero dela — nunca este. */
+const CUSTO_KWP_PEQUENO = 5000;   /* R$/kWp num sistema de 3 kWp */
+const CUSTO_KWP_GRANDE = 3200;    /* R$/kWp num sistema de 15 kWp */
+
+function custoPorKwp(kwp) {
+  const t = clamp((kwp - 3) / (15 - 3), 0, 1);
+  return CUSTO_KWP_PEQUENO + (CUSTO_KWP_GRANDE - CUSTO_KWP_PEQUENO) * t;
+}
+
+/* Potencia tipica de um painel novo, em watts. Serve so para dizer "seriam
+   uns N paineis", que e como as pessoas visualizam o tamanho do sistema. */
+const WATTS_POR_PAINEL = 550;
+
+/* ---------- e se eu instalasse? ----------
+
+   A pergunta de quem ainda nao tem sistema, e a unica coisa que o Solaris
+   pode responder para essa pessoa que nenhum site de orcamento responde: ele
+   ja sabe o consumo dela, a tarifa dela, o telhado dela e o sol da cidade
+   dela.
+
+   O sistema e dimensionado para cobrir o consumo do ano. Nao mais que isso:
+   excedente vira credito que pode nunca ser usado, e a Lei 14.300 cobra Fio B
+   sobre energia compensada — sistema grande demais paga imposto para gerar
+   credito parado.
+
+   E UMA ESTIMATIVA, e a tela diz isso. Vale como ordem de grandeza para
+   decidir se compensa pedir orcamento, nao como orcamento. */
+function simulacaoSolar(chave) {
+  const u = uni(chave);
+  if (!u || !(u.consumoMes > 0)) return null;
+
+  /* Quanto um kWp entrega por mes NESTE telhado, nesta regiao. Usamos o
+     fatorInstalacao que a unidade ja carrega, e nao uma busca na tabela de
+     telhados: as unidades de demonstracao trazem o fator direto, sem chave
+     de telhado, e uma busca falharia justo nelas. */
+  const irr = soma(IRRADIACAO_REGIAO) / 12;
+  const porKwp = irr * RAZAO_DESEMPENHO * u.fatorInstalacao * 30;
+  if (!(porKwp > 0)) return null;
+
+  const kwp = Math.round((u.consumoMes / porKwp) * 10) / 10;
+  const paineis = Math.ceil((kwp * 1000) / WATTS_POR_PAINEL);
+  const geracaoMes = kwp * porKwp;
+  const investimento = Math.round((kwp * custoPorKwp(kwp)) / 100) * 100;
+
+  const t = tarifaAtual();
+  const ano = agora().getFullYear();
+
+  /* Com o sistema cobrindo o consumo, quase tudo que vem da rede e
+     compensado; sobra o minimo faturavel, que credito nunca abate. */
+  const compensada = Math.max(0, Math.min(geracaoMes, u.consumoMes) - u.minFatura);
+  const fioB = compensada * u.fioB * percentualFioB(ano, false);
+
+  const contaHoje = u.consumoMes * t + u.consumoMes * 0.0189 + u.ilum;
+  const contaDepois = Math.max(u.minFatura, u.consumoMes - geracaoMes) * t +
+    Math.max(0, u.consumoMes - geracaoMes) * 0.0189 + u.ilum + fioB;
+  const economiaMes = Math.max(0, contaHoje - contaDepois);
+
+  return {
+    kwp: kwp, paineis: paineis, geracaoMes: geracaoMes,
+    cobertura: u.consumoMes > 0 ? (geracaoMes / u.consumoMes) * 100 : 0,
+    investimento: investimento,
+    contaHoje: contaHoje, contaDepois: contaDepois, economiaMes: economiaMes,
+    economiaAno: economiaMes * 12,
+    fioB: fioB, percFioB: percentualFioB(ano, false),
+    paybackAnos: economiaMes > 0 ? investimento / (economiaMes * 12) : null,
+    condicaoTelhado: u.condicaoTelhado
   };
 }
 
@@ -715,6 +818,23 @@ function ajustarPerfil() {
   if (chaves.indexOf(S.perfil) < 0) { S.perfil = chaves[0]; _visao = null; _cacheLedger.clear(); }
   return true;
 }
+/* A meta do mes desta unidade.
+
+   Existe pela mesma razao de tarifaAtual(): S.metas e um mapa por unidade, e
+   ler o mapa direto devolve undefined quando a chave nao esta la — o que
+   vira NaN em toda porcentagem da tela de metas. Acontece com unidade que
+   entrou no estado sem passar pelo cadastro (estado importado, versao antiga,
+   dado remendado a mao).
+
+   Sem meta gravada vale a meta padrao da propria unidade, que o arquetipo ja
+   calcula. */
+function metaAtual() {
+  const m = S.metas[S.perfil];
+  if (typeof m === 'number' && isFinite(m) && m > 0) return m;
+  const u = unidade();
+  return (u && u.metaPadrao > 0) ? u.metaPadrao : 300;
+}
+
 function tarifaAtual() {
   const u = unidade();
   if (S.tarifa[S.perfil] != null) return S.tarifa[S.perfil];
@@ -1038,7 +1158,7 @@ function mesesSemFatura(limite) {
 /* alertas derivados do estado real */
 function alertas() {
   const v = visao(), u = unidade(), t = tarifaAtual(), eq = aparelhos();
-  const meta = S.metas[S.perfil], proj = v.projConsumo;
+  const meta = metaAtual(), proj = v.projConsumo;
   const out = [];
   if (S.regras.meta) {
     if (proj > meta) out.push({ id: 'meta', tipo: 'alto', titulo: 'A meta de ' + nf(meta) + ' kWh deve estourar', quando: 'projeção de agora', txt: 'No ritmo de hoje o mês fecha em ' + nf(proj) + ' kWh — ' + nf(proj - meta) + ' kWh acima, cerca de ' + brl((proj - meta) * t) + ' a mais na conta. Cortar ' + nf((proj - meta) / Math.max(1, v.nd - v.mtd.dias), 1) + ' kWh por dia até o fim do mês já resolve.' });
