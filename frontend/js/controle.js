@@ -988,6 +988,13 @@ function tique() {
   const b = $('#liveBar');
   if (b) b.style.width = clamp((p.ger / Math.max(p.cons, .001)) * 100, 0, 100) + '%';
 
+  /* os numeros do minuto, embaixo do ceu do painel */
+  const sobra = p.inj > 0.05;
+  vivo('ger', nf(p.ger, 2) + ' kW');
+  vivo('cons', nf(p.cons, 2) + ' kW');
+  vivo('custo', brl(p.cons * tarifaAtual(), 2) + ' por hora');
+  vivo('saldo', nf(sobra ? p.inj : p.rede, 2) + ' kW', sobra ? 'Sobrando para a rede' : 'Vindo da rede');
+
   if (_spikeCooldown > 0) _spikeCooldown--;
   const emSurto = surtoAtivo();
   if (emSurto && !_spikeAtivo && _spikeCooldown === 0) {
@@ -1009,12 +1016,49 @@ async function gravarLeitura() {
   await Banco.registrarLeitura(contaAtual(), p.cons, p.ger);
 }
 
+/* troca o texto de todo elemento marcado com data-vivo="k" (e o rotulo,
+   quando o sentido do numero muda — sobrando para a rede ou vindo dela) */
+function vivo(k, valor, rotulo) {
+  $$('[data-vivo="' + k + '"]').forEach(e => { e.textContent = valor; });
+  if (rotulo) $$('[data-vivo-rot="' + k + '"]').forEach(e => { e.textContent = rotulo; });
+}
+
+/* O ceu anda com a hora. A cada 45 segundos redesenha o arco — o sol anda
+   menos de um quinto de grau nesse tempo, entao ninguem ve salto — e, se a
+   fase mudou, troca o fundo do cartao. Vale tambem na tela de entrada: quem
+   deixa o login aberto no fim da tarde ve o sol se por. */
+function atualizarCeu() {
+  if (typeof ceuDeHoje !== 'function') return;
+  const c = ceuDeHoje();
+  $$('[data-arco]').forEach(el => {
+    el.outerHTML = arcoSolar(c, { id: el.dataset.arco, compacto: el.dataset.compacto === '1' });
+  });
+  $$('[data-ceu]').forEach(el => {
+    el.classList.remove('ceu--noite', 'ceu--crepusculo', 'ceu--dourada', 'ceu--dia');
+    el.classList.add('ceu--' + c.fase);
+  });
+  $$('[data-ceu-chip]').forEach(el => { el.outerHTML = chipDoCeu(c); });
+  $$('[data-ceu-frase]').forEach(el => { el.textContent = fraseDoCeu(c, el.dataset.ceuFrase === 'curta'); });
+}
+
 let _ultimaHora = -1;
 function tiqueLento() {
+  atualizarCeu();
   if (!sessao() || semUnidade()) return;
   const h = new Date().getHours();
   _visao = null;
   if (h !== _ultimaHora) { _ultimaHora = h; render(); }
+}
+
+/* A primeira frase depois de entrar diz de onde vem o numero. "Medidor
+   conectado" com o medidor desligado era a mentira mais facil do sistema —
+   e a primeira coisa que a pessoa lia. */
+function avisoDeAbertura(titulo) {
+  const f = fonteAtual();
+  const fonte = f === 'medidor' ? 'Medidor ESP32 conectado'
+    : f === 'aguardando' ? 'Procurando o medidor; até ele responder, o painel calcula'
+      : 'Medidor virtual, calculado pela física da região';
+  aviso(titulo, fonte + ' · ' + nf(visao().mtd.tc) + ' kWh no mês até agora.', f === 'aguardando' ? 'sun' : 'good');
 }
 
 let _relogiosLigados = false;
@@ -1050,8 +1094,7 @@ async function aoEntrar() {
     aviso('Tudo pronto, ' + primeiro, 'Cadastre sua primeira unidade para o Solaris começar a calcular.', 'good');
     return;
   }
-  aviso('Bem-vindo, ' + primeiro,
-    'Medidor conectado · ' + nf(visao().mtd.tc) + ' kWh no mês até agora.', 'good');
+  avisoDeAbertura('Bem-vindo, ' + primeiro);
 }
 
 /* O perfil do papo rapido vive em dois lugares quando ha servidor: no estado
@@ -1098,10 +1141,7 @@ async function iniciar() {
 
   /* O aviso de abertura so faz sentido quando ha o que medir. */
   if (!perfilRespondido() || semUnidade()) return;
-  const v = visao();
-  setTimeout(() => {
-    aviso('Medidor conectado', 'Lendo ' + unidade().nome + ' em tempo real · ' + nf(v.mtd.tc) + ' kWh no mês até agora.', 'good');
-  }, 900);
+  setTimeout(() => { if (sessao() && !semUnidade()) avisoDeAbertura(unidade().nome); }, 900);
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
 else iniciar();

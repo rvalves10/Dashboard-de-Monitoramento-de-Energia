@@ -82,6 +82,7 @@ function vBoasVindas() {
 
 function cabecalhoBoasVindas(primeiro, i, total) {
   return '<header class="boas-topo">' +
+    marcaBoasVindas() +
     '<h1>' + (primeiro ? esc(primeiro) + ', prazer' : 'Prazer') + '. Me conta de você?</h1>' +
     '<p class="boas-d">Cinco perguntas rápidas, nenhuma sobre energia. Elas servem para o ' +
     'assistente do Solaris falar com você do seu jeito, em vez de responder igual para todo mundo. ' +
@@ -92,9 +93,17 @@ function cabecalhoBoasVindas(primeiro, i, total) {
     '</div></header>';
 }
 
+/* A marca no alto das duas telas do papo: e a primeira tela depois de criar
+   a conta, e sem ela parecia uma pagina solta, de outro site. */
+function marcaBoasVindas() {
+  return '<div class="boas-marca"><span class="brand-mark">' + ico(IC.marca, 18, 'currentColor', 1.9) + '</span>' +
+    '<span>Solaris</span></div>';
+}
+
 function telaFechoBoasVindas(primeiro) {
   return '<div class="boas enter"><div class="boas-cx">' +
     '<header class="boas-topo">' +
+      marcaBoasVindas() +
       '<h1>Mais alguma coisa que eu deva saber?</h1>' +
       '<p class="boas-d">Opcional, e do seu jeito. Vale qualquer coisa que mude o que eu deveria ' +
       'olhar na sua conta — “tenho piscina aquecida”, “trabalho de casa às terças”, ' +

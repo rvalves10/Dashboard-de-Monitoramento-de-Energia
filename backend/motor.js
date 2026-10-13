@@ -38,7 +38,12 @@ const nf = (v, d) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDig
 const brl = (v, d) => 'R$ ' + nf(v, d === undefined ? 0 : d);
 const pct = (v, d) => nf(v, d === undefined ? 0 : d) + '%';
 const sinal = (v, d) => (v >= 0 ? '+' : '−') + nf(Math.abs(v), d === undefined ? 0 : d);
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+/* hora decimal em relogio: 5.68 vira "05:41" */
+const hm = h => {
+  const min = Math.round((((h % 24) + 24) % 24) * 60);
+  return String(Math.floor(min / 60) % 24).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0');
+};
+const esc =s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 const MES3 = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -89,6 +94,15 @@ function suave(chave, i, passo) {
    e nao ha razao para calcular com a cidade errada. */
 const LAT = -23.50 * Math.PI / 180;
 
+/* Longitude de Sorocaba (-47,46) e o meridiano do horario de Brasilia (-45:
+   UTC-3, sem horario de verao desde 2019). A diferenca entre os dois diz
+   quantos minutos o meio-dia do relogio esta deslocado do meio-dia do sol —
+   4 minutos por grau. As cidades atendidas cabem em uns 60 km, ou seja,
+   menos de 3 minutos de diferenca entre elas: a mesma razao de usar uma
+   latitude so para a regiao. */
+const LON = -47.46;
+const MERIDIANO_FUSO = -45;
+
 /* Lei 14.300/2022 — marco legal da geração distribuída.
    Sistemas conectados até 06/01/2023 mantêm compensação integral até 2045
    ("direito adquirido"). Os conectados a partir de 07/01/2023 pagam um
@@ -98,6 +112,32 @@ const ESCADA_FIO_B = { 2023: .15, 2024: .30, 2025: .45, 2026: .60, 2027: .75, 20
 function percentualFioB(ano, direitoAdquirido) {
   if (direitoAdquirido || ano <= 2022) return 0;
   return ESCADA_FIO_B[ano] !== undefined ? ESCADA_FIO_B[ano] : 1;
+}
+
+/* Bandeira tarifaria: o adicional por kWh que a ANEEL cobra conforme o custo
+   de gerar energia no mes.
+
+   DE ONDE VEM: tabela de bandeiras da ANEEL. A amarela custa R$ 1,885 a cada
+   100 kWh — 0,01885 por kWh, arredondado aqui para 0,0189, o valor que o
+   motor sempre usou.
+
+   POR QUE A AMARELA: a bandeira de cada mes so e anunciada no fim do mes
+   anterior, e o Solaris ainda nao busca esse anuncio. A amarela e o degrau do
+   meio: num mes verde a conta real vem um pouco menor, num vermelho, maior.
+   Por isso toda tela que mostra a bandeira diz "estimada".
+
+   Este numero morava copiado em treze lugares de tres arquivos. Agora mora
+   aqui, e trocar aqui troca o sistema inteiro.
+
+   PENDENTE DO GRUPO: buscar a bandeira vigente de cada mes e conferir o valor
+   na tabela da ANEEL antes da banca. */
+const BANDEIRA_ESTIMADA = { nome: 'amarela', porKwh: 0.0189 };
+
+/* Quanto custa um mes inteiro sem nenhum painel: a energia (respeitando o
+   minimo faturavel), a bandeira e a iluminacao publica. Era a mesma formula
+   escrita a mao em cinco telas, e as copias ja tinham comecado a divergir. */
+function contaSemSolar(kwh, tarifa, ilum, minFatura) {
+  return Math.max(kwh, minFatura || 0) * tarifa + kwh * BANDEIRA_ESTIMADA.porKwh + (ilum || 0);
 }
 
 /* Irradiacao global horizontal media, kWh/m² por dia, mes a mes.
@@ -117,6 +157,17 @@ function percentualFioB(ano, direitoAdquirido) {
    o resto do calculo sozinho. */
 const IRRADIACAO_REGIAO = IRRADIACAO_SOROCABA;
 const RAZAO_DESEMPENHO = 0.78; /* perdas de inversor, cabos, temperatura e sujeira */
+
+/* Fator de emissao da rede, em kg de CO2 por kWh. Serve so para traduzir
+   geracao solar em emissao evitada.
+
+   PENDENTE DE FONTE: o 0,0861 entrou no projeto sem referencia, e e o unico
+   numero externo sem origem escrita. A fonte certa e o fator medio anual do
+   Sistema Interligado Nacional publicado pelo MCTI — que muda bastante de um
+   ano para o outro conforme as termeletricas ligam. Em ano de reservatorio
+   cheio ele fica bem abaixo deste valor, e o CO2 "evitado" sai exagerado.
+   Conferir o do ultimo ano publicado antes da banca. */
+const FATOR_EMISSAO_REDE = 0.0861;
 
 const UNIDADES_BASE = {
   residencial: {
@@ -213,10 +264,36 @@ function perfilCat(unidade, cat) {
 function diaDoAno(d) {
   return Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
 }
+/* A declinacao do sol na data (equacao de Cooper), em radianos. Separada de
+   janelaSolar porque agora tem dois leitores: a curva de geracao e o arco do
+   sol que a tela desenha. Os dois precisam da mesma conta. */
+function declinacaoSolar(d) {
+  return 0.4093 * Math.sin(2 * Math.PI * (284 + diaDoAno(d)) / 365);
+}
+/* Equacao do tempo, em minutos: quanto o sol verdadeiro se adianta ou se
+   atrasa em relacao ao relogio ao longo do ano, por causa da orbita
+   eliptica da Terra e da inclinacao do eixo. Vai de cerca de -14 minutos em
+   fevereiro a +16 em novembro. Formula de Spencer (1971), a mesma das
+   calculadoras solares da NOAA. */
+function equacaoDoTempo(d) {
+  const B = 2 * Math.PI * (diaDoAno(d) - 1) / 365;
+  return 229.18 * (0.000075 + 0.001868 * Math.cos(B) - 0.032077 * Math.sin(B) -
+    0.014615 * Math.cos(2 * B) - 0.040849 * Math.sin(2 * B));
+}
+/* O meio-dia do sol no relogio de Sorocaba, em horas decimais.
+
+   Antes era 12,2 fixo (12h12, so a correcao da longitude). Enquanto o sol
+   so existia dentro do calculo, ninguem via a diferenca. Quando o nascer e
+   o por passaram a aparecer escritos na tela, apareceu tambem o erro, de
+   ate 16 minutos: em meados de outubro o painel dizia que o sol se punha as
+   18h28, e em Sorocaba ele se poe perto das 18h10. */
+function meioDiaSolar(d) {
+  return 12 - (equacaoDoTempo(d) + 4 * (LON - MERIDIANO_FUSO)) / 60;
+}
 function janelaSolar(d) {
-  const decl = 0.4093 * Math.sin(2 * Math.PI * (284 + diaDoAno(d)) / 365);
+  const decl = declinacaoSolar(d);
   const ha = Math.acos(clamp(-Math.tan(LAT) * Math.tan(decl), -1, 1));
-  const meio = 12.2, meiaJornada = ha * 12 / Math.PI;
+  const meio = meioDiaSolar(d), meiaJornada = ha * 12 / Math.PI;
   return { nascer: meio - meiaJornada, por: meio + meiaJornada, meio: meio };
 }
 /* forma horária da geração: 24 pesos somando 1 */
@@ -237,6 +314,88 @@ function tempoDoDia(chave, d) {
   let c = 0.48 + 0.57 * suave(chave + '|ceu', idx, 3);
   if (ruido(chave + '|chuva' + idx) < 0.13) c *= 0.42;
   return clamp(c, 0.18, 1.06);
+}
+
+/* ---------- o ceu de agora ----------
+   A mesma fisica que decide quando os paineis geram, respondendo outra
+   pergunta: nao "quanto gera", mas "onde o sol esta". E o que a tela desenha
+   no arco do painel, da entrada e do celular.
+
+   A altura vem da formula classica da posicao solar:
+     sen(altura) = sen(lat)·sen(decl) + cos(lat)·cos(decl)·cos(angulo horario)
+   com o angulo horario girando 15 graus por hora a partir do meio-dia solar.
+
+   Usa a declinacao e o meio-dia de janelaSolar() de proposito: o arco nasce
+   e se poe exatamente nas horas em que a curva de geracao comeca e termina.
+   Com contas diferentes, a tela diria que o sol nasceu as 5h41 e o grafico,
+   que o painel acordou as 5h35.
+
+   Nao e enfeite. A altura maxima do dia e o comprimento do dia sao as duas
+   coisas que fazem um painel gerar mais em dezembro do que em junho, e o
+   arco mostra as duas. */
+const GRAU = Math.PI / 180;
+
+function _alturaSolar(j, decl, hora) {
+  const h = (hora - j.meio) * 15 * GRAU;
+  const s = Math.sin(LAT) * Math.sin(decl) + Math.cos(LAT) * Math.cos(decl) * Math.cos(h);
+  return Math.asin(clamp(s, -1, 1)) / GRAU;
+}
+/* altura do sol, em graus acima do horizonte, numa hora decimal da data */
+function alturaSolarNaHora(d, hora) {
+  return _alturaSolar(janelaSolar(d), declinacaoSolar(d), hora);
+}
+
+/* As fases do ceu pela altura do sol, nos limites que a astronomia usa:
+   abaixo de -12 graus termina o crepusculo nautico e e noite fechada; do
+   horizonte ate -12, crepusculo; nos primeiros 6 graus acima do horizonte a
+   luz atravessa mais atmosfera e chega dourada (a "hora dourada" dos
+   fotografos); dali para cima, dia. */
+const FASES_DO_CEU = [
+  { k: 'noite', ate: -12, nome: 'noite' },
+  { k: 'crepusculo', ate: 0, nome: 'crepúsculo' },
+  { k: 'dourada', ate: 6, nome: 'luz dourada' },
+  { k: 'dia', ate: Infinity, nome: 'dia claro' }
+];
+function faseDoCeu(altura) {
+  return FASES_DO_CEU.filter(f => altura < f.ate)[0];
+}
+
+/* Tudo o que a tela precisa para desenhar o ceu de uma data e hora. */
+function ceuDeHoje(d) {
+  const quando = d || agora();
+  const j = janelaSolar(quando), decl = declinacaoSolar(quando);
+  const hora = quando.getHours() + quando.getMinutes() / 60 + quando.getSeconds() / 3600;
+  const altura = _alturaSolar(j, decl, hora);
+  const fase = faseDoCeu(altura);
+  const amanha = new Date(quando.getFullYear(), quando.getMonth(), quando.getDate() + 1);
+  return {
+    quando: quando,
+    hora: hora, nascer: j.nascer, por: j.por, meio: j.meio,
+    duracao: j.por - j.nascer,
+    altura: altura,
+    /* no meio-dia solar o sol fica a 90 graus menos a distancia entre a
+       latitude e a declinacao: quase a pino em dezembro, baixo em junho */
+    alturaMax: 90 - Math.abs(LAT - decl) / GRAU,
+    fase: fase.k, nomeFase: fase.nome,
+    deDia: hora > j.nascer && hora < j.por,
+    /* quanto do dia claro ja passou: 0 no nascer, 1 no por */
+    fracaoDia: clamp((hora - j.nascer) / Math.max(j.por - j.nascer, 0.01), 0, 1),
+    /* horas de sol que ainda faltam hoje; zero depois do por */
+    restante: Math.max(0, j.por - Math.max(hora, j.nascer)),
+    /* horas ate o proximo nascer: o de hoje, ou o de amanha se ja passou */
+    ateNascer: hora < j.nascer ? j.nascer - hora : (24 - hora) + janelaSolar(amanha).nascer
+  };
+}
+
+/* O caminho do sol nas 24 horas de uma data, a altura a cada passo. Acima de
+   zero e dia; abaixo, o sol esta do outro lado da Terra. */
+function caminhoDoSol(d, passos) {
+  const n = passos || 96, j = janelaSolar(d), decl = declinacaoSolar(d), out = [];
+  for (let i = 0; i <= n; i++) {
+    const hora = (i / n) * 24;
+    out.push({ hora: hora, altura: _alturaSolar(j, decl, hora) });
+  }
+  return out;
 }
 
 /* ---------- mês simulado (memoizado) ---------- */
@@ -741,9 +900,9 @@ function simulacaoSolar(chave) {
   const compensada = Math.max(0, Math.min(geracaoMes, u.consumoMes) - u.minFatura);
   const fioB = compensada * u.fioB * percentualFioB(ano, false);
 
-  const contaHoje = u.consumoMes * t + u.consumoMes * 0.0189 + u.ilum;
+  const contaHoje = contaSemSolar(u.consumoMes, t, u.ilum, u.minFatura);
   const contaDepois = Math.max(u.minFatura, u.consumoMes - geracaoMes) * t +
-    Math.max(0, u.consumoMes - geracaoMes) * 0.0189 + u.ilum + fioB;
+    Math.max(0, u.consumoMes - geracaoMes) * BANDEIRA_ESTIMADA.porKwh + u.ilum + fioB;
   const economiaMes = Math.max(0, contaHoje - contaDepois);
 
   return {
@@ -919,12 +1078,12 @@ function visao(forcar) {
   const economiaCheia = fim.economia;
   const anteriorEcon = anteriores.length ? anteriores[anteriores.length - 1].economia : economia;
 
-  const bandeira = mtd.rede * 0.0189;
+  const bandeira = mtd.rede * BANDEIRA_ESTIMADA.porKwh;
   const projUsado = fim.usado;
   const projFaturado = fim.faturado;
   const projFioB = fim.fioB;
-  const contaProj = projFaturado * t + projRede * 0.0189 + u.ilum + projFioB;
-  const semSolarProj = Math.max(projConsumo, u.minFatura) * t + projConsumo * 0.0189 + u.ilum;
+  const contaProj = projFaturado * t + projRede * BANDEIRA_ESTIMADA.porKwh + u.ilum + projFioB;
+  const semSolarProj = contaSemSolar(projConsumo, t, u.ilum, u.minFatura);
 
   /* quanto o sistema entrega em relação ao que o telhado poderia entregar */
   const potencial = potencialRegiao(S.perfil, m, md.nd);
@@ -933,7 +1092,7 @@ function visao(forcar) {
   const aproveitaTelhado = potencial > 0 ? (esperada / potencial) * 100 : 0;
 
   const autoPct = mtd.tc > 0 ? (mtd.auto / mtd.tc) * 100 : 0;
-  const co2 = mtd.tg * 0.0861;
+  const co2 = mtd.tg * FATOR_EMISSAO_REDE;
 
   _visao = {
     perfil: S.perfil, tarifa: t, data: d, y: y, m: m, nd: md.nd, hDec: hDec, fracao: fracao,
@@ -1089,8 +1248,50 @@ function caminho(vals, max, w, hh, fechar) {
 function contaDoMes(linha, u, t) {
   if (!linha || !u) return 0;
   const faturado = Math.max(linha.faturado, 0);
-  const bandeira = linha.rede * 0.0189;
+  const bandeira = linha.rede * BANDEIRA_ESTIMADA.porKwh;
   return faturado * t + bandeira + u.ilum + linha.fioB;
+}
+
+/* ---------- a mesma conta, linha a linha ----------
+   O que a fatura detalhada mostra, como dado — quem desenha e a tela.
+
+   Existe por causa de dois defeitos com a mesma raiz. O relatorio mostrava a
+   energia injetada com sinal de menos, mas ela nao entrava no total: quem
+   somasse a coluna achava dezenas de reais sumidos. E a conta do celular
+   montava as linhas do proprio jeito, esquecia o Fio B e mostrava um total
+   diferente do relatorio para o mesmo mes.
+
+   A REGRA: as linhas com valor somam exatamente contaDoMes(). A energia
+   injetada aparece, mas como informacao — ela vira credito, e o credito so
+   desconta a conta quando e usado, na linha "Creditos usados". Existe teste
+   para isso. */
+function linhasDaConta(linha, u, t) {
+  if (!linha || !u) return [];
+  const out = [{
+    id: 'consumo', rotulo: 'Consumo registrado no medidor',
+    qtd: nf(linha.cons) + ' kWh', valor: linha.cons * t
+  }];
+  /* sem painel, as linhas de compensacao sao todas zero: fatura com linha
+     zerada faz a pessoa procurar um erro que nao existe */
+  if (u.temSolar !== false) {
+    out.push(
+      { id: 'auto', rotulo: 'Energia gerada e autoconsumida', qtd: '− ' + nf(linha.auto) + ' kWh', valor: -linha.auto * t, tipo: 'credito' },
+      { id: 'injetada', rotulo: 'Energia injetada na rede', qtd: nf(linha.inj) + ' kWh', valor: null, nota: 'vira crédito', tipo: 'info' },
+      { id: 'usados', rotulo: 'Créditos usados neste mês', qtd: '− ' + nf(linha.usado) + ' kWh', valor: -linha.usado * t, tipo: 'credito' },
+      { id: 'fiob', rotulo: 'Fio B sobre energia compensada (Lei 14.300)', qtd: pct(linha.percFioB * 100) + ' de ' + brl(u.fioB, 2) + '/kWh', valor: linha.fioB }
+    );
+  }
+  out.push(
+    { id: 'bandeira', rotulo: 'Bandeira ' + BANDEIRA_ESTIMADA.nome + ' (estimada)', qtd: '—', valor: linha.rede * BANDEIRA_ESTIMADA.porKwh },
+    { id: 'iluminacao', rotulo: 'Contribuição de iluminação pública', qtd: '—', valor: u.ilum }
+  );
+  return out;
+}
+
+/* A conta do mesmo mes se nao houvesse painel nenhum. */
+function contaSemSolarDoMes(linha, u, t) {
+  if (!linha || !u) return 0;
+  return contaSemSolar(linha.cons, t, u.ilum, u.minFatura);
 }
 
 /* ---------- as faturas de verdade ----------
@@ -1197,12 +1398,12 @@ function alertas() {
         id: 'reajuste',
         tipo: 'medio',
         titulo: faltam === 0
-          ? 'A ' + d.nome + ' reajusta a tarifa este mes'
-          : 'A ' + d.nome + ' reajusta a tarifa mes que vem',
+          ? 'A ' + d.nome + ' reajusta a tarifa este mês'
+          : 'A ' + d.nome + ' reajusta a tarifa mês que vem',
         quando: mesReajuste + ', todo ano',
-        txt: 'A partir do reajuste a sua conta muda de patamar sem voce ter mudado nada em casa. ' +
-          'Quando a proxima fatura chegar, confira a tarifa (R$ por kWh) e atualize em Configuracoes — ' +
-          'todo o calculo do Solaris depende desse numero. Hoje ele esta em ' + brl(t, 2) + ' por kWh.'
+        txt: 'A partir do reajuste a sua conta muda de patamar sem você ter mudado nada em casa. ' +
+          'Quando a próxima fatura chegar, confira a tarifa (R$ por kWh) e atualize em Configurações — ' +
+          'todo o cálculo do Solaris depende desse número. Hoje ele está em ' + brl(t, 2) + ' por kWh.'
       });
     }
   }

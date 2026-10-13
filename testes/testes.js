@@ -1683,7 +1683,7 @@ grupo('Conferencia com a fatura', () => {
     em(2026, 7, 15, 10, 0, () => comPerfil('residencial', () => {
       const v = visao(), u = unidade(), t = tarifaAtual();
       const l = v.ledger.linhas[v.ledger.linhas.length - 2];
-      const esperado = Math.max(l.faturado, 0) * t + l.rede * 0.0189 + u.ilum + l.fioB;
+      const esperado = Math.max(l.faturado, 0) * t + l.rede * BANDEIRA_ESTIMADA.porKwh + u.ilum + l.fioB;
       perto(contaDoMes(l, u, t), esperado, 0.001, 'a formula da conta se afastou');
       igual(contaDoMes(null, u, t), 0, 'sem linha tem que dar zero, nao NaN');
       igual(contaDoMes(l, null, t), 0, 'sem unidade tem que dar zero, nao NaN');
@@ -2054,6 +2054,231 @@ grupo('Sem sistema solar', () => {
       ok(!g.some(x => x.indexOf('rendendo o esperado') >= 0),
         'nao da para perguntar do rendimento de um sistema que nao existe');
     }));
+  });
+});
+
+/* ================= o ceu =================
+   O arco do sol aparece na entrada, no painel, no menu e no celular, com as
+   horas escritas. Hora escrita errada e o tipo de erro que qualquer pessoa
+   confere olhando pela janela — por isso a astronomia tem teste. */
+grupo('Céu', () => {
+
+  teste('o arco nasce e se põe na mesma hora da curva de geração', () => {
+    [[2026, 5, 21], [2026, 9, 13], [2026, 11, 21]].forEach(d => {
+      const quando = new Date(d[0], d[1], d[2], 10, 0);
+      const c = ceuDeHoje(quando), j = janelaSolar(quando);
+      perto(c.nascer, j.nascer, 1e-9, 'nascer diferente em ' + d.join('-'));
+      perto(c.por, j.por, 1e-9, 'por diferente em ' + d.join('-'));
+    });
+  });
+
+  teste('no nascer o sol está no horizonte, no meio-dia está no ponto mais alto', () => {
+    const quando = new Date(2026, 9, 13, 12, 0);
+    const c = ceuDeHoje(quando);
+    perto(alturaSolarNaHora(quando, c.nascer), 0, 0.01, 'o sol nao esta no horizonte no nascer');
+    perto(alturaSolarNaHora(quando, c.por), 0, 0.01, 'o sol nao esta no horizonte no por');
+    perto(alturaSolarNaHora(quando, c.meio), c.alturaMax, 0.01, 'o pico do arco nao e o meio-dia solar');
+    ok(alturaSolarNaHora(quando, c.meio - 2) < c.alturaMax, 'duas horas antes deveria estar mais baixo');
+  });
+
+  teste('o sol de junho sobe muito menos que o de dezembro', () => {
+    const jun = ceuDeHoje(new Date(2026, 5, 21, 12, 0)).alturaMax;
+    const dez = ceuDeHoje(new Date(2026, 11, 21, 12, 0)).alturaMax;
+    ok(jun > 40 && jun < 46, 'em junho, a 23,5 graus sul, o sol para perto de 43 graus (deu ' + jun.toFixed(1) + ')');
+    ok(dez > 88, 'em dezembro ele passa quase a pino (deu ' + dez.toFixed(1) + ')');
+  });
+
+  teste('o nascer e o pôr batem com Sorocaba', () => {
+    /* 13 de outubro em Sorocaba: o sol nasce perto das 5h41 e se poe perto
+       das 18h11. Antes da equacao do tempo o Solaris dizia 5h56 e 18h28. */
+    const c = ceuDeHoje(new Date(2026, 9, 13, 12, 0));
+    ok(c.nascer > 5.55 && c.nascer < 5.8, 'nascer fora: ' + hm(c.nascer));
+    ok(c.por > 18.05 && c.por < 18.3, 'por fora: ' + hm(c.por));
+  });
+
+  teste('a equação do tempo empurra o meio-dia solar ao longo do ano', () => {
+    /* fevereiro: o sol atrasa ~14 min; novembro: adianta ~16 */
+    const fev = meioDiaSolar(new Date(2026, 1, 11)), nov = meioDiaSolar(new Date(2026, 10, 3));
+    ok(fev > 12.35 && fev < 12.48, 'meio-dia de fevereiro fora: ' + hm(fev));
+    ok(nov > 11.83 && nov < 11.96, 'meio-dia de novembro fora: ' + hm(nov));
+  });
+
+  teste('as fases do céu seguem os limites da astronomia', () => {
+    igual(faseDoCeu(-20).k, 'noite');
+    igual(faseDoCeu(-12.5).k, 'noite');
+    igual(faseDoCeu(-5).k, 'crepusculo');
+    igual(faseDoCeu(3).k, 'dourada');
+    igual(faseDoCeu(30).k, 'dia');
+    igual(ceuDeHoje(new Date(2026, 9, 13, 2, 0)).fase, 'noite', 'duas da manha e noite');
+    igual(ceuDeHoje(new Date(2026, 9, 13, 12, 0)).fase, 'dia', 'meio-dia e dia');
+  });
+
+  teste('o desenho do céu nunca sai com número quebrado', () => {
+    const horas = [[0, 0], [5, 41], [6, 5], [12, 0], [18, 11], [18, 40], [23, 59]];
+    [[2026, 5, 21], [2026, 9, 13], [2026, 11, 21]].forEach(d => horas.forEach(h => {
+      const c = ceuDeHoje(new Date(d[0], d[1], d[2], h[0], h[1]));
+      [arcoSolar(c, { id: 't' }), arcoSolar(c, { id: 'tc', compacto: true })].forEach(html => {
+        ok(!/NaN|undefined|Infinity/.test(html), 'valor invalido no arco em ' + d.join('-') + ' ' + h.join(':'));
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        const svg = div.querySelector('svg');
+        ok(svg && svg.getAttribute('role') === 'img', 'o arco precisa de role=img');
+        ok((svg.getAttribute('aria-label') || '').length > 60, 'o arco precisa de descricao para leitor de tela');
+      });
+    }));
+  });
+
+  teste('a versão compacta não leva rótulos; a cheia leva nascer e pôr', () => {
+    const c = ceuDeHoje(new Date(2026, 9, 13, 9, 0));
+    const cheio = document.createElement('div'), compacto = document.createElement('div');
+    cheio.innerHTML = arcoSolar(c, { id: 'a' });
+    compacto.innerHTML = arcoSolar(c, { id: 'b', compacto: true });
+    ok(cheio.querySelector('.arco-rot--nascer') && cheio.querySelector('.arco-rot--por'), 'faltou rotulo no arco cheio');
+    igual(compacto.querySelectorAll('.arco-rot').length, 0, 'o arco compacto nao tem espaco para rotulo');
+  });
+
+  teste('a frase do céu muda de dia, depois do pôr e antes do nascer', () => {
+    const dia = fraseDoCeu(ceuDeHoje(new Date(2026, 9, 13, 12, 0)));
+    const tarde = fraseDoCeu(ceuDeHoje(new Date(2026, 9, 13, 20, 0)));
+    const madrugada = fraseDoCeu(ceuDeHoje(new Date(2026, 9, 13, 3, 0)));
+    ok(dia.indexOf('acima do horizonte') > 0, 'de dia: ' + dia);
+    ok(tarde.indexOf('se pôs') > 0, 'depois do por: ' + tarde);
+    ok(madrugada.indexOf('nasce') > 0, 'antes do nascer: ' + madrugada);
+  });
+});
+
+/* ================= a fatura linha a linha =================
+   Dois defeitos reais: o relatorio mostrava a energia injetada com sinal de
+   menos sem descontar do total (a coluna nao fechava), e a conta do celular
+   esquecia o Fio B. Os dois agora leem linhasDaConta(). */
+grupo('Fatura linha a linha', () => {
+
+  const SEM = {
+    chave: 'u-fatura-sem', nome: 'Sem painel', cidade: 'sorocaba', arquetipo: 'casaCheia',
+    telhado: 'bom', distribuidora: '', tarifa: 1.02, consumoMes: 410, temSolar: false,
+    potenciaKwp: 0, paineis: 0, investimento: 0, mesesOperacao: 8, criadaEm: null
+  };
+  function comUnidadeSem(fn) {
+    const gu = S.unidades, gp = S.perfil, ge = S.exemplos;
+    try {
+      S.unidades = [JSON.parse(JSON.stringify(SEM))]; S.exemplos = true; S.perfil = SEM.chave;
+      _visao = null; _cacheLedger.clear(); _cacheMes.clear();
+      return fn();
+    } finally {
+      S.unidades = gu; S.perfil = gp; S.exemplos = ge;
+      _visao = null; _cacheLedger.clear(); _cacheMes.clear();
+    }
+  }
+  const somaDasLinhas = (l, u, t) => soma(linhasDaConta(l, u, t).filter(r => r.valor !== null).map(r => r.valor));
+
+  teste('as linhas com valor somam exatamente o total, em toda data', () => {
+    [[2026, 0, 1, 0, 30], [2026, 1, 28, 23, 0], [2026, 7, 15, 14, 0], [2026, 11, 31, 22, 0]].forEach(d =>
+      em(d[0], d[1], d[2], d[3], d[4], () => {
+        ['residencial', 'negocio'].forEach(p => comPerfil(p, () => {
+          const v = visao(), u = unidade(), t = tarifaAtual();
+          v.ledger.linhas.slice(-3).forEach(l => {
+            perto(somaDasLinhas(l, u, t), contaDoMes(l, u, t), 0.005, p + ' ' + (l.m + 1) + '/' + l.y);
+          });
+        }));
+        comUnidadeSem(() => {
+          const v = visao(), u = unidade(), t = tarifaAtual();
+          perto(somaDasLinhas(v.linhaAtual, u, t), contaDoMes(v.linhaAtual, u, t), 0.005, 'sem painel');
+        });
+      }));
+  });
+
+  teste('a energia injetada aparece, mas não desconta', () => {
+    em(2026, 7, 15, 14, 0, () => comPerfil('residencial', () => {
+      const linhas = linhasDaConta(visao().linhaAtual, unidade(), tarifaAtual());
+      const inj = linhas.filter(r => r.id === 'injetada')[0];
+      ok(inj, 'a linha da energia injetada sumiu');
+      igual(inj.valor, null, 'injetado vira credito; quem desconta e "creditos usados"');
+    }));
+  });
+
+  teste('sem painel, a fatura não tem linha de compensação', () => {
+    comUnidadeSem(() => {
+      const ids = linhasDaConta(visao().linhaAtual, unidade(), tarifaAtual()).map(r => r.id);
+      ['auto', 'injetada', 'usados', 'fiob'].forEach(id => ok(ids.indexOf(id) < 0, 'sobrou a linha ' + id));
+    });
+  });
+
+  teste('o relatório e a conta do celular mostram o mesmo total', () => {
+    em(2026, 7, 15, 14, 0, () => comPerfil('residencial', () => {
+      const v = visao(), total = brl(contaDoMes(v.linhaAtual, unidade(), tarifaAtual()), 2);
+      ok(vRelatorio().indexOf(total) >= 0, 'o relatorio nao mostra ' + total);
+      ok(mConta().indexOf(total) >= 0, 'a conta do celular nao mostra ' + total);
+    }));
+  });
+
+  teste('a conta do celular de quem não tem painel não fala de economia', () => {
+    comUnidadeSem(() => {
+      const d = document.createElement('div');
+      d.innerHTML = mConta();
+      const txt = d.textContent;
+      ok(txt.indexOf('Você economizou') < 0, 'nao ha economia sem painel');
+      ok(txt.indexOf('Sem os painéis') < 0, 'nao ha painel para tirar');
+      ok(txt.indexOf('Total a pagar') >= 0, 'o total tem que ficar');
+    });
+  });
+
+  teste('a bandeira vem de um lugar só', () => {
+    em(2026, 7, 15, 14, 0, () => comPerfil('residencial', () => {
+      const l = visao().linhaAtual;
+      const b = linhasDaConta(l, unidade(), tarifaAtual()).filter(r => r.id === 'bandeira')[0];
+      perto(b.valor, l.rede * BANDEIRA_ESTIMADA.porKwh, 1e-9, 'a linha da bandeira usa outro numero');
+      ok(b.rotulo.indexOf('estimada') > 0, 'a bandeira e estimada e a fatura tem que dizer');
+    }));
+  });
+});
+
+/* ================= de onde vem o numero =================
+   "Medidor conectado" com o medidor desligado era a primeira frase que a
+   pessoa lia ao entrar. A fonte da leitura agora e dita em todo lugar. */
+grupo('Fonte dita na tela', () => {
+
+  teste('com a simulação, o menu diz "medidor virtual"', () => {
+    const antes = MEDIDOR.ativo;
+    try {
+      MEDIDOR.ativo = false;
+      igual(rotuloDaFonte(), 'medidor virtual');
+      ok(vRail().indexOf('medidor virtual') > 0, 'o menu nao diz de onde vem o numero');
+    } finally { MEDIDOR.ativo = antes; }
+  });
+
+  teste('medidor ligado sem resposta não finge que está lendo', () => {
+    const antes = { ativo: MEDIDOR.ativo, ultima: MEDIDOR.ultima, quando: MEDIDOR.quando };
+    try {
+      MEDIDOR.ativo = true; MEDIDOR.ultima = null; MEDIDOR.quando = 0;
+      igual(rotuloDaFonte(), 'procurando o medidor');
+    } finally { Object.assign(MEDIDOR, antes); }
+  });
+});
+
+/* ================= o piso de 12px, no HTML gerado =================
+   O CSS segue os degraus, mas as telas tinham tamanho de fonte digitado
+   direto no style — 10,5px e 11,5px entre eles. Esta varredura passa por
+   todas as telas, nas duas cascas, e trava o piso. */
+grupo('Tipografia', () => {
+
+  teste('nenhuma tela escreve fonte abaixo de 12px', () => {
+    const achados = [];
+    const olhar = (onde, html) => {
+      (html.match(/font-size:\s*(\d+(?:\.\d+)?)px/g) || []).forEach(m => {
+        const px = parseFloat(m.replace(/[^\d.]/g, ''));
+        if (px < 12) achados.push(onde + ': ' + m);
+      });
+    };
+    const g = { tela: S.tela, tab: S.tab, msub: S.msub };
+    try {
+      ['painel', 'historico', 'equipamentos', 'cadastro', 'alertas', 'relatorio', 'config', 'unidade', 'assistente']
+        .forEach(t => { S.tela = t; olhar(t, corpoAmplo()); });
+      ['painel', 'historico', 'aparelhos', 'assistente', 'mais'].forEach(t => {
+        S.tab = t; S.msub = null; olhar('movel/' + t, vMovel());
+      });
+      ['conta', 'cadastro', 'config', 'metas'].forEach(s => { S.msub = s; olhar('movel/' + s, vMovel()); });
+    } finally { S.tela = g.tela; S.tab = g.tab; S.msub = g.msub; }
+    igual(achados.length, 0, achados.join(', '));
   });
 });
 

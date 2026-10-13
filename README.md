@@ -6,6 +6,14 @@ Projeto de UPX.
 Mostra para onde vai cada quilowatt, quanto o sol cobriu de verdade e quanto
 vem na próxima conta — com a Lei 14.300 já dentro do cálculo.
 
+**A interface segue o sol.** A primeira coisa que o Solaris mostra é o céu
+de agora na região de Sorocaba: o caminho do sol nas 24 horas, calculado
+pela astronomia, com o sol no lugar em que ele está e o fundo na cor da
+hora. Quem abre às sete da noite vê o crepúsculo.
+
+Para onde o projeto vai — e como ele se sustenta — está em
+**[`documentacao/visao-e-negocio.md`](documentacao/visao-e-negocio.md)**.
+
 ---
 
 ## Abrir
@@ -37,7 +45,7 @@ Se preferir um arquivo só para mandar por e-mail ou WhatsApp, use
 Suba o servidor local com `node backend/ferramentas/servidor.mjs` e abra
 **`http://localhost:8080/testes/index.html`**. (Abrindo o arquivo direto do
 disco também roda, mas o painel do banco de dados fica limitado.)
-Devem aparecer **164 de 164 testes passando**, tudo verde.
+Devem aparecer **182 de 182 testes passando**, tudo verde.
 
 ---
 
@@ -56,10 +64,16 @@ arquivo. Explica onde fica cada coisa e por quê.
 
 ## O que o site faz
 
-**Medidor rodando ao vivo.** Um medidor virtual pulsa a cada 2 segundos. A
-curva do sol vem da declinação solar na data — a janela de luz encurta no
-inverno sozinha. As nuvens vêm de ruído semeado: o mesmo dia sempre tem o
-mesmo tempo, mas cada dia é diferente.
+**O céu de hoje.** O arco do sol na entrada, no painel, no menu e no
+celular: nasce e se põe na hora certa de Sorocaba (declinação solar,
+longitude e equação do tempo), sobe quase a pino em dezembro e fica baixo em
+junho — que é exatamente por que o painel gera menos no inverno. O fundo
+muda com a fase do céu: noite, crepúsculo, luz dourada, dia.
+
+**Medidor rodando ao vivo — e dizendo de onde vem.** Um medidor virtual
+pulsa a cada 2 segundos, e a tela diz que ele é virtual: "medidor virtual"
+no menu, "medidor ESP32" quando o sensor responde. As nuvens vêm de ruído
+semeado: o mesmo dia sempre tem o mesmo tempo, mas cada dia é diferente.
 
 **Desagregação por aparelho.** Estima quanto cada aparelho consome a partir
 do padrão do medidor. A soma sempre fecha com a leitura — é teste
@@ -67,7 +81,9 @@ automatizado, não coincidência. Você pode discordar da IA e corrigir.
 
 **Conta de luz de verdade.** Compensa créditos mês a mês, respeita o mínimo
 faturável e cobra o Fio B da Lei 14.300 sobre a energia compensada. Aplicar a
-lei derrubou a economia declarada da casa de R$ 172 para R$ 139 por mês.
+lei derrubou a economia declarada da casa de R$ 172 para R$ 139 por mês. A
+fatura detalhada fecha centavo a centavo: as linhas somam o total, no
+relatório e no celular.
 
 **Não precisa ter painel no telhado.** No cadastro você diz se já tem
 sistema solar ou não. Quem ainda não tem acompanha o consumo do mesmo jeito e
@@ -128,13 +144,13 @@ Solaris/
 │
 ├── frontend/             ◀ o que a pessoa vê
 │   ├── index.html        a página; carrega as camadas na ordem certa
-│   ├── css/              a aparência, dividida por assunto
-│   ├── js/               telas, celular, assistente e eventos
+│   ├── css/              a aparência, dividida por assunto (o céu em ceu.css)
+│   ├── js/               o céu, a entrada, as telas, o celular, o assistente e os eventos
 │   └── assets/           o ícone
 │
 ├── backend/              ◀ a lógica de domínio
 │   ├── motor.js          sol, consumo, créditos, Fio B, divisão por aparelho
-│   ├── login.js          contas, sessão e a tela de entrada
+│   ├── login.js          contas e sessão
 │   ├── leitor.js         lê a conta de luz por foto (OCR no navegador)
 │   ├── agente.js         o assistente: contexto, perfil do cliente e conversa
 │   ├── ferramentas/      build, servidor local, instalador de skills, gerador
@@ -151,7 +167,7 @@ Solaris/
 │
 ├── skills/               instruções que padronizam o trabalho com IA
 ├── documentacao/         mapa, como ligar o Supabase, teste de campo, banca
-└── testes/               164 testes, rodam no navegador
+└── testes/               182 testes, rodam no navegador
 ```
 
 **Cada camada tem o seu `LEIA-ME.md`** explicando o que faz, o que não faz e

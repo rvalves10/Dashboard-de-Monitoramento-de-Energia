@@ -1,23 +1,25 @@
 /* responsivo.css
    Pontos de quebra entre desktop, tablet e celular.
    Parte do sistema de design do Solaris. A ordem em que os arquivos
-   de CSS entram no index.html importa: base, componentes, telas,
-   responsivo e impressao, nessa sequencia. */
+   de CSS entram no index.html importa: base, componentes, ceu, telas,
+   conta, assistente, movel, responsivo e impressao, nessa sequencia. */
 
 @media (max-width:1240px){
   .s3{grid-column:span 6}
   .s4,.s5,.s7,.s8{grid-column:span 12}
   .det-sticky{position:static !important}
-  .inv-head,.inv-row{grid-template-columns:1fr 118px 108px}
+  .inv-head,.inv-row{grid-template-columns:1fr 128px 108px}
   .eq-head,.eq-row{grid-template-columns:24px minmax(0,1fr) 84px 76px 52px 28px;gap:var(--e2)}
   .page,.topbar{padding-left:var(--e6);padding-right:var(--e6)}
+  /* o donut sozinho numa linha inteira fica perdido: deita */
+  .donut-card .donut-wrap{justify-content:flex-start}
 }
 
 /* O menu vira so icone. O rotulo sai, mas o aria-label continua no botao,
    entao leitor de tela e navegacao por teclado nao perdem nada. */
 @media (max-width:1040px){
   .rail{width:72px}
-  .nav-label,.brand-text,.unitbox,.meter-rows,.meter-note,.meter-bar{display:none}
+  .nav-label,.brand-text,.unitbox,.meter-rows,.meter-note,.meter-bar,.meter-arco,.meter-head span:not(.live-dot){display:none}
   .rail-foot{padding:0 var(--e2)}
   .meter{padding:var(--e2);display:flex;justify-content:center}
   .brand{padding:0 var(--e5) var(--e6);justify-content:center}
@@ -29,19 +31,27 @@
   .seg button{padding:6px var(--e3)}
 }
 
+/* O ceu do painel empilha: primeiro o numero, depois o arco. */
+@media (max-width:960px){
+  .heroi{grid-template-columns:1fr;gap:var(--e5);min-height:0}
+  .heroi .spark{padding-top:var(--e5)}
+}
+
 @media (max-width:900px){
   .eq-head,.eq-row{grid-template-columns:minmax(0,1fr) 76px 52px 28px}
   .eq-hide{display:none}
   .card{padding:var(--e4) var(--e5)}
-  .hero{padding:var(--e5)}
-  .big-74{font-size:var(--t-3xl);letter-spacing:-.035em}
-  .inv-head,.inv-row{grid-template-columns:1fr 92px}
+  .heroi{padding:var(--e5)}
+  .big-74{font-size:var(--t-3xl);letter-spacing:-.025em}
+  .big-ceu{font-size:var(--t-4xl)}
+  .inv-head,.inv-row{grid-template-columns:1fr 104px}
   .inv-q{display:none}
   .page,.topbar{padding-left:var(--e5);padding-right:var(--e5)}
+  .ceu-chip{display:none}
 }
 
 /* Abaixo de 761px o JavaScript troca a casca inteira pela versao de
-   coluna unica (ver site/js/movel.js), entao aqui so sobra o que o
+   coluna unica (ver frontend/js/movel.js), entao aqui so sobra o que o
    layout estreito precisa alem daquilo. */
 @media (min-width:761px){
   .mobile-only{display:none !important}
