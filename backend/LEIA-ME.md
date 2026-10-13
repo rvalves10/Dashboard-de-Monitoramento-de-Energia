@@ -43,8 +43,8 @@ fala com o banco direto.
 
 | Arquivo | O que faz |
 | --- | --- |
-| `motor.js` | **O coração.** Sol, nuvem, consumo, compensação de créditos, Fio B da Lei 14.300 e a divisão por aparelho. |
-| `login.js` | Contas, sessão e a tela de entrada. O login é obrigatório: não existe mais modo visitante. |
+| `motor.js` | **O coração.** Sol, nuvem, consumo, compensação de créditos, Fio B da Lei 14.300, a divisão por aparelho — e onde o sol está agora, que é o que a tela desenha no céu. |
+| `login.js` | Contas e sessão. O login é obrigatório: não existe mais modo visitante. A **tela** de entrada mora em `frontend/js/entrada.js`, porque o backend não monta HTML. |
 | `leitor.js` | Lê a conta de luz por foto: OCR no navegador e interpretação dos campos. |
 | `agente.js` | O assistente de IA do lado do navegador: as cinco perguntas do cadastro, o contexto que vai junto de cada pergunta e o histórico da conversa. |
 
@@ -74,7 +74,11 @@ os dois usam utilitários e o estado `S` que o motor declara.
 Nada aqui é digitado. Tudo é calculado, nesta ordem:
 
 1. **Onde o sol está.** A declinação solar depende da data, então a janela de
-   luz encurta no inverno sozinha.
+   luz encurta no inverno sozinha. O meio-dia solar leva a longitude de
+   Sorocaba e a equação do tempo (Spencer, 1971): o nascer e o pôr que a
+   tela escreve batem com os de verdade. A mesma conta alimenta o céu que
+   a tela desenha (`ceuDeHoje`, `caminhoDoSol`) — o arco nasce exatamente
+   quando a curva de geração começa.
 2. **Nuvem no céu.** Ruído com semente fixa: 12 de junho sempre tem o mesmo
    tempo, mas cada dia é diferente do outro. Realista e reproduzível ao mesmo
    tempo — sem isso, dois testes rodando no mesmo dia dariam resultados
@@ -89,13 +93,29 @@ Nada aqui é digitado. Tudo é calculado, nesta ordem:
 
 ### Os números que vêm de fora
 
-Só um: `IRRADIACAO_REGIAO`, a irradiação média mês a mês. Ela vem de
-`banco-de-dados/dados/regiao-sorocaba.js` e é **uma série para a região
-inteira** — as cidades atendidas estão dentro de uns 60 km, e a diferença
-real entre elas é menor que a incerteza da própria medida. **Precisa ser
-conferida
-no Atlas Brasileiro de Energia Solar (INPE/LABREN) para a cidade real do
-projeto antes da banca.** Está marcado no código.
+Cada um mora numa constante só, com a fonte escrita do lado:
+
+| Constante | De onde vem | Situação |
+| --- | --- | --- |
+| `IRRADIACAO_REGIAO` | `banco-de-dados/dados/regiao-sorocaba.js` | **conferir** no Atlas Brasileiro de Energia Solar (INPE/LABREN) |
+| `BANDEIRA_ESTIMADA` | ANEEL, bandeira amarela (R$ 1,885 por 100 kWh) | **buscar** a bandeira de cada mês |
+| `FATOR_EMISSAO_REDE` | sem fonte escrita | **conferir** no fator médio do SIN publicado pelo MCTI |
+| `CUSTO_KWP_*` | ABSOLAR/ANEEL, 1º trimestre de 2026 | conferir com orçamentos reais |
+| `LAT`, `LON` | geografia de Sorocaba | conferido |
+| `equacaoDoTempo()` | fórmula de Spencer (1971) | conferido |
+
+A irradiação é **uma série para a região inteira** — as cidades atendidas
+estão dentro de uns 60 km, e a diferença real entre elas é menor que a
+incerteza da própria medida. A bandeira morava copiada em treze lugares;
+agora uma troca na constante muda o sistema inteiro.
+
+### A fatura detalhada
+
+`linhasDaConta()` devolve as linhas da conta de um mês e `contaDoMes()` o
+total — e **as linhas com valor somam exatamente o total**. A energia
+injetada aparece sem valor: vira crédito, e o crédito só desconta quando é
+usado. Relatório e celular leem as mesmas duas funções; antes cada um tinha
+a sua fórmula, e o celular esquecia o Fio B.
 
 ### Lei 14.300/2022
 
@@ -121,7 +141,7 @@ isso. Nenhuma tela pode mostrar passado reconstruído sem marcar.
 
 **Isto não é segurança contra quem tem acesso ao computador.** Sem servidor,
 não existe segredo do lado do cliente. Está escrito na própria tela de
-entrada, de propósito.
+entrada (`frontend/js/entrada.js`), de propósito.
 
 O que é real:
 

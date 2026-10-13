@@ -1,0 +1,173 @@
+/* ceu.css
+   O ceu de hoje: as quatro fases do fundo e os tracos do arco do sol.
+   Parte do sistema de design do Solaris. A ordem em que os arquivos
+   de CSS entram no index.html importa: base, componentes, ceu, telas,
+   conta, assistente, movel, responsivo e impressao, nessa sequencia.
+
+   COMO FUNCIONA. Todo cartao que mostra o ceu leva a classe .ceu e uma
+   fase: ceu--noite, ceu--crepusculo, ceu--dourada ou ceu--dia. Quem
+   escolhe a fase e o motor (ceuDeHoje, pela altura real do sol), e nao
+   o relogio da parede: as 18h de junho ja e noite, as 18h de dezembro
+   ainda e luz dourada.
+
+   Cada fase define o MESMO conjunto de variaveis --ceu-*. Fundo e tinta
+   andam juntos: o ceu de dia e claro e leva tinta escura; os outros tres
+   sao escuros e levam tinta clara. Todos os pares de texto foram
+   conferidos por script nas quatro fases (WCAG AA).
+
+   O fundo e so um degrade vertical, como o ceu de verdade: mais fundo no
+   alto, mais claro no horizonte. O brilho do sol baixo (o laranja da
+   luz dourada, o rosa do crepusculo) mora DENTRO do desenho do arco,
+   preso ao ponto do horizonte onde o sol esta e cortado na linha do
+   horizonte. Assim ele acompanha o sol e nunca passa por baixo de texto —
+   no fundo do cartao ele derrubava o contraste dos rotulos de 12px.
+
+   Nada aqui pulsa. O sol anda porque a hora anda — o controle.js
+   redesenha o arco a cada 45 segundos, e e so isso. */
+
+.ceu{
+  position:relative;overflow:hidden;isolation:isolate;
+  color:var(--ceu-tinta);background:var(--ceu-fundo);
+  border-color:transparent;
+}
+
+/* ---------- as quatro fases ---------- */
+.ceu--noite{
+  --ceu-fundo:linear-gradient(180deg,#060A1A 0%,#0B1129 55%,#151D44 100%);
+  --ceu-tinta:#EEF1F8; --ceu-tinta-2:#B3BBCF; --ceu-tinta-3:#8C95AE;
+  --ceu-destaque:#F0A93C;
+  --ceu-linha:rgba(238,241,248,.24);
+  --ceu-arco:#F0A93C; --ceu-arco-op:.42;
+  --ceu-luz:#F0A93C; --ceu-luz-op:.05;
+  --ceu-horizonte:#3A4A9A; --ceu-horizonte-2:#1A2250; --ceu-horizonte-op:0;
+  --ceu-barra:rgba(238,241,248,.24); --ceu-barra-forte:rgba(238,241,248,.40);
+  --ceu-hachura:rgba(6,10,26,.55);
+  --ceu-pilula:rgba(238,241,248,.10);
+}
+.ceu--crepusculo{
+  --ceu-fundo:linear-gradient(180deg,#070C22 0%,#121A44 55%,#2A2862 100%);
+  --ceu-tinta:#EEF1F8; --ceu-tinta-2:#BDC3D6; --ceu-tinta-3:#959DB5;
+  --ceu-destaque:#F5B455;
+  --ceu-linha:rgba(238,241,248,.28);
+  --ceu-arco:#F0A93C; --ceu-arco-op:.7;
+  --ceu-luz:#F0A93C; --ceu-luz-op:.10;
+  --ceu-horizonte:#E07585; --ceu-horizonte-2:#7A4A9A; --ceu-horizonte-op:.62;
+  --ceu-barra:rgba(238,241,248,.26); --ceu-barra-forte:rgba(238,241,248,.42);
+  --ceu-hachura:rgba(7,12,34,.55);
+  --ceu-pilula:rgba(238,241,248,.12);
+}
+.ceu--dourada{
+  --ceu-fundo:linear-gradient(180deg,#0A1030 0%,#1C2453 55%,#3A3070 100%);
+  --ceu-tinta:#F4F2F6; --ceu-tinta-2:#C9C6D8; --ceu-tinta-3:#ABA9C2;
+  --ceu-destaque:#FFC56E;
+  --ceu-linha:rgba(244,242,246,.32);
+  --ceu-arco:#FFC56E; --ceu-arco-op:1;
+  --ceu-luz:#F0A93C; --ceu-luz-op:.20;
+  --ceu-horizonte:#FFB566; --ceu-horizonte-2:#D96B73; --ceu-horizonte-op:.8;
+  --ceu-barra:rgba(244,242,246,.28); --ceu-barra-forte:rgba(244,242,246,.46);
+  --ceu-hachura:rgba(10,16,48,.5);
+  --ceu-pilula:rgba(244,242,246,.12);
+}
+.ceu--dia{
+  --ceu-fundo:linear-gradient(180deg,#B7D4F1 0%,#D5E5F6 55%,#F6EAD8 100%);
+  --ceu-tinta:#0F1427; --ceu-tinta-2:#30384C; --ceu-tinta-3:#434C62;
+  --ceu-destaque:#9A5308;
+  --ceu-linha:rgba(15,20,39,.22);
+  /* de dia o ambar de preenchimento nao tem 3:1 sobre o azul claro; o
+     arco usa o ambar escuro */
+  --ceu-arco:#9A5308; --ceu-arco-op:1;
+  --ceu-luz:#F0A93C; --ceu-luz-op:.28;
+  --ceu-horizonte:#FFE7B8; --ceu-horizonte-2:#FFE7B8; --ceu-horizonte-op:.5;
+  --ceu-barra:rgba(15,20,39,.16); --ceu-barra-forte:rgba(15,20,39,.28);
+  --ceu-hachura:rgba(255,255,255,.7);
+  --ceu-pilula:rgba(255,255,255,.55);
+}
+
+/* O menu lateral e sempre noite, mesmo ao meio-dia: o arco em miniatura
+   dele usa a tinta da noite e so o sol diz que horas sao. */
+.ceu-sobre-noite{
+  --ceu-tinta:#EEF1F8; --ceu-tinta-2:#B3BBCF; --ceu-tinta-3:#8C95AE;
+  --ceu-linha:rgba(238,241,248,.2);
+  --ceu-arco:#F0A93C; --ceu-arco-op:.9;
+  --ceu-luz:#F0A93C; --ceu-luz-op:.12;
+  --ceu-horizonte:#F0A93C; --ceu-horizonte-2:#F0A93C; --ceu-horizonte-op:0;
+}
+
+/* ---------- o arco ---------- */
+.arco{position:relative;width:100%;aspect-ratio:640 / 236}
+.arco svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+
+.arco-luz-a{stop-color:var(--ceu-luz);stop-opacity:var(--ceu-luz-op)}
+.arco-luz-b{stop-color:var(--ceu-luz);stop-opacity:0}
+.arco-hz-a{stop-color:var(--ceu-horizonte);stop-opacity:var(--ceu-horizonte-op)}
+.arco-hz-b{stop-color:var(--ceu-horizonte-2);stop-opacity:calc(var(--ceu-horizonte-op) * .42)}
+.arco-hz-c{stop-color:var(--ceu-horizonte-2);stop-opacity:0}
+.arco-horizonte{stroke:var(--ceu-linha);stroke-width:1}
+.arco-tique{stroke:var(--ceu-linha);stroke-width:1}
+/* o sol do outro lado da Terra: pontilhado, discreto */
+.arco-noite{fill:none;stroke:var(--ceu-tinta-3);stroke-width:1.8;stroke-dasharray:.5 7;stroke-linecap:round;opacity:.75}
+/* o dia ja percorrido e cheio; o que falta, tracejado */
+.arco-feito{fill:none;stroke:var(--ceu-arco);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:var(--ceu-arco-op)}
+.arco-falta{fill:none;stroke:var(--ceu-arco);stroke-width:1.6;stroke-dasharray:5 6;stroke-linecap:round;opacity:calc(var(--ceu-arco-op) * .62)}
+.arco-marco{fill:var(--ceu-tinta-2)}
+
+.arco-brilho-a{stop-color:var(--sun-glow);stop-opacity:.6}
+.arco-brilho-b{stop-color:var(--sun-lite);stop-opacity:0}
+.arco-disco-a{stop-color:#FFF6DC}
+.arco-disco-b{stop-color:var(--sun-lite)}
+.arco-disco-c{stop-color:var(--sun)}
+.ceu--dia .arco-disco{stroke:var(--sun-ink);stroke-width:1.2}
+/* abaixo do horizonte o disco fica apagado: e o sol, mas nao esta la */
+.arco-sol--noite .arco-disco{fill:var(--ceu-tinta-3);opacity:.5;stroke:none}
+
+/* Rotulos em HTML por cima do desenho: nunca encolhem abaixo de 12px. */
+.arco-rot{
+  position:absolute;transform:translate(-50%,12px);
+  font-size:var(--t-xs);color:var(--ceu-tinta-2);white-space:nowrap;line-height:1.2;pointer-events:none;
+}
+.arco-rot b{font-family:var(--f-mono);font-weight:500;color:var(--ceu-tinta)}
+.arco-rot--pico{transform:translate(-50%,calc(-100% - 12px))}
+
+/* ---------- o ceu no painel ---------- */
+.heroi{
+  display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:var(--e6);
+  padding:var(--e6) var(--e6) var(--e5);min-height:360px;
+}
+.heroi-txt{display:flex;flex-direction:column;min-width:0;position:relative;z-index:1}
+.heroi-topo{display:flex;align-items:center;gap:var(--e3);flex-wrap:wrap}
+.heroi-kicker{font-size:var(--t-sm);font-weight:500;color:var(--ceu-tinta-2)}
+.heroi-valor{display:flex;align-items:baseline;margin-top:var(--e4)}
+.heroi .big{color:var(--ceu-tinta)}
+.heroi .moeda{color:var(--ceu-tinta-2)}
+.heroi-linha{font-size:var(--t-sm);color:var(--ceu-tinta-2);line-height:var(--lh-body);margin-top:var(--e4);max-width:44ch}
+.heroi-linha b{color:var(--ceu-tinta);font-weight:600}
+.heroi .spark{margin-top:auto;padding-top:var(--e6)}
+.heroi-ceu{display:flex;flex-direction:column;justify-content:flex-end;min-width:0}
+.heroi-agora{
+  display:flex;gap:var(--e6);flex-wrap:wrap;
+  margin-top:var(--e4);padding-top:var(--e3);border-top:1px solid var(--ceu-linha);
+}
+.agora-item{min-width:0}
+.agora-item span{display:block;font-size:var(--t-xs);color:var(--ceu-tinta-2)}
+.agora-item b{display:block;font-family:var(--f-mono);font-size:var(--t-md);font-weight:500;color:var(--ceu-tinta);font-variant-numeric:tabular-nums;margin-top:2px}
+.heroi-frase{font-size:var(--t-xs);color:var(--ceu-tinta-2);margin-top:var(--e3);line-height:var(--lh-snug)}
+
+.heroi .delta{background:var(--ceu-pilula);color:var(--ceu-tinta)}
+.heroi .delta--sobe{color:var(--good-on-dark)}
+.heroi .delta--desce{color:#F1B4A6}
+.ceu--dia.heroi .delta--sobe{background:var(--good-bg);color:var(--good)}
+.ceu--dia.heroi .delta--desce{background:var(--bad-bg);color:var(--bad)}
+
+.heroi .spark-bar{background:var(--ceu-barra)}
+.heroi .spark-col:hover .spark-bar{background:var(--ceu-barra-forte)}
+.heroi .spark-col.is-now .spark-bar{background:var(--sun-lite)}
+.ceu--dia.heroi .spark-col.is-now .spark-bar{background:var(--sun)}
+/* a conta de quem nao tem painel: o mes atual se destaca pela tinta, nao
+   pelo ambar — ambar dentro de dado e so geracao solar */
+.heroi .spark--conta .spark-col.is-now .spark-bar,
+.ceu--dia.heroi .spark--conta .spark-col.is-now .spark-bar{background:var(--ceu-tinta)}
+.heroi .spark-lbl{color:var(--ceu-tinta-3)}
+.heroi .spark-col.is-now .spark-lbl{color:var(--ceu-tinta);font-weight:600}
+.heroi .spark-col--est .spark-bar{
+  background-image:repeating-linear-gradient(135deg,var(--ceu-hachura) 0 2px,transparent 2px 5px);
+}

@@ -6,13 +6,13 @@
 <title>Testes Solaris</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* Mesmos tokens do site (frontend/css/base.css). Se a paleta mudar la,
    mude aqui tambem - esta pagina nao carrega o CSS do site de proposito,
    para um erro de estilo nunca derrubar a suite. */
 :root{
-  --ground:#F4F5F7;--surface:#fff;--ink:#15181C;--muted:#4C535B;--line:#DCDFE4;
+  --ground:#F3F5F9;--surface:#fff;--ink:#0F1427;--muted:#485168;--line:#DADFE8;
   --good:#0F6B47;--good-bg:#E8F3ED;--bad:#AE3F27;--bad-bg:#FBEDE9;--sun:#D97706;
 }
 *{box-sizing:border-box}
@@ -21,19 +21,19 @@ body{
   font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.6;
 }
 .wrap{max-width:820px;margin:0 auto}
-h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:34px;letter-spacing:-.033em;margin:0}
+h1{font-family:'Newsreader',Georgia,serif;font-weight:500;font-size:34px;letter-spacing:-.02em;margin:0}
 .sub{color:var(--muted);margin:8px 0 26px;font-size:15px;max-width:70ch}
 .resumo{
   border-radius:14px;padding:16px 20px;font-size:17px;margin-bottom:26px;
   border:1px solid var(--line);background:var(--surface);
 }
-.resumo b{font-family:'Bricolage Grotesque',sans-serif;font-size:20px}
+.resumo b{font-family:'Newsreader',Georgia,serif;font-size:20px}
 .resumo.bom{background:var(--good-bg);border-color:#C6E0D3;color:#0F6B47}
 .resumo.ruim{background:var(--bad-bg);border-color:#F0D3C9;color:#8A3320}
 .resumo span{font-weight:600}
 section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:12px}
 h2{
-  font-family:'Bricolage Grotesque',sans-serif;font-size:15px;font-weight:700;margin:0 0 10px;
+  font-family:'Newsreader',Georgia,serif;font-size:17px;font-weight:600;margin:0 0 10px;
   display:flex;justify-content:space-between;align-items:baseline;letter-spacing:-.01em;
 }
 h2 span{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:400;color:var(--muted)}
@@ -81,6 +81,7 @@ window.SOLARIS_MODO_LOCAL = true;
     '../banco-de-dados/banco.js',
     '../backend/motor.js', '../backend/login.js', '../backend/leitor.js',
     '../backend/agente.js',
+    '../frontend/js/ceu.js', '../frontend/js/entrada.js',
     '../frontend/js/telas.js', '../frontend/js/movel.js',
     '../frontend/js/assistente.js', '../frontend/js/controle.js',
     'testes.js'

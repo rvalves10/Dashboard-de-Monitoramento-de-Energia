@@ -6,19 +6,22 @@
 
 <title>Solaris — monitoramento de energia solar</title>
 <meta name="description" content="Painel que mostra para onde vai cada quilowatt da sua casa ou do seu comércio, quanto o sol cobriu e quanto vem na próxima conta.">
-<meta name="theme-color" content="#16150F">
+<meta name="theme-color" content="#0B1024">
 <link rel="icon" href="assets/favicon.svg">
 
-<!-- Fontes: Bricolage Grotesque para os títulos e números grandes,
-     IBM Plex Sans para o texto e IBM Plex Mono para dados tabulares. -->
+<!-- Fontes: Newsreader para os títulos e números grandes (tem algarismos
+     tabulares de verdade), IBM Plex Sans para o texto e IBM Plex Mono para
+     dados que mudam. Sem internet o site cai para as fontes do sistema e
+     continua abrindo. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
 <!-- A ordem do CSS importa: cada arquivo pode sobrescrever o anterior.
      base define os tokens, impressao é o último porque só vale no papel. -->
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/componentes.css">
+<link rel="stylesheet" href="css/ceu.css">
 <link rel="stylesheet" href="css/telas.css">
 <link rel="stylesheet" href="css/conta.css">
 <link rel="stylesheet" href="css/assistente.css">
@@ -60,9 +63,11 @@
   banco-de-dados/supabase.js       Postgres na nuvem: contas, estado e leituras
   banco-de-dados/banco.js          escolhe qual dos dois responde
   backend/motor.js                 a simulação física, as tarifas e a Lei 14.300
-  backend/login.js                 contas, sessão e a tela de entrada
+  backend/login.js                 contas e sessão
   backend/leitor.js                lê a conta de luz por foto (OCR sob demanda)
   backend/agente.js                o assistente: contexto, perfil e conversa
+  frontend/js/ceu.js               o céu de hoje: o arco do sol desenhado
+  frontend/js/entrada.js           a tela de entrada (a única porta do site)
   frontend/js/telas.js             as telas da versão ampla
   frontend/js/movel.js             a mesma coisa em coluna única, para tela estreita
   frontend/js/assistente.js        o papo do cadastro e a tela de conversa
@@ -77,6 +82,8 @@
 <script src="../backend/login.js"></script>
 <script src="../backend/leitor.js"></script>
 <script src="../backend/agente.js"></script>
+<script src="js/ceu.js"></script>
+<script src="js/entrada.js"></script>
 <script src="js/telas.js"></script>
 <script src="js/movel.js"></script>
 <script src="js/assistente.js"></script>

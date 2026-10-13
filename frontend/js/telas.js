@@ -46,7 +46,10 @@ const IC = {
   lapis: 'M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM14 6l4 4',
   camera: 'M3 8a2 2 0 0 1 2-2h2.5L9 4h6l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z',
   ia: 'M12 3a6 6 0 0 0-3.4 10.9c.5.5.9 1.3.9 2.1h5c0-.8.4-1.6.9-2.1A6 6 0 0 0 12 3zM10 19.5h4',
-  mapa: 'M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5zM9 4v13M15 6.5v13'
+  mapa: 'M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5zM9 4v13M15 6.5v13',
+  lua: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z',
+  /* o simbolo do Solaris: o sol nascendo sobre a linha do horizonte */
+  marca: 'M5 16.5a7 7 0 0 1 14 0M2 16.5h20M12 6.5V4M6.3 10.3 4.6 8.6M17.7 10.3l1.7-1.7M7.5 20h9'
 };
 function ico(d, sz, cor, sw) {
   return '<svg width="' + (sz || 16) + '" height="' + (sz || 16) + '" viewBox="0 0 24 24" fill="none" stroke="' + (cor || 'currentColor') + '" stroke-width="' + (sw || 1.8) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"/></svg>';
@@ -103,17 +106,25 @@ function vRail() {
       '<span class="unit-dot"></span><span style="min-width:0"><span class="unit-name" style="display:block">' + esc(u.nome) + '</span>' +
       '<span class="unit-type" style="display:block">' + esc(u.curto) + '</span></span></button>';
   }).join('');
+  const semSolar = unidade().temSolar === false;
   return '<aside class="rail">' +
-    '<div class="brand"><span class="brand-mark">' + ico(IC.sol, 19, 'var(--n-900)', 2.2) + '</span>' +
-    '<span class="brand-text"><span class="brand-name" style="display:block">Solaris</span><span class="brand-sub" style="display:block">Energia sob controle</span></span></div>' +
+    '<div class="brand"><span class="brand-mark">' + ico(IC.marca, 20, 'currentColor', 1.9) + '</span>' +
+    '<span class="brand-text"><span class="brand-name" style="display:block">Solaris</span><span class="brand-sub" style="display:block">Sua energia, explicada</span></span></div>' +
     '<nav class="nav" aria-label="Seções">' + nav + '</nav>' +
     '<div class="rail-spacer"></div>' +
     '<div class="rail-foot">' +
-    '<div class="meter"><div class="meter-head"><span class="live-dot batendo"></span><span class="meter-lbl">Medidor agora</span></div>' +
+    /* O nome da fonte vai junto do "Agora": ponto verde piscando ao lado de
+       "medidor" faria qualquer um achar que existe um sensor lendo a casa. */
+    '<div class="meter ceu-sobre-noite"><div class="meter-head"><span class="live-dot batendo"></span><span>Agora</span>' +
+    '<span class="meter-fonte">· ' + rotuloDaFonte() + '</span></div>' +
+    '<div class="meter-arco">' + arcoSolar(ceuDeHoje(), { id: 'arcoRail', compacto: true }) + '</div>' +
     '<div class="meter-rows">' +
     '<div class="meter-row"><span>Consumindo</span><span class="meter-val" id="liveC">' + nf(p.cons, 2) + ' kW</span></div>' +
-    '<div class="meter-row"><span>Gerando</span><span class="meter-val" id="liveG">' + nf(p.ger, 2) + ' kW</span></div>' +
-    '</div><div class="meter-bar"><span id="liveBar" style="width:' + clamp((p.ger / Math.max(p.cons, .001)) * 100, 0, 100) + '%"></span></div>' +
+    (semSolar ? '' :
+      '<div class="meter-row"><span>Gerando</span><span class="meter-val" id="liveG">' + nf(p.ger, 2) + ' kW</span></div>') +
+    '</div>' +
+    (semSolar ? '' :
+      '<div class="meter-bar"><span id="liveBar" style="width:' + clamp((p.ger / Math.max(p.cons, .001)) * 100, 0, 100) + '%"></span></div>') +
     '<div class="meter-note" id="liveNote">' + textoMedidor(p) + '</div></div>' +
     cardConta() +
     '<div class="unitbox"><div class="unitbox-title">Unidade</div><div style="display:flex;flex-direction:column;gap:4px">' + units +
@@ -137,17 +148,27 @@ function cardConta() {
 }
 
 function textoMedidor(p) {
+  /* sem painel nao ha "paineis dormindo": ha so o que a rede cobra */
+  if (unidade().temSolar === false) return 'Tudo vem da rede: ' + brl(p.cons * tarifaAtual(), 2) + ' por hora neste ritmo.';
   if (p.ger <= 0.02) return 'Painéis dormindo. Tudo vem da rede.';
   if (p.inj > 0.05) return 'Sobrando ' + nf(p.inj, 2) + ' kW para a rede — virando crédito.';
   return 'O sol cobre ' + pct((p.ger / Math.max(p.cons, .001)) * 100) + ' do que a casa puxa agora.';
 }
 
+/* De onde vem o "agora". Dito sempre, porque ponto verde piscando ao lado de
+   um numero e a promessa de que alguem esta medindo de verdade. */
+function rotuloDaFonte() {
+  const f = fonteAtual();
+  return f === 'medidor' ? 'medidor ESP32' : f === 'aguardando' ? 'procurando o medidor' : 'medidor virtual';
+}
+
 function vTopbar() {
   const v = visao();
   const t = TELAS[S.tela];
+  const dia = DIAF[v.data.getDay()];
   const kicker = S.tela === 'painel'
-    ? MESES[v.m].charAt(0).toUpperCase() + MESES[v.m].slice(1) + ' de ' + v.y + ' · dia ' + v.data.getDate() + ' de ' + v.nd
-    : t[0];
+    ? dia.charAt(0).toUpperCase() + dia.slice(1) + ', ' + v.data.getDate() + ' de ' + MESES[v.m] + ' · ' + unidade().nome
+    : t[0] + ' · ' + unidade().nome;
   const titulo = S.tela === 'painel' ? saudacao() : t[1];
   const mostraPeriodo = S.tela === 'historico';
   const per = [['dia', 'Dia', 'D'], ['semana', 'Semana', 'S'], ['mes', 'Mês', 'M']].map(p =>
@@ -155,52 +176,31 @@ function vTopbar() {
   return '<header class="topbar no-print"><div><h1>' + esc(titulo) + '</h1><p class="topbar-sub">' + esc(kicker) + '</p></div>' +
     '<div class="topbar-actions">' +
     (mostraPeriodo ? '<div class="seg" role="group" aria-label="Período">' + per + '</div>' : '') +
+    chipDoCeu(ceuDeHoje()) +
     '</div></header>';
+}
+
+/* O ceu em uma linha, no topo de toda tela. */
+function chipDoCeu(c) {
+  return '<span class="ceu-chip' + (c.deDia ? '' : ' ceu-chip--noite') + '" data-ceu-chip>' +
+    '<span class="ceu-chip-ic">' + ico(c.deDia ? IC.sol : IC.lua, 12, 'currentColor', 2.2) + '</span>' +
+    '<span data-ceu-frase="curta">' + esc(fraseDoCeu(c, true)) + '</span></span>';
 }
 
 /* ---------- painel ---------- */
 function vPainel() {
   const v = visao(), u = unidade(), t = tarifaAtual(), eq = aparelhos();
-  const dEcon = v.anteriorEcon > 0 ? ((v.economiaCheia - v.anteriorEcon) / v.anteriorEcon) * 100 : 0;
-  const meses = v.ledger.linhas.slice(-12);
-  const maxE = Math.max.apply(null, meses.map(l => l.economia)) || 1;
-  const spark = meses.map((l, i) => {
-    const ehAgora = i === meses.length - 1;
-    /* mes anterior ao cadastro entra hachurado: e reconstrucao, nao leitura */
-    const est = !l.medido && !l.parcial;
-    return '<div class="spark-col' + (ehAgora ? ' is-now' : '') + (est ? ' spark-col--est' : '') +
-      '" title="' + MES3[l.m] + ': ' + brl(l.economia) + (est ? ' (estimado)' : '') + '">' +
-      '<span class="spark-bar" style="height:' + Math.round((l.economia / maxE) * 52 + 6) + 'px"></span>' +
-      '<span class="spark-lbl">' + MES3[l.m] + '</span></div>';
-  }).join('');
-
-  const diasGratis = Math.round(v.economia / Math.max(t * (v.projConsumo / v.nd), .01));
-
-  /* Sem painel no telhado não há economia para anunciar, e um "R$ 0" gigante
-     seria a pior primeira impressão possível. O número grande passa a ser o
-     que essa pessoa realmente quer saber: quanto vem na conta. */
-  const hero = u.temSolar === false
-    ? '<section class="card card--dark hero s7"><div class="hero-in">' +
-      '<div class="hero-top"><span class="hero-kicker">Sua conta de ' + MESES[v.m] + '</span></div>' +
-      '<div class="hero-money"><span class="hero-cur">R$</span><span class="big big-74" id="heroEcon">' + nf(v.contaProj) + '</span></div>' +
-      '<p class="hero-line">Projeção para o mês fechado, com ' + nf(v.projConsumo) + ' kWh de consumo. ' +
-      'Até agora foram ' + nf(v.mtd.tc) + ' kWh — uma média de ' + nf(v.mtd.tc / Math.max(v.mtd.dias, .1), 1) + ' kWh por dia.</p>' +
-      '<div class="spark">' + sparkContas(v, u, t) + '</div></div></section>'
-    : '<section class="card card--dark hero s7"><div class="hero-in">' +
-      '<div class="hero-top"><span class="hero-kicker">Você economizou em ' + MESES[v.m] + '</span>' +
-      '<span class="delta' + (dEcon < 0 ? ' delta--down' : '') + '">' + ico(IC.cima, 12, 'currentColor', 2.6) + sinal(dEcon, 0) + '%</span></div>' +
-      '<div class="hero-money"><span class="hero-cur">R$</span><span class="big big-74" id="heroEcon">' + nf(v.economia) + '</span></div>' +
-      '<p class="hero-line">Equivale a ' + diasGratis + ' dias de energia de graça. Seu telhado cobriu ' + pct(v.autoPct) + ' de tudo que a unidade gastou até agora — e o mês deve fechar em ' + brl(v.economiaCheia) + '.</p>' +
-      '<div class="spark">' + spark + '</div></div></section>';
+  const semSolar = u.temSolar === false;
 
   const dash = Math.round((clamp(v.autoPct, 0, 100) / 100) * 351.8);
-  const donut = '<section class="card s5"><h2>Autossuficiência</h2>' +
+  const donut = '<section class="card s4 donut-card"><h2>Autossuficiência</h2>' +
+    '<div class="card-sub">Quanto do consumo do mês o seu telhado cobriu na hora</div>' +
     '<div class="donut-wrap"><div class="donut">' +
     /* decorativo: a porcentagem aparece em texto logo abaixo, entao o
        leitor de tela nao precisa atravessar o desenho */
     '<svg width="132" height="132" viewBox="0 0 132 132" aria-hidden="true">' +
-    '<circle cx="66" cy="66" r="56" fill="none" stroke="var(--ground-2)" stroke-width="15"/>' +
-    '<circle class="donut-ring" cx="66" cy="66" r="56" fill="none" stroke="var(--sun)" stroke-width="15" stroke-linecap="round" stroke-dasharray="' + dash + ' 351.8"/></svg>' +
+    '<circle cx="66" cy="66" r="56" fill="none" stroke="var(--ground-2)" stroke-width="11"/>' +
+    '<circle class="donut-ring" cx="66" cy="66" r="56" fill="none" stroke="var(--sun)" stroke-width="11" stroke-linecap="round" stroke-dasharray="' + dash + ' 351.8"/></svg>' +
     '<div class="donut-mid"><span class="donut-pct">' + pct(v.autoPct) + '</span><span class="donut-cap">do consumo</span></div></div>' +
     '<div class="split">' +
     linhaSplit('var(--sun)', 'Sol direto', nf(v.mtd.auto, 1) + ' kWh') +
@@ -212,7 +212,7 @@ function vPainel() {
      zeros seria desperdiçar metade do painel — as caixas passam a falar do
      que existe: o custo do dia, o aparelho que mais pesa e a tarifa. */
   const eq0 = eq.filter(e => !e.sintetico)[0];
-  const kpis = (u.temSolar === false
+  const kpis = (semSolar
     ? [
       { l: 'Consumo do mês', v: nf(v.mtd.tc), un: 'kWh', cor: 'var(--grid)', ic: IC.raio, n: 'Média de ' + nf(v.mtd.tc / Math.max(v.mtd.dias, .1), 1) + ' kWh por dia' },
       { l: 'Custo por dia', v: brl((v.contaProj / v.nd), 2).replace('R$ ', ''), un: 'R$', cor: 'var(--grid)', ic: IC.papel, n: 'No ritmo deste mês' },
@@ -221,16 +221,16 @@ function vPainel() {
     ]
     : [
       { l: 'Consumo do mês', v: nf(v.mtd.tc), un: 'kWh', cor: 'var(--grid)', ic: IC.raio, n: 'Média de ' + nf(v.mtd.tc / Math.max(v.mtd.dias, .1), 1) + ' kWh por dia' },
-      { l: 'Geração solar', v: nf(v.mtd.tg), un: 'kWh', cor: 'var(--sun)', ic: IC.sol, n: u.paineis + ' painéis · ' + nf(u.potenciaKwp, 1) + ' kWp instalados' },
+      { l: 'Geração solar', v: nf(v.mtd.tg), un: 'kWh', cor: 'var(--sun-ink)', ic: IC.sol, n: u.paineis + ' painéis · ' + nf(u.potenciaKwp, 1) + ' kWp instalados' },
       { l: 'CO₂ evitado', v: nf(v.co2, 1), un: 'kg', cor: 'var(--good)', ic: IC.folha, n: 'Como ' + nf(v.co2 / 0.12) + ' km de carro não rodados' },
       { l: 'Créditos na rede', v: nf(v.creditos), un: 'kWh', cor: 'var(--violet)', ic: IC.troca, n: 'Válidos por 60 meses · ' + esc(u.distribuidora) }
     ]
-  ).map(k => '<section class="card card--tight s3"><div class="kpi-top">' + ico(k.ic, 15, k.cor, 1.9) + '<span class="kpi-lbl">' + k.l + '</span></div>' +
-    '<div class="kpi-val"><span class="big big-32">' + k.v + '</span><span class="kpi-unit">' + k.un + '</span></div>' +
+  ).map(k => '<section class="card card--tight s3 kpi"><div class="kpi-top"><span class="kpi-ic">' + ico(k.ic, 14, k.cor, 2) + '</span><span class="kpi-lbl">' + k.l + '</span></div>' +
+    '<div class="kpi-val"><span class="big big-34">' + k.v + '</span><span class="kpi-unit">' + k.un + '</span></div>' +
     '<div class="kpi-note">' + k.n + '</div></section>').join('');
 
   const dia = v.md.dias[v.data.getDate() - 1];
-  const curva = graficoDia(dia, v);
+  const curva = graficoDia(dia, v, semSolar ? 's7' : 's8');
 
   const somaTop = soma(eq.map(e => e.kwh)) || 1;
   const mix = eq.slice(0, 6).map(e => '<i style="width:' + (e.kwh / somaTop) * 100 + '%;background:' + e.cor + '" title="' + esc(e.nome) + ': ' + pct((e.kwh / somaTop) * 100) + '"></i>').join('');
@@ -241,48 +241,123 @@ function vPainel() {
     '<span style="text-align:right"><span class="toprow-num" style="display:block">' + nf(e.kwh) + ' kWh</span>' +
     '<span class="toprow-cash" style="display:block">' + brl(e.reais) + '</span></span></button>').join('');
 
-  const desagreg = '<section class="card s7"><div style="display:flex;align-items:center;gap:9px">' +
+  const desagreg = '<section class="card s7"><div style="display:flex;align-items:center;gap:var(--e3)">' +
     '<h2>Para onde vai sua energia</h2><span class="pill--ia">' + ico(IC.faisca, 10, 'currentColor', 2.4) + 'IA</span></div>' +
     '<div class="card-sub">Estimado pelo padrão do medidor, sem sensor em cada tomada</div>' +
     '<div class="mixbar">' + mix + '</div><div class="toplist">' + top + '</div>' +
-    '<button class="link-btn" style="margin:12px 0 0 10px" data-act="nav" data-tela="equipamentos">Ver todos os ' + eq.length + ' aparelhos' + ico(IC.seta, 13, 'currentColor', 2.4) + '</button></section>';
+    '<button class="link-btn" style="margin:var(--e3) 0 0 var(--e2)" data-act="nav" data-tela="equipamentos">Ver todos os ' + eq.length + ' aparelhos' + ico(IC.seta, 13, 'currentColor', 2.4) + '</button></section>';
 
   const fech = new Date(v.y, v.m + 1, 12);
-  const conta = '<section class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px">' +
-    '<h2>Próxima conta</h2><span class="pill pill--warn">Bandeira amarela</span></div>' +
-    '<div style="display:flex;align-items:baseline;gap:8px;margin-top:10px"><span class="big big-40">' + brl(v.contaProj) + '</span>' +
-    '<span style="font-size:13px;color:var(--faint)">estimado · fecha ' + fech.getDate() + ' de ' + MESES[fech.getMonth()] + '</span></div>' +
+  const conta = '<section class="card"><div class="card-head" style="align-items:center">' +
+    '<h2>Próxima conta</h2><span class="pill pill--warn" title="A ANEEL anuncia a bandeira no fim de cada mês; até lá o Solaris usa a amarela">' +
+    'Bandeira ' + BANDEIRA_ESTIMADA.nome + ' · estimada</span></div>' +
+    '<div style="display:flex;align-items:baseline;gap:var(--e2);margin-top:var(--e3);flex-wrap:wrap"><span class="big big-46"><span class="moeda">R$</span>' + nf(v.contaProj) + '</span>' +
+    '<span style="font-size:var(--t-sm);color:var(--faint)">fecha ' + fech.getDate() + ' de ' + MESES[fech.getMonth()] + '</span></div>' +
     '<hr class="rule">' +
-    '<div style="display:flex;flex-direction:column;gap:9px">' +
+    '<div style="display:flex;flex-direction:column;gap:var(--e2)">' +
     linhaConta('Energia da rede (' + nf(v.projRede) + ' kWh)', brl(v.projRede * t), 'var(--ink)') +
-    linhaConta('Bandeira + iluminação pública', brl(v.projRede * 0.0189 + u.ilum), 'var(--ink)') +
-    (u.temSolar === false ? '' :
+    linhaConta('Bandeira + iluminação pública', brl(v.projRede * BANDEIRA_ESTIMADA.porKwh + u.ilum), 'var(--ink)') +
+    (semSolar ? '' :
       linhaConta('Abatido por créditos solares', '− ' + brl(v.projUsado * t), 'var(--good)')) +
     '</div></section>';
 
   const mesesPay = v.economiaTotal > 0 ? Math.round(u.investimento / (v.economiaTotal / u.mesesOperacao)) : 0;
-  const pbPct = clamp((v.economiaTotal / u.investimento) * 100, 0, 100);
-  const payback = '<section class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px">' +
+  const pbPct = clamp((v.economiaTotal / Math.max(u.investimento, 1)) * 100, 0, 100);
+  const payback = '<section class="card"><div class="card-head" style="align-items:center">' +
     '<h2>Retorno do investimento</h2>' +
-    '<span class="mono" style="font-size:12px;color:var(--good);font-weight:500">' + pct(pbPct) + ' pago</span></div>' +
-    '<div style="height:9px;background:var(--ground);border-radius:6px;margin-top:13px;overflow:hidden">' +
-    '<div style="height:100%;border-radius:6px;background:var(--good);width:' + pbPct + '%;transition:width .8s cubic-bezier(.4,0,.2,1)"></div></div>' +
-    '<div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--faint)">' +
+    '<span class="mono" style="font-size:var(--t-xs);color:var(--good);font-weight:500">' + pct(pbPct) + ' pago</span></div>' +
+    '<div class="track" style="height:8px;margin-top:var(--e4)"><i style="width:' + pbPct + '%;background:var(--good)"></i></div>' +
+    '<div style="display:flex;justify-content:space-between;gap:var(--e3);flex-wrap:wrap;margin-top:var(--e3);font-size:var(--t-xs);color:var(--faint)">' +
     '<span>' + u.mesesOperacao + ' meses · ' + brl(v.economiaTotal) + ' economizados</span>' +
     '<span>faltam ' + nf(Math.max(0, mesesPay - u.mesesOperacao) / 12, 1) + ' anos</span></div></section>';
 
-  /* O resumo entra logo abaixo do bloco da economia: e o primeiro lugar onde
-     o olho para depois do numero grande, e e texto — dilui a parede de
-     numeros em vez de somar mais uma. Some sozinho quando nao existe. */
-  /* Sem painel, saem as duas peças que só existem por causa dele — o donut
-     de autossuficiência e o retorno do investimento — e entra a única
+  /* O ceu abre a tela, e o resumo do assistente vem logo depois dos quatro
+     numeros: e texto, dilui a parede de numeros em vez de somar mais uma.
+     Some sozinho quando nao existe.
+
+     Sem painel, saem as duas pecas que so existem por causa dele — o donut
+     de autossuficiencia e o retorno do investimento — e entra a unica
      pergunta que essa pessoa tem: vale a pena instalar? */
-  if (u.temSolar === false) {
-    return '<div class="grid12 enter">' + hero + cardValeAPena() + cardResumo() + kpis + curva + desagreg +
-      '<div class="s5 stack">' + conta + '</div></div>';
+  if (semSolar) {
+    return '<div class="grid12 enter">' + heroiDoPainel(v, u, t) + kpis + cardResumo() + curva + cardValeAPena() +
+      desagreg + '<div class="s5 stack">' + conta + '</div></div>';
   }
-  return '<div class="grid12 enter">' + hero + donut + cardResumo() + kpis + curva + desagreg +
-    '<div class="s5 stack">' + conta + payback + '</div></div>';
+  return '<div class="grid12 enter">' + heroiDoPainel(v, u, t) + kpis + cardResumo() + curva + donut +
+    desagreg + '<div class="s5 stack">' + conta + payback + '</div></div>';
+}
+
+/* ---------- o ceu do painel ----------
+   O cartao que abre o Solaris. A esquerda, o numero que a pessoa veio ver;
+   a direita, o ceu de hoje com o sol onde ele esta, e o que o medidor marca
+   neste minuto. O fundo e a cor da hora (ceu.css): abrir as sete da noite
+   e ver o crepusculo e saber, antes de ler qualquer coisa, por que os
+   paineis pararam.
+
+   Sem painel no telhado nao ha economia para anunciar, e um "R$ 0" gigante
+   seria a pior primeira impressao possivel. O numero grande passa a ser o
+   que essa pessoa quer saber: quanto vem na conta. */
+function heroiDoPainel(v, u, t) {
+  const c = ceuDeHoje(), p = potenciaAgora();
+  const semSolar = u.temSolar === false;
+  const dEcon = v.anteriorEcon > 0 ? ((v.economiaCheia - v.anteriorEcon) / v.anteriorEcon) * 100 : 0;
+  const diasGratis = Math.round(v.economia / Math.max(t * (v.projConsumo / v.nd), .01));
+
+  const valor = semSolar ? v.contaProj : v.economia;
+  const topo = semSolar
+    ? '<span class="heroi-kicker">Sua conta de ' + MESES[v.m] + ', projetada</span>'
+    : '<span class="heroi-kicker">Você economizou em ' + MESES[v.m] + '</span>' +
+      '<span class="delta ' + (dEcon < 0 ? 'delta--desce' : 'delta--sobe') + '">' + ico(IC.cima, 12, 'currentColor', 2.6) + sinal(dEcon, 0) + '% sobre ' + MES3[(v.m + 11) % 12] + '</span>';
+  const linha = semSolar
+    ? 'Projeção para o mês fechado, com <b>' + nf(v.projConsumo) + ' kWh</b> de consumo. Até agora foram ' +
+      nf(v.mtd.tc) + ' kWh — uma média de ' + nf(v.mtd.tc / Math.max(v.mtd.dias, .1), 1) + ' kWh por dia.'
+    : 'Equivale a <b>' + diasGratis + ' dias de energia de graça</b>. Seu telhado cobriu ' + pct(v.autoPct) +
+      ' de tudo que a unidade gastou até agora — e o mês deve fechar em ' + brl(v.economiaCheia) + '.';
+
+  return '<section class="card heroi ' + classeDoCeu(c) + ' s12" data-ceu>' +
+    '<div class="heroi-txt">' +
+      '<div class="heroi-topo">' + topo + '</div>' +
+      '<div class="heroi-valor"><span class="big big-ceu" id="heroEcon"><span class="moeda">R$</span>' + nf(valor) + '</span></div>' +
+      '<p class="heroi-linha">' + linha + '</p>' +
+      /* sem painel as barras sao a conta, nao a economia: o mes atual nao
+         pode ser ambar, porque ambar dentro de dado e energia do sol */
+      '<div class="spark' + (semSolar ? ' spark--conta' : '') + '">' + (semSolar ? sparkContas(v, u, t) : sparkEconomia(v)) + '</div>' +
+    '</div>' +
+    '<div class="heroi-ceu">' +
+      arcoSolar(c, { id: 'arcoPainel' }) +
+      '<div class="heroi-agora">' + itensAgora(p, semSolar) + '</div>' +
+      '<p class="heroi-frase" data-ceu-frase="longa">' + esc(fraseDoCeu(c)) + '</p>' +
+    '</div>' +
+    '</section>';
+}
+
+/* Os numeros do minuto, embaixo do ceu. Cada um leva data-vivo: o tique de
+   2 segundos troca so o texto, sem redesenhar a tela. */
+function itensAgora(p, semSolar) {
+  const t = tarifaAtual();
+  const item = (rot, val, k) => '<div class="agora-item"><span data-vivo-rot="' + k + '">' + rot + '</span>' +
+    '<b data-vivo="' + k + '">' + val + '</b></div>';
+  if (semSolar) {
+    return item('Consumindo agora', nf(p.cons, 2) + ' kW', 'cons') +
+      item('Custando', brl(p.cons * t, 2) + ' por hora', 'custo');
+  }
+  return item('Gerando', nf(p.ger, 2) + ' kW', 'ger') +
+    item('Consumindo', nf(p.cons, 2) + ' kW', 'cons') +
+    item(p.inj > 0.05 ? 'Sobrando para a rede' : 'Vindo da rede', nf(p.inj > 0.05 ? p.inj : p.rede, 2) + ' kW', 'saldo');
+}
+
+/* As doze barrinhas da economia, mes a mes. */
+function sparkEconomia(v) {
+  const meses = v.ledger.linhas.slice(-12);
+  const maxE = Math.max.apply(null, meses.map(l => l.economia)) || 1;
+  return meses.map((l, i) => {
+    const ehAgora = i === meses.length - 1;
+    /* mes anterior ao cadastro entra hachurado: e reconstrucao, nao leitura */
+    const est = !l.medido && !l.parcial;
+    return '<div class="spark-col' + (ehAgora ? ' is-now' : '') + (est ? ' spark-col--est' : '') +
+      '" title="' + MES3[l.m] + ': ' + brl(l.economia) + (est ? ' (estimado)' : '') + '">' +
+      '<span class="spark-bar" style="height:' + Math.round((l.economia / maxE) * 56 + 6) + 'px"></span>' +
+      '<span class="spark-lbl">' + MES3[l.m] + '</span></div>';
+  }).join('');
 }
 /* As barrinhas do bloco grande, para quem não tem painel: em vez da economia
    mês a mês (que seria uma fileira de zeros), o valor da conta. */
@@ -349,39 +424,57 @@ function linhaSplit(cor, lbl, val) {
   return '<div><div class="split-row-top"><span class="split-dot" style="background:' + cor + '"></span><span class="split-lbl">' + lbl + '</span></div><div class="split-val">' + val + '</div></div>';
 }
 function linhaConta(l, v, cor) {
-  return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px"><span style="color:var(--muted)">' + l + '</span><span class="mono" style="font-weight:500;color:' + cor + '">' + v + '</span></div>';
+  return '<div style="display:flex;justify-content:space-between;gap:var(--e3);font-size:var(--t-sm)"><span style="color:var(--muted)">' + l + '</span><span class="mono" style="font-weight:500;color:' + cor + '">' + v + '</span></div>';
 }
 
-function graficoDia(dia, v) {
+/* A curva do dia. O fundo traz a noite: antes do nascer e depois do por, uma
+   faixa mais escura, com as horas exatas em cima — as mesmas do arco do sol,
+   porque vem da mesma conta. E o que explica sem palavras por que a curva
+   ambar vai a zero: nao e defeito do painel, e noite. */
+function graficoDia(dia, v, span) {
   /* Sem painel nao ha serie de geracao: uma linha ambar deitada no zero, com
      legenda "Geracao solar" ao lado, faz a pessoa procurar um defeito que nao
      existe. Sai a serie, sai a legenda, e o subtitulo passa a falar do que o
      grafico realmente mostra. */
   const semSolar = unidade().temSolar === false;
+  const c = ceuDeHoje();
   const max = Math.max(Math.max.apply(null, dia.cons), Math.max.apply(null, dia.ger)) * 1.15 || 1;
-  const W = 720, H = 200;
-  const grade = [0, 1, 2, 3].map(i => '<g><line x1="0" y1="' + i * 50 + '" x2="720" y2="' + i * 50 + '" stroke="var(--ground-2)" stroke-width="1"/>' +
-    '<text x="0" y="' + (i * 50 + 12) + '" fill="var(--faint)" font-size="10" font-family="IBM Plex Mono, monospace">' + nf(max * (1 - i / 4), 1) + ' kW</text></g>').join('');
+  const W = 720, H = 200, VH = 215;
+  /* mesmo mapa de tempo do resto do grafico: hora h no x = h/23 da largura */
+  const fx = h => clamp(h / 23, 0, 1);
+  const grade = [0, 1, 2, 3].map(i => '<line x1="0" y1="' + i * 50 + '" x2="720" y2="' + i * 50 + '" stroke="var(--ground-2)" stroke-width="1"/>').join('');
+  const escala = [0, 1, 2, 3].map(i => '<span style="top:' + ((i * 50 + 4) / VH * 100).toFixed(2) + '%">' + nf(max * (1 - i / 4), 1) + ' kW</span>').join('');
   const nowX = (v.hDec - (v.data.getDate() - 1) * 24) / 23 * W;
   const hr = Math.min(23, Math.floor(v.hDec - (v.data.getDate() - 1) * 24));
   const nowY = H - (dia.ger[hr] / max) * H;
   const eixo = ['00h', '04h', '08h', '12h', '16h', '20h', '23h'].map(t => '<span>' + t + '</span>').join('');
-  return '<section class="card s12"><div class="card-head"><div><h2>Hoje, hora a hora</h2>' +
+
+  /* a faixa da noite: um degrade horizontal com as transicoes no nascer e no por */
+  const n = fx(c.nascer), p = fx(c.por), fundo = 0.055;
+  const pare = (o, a) => '<stop offset="' + clamp(o, 0, 1).toFixed(4) + '" stop-color="#0B1024" stop-opacity="' + a + '"/>';
+  const noite = '<linearGradient id="gNoite" x1="0" y1="0" x2="1" y2="0">' +
+    pare(0, fundo) + pare(n - 0.012, fundo) + pare(n + 0.018, 0) + pare(p - 0.018, 0) + pare(p + 0.012, fundo) + pare(1, fundo) +
+    '</linearGradient>';
+
+  return '<section class="card ' + (span || 's12') + '"><div class="card-head"><div><h2>Hoje, hora a hora</h2>' +
     '<div class="card-sub">' + (semSolar
-      ? 'Como o seu consumo se distribui ao longo do dia · a linha pontilhada vertical é agora'
-      : 'Onde o sol cobre e onde a rede entra · a linha pontilhada vertical é agora') + '</div></div>' +
+      ? 'Como o seu consumo se distribui ao longo do dia · a linha pontilhada é agora'
+      : 'Onde o sol cobre e onde a rede entra · a linha pontilhada é agora') + '</div></div>' +
     '<div class="legend">' +
     (semSolar ? '' : '<span><i class="swatch" style="background:var(--sun)"></i>Geração solar</span>') +
-    '<span><i class="swatch" style="background:var(--grid)"></i>Consumo</span></div></div>' +
+    '<span><i class="swatch" style="background:var(--grid)"></i>Consumo</span>' +
+    '<span><i class="swatch swatch--sq" style="background:rgba(11,16,36,.14)"></i>Noite</span></div></div>' +
     '<div class="chart" id="chartDia" data-max="' + max + '" tabindex="0" role="img" ' +
-    'aria-label="Curva de hoje. ' +
+    'aria-label="Curva de hoje. O sol nasceu às ' + hm(c.nascer) + ' e se põe às ' + hm(c.por) + '. ' +
     (semSolar ? '' : 'Geração máxima ' + nf(Math.max.apply(null, dia.ger), 2) + ' quilowatts por volta das ' +
       dia.ger.indexOf(Math.max.apply(null, dia.ger)) + ' horas. ') +
     'Consumo máximo ' + nf(Math.max.apply(null, dia.cons), 2) +
     ' quilowatts por volta das ' + dia.cons.indexOf(Math.max.apply(null, dia.cons)) + ' horas. ' +
     'Use as setas para percorrer hora a hora.">' +
-    '<svg viewBox="0 0 720 215" aria-hidden="true">' +
-    '<defs><linearGradient id="gSol" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--sun)" stop-opacity="0.28"/><stop offset="100%" stop-color="var(--sun)" stop-opacity="0"/></linearGradient></defs>' +
+    '<svg viewBox="0 0 720 ' + VH + '" aria-hidden="true">' +
+    '<defs><linearGradient id="gSol" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--sun)" stop-opacity="0.26"/><stop offset="100%" stop-color="var(--sun)" stop-opacity="0"/></linearGradient>' +
+    noite + '</defs>' +
+    '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="url(#gNoite)"/>' +
     grade +
     (semSolar ? '' :
       '<path d="' + caminho(dia.ger, max, W, H, true) + '" fill="url(#gSol)"/>' +
@@ -390,8 +483,12 @@ function graficoDia(dia, v) {
     '<line class="now-line" x1="' + nowX.toFixed(1) + '" y1="0" x2="' + nowX.toFixed(1) + '" y2="' + H + '"/>' +
     '<circle class="now-dot" cx="' + nowX.toFixed(1) + '" cy="' +
     (semSolar ? (H - (dia.cons[hr] / max) * H) : nowY).toFixed(1) + '" r="4.5" fill="' +
-    (semSolar ? 'var(--grid)' : 'var(--sun)') + '" stroke="var(--ground-2)" stroke-width="2"/>' +
-    '</svg><div class="tip" id="tipDia"></div></div>' +
+    (semSolar ? 'var(--grid)' : 'var(--sun)') + '" stroke="var(--surface)" stroke-width="2"/>' +
+    '</svg>' +
+    '<div class="chart-y">' + escala + '</div>' +
+    '<span class="chart-sol" style="left:' + (n * 100).toFixed(2) + '%">nasce <b>' + hm(c.nascer) + '</b></span>' +
+    '<span class="chart-sol" style="left:' + (p * 100).toFixed(2) + '%">se põe <b>' + hm(c.por) + '</b></span>' +
+    '<div class="tip" id="tipDia"></div></div>' +
     '<div class="chart-axis">' + eixo + '</div></section>';
 }
 
@@ -445,7 +542,7 @@ function vHistorico() {
     ['Energia puxada da rede', nf(s.rede, 1), 'kWh', 'Custa ' + brl(s.rede * t) + ' — só o que o sol não cobriu']
   ].map(x => '<section class="card card--tight s3"><div class="kpi-lbl">' + x[0] + '</div>' +
     '<div class="kpi-val"><span class="big big-30">' + x[1] + '</span>' + (x[2] ? '<span class="kpi-unit">' + x[2] + '</span>' : '') + '</div>' +
-    '<div style="font-size:12px;margin-top:7px;color:var(--faint);font-weight:500">' + x[3] + '</div></section>').join('');
+    '<div style="font-size:var(--t-xs);margin-top:7px;color:var(--faint);font-weight:500">' + x[3] + '</div></section>').join('');
 
   const cmp = '<section class="card s7"><h2>Comparado com o período anterior</h2>' +
     '<div style="display:flex;flex-direction:column;gap:18px;margin-top:20px">' +
@@ -504,7 +601,7 @@ function vEquip() {
     return '<div class="eq-row" role="button" tabindex="0" data-act="eq-abrir" data-id="' + e.id + '" aria-expanded="' + aberto + '">' +
       '<span class="eq-pos eq-hide">' + String(i + 1).padStart(2, '0') + '</span>' +
       '<span style="min-width:0"><span class="eq-name"><b title="' + esc(e.nome) + '">' + esc(e.nome) + '</b>' +
-      '<span class="pill" style="background:' + c.bg + ';color:' + c.cor + ';font-size:10.5px;padding:3px 8px">' + c.txt + '</span></span>' +
+      '<span class="pill" style="background:' + c.bg + ';color:' + c.cor + ';font-size:var(--t-xs);padding:3px 8px">' + c.txt + '</span></span>' +
       '<span class="eq-meta" style="display:block">' + esc(e.local) + ' · ' + (e.fonte === 'ia' ? 'Detectado por IA' : 'Cadastrado por você') + '</span></span>' +
       '<span class="eq-hide"><span class="eq-track"><i style="width:' + (e.kwh / maxK) * 100 + '%;background:' + e.cor + '"></i></span>' +
       '<span class="eq-pct" style="display:block">' + pct((e.kwh / total) * 100) + '</span></span>' +
@@ -564,13 +661,13 @@ function cardDetalhe(e, total, t) {
     (e.sintetico ? '' : '<button class="link-btn" style="margin-top:14px" data-act="eq-editar" data-id="' + e.id + '">' +
       ico(IC.lapis, 13, 'currentColor', 2) + (e.fonte === 'ia' ? 'Corrigir a estimativa da IA' : 'Editar este aparelho') + '</button>') +
     '<div style="display:flex;align-items:baseline;gap:8px;margin-top:18px"><span class="big big-34">' + brl(e.reais) + '</span>' +
-    '<span style="font-size:13px;color:var(--faint)">por mês · ' + nf(e.kwh) + ' kWh</span></div>' +
-    '<div style="font-size:12.5px;color:var(--faint);margin-top:5px">' + pct((e.kwh / total) * 100) + ' da unidade · ' + brl(e.reais * 12) + ' por ano</div>' +
+    '<span style="font-size:var(--t-sm);color:var(--faint)">por mês · ' + nf(e.kwh) + ' kWh</span></div>' +
+    '<div style="font-size:var(--t-sm);color:var(--faint);margin-top:5px">' + pct((e.kwh / total) * 100) + ' da unidade · ' + brl(e.reais * 12) + ' por ano</div>' +
     '<div class="det-facts"><div class="fact"><div class="fact-k">Potência</div><div class="fact-v">' + (e.pot ? nf(e.pot) + ' W' : '—') + '</div></div>' +
     '<div class="fact"><div class="fact-k">Uso estimado</div><div class="fact-v">' + (e.horas ? nf(e.horas, 1) + ' h/dia' : '—') + '</div></div></div>' +
     '<h3 style="margin:20px 0 9px">Perfil de uso nas 24 horas</h3>' +
     '<div class="prof">' + barras + '</div>' +
-    '<div style="font-size:12px;color:var(--faint);margin-top:8px">Uso concentrado por volta das ' + String(iPico).padStart(2, '0') + 'h</div>' +
+    '<div style="font-size:var(--t-xs);color:var(--faint);margin-top:8px">Uso concentrado por volta das ' + String(iPico).padStart(2, '0') + 'h</div>' +
     '<hr class="rule" style="margin:18px 0 14px">' +
     '<div class="tips">' + dicas.map(d => '<div class="tip-row">' + ico(IC.check, 15, 'var(--good)', 2.2) +
       '<div class="tip-txt"><b>' + d[0] + '</b> <span>' + d[1] + '</span></div></div>').join('') + '</div></section>';
@@ -618,12 +715,12 @@ function vCadastro() {
   const est = '<section class="card card--dark" style="padding:24px 26px 26px">' +
     '<h2>Estimativa</h2>' +
     '<div style="display:flex;align-items:baseline;gap:8px;margin-top:12px">' +
-    '<span class="big big-46" id="estKwh">' + nf(e.kwh, 1) + '</span><span style="font-size:15px;color:var(--on-dark-soft)">kWh por mês</span></div>' +
-    '<div class="big" id="estCusto" style="font-weight:600;font-size:24px;color:var(--sun-lite);margin-top:10px;letter-spacing:-.8px">' + brl(e.custo) + ' por mês</div>' +
-    '<div style="font-size:13px;color:var(--on-dark-soft);margin-top:5px" id="estAno">' + brl(e.ano) + ' ao longo de um ano</div>' +
+    '<span class="big big-46" id="estKwh">' + nf(e.kwh, 1) + '</span><span style="font-size:var(--t-base);color:var(--on-dark-soft)">kWh por mês</span></div>' +
+    '<div class="big" id="estCusto" style="font-weight:600;font-size:var(--t-xl);color:var(--sun-lite);margin-top:10px;letter-spacing:-.8px">' + brl(e.custo) + ' por mês</div>' +
+    '<div style="font-size:var(--t-sm);color:var(--on-dark-soft);margin-top:5px" id="estAno">' + brl(e.ano) + ' ao longo de um ano</div>' +
     '<div class="est-bar"><i id="estBar" style="width:' + e.pctBar + '%"></i></div>' +
-    '<div style="font-size:12px;color:var(--on-dark-soft);margin-top:8px" id="estPct">' + textoEstimativa(e) + '</div>' +
-    '<button class="dark-btn" data-act="salvar" style="width:100%;height:46px;margin-top:18px;border-radius:13px;font-size:14.5px;' +
+    '<div style="font-size:var(--t-xs);color:var(--on-dark-soft);margin-top:8px" id="estPct">' + textoEstimativa(e) + '</div>' +
+    '<button class="dark-btn" data-act="salvar" style="width:100%;height:46px;margin-top:18px;border-radius:13px;font-size:var(--t-base);' +
     (pode ? 'background:var(--on-dark);color:var(--dark)' : '') + '"' + (pode ? '' : ' disabled') + '>' +
     ico(editando ? IC.check : IC.mais, 15, 'currentColor', 2.4) +
     (editando ? 'Salvar alterações' : 'Adicionar aos meus aparelhos') + '</button>' +
@@ -675,17 +772,17 @@ function vAlertas() {
   return '<div class="grid12 enter">' +
     '<section class="card s7" style="padding:24px 28px 26px"><div class="card-head"><div><h2>Meta do mês</h2>' +
     '<div class="card-sub">Quanto você quer consumir no total, somando rede e sol</div></div>' +
-    '<div style="text-align:right"><div class="big" style="font-size:26px;letter-spacing:-1px" id="metaLbl">' + nf(meta) + ' kWh</div>' +
-    '<div style="font-size:12px;color:var(--faint);margin-top:4px" id="metaCusto">≈ ' + brl(meta * t) + '</div></div></div>' +
+    '<div style="text-align:right"><div class="big" style="font-size:var(--t-xl);letter-spacing:-1px" id="metaLbl">' + nf(meta) + ' kWh</div>' +
+    '<div style="font-size:var(--t-xs);color:var(--faint);margin-top:4px" id="metaCusto">≈ ' + brl(meta * t) + '</div></div></div>' +
     '<input type="range" data-fid="meta" data-in="meta" min="80" max="2600" step="10" value="' + meta + '" aria-label="Meta mensal em kWh" style="accent-color:var(--good);margin-top:20px">' +
     '<div class="goal-track"><div class="goal-fill" id="metaFill" style="width:' + p + '%;background:' + (acima ? 'var(--bad)' : 'var(--good)') + '"></div>' +
     '<div class="goal-mark" style="left:' + marca + '%" data-l="meta"></div></div>' +
-    '<div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12.5px;color:var(--muted)">' +
+    '<div style="display:flex;justify-content:space-between;margin-top:10px;font-size:var(--t-sm);color:var(--muted)">' +
     '<span>Já consumido: <b class="mono" style="color:var(--ink);font-weight:500">' + nf(usado) + ' kWh</b></span>' +
     '<span>' + pct((usado / meta) * 100) + ' da meta</span></div>' +
-    '<div style="font-size:13.5px;font-weight:600;margin-top:10px;color:' + (acima ? 'var(--bad)' : 'var(--good)') + '">' +
+    '<div style="font-size:var(--t-sm);font-weight:600;margin-top:10px;color:' + (acima ? 'var(--bad)' : 'var(--good)') + '">' +
     (acima ? 'Você deve estourar a meta em ' + nf(proj - meta) + ' kWh' : 'No ritmo atual, você fecha o mês dentro da meta') + '</div>' +
-    '<div style="font-size:12.5px;color:var(--faint);margin-top:3px">Projeção de fechamento: ' + nf(proj) + ' kWh</div></section>' +
+    '<div style="font-size:var(--t-sm);color:var(--faint);margin-top:3px">Projeção de fechamento: ' + nf(proj) + ' kWh</div></section>' +
 
     '<section class="card s5" style="padding:22px 24px 24px"><h2>Quando avisar</h2>' +
     '<div style="display:flex;flex-direction:column;gap:4px;margin-top:16px">' + regras + '</div></section>' +
@@ -697,29 +794,22 @@ function vAlertas() {
 function vRelatorio() {
   const v = visao(), u = unidade(), t = tarifaAtual();
   const l = v.linhaAtual;
-  const faturado = Math.max(l.rede - l.usado, 0);
-  const cobrado = Math.max(faturado, 0);
-  const bandeira = l.rede * 0.0189;
-  const total = cobrado * t + bandeira + u.ilum + l.fioB;
-  const semSolar = Math.max(l.cons, 0) * t + l.cons * 0.0189 + u.ilum;
+  const total = contaDoMes(l, u, t);
+  const semSolar = contaSemSolarDoMes(l, u, t);
   const arv = Math.round(v.co2 / 22 * 12);
 
-  /* Sem painel, as quatro linhas de compensação são todas zero. Fatura com
-     linha zerada não é fatura detalhada: é ruído que faz a pessoa procurar
-     um erro que não existe. */
-  const linhas = [
-    ['Consumo registrado no medidor', nf(l.cons) + ' kWh', brl(l.cons * t), '']
-  ].concat(u.temSolar === false ? [] : [
-    ['Energia gerada e autoconsumida', '− ' + nf(l.auto) + ' kWh', '− ' + brl(l.auto * t), 'credit'],
-    ['Energia injetada na rede', '− ' + nf(l.inj) + ' kWh', '− ' + brl(l.inj * u.tarifaComp), 'credit'],
-    ['Créditos usados neste mês', '− ' + nf(l.usado) + ' kWh', '− ' + brl(l.usado * t), 'credit'],
-    ['Fio B sobre energia compensada (Lei 14.300)', pct(l.percFioB * 100) + ' de ' + brl(u.fioB, 2) + '/kWh', brl(l.fioB, 2), '']
-  ]).concat([
-    ['Bandeira amarela', '—', brl(bandeira, 2), ''],
-    ['Contribuição de iluminação pública', '—', brl(u.ilum, 2), ''],
-    ['Total a pagar', nf(faturado) + ' kWh faturados', brl(total), 'total']
-  ]).map(r => '<div class="inv-row' + (r[3] === 'total' ? ' inv-row--total' : r[3] === 'credit' ? ' inv-row--credit' : '') + '">' +
-    '<span>' + r[0] + '</span><span class="inv-q">' + r[1] + '</span><span class="inv-v">' + r[2] + '</span></div>').join('');
+  /* As linhas vem do motor (linhasDaConta), as mesmas da conta do celular, e
+     as que tem valor somam exatamente o total — em centavos, como numa
+     fatura de verdade, para quem conferir com a calculadora chegar no mesmo
+     numero. A energia injetada aparece sem valor: ela vira credito, e o
+     credito so entra na conta quando e usado. */
+  const valorDaLinha = r => r.valor === null ? esc(r.nota)
+    : r.valor < 0 ? '− ' + brl(-r.valor, 2) : brl(r.valor, 2);
+  const linhas = linhasDaConta(l, u, t).map(r =>
+    '<div class="inv-row' + (r.tipo === 'credito' ? ' inv-row--credit' : r.tipo === 'info' ? ' inv-row--info' : '') + '">' +
+    '<span>' + esc(r.rotulo) + '</span><span class="inv-q">' + esc(r.qtd) + '</span><span class="inv-v">' + valorDaLinha(r) + '</span></div>').join('') +
+    '<div class="inv-row inv-row--total"><span>Total a pagar</span><span class="inv-q">' + nf(Math.max(l.faturado, 0)) +
+    ' kWh faturados</span><span class="inv-v">' + brl(total, 2) + '</span></div>';
 
   const meses = v.ledger.linhas.slice(-12);
   const maxE = Math.max.apply(null, meses.map(x => x.economia)) || 1;
@@ -728,9 +818,9 @@ function vRelatorio() {
 
   const hoje = v.data;
   return '<div class="grid12 enter">' +
-    '<section class="card s8" style="padding:30px 34px 32px">' +
-    '<div class="print-head"><span class="brand-mark" style="background:var(--dark)">' + ico(IC.sol, 17, 'var(--sun)', 2.2) + '</span><b style="font-family:var(--f-display);font-size:17px">Solaris</b></div>' +
-    '<div class="card-head"><div><div class="big" style="font-size:22px;letter-spacing:-.7px">' + esc(u.nome) + '</div>' +
+    '<section class="card s8" style="padding:var(--e6) var(--e7) var(--e7)">' +
+    '<div class="print-head"><span class="brand-mark">' + ico(IC.marca, 18, 'currentColor', 1.9) + '</span><b style="font-family:var(--f-display);font-size:var(--t-md);font-weight:600">Solaris</b></div>' +
+    '<div class="card-head"><div><div class="inv-titulo">' + esc(u.nome) + '</div>' +
     '<div class="card-sub">' + esc(u.distribuidora) + ' · 01 a ' + hoje.getDate() + ' de ' + MESES[v.m] + ' de ' + v.y + '</div></div>' +
     '<button class="ghost-btn no-print" data-act="imprimir">' + ico(IC.print, 14, 'currentColor', 1.9) + 'Imprimir</button></div>' +
     '<div class="inv-head"><span>Descrição</span><span>Quantidade</span><span style="text-align:right">Valor</span></div>' +
@@ -756,8 +846,9 @@ function vRelatorio() {
             '; o que vem antes disso é reconstruído a partir do que você informou, não lido do medidor.'
           : 'Esta é uma unidade de demonstração: todos os valores são simulados.') + '</span></div>'
       : '') +
-    '<div style="font-size:11.5px;color:var(--fainter);margin-top:18px">Emitido em ' + hoje.getDate() + ' de ' + MESES[v.m] + ' de ' + v.y +
-    ' · valores estimados a partir do medidor e da tarifa cadastrada</div></section>' +
+    '<div style="font-size:var(--t-xs);color:var(--faint);margin-top:var(--e5)">Emitido em ' + hoje.getDate() + ' de ' + MESES[v.m] + ' de ' + v.y +
+    ' · valores estimados a partir do medidor e da tarifa cadastrada · bandeira ' + BANDEIRA_ESTIMADA.nome +
+    ' estimada até a ANEEL anunciar a do mês</div></section>' +
 
     '<div class="s4 stack">' +
     '<section class="card" style="padding:20px 22px 22px"><h2>Economia nos 12 meses</h2>' +
@@ -769,7 +860,7 @@ function vRelatorio() {
     (u.temSolar === false ? '' :
     '<section class="card" style="padding:20px 22px 22px"><h2>Saldo de créditos</h2>' +
     '<div class="big big-30" style="margin-top:8px">' + nf(v.creditos) + ' kWh</div>' +
-    '<div style="font-size:12.5px;color:var(--faint);margin-top:6px;line-height:1.5">' +
+    '<div style="font-size:var(--t-sm);color:var(--faint);margin-top:6px;line-height:1.5">' +
     (v.creditos >= 1
       ? 'Energia injetada que ainda não foi usada. Vale por 60 meses e abate contas futuras — neste mês ela já derrubou ' + brl(l.usado * t) + '.'
       : 'Esta unidade consome mais do que gera, então tudo o que é injetado volta no mesmo ciclo: não sobra saldo. Neste mês os créditos abateram ' + brl(l.usado * t) + '.') +
@@ -854,18 +945,18 @@ function vConfig() {
   return '<div class="grid12 enter">' +
     '<section class="card s6" style="padding:24px 26px 26px"><h2>Tarifa de energia</h2>' +
     '<div class="card-sub">É o número que transforma kWh em reais em todo o sistema</div>' +
-    '<div class="big" style="font-size:38px;letter-spacing:-1.6px;margin-top:18px" id="tarLbl">R$ ' + nf(t, 2) + ' / kWh</div>' +
+    '<div class="big" style="font-size:var(--t-2xl);letter-spacing:-1.6px;margin-top:18px" id="tarLbl">R$ ' + nf(t, 2) + ' / kWh</div>' +
     '<input type="range" data-fid="tarifa" data-in="tarifa" min="40" max="160" step="1" value="' + Math.round(t * 100) + '" aria-label="Tarifa em centavos por kWh" style="margin-top:18px">' +
     '<div class="slider-ends"><span>R$ 0,40</span><span>R$ 1,60</span></div>' +
     (S.tarifa[S.perfil] != null ? '<button class="link-btn" style="margin-top:14px" data-act="reset-tarifa">Voltar para a tarifa da distribuidora</button>' :
-      '<div style="margin-top:14px;font-size:12.5px;color:var(--faint)">Usando a tarifa da ' + esc(u.distribuidora) + '</div>') +
+      '<div style="margin-top:14px;font-size:var(--t-sm);color:var(--faint)">Usando a tarifa da ' + esc(u.distribuidora) + '</div>') +
     '<hr class="rule" style="margin:20px 0 16px">' +
     '<dl class="kvs">' +
     kv('Tarifa de compensação (injetado)', 'R$ ' + nf(u.tarifaComp, 2) + ' / kWh', true) +
     kv('Distribuidora', esc(u.distribuidora)) +
     kv('Consumo mínimo faturado', nf(u.minFatura) + ' kWh', true) +
     kv('Componente TUSD Fio B', 'R$ ' + nf(u.fioB, 2) + ' / kWh', true) +
-    kv('Fator de emissão da rede', nf(86.1, 1) + ' g CO₂ por kWh', true) +
+    kv('Fator de emissão da rede', nf(FATOR_EMISSAO_REDE * 1000, 1) + ' g CO₂ por kWh', true) +
     '</dl>' +
     '<div class="softbox">' + (v.direitoAdquirido
       ? 'Sistema conectado antes de 07/01/2023: mantém <b>compensação integral</b> até 2045 pela regra de transição da Lei 14.300.'
@@ -907,7 +998,7 @@ function vConfig() {
     '</div></div></div>') +
     '<hr class="rule" style="margin:22px 0 14px">' +
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">' +
-    '<div style="font-size:12.5px;color:var(--faint);max-width:44ch">Aparelhos cadastrados, metas e tarifa ficam salvos neste navegador.</div>' +
+    '<div style="font-size:var(--t-sm);color:var(--faint);max-width:44ch">Aparelhos cadastrados, metas e tarifa ficam salvos neste navegador.</div>' +
     '<button class="danger-btn" data-act="reset-tudo">Apagar meus dados</button></div>' +
     '</section>' + cardAssistente() + cardUnidades() + cardExemplos() + cardFonte() + cardBanco() + '</div>';
 }
@@ -969,7 +1060,7 @@ function cardExemplos() {
     '<div class="card-sub">Uma casa e uma padaria de demonstração, para conhecer o sistema</div></div>' +
     '<button class="tog" data-act="alternar-exemplos" role="switch" ' +
     'aria-checked="' + ligado + '" aria-label="Mostrar unidades de exemplo"><i></i></button></div>' +
-    '<div style="font-size:13px;color:var(--muted);margin-top:14px;line-height:1.55;max-width:60ch">' +
+    '<div style="font-size:var(--t-sm);color:var(--muted);margin-top:14px;line-height:1.55;max-width:60ch">' +
     (ligado
       ? 'Elas aparecem no menu junto com as suas. Não são dados reais — servem para mostrar como o sistema se comporta.' +
         (proprias ? '' : ' Desligar agora deixaria a conta vazia, porque você ainda não cadastrou nenhuma unidade sua.')
@@ -1007,7 +1098,7 @@ function cardUnidades() {
     ? proprias.map(f => {
       const u = montarUnidade(f);
       return '<div class="un-row">' +
-        '<span style="min-width:0"><b style="font-size:13.5px">' + esc(u.nome) + '</b>' +
+        '<span style="min-width:0"><b style="font-size:var(--t-sm)">' + esc(u.nome) + '</b>' +
         '<span class="un-meta">' + esc(u.tipo) + ' · ' +
         (u.temSolar === false ? 'sem sistema solar' : nf(u.potenciaKwp, 1) + ' kWp') +
         ' · ' + nf(u.consumoMes) + ' kWh/mês</span></span>' +
@@ -1015,7 +1106,7 @@ function cardUnidades() {
         '<button class="eq-kill" style="opacity:1" data-act="remover-unidade" data-chave="' + f.chave + '" ' +
         'aria-label="Remover ' + esc(u.nome) + '">' + ico(IC.lixo, 15, 'currentColor', 1.8) + '</button></div>';
     }).join('')
-    : '<div style="font-size:13px;color:var(--faint);margin-top:10px;max-width:60ch">' +
+    : '<div style="font-size:var(--t-sm);color:var(--faint);margin-top:10px;max-width:60ch">' +
       'Você ainda não cadastrou nenhuma. As duas que aparecem no menu são exemplos que vêm com o sistema.</div>';
   return '<section class="card s6"><div class="card-head"><div><h2>Suas unidades</h2>' +
     '<div class="card-sub">Cadastre a sua casa ou o seu comércio para ver os números reais</div></div>' +
@@ -1043,14 +1134,14 @@ function cardFonte() {
       ? '<div class="field"><label class="field-lbl" for="inEnd">Endereço do medidor na rede</label>' +
       '<input class="text-in" id="inEnd" data-fid="endereco" data-in="endereco" type="text" value="' + esc(MEDIDOR.endereco) + '" ' +
       'placeholder="192.168.4.1" autocomplete="off" spellcheck="false" style="max-width:280px"></div>' +
-      '<div style="font-size:12.5px;color:var(--faint);margin-top:12px;line-height:1.55;max-width:70ch">' +
+      '<div style="font-size:var(--t-sm);color:var(--faint);margin-top:12px;line-height:1.55;max-width:70ch">' +
       (f === 'medidor'
         ? 'Última leitura: <b class="mono" style="color:var(--ink)">' + nf(MEDIDOR.ultima, 3) + ' kW</b>, há ' +
         nf((Date.now() - MEDIDOR.quando) / 1000, 0) + ' segundos. Só o consumo vem do sensor — a geração continua simulada, porque um sensor no quadro geral não separa as duas.'
         : 'Sem resposta do medidor' + (MEDIDOR.erro ? ' (' + esc(MEDIDOR.erro) + ')' : '') +
         '. Confira se o computador está na rede <b>Solaris-Medidor</b>. Depois de 15 segundos sem leitura o painel volta sozinho para a simulação, para nunca congelar numa apresentação.') +
       '</div>'
-      : '<div style="font-size:12.5px;color:var(--faint);margin-top:12px;max-width:70ch">' +
+      : '<div style="font-size:var(--t-sm);color:var(--faint);margin-top:12px;max-width:70ch">' +
       'A simulação calcula tudo a partir da data, da irradiação da região e do padrão de consumo da unidade. É a fonte padrão e não depende de rede.</div>') +
     '</section>';
 }
@@ -1067,7 +1158,7 @@ function vPrimeiraUnidade() {
   return '<div class="comecar">' +
     '<div class="comecar-cx">' +
       '<span class="comecar-ic">' +
-      '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--n-900)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       '<path d="M3 11l9-8 9 8M5 9.5V21h14V9.5M9 21v-6h6v6"/></svg></span>' +
 
       '<h1>' + (primeiro ? primeiro + ', vamos' : 'Vamos') + ' come\u00e7ar<br>pela sua unidade</h1>' +
@@ -1103,7 +1194,7 @@ function previaUnidade() {
   const irr = soma(IRRADIACAO_REGIAO) / 12;
   const geracao = n.potenciaKwp * irr * RAZAO_DESEMPENHO * tel.fator * 30;
   const cobertura = n.consumoMes > 0 ? clamp((geracao / n.consumoMes) * 100, 0, 999) : 0;
-  const contaSem = n.consumoMes * n.tarifa + n.consumoMes * 0.0189 + a.ilum;
+  const contaSem = contaSemSolar(n.consumoMes, n.tarifa, a.ilum, a.minFatura);
   return { arquetipo: a, telhado: tel, geracao: geracao, cobertura: cobertura, contaSem: contaSem };
 }
 
@@ -1386,20 +1477,21 @@ function previaCard(n, p, at) {
     const porKwp = (soma(IRRADIACAO_REGIAO) / 12) * RAZAO_DESEMPENHO * tel.fator * 30;
     const kwp = porKwp > 0 ? Math.round((n.consumoMes / porKwp) * 10) / 10 : 0;
     const custo = Math.round((kwp * custoPorKwp(kwp)) / 100) * 100;
-    const contaHoje = n.consumoMes * n.tarifa + n.consumoMes * 0.0189 + (ARQUETIPOS[n.arquetipo] || ARQUETIPOS.casaVazia).ilum;
+    const arq = ARQUETIPOS[n.arquetipo] || ARQUETIPOS.casaVazia;
+    const contaHoje = contaSemSolar(n.consumoMes, n.tarifa, arq.ilum, arq.minFatura);
 
     return '<section class="card card--dark" style="padding:24px 26px 26px">' +
       '<h2>O que o Solaris vai te dizer</h2>' +
-      '<div style="font-size:13px;color:var(--on-dark-soft);margin-top:12px;line-height:1.55">' +
+      '<div style="font-size:var(--t-sm);color:var(--on-dark-soft);margin-top:12px;line-height:1.55">' +
       'Com o seu consumo e a sua tarifa, ele acompanha para onde vai cada quilowatt e ' +
       'quanto vem na próxima conta — hoje, sem painel nenhum.</div>' +
       (kwp > 0
         ? '<hr style="border:0;height:1px;background:rgba(242,244,246,.14);margin:18px 0 14px">' +
-          '<div style="font-size:13px;color:var(--on-dark-soft);line-height:1.55">' +
+          '<div style="font-size:var(--t-sm);color:var(--on-dark-soft);line-height:1.55">' +
           'E responde a pergunta que interessa: um sistema de <b style="color:var(--on-dark)">' +
           nf(kwp, 1) + ' kWp</b> cobriria o seu consumo, por volta de <b style="color:var(--on-dark)">' +
           brl(custo) + '</b>. Hoje a sua conta é cerca de ' + brl(contaHoje) + ' por mês.</div>' +
-          '<div style="font-size:11.5px;color:var(--on-dark-faint);margin-top:10px;line-height:1.5">' +
+          '<div style="font-size:var(--t-xs);color:var(--on-dark-faint);margin-top:10px;line-height:1.5">' +
           'Estimativa para decidir se vale pedir orçamento — não é orçamento.</div>'
         : '') +
       '</section>';
@@ -1414,9 +1506,9 @@ function previaCard(n, p, at) {
       '<h2>O que o painel vai explicar</h2>' +
       '<div style="display:flex;align-items:baseline;gap:8px;margin-top:12px">' +
       '<span class="big big-46">' + nf(coberto) + '</span>' +
-      '<span style="font-size:15px;color:var(--on-dark-soft)">% do seu consumo</span></div>' +
+      '<span style="font-size:var(--t-base);color:var(--on-dark-soft)">% do seu consumo</span></div>' +
       '<div class="est-bar"><i style="width:' + clamp(coberto, 0, 100) + '%"></i></div>' +
-      '<div style="font-size:13px;color:var(--on-dark-soft);margin-top:12px;line-height:1.55">' +
+      '<div style="font-size:var(--t-sm);color:var(--on-dark-soft);margin-top:12px;line-height:1.55">' +
       marcados.length + ' de ' + opcoes.length + ' aparelhos marcados. Os ' +
       nf(Math.max(0, 100 - coberto)) + '% restantes aparecem como <b style="color:var(--on-dark)">Não identificado</b> ' +
       'até você cadastrar o que falta.</div></section>';
@@ -1425,13 +1517,13 @@ function previaCard(n, p, at) {
     '<h2>O que o sistema vai calcular</h2>' +
     '<div style="display:flex;align-items:baseline;gap:8px;margin-top:12px">' +
     '<span class="big big-46" id="pvGer">' + nf(p.geracao) + '</span>' +
-    '<span style="font-size:15px;color:var(--on-dark-soft)">kWh gerados por mês</span></div>' +
-    '<div style="font-size:13px;color:var(--on-dark-soft);margin-top:6px" id="pvExpl">' +
+    '<span style="font-size:var(--t-base);color:var(--on-dark-soft)">kWh gerados por mês</span></div>' +
+    '<div style="font-size:var(--t-sm);color:var(--on-dark-soft);margin-top:6px" id="pvExpl">' +
     nf(p.telhado.fator * 100) + '% do sol da região, com ' + nf(n.potenciaKwp, 1) + ' kWp instalados</div>' +
     '<div class="est-bar"><i id="pvBar" style="width:' + clamp(p.cobertura, 0, 100) + '%"></i></div>' +
-    '<div style="font-size:12px;color:var(--on-dark-soft);margin-top:8px" id="pvCob">' + textoCobertura(p, n) + '</div>' +
+    '<div style="font-size:var(--t-xs);color:var(--on-dark-soft);margin-top:8px" id="pvCob">' + textoCobertura(p, n) + '</div>' +
     '<hr style="border:0;height:1px;background:rgba(242,244,246,.14);margin:18px 0 14px">' +
-    '<div style="font-size:13px;color:var(--on-dark-soft);line-height:1.55" id="pvConta">' +
+    '<div style="font-size:var(--t-sm);color:var(--on-dark-soft);line-height:1.55" id="pvConta">' +
     'Sem os painéis, sua conta seria cerca de <b style="color:var(--on-dark)">' + brl(p.contaSem) + '</b> por mês.</div>' +
     '</section>';
 }
@@ -1440,7 +1532,7 @@ function ajudaCard(at) {
   if (at === 3) {
     return '<section class="card" style="padding:20px 22px 22px">' +
       '<h2>Por que perguntar isso</h2>' +
-      '<div style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:10px">' +
+      '<div style="font-size:var(--t-sm);color:var(--muted);line-height:1.6;margin-top:10px">' +
       'O medidor mede a casa inteira, não tomada por tomada. Para dizer quanto é da geladeira, ' +
       'o sistema precisa saber que existe uma geladeira.' +
       '<br><br>Marcar aqui não é chute: cada aparelho tem uma assinatura de horário, e é ela que ' +
@@ -1449,7 +1541,7 @@ function ajudaCard(at) {
   }
   return '<section class="card" style="padding:20px 22px 22px">' +
     '<h2>Como o cálculo funciona</h2>' +
-    '<div style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:10px">' +
+    '<div style="font-size:var(--t-sm);color:var(--muted);line-height:1.6;margin-top:10px">' +
     'A geração não é chute nem um número que você digita: vem da irradiação média da região (' +
     nf(soma(IRRADIACAO_REGIAO) / 12, 1) + ' kWh/m² por dia), da potência que você informou, de ' +
     pct(RAZAO_DESEMPENHO * 100) + ' de rendimento típico do inversor e da condição do telhado.' +

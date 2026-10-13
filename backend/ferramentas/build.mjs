@@ -20,7 +20,7 @@ const ler = (...p) => readFileSync(join(raiz, ...p), 'utf8');
    procurar. A ORDEM aqui e a mesma do frontend/index.html e nao pode mudar:
    banco de dados, dominio, interface. Cada camada so usa o que ja foi
    carregado antes dela. */
-const CSS = ['base.css', 'componentes.css', 'telas.css', 'conta.css',
+const CSS = ['base.css', 'componentes.css', 'ceu.css', 'telas.css', 'conta.css',
   'assistente.css', 'movel.css', 'responsivo.css', 'impressao.css'];
 const JS = [
   ['banco-de-dados', 'config.js'],
@@ -32,6 +32,8 @@ const JS = [
   ['backend', 'login.js'],
   ['backend', 'leitor.js'],
   ['backend', 'agente.js'],
+  ['frontend/js', 'ceu.js'],
+  ['frontend/js', 'entrada.js'],
   ['frontend/js', 'telas.js'],
   ['frontend/js', 'movel.js'],
   ['frontend/js', 'assistente.js'],
@@ -85,7 +87,7 @@ const favicon = 'data:image/svg+xml,' + encodeURIComponent(ler('frontend', 'asse
 const fontes =
   '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
   '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
-  '<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">';
+  '<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">';
 
 const corpo =
   '<a class="pular" href="#conteudo">Pular para o conteúdo</a>\n' +
@@ -99,7 +101,7 @@ const cabecalho = `<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Solaris — monitoramento de energia solar</title>
 <meta name="description" content="Painel que mostra para onde vai cada quilowatt da sua casa ou do seu comércio, quanto o sol cobriu e quanto vem na próxima conta.">
-<meta name="theme-color" content="#16150F">
+<meta name="theme-color" content="#0B1024">
 ${fontes}`;
 
 const completo = `<!DOCTYPE html>

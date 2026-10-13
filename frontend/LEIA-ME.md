@@ -13,10 +13,12 @@ frontend/
 
 ---
 
-## `js/` — quatro arquivos, quatro trabalhos
+## `js/` — seis arquivos, seis trabalhos
 
 | Arquivo | O que faz | Quando mexer |
 | --- | --- | --- |
+| `ceu.js` | O céu de hoje desenhado: o arco do sol nas 24 horas, o disco na posição de agora, a frase que acompanha. Aparece na entrada, no painel, no menu e no celular. A astronomia vem do `motor.js`; aqui só se desenha. | Mudar o desenho do céu. |
+| `entrada.js` | A tela de entrada — a única porta do site — e o envio do formulário. Quem confere senha e abre sessão continua sendo o `backend/login.js`. | Mudar a porta. |
 | `telas.js` | Monta as telas da versão ampla. Cada tela é uma função que devolve HTML como texto. | Mudar o que aparece na tela. |
 | `movel.js` | As mesmas telas em coluna única, para tela estreita. | Mudar a versão de celular. |
 | `assistente.js` | As duas telas de conversa: o papo rápido do cadastro e o chat com o assistente. Serve à versão ampla e à de celular — a conversa é a mesma peça nas duas. | Mudar como a conversa aparece. |
@@ -44,6 +46,7 @@ Cada arquivo pode sobrescrever o anterior. Se mexer na ordem no
 | --- | --- |
 | `base.css` | Cores, fontes, espaçamentos e o reset. **Tudo herda daqui.** |
 | `componentes.css` | Peças de várias telas: menu, cartões, botões, formulários. |
+| `ceu.css` | O céu: as quatro fases do fundo, a tinta de cada uma (contraste conferido por script) e os traços do arco. |
 | `telas.css` | O que é de uma tela só: o bloco da economia, o donut, os gráficos, a tabela de aparelhos, a fatura. |
 | `conta.css` | Tela de entrada, cartão da conta e o painel do banco de dados. |
 | `assistente.css` | A fala — a bolha usada nas duas telas de conversa — mais o papo do cadastro e o chat. |
@@ -51,8 +54,8 @@ Cada arquivo pode sobrescrever o anterior. Se mexer na ordem no
 | `responsivo.css` | Os pontos de quebra entre desktop, tablet e celular. |
 | `impressao.css` | Como o relatório sai no papel. |
 
-As regras de aparência — o que é âmbar, quanto de raio, que tamanho de fonte
-— estão em
+As regras de aparência — o céu, o que é âmbar, quanto de raio, que tamanho de
+fonte — estão em `../skills/solaris-visual/SKILL.md` e em
 [`../documentacao/MAPA-DO-PROJETO.md`](../documentacao/MAPA-DO-PROJETO.md),
 com o porquê de cada uma. Leia antes de mudar uma cor.
 

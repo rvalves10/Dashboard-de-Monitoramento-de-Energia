@@ -44,7 +44,13 @@ ninguém olhar.
 ## 4. As duas larguras
 
 - **1440px** — a versão ampla, com menu lateral
+- **1024px** — o menu recolhe para ícones e o céu do painel aperta
 - **390px** — abaixo de 761px o JavaScript troca a casca inteira
+
+Se a tela tem o céu (entrada, painel, celular), olhe também **de dia e de
+noite**: o fundo e a tinta mudam com a fase, e um texto que se lê ao
+meio-dia pode sumir no crepúsculo. Dá para congelar o relógio no console com
+`agora = () => new Date(2026, 9, 13, 18, 30)` e chamar `render()`.
 
 Não basta encolher a janela e ver se "não quebrou": as duas cascas são código
 diferente (`telas.js` e `movel.js`). Se você mexeu numa, provavelmente
@@ -88,7 +94,7 @@ entender o que estava errado, não só o que ficou.
 - [ ] Suíte verde
 - [ ] Caminho completo numa conta nova, sem dado de demonstração
 - [ ] Console limpo durante os 2 minutos do tique
-- [ ] 1440px e 390px
+- [ ] 1440px, 1024px e 390px — e o céu de dia e de noite
 - [ ] Campos novos entram na `sync` certa
 - [ ] Texto do usuário passa por `esc()`
 - [ ] `node backend/ferramentas/build.mjs` sem reclamação

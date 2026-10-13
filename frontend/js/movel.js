@@ -62,12 +62,13 @@ function vMovel() {
 }
 
 function mPainel() {
-  const v = visao(), p = potenciaAgora();
+  const v = visao(), p = potenciaAgora(), c = ceuDeHoje();
   const dia = v.md.dias[v.data.getDate() - 1];
   const max = Math.max(Math.max.apply(null, dia.cons), Math.max.apply(null, dia.ger)) * 1.12 || 1;
   const u = unidade();
+  const semSolar = u.temSolar === false;
   /* sem painel, tres dos quatro numeros seriam zero */
-  const tiles = (u.temSolar === false
+  const tiles = (semSolar
     ? [
       ['Consumo', nf(v.mtd.tc), 'kWh no mês'],
       ['Conta', brl(v.contaProj), 'projeção do mês'],
@@ -81,26 +82,44 @@ function mPainel() {
       ['Créditos', nf(v.creditos), 'kWh na rede']
     ]).map(t => '<div class="mob-tile"><div class="mob-tile-k">' + t[0] + '</div><div class="mob-tile-v">' + t[1] + '</div><div class="mob-tile-s">' + t[2] + '</div></div>').join('');
 
+  /* a faixa da noite no grafico pequeno, com as mesmas horas do arco */
+  const fx = h => clamp(h / 23, 0, 1);
+  const pare = (o, a) => '<stop offset="' + clamp(o, 0, 1).toFixed(4) + '" stop-color="#0B1024" stop-opacity="' + a + '"/>';
+  const noite = '<linearGradient id="gNoiteM" x1="0" y1="0" x2="1" y2="0">' +
+    pare(0, .055) + pare(fx(c.nascer) - .015, .055) + pare(fx(c.nascer) + .025, 0) +
+    pare(fx(c.por) - .025, 0) + pare(fx(c.por) + .015, .055) + pare(1, .055) + '</linearGradient>';
+  const xAgora = ((v.hDec - (v.data.getDate() - 1) * 24) / 23 * 320).toFixed(1);
+
   return '<div class="mob-col">' +
-    '<div class="mob-hero"><div style="position:relative">' +
-    '<div class="mob-hero-k">' + (u.temSolar === false ? 'Sua conta de ' + MESES[v.m] : 'Economizado em ' + MESES[v.m]) + '</div>' +
-    '<div class="mob-hero-v"><span class="cur">R$</span><span class="num">' +
-    nf(u.temSolar === false ? v.contaProj : v.economia) + '</span></div>' +
-    '<div class="mob-hero-s">' + (u.temSolar === false
+    /* o ceu tambem abre o painel do celular: o mesmo arco, sem os rotulos */
+    '<section class="mob-hero ' + classeDoCeu(c) + '" data-ceu>' +
+    '<div class="mob-hero-k">' + (semSolar ? 'Sua conta de ' + MESES[v.m] + ', projetada' : 'Economizado em ' + MESES[v.m]) + '</div>' +
+    '<div class="mob-hero-v"><span class="big big-46"><span class="moeda">R$</span>' +
+    nf(semSolar ? v.contaProj : v.economia) + '</span></div>' +
+    '<div class="mob-hero-s">' + (semSolar
       ? 'Projeção do mês fechado, com ' + nf(v.projConsumo) + ' kWh'
       : 'O sol cobriu ' + pct(v.autoPct) + ' do seu consumo até agora') + '</div>' +
-    '<div class="mob-live"><span class="live-dot batendo"></span><span>Agora: consumindo <b id="mLiveC">' + nf(p.cons, 2) + ' kW</b> · gerando <b id="mLiveG">' + nf(p.ger, 2) + ' kW</b></span></div>' +
-    '</div></div>' +
-    '<div class="mob-card"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px">' +
-    '<h2>Hoje</h2><div class="legend" style="gap:11px">' +
-    '<span><i class="swatch" style="background:var(--sun)"></i>Sol</span><span><i class="swatch" style="background:var(--grid)"></i>Consumo</span></div></div>' +
-    '<svg viewBox="0 0 320 100" style="width:100%;height:auto;margin-top:10px;overflow:visible">' +
-    '<defs><linearGradient id="gSolM" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--sun)" stop-opacity="0.3"/><stop offset="100%" stop-color="var(--sun)" stop-opacity="0"/></linearGradient></defs>' +
-    '<path d="' + caminho(dia.ger, max, 320, 96, true) + '" fill="url(#gSolM)"/>' +
-    '<path d="' + caminho(dia.ger, max, 320, 96) + '" fill="none" stroke="var(--sun)" stroke-width="2.4" stroke-linejoin="round"/>' +
+    '<div class="mob-arco">' + arcoSolar(c, { id: 'arcoMovel', compacto: true }) + '</div>' +
+    '<div class="mob-live"><span class="live-dot batendo"></span><span>Agora: consumindo <b id="mLiveC">' + nf(p.cons, 2) + ' kW</b>' +
+    (semSolar ? '' : ' · gerando <b id="mLiveG">' + nf(p.ger, 2) + ' kW</b>') + '</span></div>' +
+    '<p class="mob-ceu-frase" data-ceu-frase="curta">' + esc(fraseDoCeu(c, true)) + '</p>' +
+    '</section>' +
+    '<div class="mob-card"><div style="display:flex;align-items:center;justify-content:space-between;gap:var(--e3)">' +
+    '<h2>Hoje</h2><div class="legend" style="gap:var(--e3)">' +
+    (semSolar ? '' : '<span><i class="swatch" style="background:var(--sun)"></i>Sol</span>') +
+    '<span><i class="swatch" style="background:var(--grid)"></i>Consumo</span></div></div>' +
+    '<svg viewBox="0 0 320 100" style="width:100%;height:auto;margin-top:var(--e3);overflow:visible" aria-hidden="true">' +
+    '<defs><linearGradient id="gSolM" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--sun)" stop-opacity="0.3"/><stop offset="100%" stop-color="var(--sun)" stop-opacity="0"/></linearGradient>' +
+    noite + '</defs>' +
+    '<rect x="0" y="0" width="320" height="96" fill="url(#gNoiteM)"/>' +
+    (semSolar ? '' :
+      '<path d="' + caminho(dia.ger, max, 320, 96, true) + '" fill="url(#gSolM)"/>' +
+      '<path d="' + caminho(dia.ger, max, 320, 96) + '" fill="none" stroke="var(--sun)" stroke-width="2.4" stroke-linejoin="round"/>') +
     '<path d="' + caminho(dia.cons, max, 320, 96) + '" fill="none" stroke="var(--grid)" stroke-width="2" stroke-dasharray="4 3" stroke-linejoin="round"/>' +
-    '<line x1="' + ((v.hDec - (v.data.getDate() - 1) * 24) / 23 * 320).toFixed(1) + '" y1="0" x2="' + ((v.hDec - (v.data.getDate() - 1) * 24) / 23 * 320).toFixed(1) + '" y2="96" stroke="var(--n-900)" stroke-width="1" stroke-dasharray="3 3" opacity=".4"/>' +
-    '</svg></div>' +
+    '<line x1="' + xAgora + '" y1="0" x2="' + xAgora + '" y2="96" stroke="var(--n-900)" stroke-width="1" stroke-dasharray="3 3" opacity=".4"/>' +
+    '</svg>' +
+    '<div class="chart-axis"><span>00h</span><span>nasce ' + hm(c.nascer) + '</span><span>se põe ' + hm(c.por) + '</span><span>23h</span></div>' +
+    '</div>' +
     '<div class="mob-grid2">' + tiles + '</div></div>';
 }
 
@@ -125,7 +144,7 @@ function mHistorico() {
 
   return '<div class="mob-col"><div class="mob-seg">' + per + '</div>' +
     '<div class="mob-card"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px">' +
-    '<span style="font-size:13px;font-weight:600">' + esc(s.rotulo) + '</span></div>' +
+    '<span style="font-size:var(--t-sm);font-weight:600">' + esc(s.rotulo) + '</span></div>' +
     '<div class="hbars mob-hbars">' + barras + '</div></div>' +
     '<div class="mob-grid2">' +
     '<div class="mob-tile"><div class="mob-tile-k">Consumo</div><div class="mob-tile-v">' + nf(tC, 1) + '</div>' +
@@ -143,9 +162,9 @@ function mAparelhos() {
   const eq = aparelhos(), total = soma(eq.map(e => e.kwh)) || 1, maxK = eq[0] ? eq[0].kwh : 1;
   const linhas = eq.slice(0, 8).map(e => '<div class="mob-card">' +
     '<div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">' +
-    '<b style="font-size:13.5px">' + esc(e.nome) + '</b><span class="mono" style="font-size:13px">' + brl(e.reais) + '</span></div>' +
+    '<b style="font-size:var(--t-sm)">' + esc(e.nome) + '</b><span class="mono" style="font-size:var(--t-sm)">' + brl(e.reais) + '</span></div>' +
     '<div class="eq-track" style="margin-top:9px"><i style="width:' + (e.kwh / maxK) * 100 + '%;background:' + e.cor + '"></i></div>' +
-    '<div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--faint);margin-top:6px">' +
+    '<div style="display:flex;justify-content:space-between;font-size:var(--t-xs);color:var(--faint);margin-top:6px">' +
     '<span>' + nf(e.kwh) + ' kWh</span><span>' + pct((e.kwh / total) * 100) + ' do total</span></div></div>').join('');
   return '<div class="mob-col"><p class="rotulo-lc" style="margin-bottom:4px">Estimado por IA a partir do medidor</p>' + linhas + '</div>';
 }
@@ -155,17 +174,17 @@ function mMetas() {
   const p = clamp((v.mtd.tc / meta) * 100, 0, 100);
   const acima = v.projConsumo > meta;
   const feed = alertas().slice(0, 4).map(a => '<div class="feed-item feed-item--' + a.tipo + '"><span class="feed-dot"></span>' +
-    '<div><div style="font-size:13px;font-weight:600">' + esc(a.titulo) + '</div>' +
-    '<div style="font-size:12px;color:var(--ink-2);margin-top:3px;line-height:1.45">' + esc(a.txt) + '</div></div></div>').join('');
+    '<div><div style="font-size:var(--t-sm);font-weight:600">' + esc(a.titulo) + '</div>' +
+    '<div style="font-size:var(--t-xs);color:var(--ink-2);margin-top:3px;line-height:1.45">' + esc(a.txt) + '</div></div></div>').join('');
   return '<div class="mob-col"><div class="mob-card">' +
     '<h2>Meta do mês</h2>' +
     '<div style="display:flex;align-items:baseline;gap:6px;margin-top:6px">' +
-    '<span class="big" style="font-size:30px">' + nf(v.mtd.tc) + '</span>' +
-    '<span style="font-size:13px;color:var(--faint)">de <b id="metaLbl">' + nf(meta) + '</b> kWh</span></div>' +
+    '<span class="big" style="font-size:var(--t-xl)">' + nf(v.mtd.tc) + '</span>' +
+    '<span style="font-size:var(--t-sm);color:var(--faint)">de <b id="metaLbl">' + nf(meta) + '</b> kWh</span></div>' +
     '<div class="track" style="margin-top:12px"><i id="metaFill" style="width:' + p + '%;background:' + (acima ? 'var(--bad)' : 'var(--good)') + '"></i></div>' +
-    '<div style="font-size:12px;color:var(--faint);margin-top:8px">' + pct((v.mtd.tc / meta) * 100) + ' da meta · projeção ' + nf(v.projConsumo) + ' kWh</div>' +
+    '<div style="font-size:var(--t-xs);color:var(--faint);margin-top:8px">' + pct((v.mtd.tc / meta) * 100) + ' da meta · projeção ' + nf(v.projConsumo) + ' kWh</div>' +
     '<input type="range" data-fid="meta" data-in="meta" min="80" max="2600" step="10" value="' + meta + '" aria-label="Meta mensal" style="accent-color:var(--good)">' +
-    '<div style="font-size:13px;font-weight:600;margin-top:6px;color:' + (acima ? 'var(--bad)' : 'var(--good)') + '">' +
+    '<div style="font-size:var(--t-sm);font-weight:600;margin-top:6px;color:' + (acima ? 'var(--bad)' : 'var(--good)') + '">' +
     (acima ? 'Deve estourar em ' + nf(v.projConsumo - meta) + ' kWh' : 'No ritmo atual você fecha dentro da meta') + '</div></div>' +
     feed + '</div>';
 }
@@ -195,24 +214,32 @@ function mMais() {
     '<h2 style="margin-top:10px">Trocar de unidade</h2>' + uns + '</div>';
 }
 
+/* A conta do mes no celular. Le as MESMAS linhas do relatorio da versao
+   ampla (linhasDaConta, no motor) e o mesmo total (contaDoMes). Antes ela
+   montava as proprias linhas, esquecia o Fio B e mostrava um total menor
+   que o do relatorio para o mesmo mes — e, para quem nao tem painel, ainda
+   listava autoconsumo zerado e "Voce economizou R$ 0". */
 function mConta() {
   const v = visao(), u = unidade(), t = tarifaAtual(), l = v.linhaAtual;
-  const faturado = Math.max(l.rede - l.usado, 0);
-  const total = faturado * t + l.rede * 0.0189 + u.ilum;
-  const semSolar = l.cons * t + l.cons * 0.0189 + u.ilum;
-  const linhas = [
-    ['Consumo no medidor', brl(l.cons * t)],
-    ['Autoconsumo solar', '− ' + brl(l.auto * t)],
-    ['Injetado na rede', '− ' + brl(l.inj * u.tarifaComp)],
-    ['Créditos usados', '− ' + brl(l.usado * t)],
-    ['Bandeira + iluminação', brl(l.rede * 0.0189 + u.ilum, 2)]
-  ].map(x => '<div class="mob-rowline"><span>' + x[0] + '</span><b class="mono">' + x[1] + '</b></div>').join('');
+  const semSolar = u.temSolar === false;
+  const total = contaDoMes(l, u, t);
+  const semPaineis = contaSemSolarDoMes(l, u, t);
+  const valor = r => r.valor === null ? esc(r.nota) : r.valor < 0 ? '− ' + brl(-r.valor, 2) : brl(r.valor, 2);
+  const linhas = linhasDaConta(l, u, t).map(r =>
+    '<div class="mob-rowline' + (r.tipo === 'info' ? ' mob-rowline--info' : r.tipo === 'credito' ? ' mob-rowline--credito' : '') + '">' +
+    '<span>' + esc(r.rotulo) + '</span><b class="mono">' + valor(r) + '</b></div>').join('') +
+    '<div class="mob-rowline mob-rowline--total"><span>Total a pagar</span><b class="mono">' + brl(total, 2) + '</b></div>';
   return '<div class="mob-col">' +
-    '<div class="mob-hero"><div class="mob-hero-k">Total a pagar</div>' +
-    '<div class="mob-hero-v"><span class="num" style="font-size:38px">' + brl(total) + '</span></div>' +
-    '<div class="mob-hero-s">Sem os painéis seria ' + brl(semSolar) + '</div></div>' +
+    '<div class="mob-hero mob-hero--conta"><div class="mob-hero-k">Total a pagar · 1 a ' + v.data.getDate() + ' de ' + MESES[v.m] + '</div>' +
+    '<div class="mob-hero-v"><span class="big big-46"><span class="moeda">R$</span>' + nf(total, 2) + '</span></div>' +
+    '<div class="mob-hero-s">' + (semSolar
+      ? 'Todo o consumo veio da rede: ' + nf(l.cons) + ' kWh até agora'
+      : 'Sem os painéis seria ' + brl(semPaineis)) + '</div></div>' +
     '<div class="mob-card">' + linhas + '</div>' +
-    notaBox('good', 'Você economizou ' + brl(v.economia) + ' neste mês', nf(v.co2, 1) + ' kg de CO₂ deixaram de ir para a atmosfera') + '</div>';
+    (semSolar
+      ? notaBox('sun', 'Esta unidade ainda não tem sistema solar', 'Em Configurações, “Vale a pena instalar?” estima quanto um sistema tiraria desta conta.')
+      : notaBox('good', 'Você economizou ' + brl(v.economia) + ' neste mês', nf(v.co2, 1) + ' kg de CO₂ deixaram de ir para a atmosfera')) +
+    '</div>';
 }
 
 function mCadastro() {
@@ -230,11 +257,11 @@ function mCadastro() {
     '<input type="range" data-fid="dias" data-in="dias" min="1" max="31" step="1" value="' + n.dias + '" aria-label="Dias por mês"></div>' +
     '<div class="mob-card"><h3>Onde fica</h3><div class="chips">' + coms + '</div></div>' +
     '<div class="mob-hero"><div class="mob-hero-k">Estimativa</div>' +
-    '<div class="mob-hero-v"><span class="num" style="font-size:36px" id="estKwh">' + nf(e.kwh, 1) + '</span><span class="cur" style="font-size:14px">kWh/mês</span></div>' +
-    '<div style="font-size:17px;font-weight:600;color:var(--sun-lite);margin-top:6px" id="estCusto">' + brl(e.custo) + ' por mês</div>' +
-    '<div style="font-size:12px;color:var(--on-dark-soft);margin-top:3px" id="estAno">' + brl(e.ano) + ' ao longo de um ano</div>' +
+    '<div class="mob-hero-v"><span class="num" style="font-size:var(--t-2xl)" id="estKwh">' + nf(e.kwh, 1) + '</span><span class="cur" style="font-size:var(--t-base)">kWh/mês</span></div>' +
+    '<div style="font-size:var(--t-md);font-weight:600;color:var(--sun-lite);margin-top:6px" id="estCusto">' + brl(e.custo) + ' por mês</div>' +
+    '<div style="font-size:var(--t-xs);color:var(--on-dark-soft);margin-top:3px" id="estAno">' + brl(e.ano) + ' ao longo de um ano</div>' +
     '<div class="est-bar"><i id="estBar" style="width:' + e.pctBar + '%"></i></div>' +
-    '<div style="font-size:11.5px;color:var(--on-dark-soft);margin-top:7px" id="estPct">' + textoEstimativa(e) + '</div>' +
+    '<div style="font-size:var(--t-xs);color:var(--on-dark-soft);margin-top:7px" id="estPct">' + textoEstimativa(e) + '</div>' +
     '<button class="dark-btn" data-act="salvar" style="width:100%;height:44px;margin-top:16px;border-radius:12px;' +
     (pode ? 'background:var(--on-dark);color:var(--dark)' : '') + '"' + (pode ? '' : ' disabled') + '>Adicionar aparelho</button>' +
     (S.salvo ? '<div class="saved">' + ico(IC.check, 14, 'currentColor', 2.6) + 'Cadastrado e já no ranking</div>' : '') +
@@ -246,14 +273,14 @@ function mSimulacao() {
   const sim = simulacaoSolar(S.perfil);
   if (!sim) return '';
   return '<div class="mob-card"><h3>Vale a pena instalar?</h3>' +
-    '<div class="mob-hero-v" style="margin-top:6px"><span class="num" style="font-size:30px;color:var(--ink)">' +
+    '<div class="mob-hero-v" style="margin-top:6px"><span class="num" style="font-size:var(--t-xl);color:var(--ink)">' +
     brl(sim.economiaMes) + '</span></div>' +
-    '<div style="font-size:12.5px;color:var(--muted);margin-top:2px">a menos por mês, de ' +
+    '<div style="font-size:var(--t-sm);color:var(--muted);margin-top:2px">a menos por mês, de ' +
     brl(sim.contaHoje) + ' para ' + brl(sim.contaDepois) + '</div>' +
     '<div class="mob-rowline" style="margin-top:12px"><span>Sistema</span><b class="mono">' + nf(sim.kwp, 1) + ' kWp</b></div>' +
     '<div class="mob-rowline"><span>Investimento</span><b class="mono">' + brl(sim.investimento) + '</b></div>' +
     '<div class="mob-rowline"><span>Se paga em</span><b class="mono">' + (sim.paybackAnos ? nf(sim.paybackAnos, 1) + ' anos' : '—') + '</b></div>' +
-    '<div style="font-size:11.5px;color:var(--faint);margin-top:10px;line-height:1.5">' +
+    '<div style="font-size:var(--t-xs);color:var(--faint);margin-top:10px;line-height:1.5">' +
     'Estimativa para decidir se vale pedir orçamento — não é orçamento.</div></div>';
 }
 
@@ -261,7 +288,7 @@ function mConfig() {
   const v = visao(), u = unidade(), t = tarifaAtual();
   return '<div class="mob-col"><div class="mob-card">' +
     '<h2>Tarifa de energia</h2>' +
-    '<div class="big" style="font-size:30px;margin-top:6px" id="tarLbl">R$ ' + nf(t, 2) + ' / kWh</div>' +
+    '<div class="big" style="font-size:var(--t-xl);margin-top:6px" id="tarLbl">R$ ' + nf(t, 2) + ' / kWh</div>' +
     '<input type="range" data-fid="tarifa" data-in="tarifa" min="40" max="160" step="1" value="' + Math.round(t * 100) + '" aria-label="Tarifa">' +
     (S.tarifa[S.perfil] != null ? '<button class="link-btn" style="margin-top:8px" data-act="reset-tarifa">Voltar para a tarifa da distribuidora</button>' : '') +
     '</div>' +

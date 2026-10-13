@@ -36,13 +36,13 @@ Solaris/
 │   ├── LEIA-ME.md
 │   ├── index.html        a página; carrega as camadas na ordem certa
 │   ├── css/              a aparência, dividida por assunto
-│   ├── js/               telas.js, movel.js, assistente.js, controle.js
+│   ├── js/               ceu.js, entrada.js, telas.js, movel.js, assistente.js, controle.js
 │   └── assets/           ícone
 │
 ├── backend/              ◀ a lógica de domínio
 │   ├── LEIA-ME.md        inclui por que se chama assim
-│   ├── motor.js
-│   ├── login.js
+│   ├── motor.js          o cálculo, e também onde o sol está
+│   ├── login.js          contas e sessão (a tela mora no frontend)
 │   ├── leitor.js
 │   ├── agente.js         o assistente de IA, do lado do navegador
 │   ├── ferramentas/      build, servidor local, skills e o gerador do SQL
@@ -65,12 +65,13 @@ Solaris/
 │   ├── solaris-motor/    regras do cálculo
 │   └── solaris-revisao/  o que conferir antes do pull request
 │
-├── documentacao/         este mapa, como ligar o Supabase, teste de campo,
+├── documentacao/         este mapa, a visão e o modelo de negócio, como ligar
+│   │                     o Supabase, teste de campo
 │   ├── apresentacao/     plano do semestre e slides da banca
 │   ├── design/           o desenho original, antes de virar código
 │   └── app-futuro/       fase 2: o que fazer quando virar aplicativo
 │
-└── testes/               164 testes que rodam no navegador
+└── testes/               182 testes que rodam no navegador
 ```
 
 **São seis pastas, e é para continuar assim.** Ferramentas e firmware moram
@@ -100,6 +101,7 @@ Se mexer na ordem no `frontend/index.html`, coisas quebram.
 | --- | --- |
 | `base.css` | Cores, fontes, espaçamentos e o reset. **Tudo herda daqui.** Mexeu numa cor aqui, mudou o site inteiro. |
 | `componentes.css` | Peças que aparecem em várias telas: menu lateral, cartões, botões, formulários, avisos. |
+| `ceu.css` | O céu de hoje: as quatro fases do fundo (noite, crepúsculo, luz dourada, dia), a tinta de cada uma e os traços do arco do sol. |
 | `telas.css` | O que é específico de uma tela só: o herói do painel, o donut, os gráficos, a tabela de aparelhos, a fatura. |
 | `conta.css` | Tela de entrada, cartão da conta e o painel do banco de dados. |
 | `assistente.css` | A fala (usada nas duas telas de conversa), o papo rápido do cadastro e o chat com o assistente. |
@@ -143,6 +145,8 @@ com e sem internet.
 
 | Arquivo | O que faz | Quando mexer |
 | --- | --- | --- |
+| `ceu.js` | Desenha o céu de hoje: o arco do sol, o disco na posição de agora e a frase que acompanha. Não calcula nada — a astronomia é do `motor.js`. | Mudar o desenho do céu. |
+| `entrada.js` | A tela de entrada, a única porta do site. Morava em `backend/login.js`, o que contrariava a regra de camada. | Mudar a porta. |
 | `telas.js` | Monta as telas da versão ampla. | Mudar o que aparece na tela. |
 | `movel.js` | As mesmas telas em coluna única. | Mudar a versão de celular. |
 | `assistente.js` | As duas telas de conversa: o papo rápido do cadastro e o chat com o assistente. | Mudar como a conversa aparece. |
@@ -206,14 +210,32 @@ que desenhar continua sendo `semUnidade()`.
 ## As regras da aparência
 
 Não são preferências. Cada uma resolve um problema concreto, e desfazer
-qualquer uma delas traz o problema de volta.
+qualquer uma delas traz o problema de volta. A versão completa, com o
+checklist, está na skill `skills/solaris-visual/SKILL.md`.
+
+**A interface segue o sol.** A peça principal é o céu de hoje: o caminho do
+sol nas 24 horas, calculado para Sorocaba, com o sol onde ele está agora e o
+fundo na cor da fase (noite, crepúsculo, luz dourada, dia). A fase vem da
+altura real do sol, não do relógio. O céu é dado: nada de estrela, nuvem
+animada ou partícula, e degradê de céu só existe nos cartões `.ceu`. O resto
+é papel (claro, com um fio de azul) e noite (o índigo do menu).
+
+**Duas vozes na tipografia.** Título e número grande em Newsreader — escolhida
+contra a Fraunces porque tem algarismos tabulares de verdade, e número que
+troca não pode dançar de largura. Texto em IBM Plex Sans, número que muda a
+cada tique em IBM Plex Mono.
 
 **Âmbar é geração solar.** Dentro de gráfico ou de dado, âmbar significa
 energia que veio do sol e azul-ardósia significa energia comprada da rede.
 Nenhum aparelho pode ser âmbar — se fosse, a barra de consumo pareceria
-estar falando do sol. Fora dos dados, o âmbar é a cor da marca (símbolo,
-marcador de página, botão de entrar sem conta). São dois papéis, e eles não
-se misturam na mesma peça.
+estar falando do sol. Nem o destaque do mês atual na conta de quem não tem
+painel. Fora dos dados, o âmbar é a cor da marca e do próprio sol (símbolo,
+disco no arco, marcador de página). São papéis que não se misturam na mesma
+peça.
+
+**Texto não mora dentro de SVG.** Texto de SVG encolhe junto com o desenho e
+cai abaixo de 12px em tela média. Rótulos de gráfico e de arco são HTML por
+cima do desenho, posicionados em porcentagem.
 
 **A paleta dos aparelhos foi conferida por script.** A ordem em
 `CORES_EXTRA` (em `motor.js`) não é decoração: é o que garante que duas
