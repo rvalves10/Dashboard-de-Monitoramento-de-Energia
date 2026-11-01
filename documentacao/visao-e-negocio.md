@@ -1,7 +1,7 @@
-# Solaris — visão e modelo de negócio
+# Watt Control — visão e modelo de negócio
 
 Escrito depois de uma revisão do projeto inteiro e da troca da camada
-visual. Responde três perguntas: **o que o Solaris é hoje, o que ele pode
+visual. Responde três perguntas: **o que o Watt Control é hoje, o que ele pode
 virar, e como isso paga as contas.**
 
 Os números de mercado e de preço daqui são **hipóteses para validar**, não
@@ -12,7 +12,7 @@ previsão. Onde existe fonte, ela está dita; onde não existe, está escrito
 
 ## Em uma frase
 
-> **O Solaris é a camada de inteligência entre o brasileiro e a conta de
+> **O Watt Control é a camada de inteligência entre o brasileiro e a conta de
 > luz:** lê, explica, confere e age — com o sol de cada telhado e a regra
 > de cada distribuidora dentro do cálculo.
 
@@ -49,7 +49,7 @@ painel no telhado ou não.
 
 1. **Não há dado real.** O medidor é virtual; o firmware do ESP32 está
    escrito, mas o sensor nunca foi montado; não há integração com inversor.
-   Sem dado real, o Solaris é uma demonstração muito convincente.
+   Sem dado real, o Watt Control é uma demonstração muito convincente.
 2. **A conferência com a fatura ainda não tem fatura.** O erro médio do
    motor é `null` porque ninguém informou uma conta de verdade. É a primeira
    pergunta de qualquer banca, cliente ou investidor: *"e bate?"*.
@@ -89,7 +89,7 @@ painel no telhado ou não.
 
 ## 2. A nova identidade: a interface segue o sol
 
-A camada visual foi refeita em torno de uma ideia só: **o Solaris fala de
+A camada visual foi refeita em torno de uma ideia só: **o Watt Control fala de
 luz, então a peça principal da tela é o céu de agora.**
 
 - O **arco do sol** nas 24 horas, calculado para Sorocaba, com o sol no lugar
@@ -106,7 +106,7 @@ luz, então a peça principal da tela é o céu de agora.**
   menu, e o âmbar do sol com um trabalho só.
 
 Nenhum painel de energia no mercado tem essa cara. É a identidade que faz o
-Solaris ser reconhecido de longe — e ela só funciona porque o motor por trás
+Watt Control ser reconhecido de longe — e ela só funciona porque o motor por trás
 é sério.
 
 As regras ficaram registradas em `skills/solaris-visual/SKILL.md`, com o
@@ -133,7 +133,7 @@ energia.
 
 ### Os quatro verbos do produto
 
-| Verbo | O que o Solaris faz | Já existe? |
+| Verbo | O que o Watt Control faz | Já existe? |
 | --- | --- | --- |
 | **Entender** | A conta explicada linha a linha; para onde vai cada kWh; o céu de hoje e por que o painel gera o que gera. | Sim |
 | **Conferir** | A fatura de papel ao lado do cálculo; o erro do motor publicado; auditoria que encontra cobrança errada da distribuidora (crédito não abatido, Fio B acima da escada, classe tarifária errada). | Parcial — falta a auditoria |
@@ -174,16 +174,16 @@ Não é para fazer tudo. É um cardápio, com a ordem recomendada logo depois.
 
 | # | Modelo | Quem paga | Como cobra | Quando liga |
 | --- | --- | --- | --- | --- |
-| 1 | **Solaris Pro para integradores** — monitoramento multimarca, portal do cliente com a marca do integrador, relatório mensal com Lei 14.300, alerta de queda de rendimento | Integrador | Por sistema monitorado por mês (hipótese: R$ 4 a R$ 9) | Fase 1 |
+| 1 | **Watt Control Pro para integradores** — monitoramento multimarca, portal do cliente com a marca do integrador, relatório mensal com Lei 14.300, alerta de queda de rendimento | Integrador | Por sistema monitorado por mês (hipótese: R$ 4 a R$ 9) | Fase 1 |
 | 2 | **Leads qualificados** — quem simula "vale a pena instalar?" pede orçamento a três instaladores avaliados, com consentimento | Integrador | Por lead entregue e/ou porcentagem do contrato fechado (validar com o mercado) | Fase 2 |
-| 3 | **Solaris+ (assinatura pessoal)** — grátis para entender; pago para alerta no WhatsApp, assistente sem limite, auditoria automática, várias unidades, tarifa branca | Pessoa física, pequeno negócio | Mensalidade (hipótese: R$ 9,90 a R$ 19,90) | Fase 2 |
+| 3 | **Watt Control+ (assinatura pessoal)** — grátis para entender; pago para alerta no WhatsApp, assistente sem limite, auditoria automática, várias unidades, tarifa branca | Pessoa física, pequeno negócio | Mensalidade (hipótese: R$ 9,90 a R$ 19,90) | Fase 2 |
 | 4 | **Auditoria de fatura** — encontra cobrança errada e prepara a contestação | Pequeno negócio, pessoa física | Porcentagem do valor recuperado | Fase 3 |
 | 5 | **Financiamento e seguro embarcados** — crédito para o sistema simulado, seguro do sistema instalado | Banco, fintech de crédito solar, seguradora | Comissão por contrato | Fase 3 |
 | 6 | **Serviços** — limpeza, manutenção, troca de inversor quando o rendimento cai abaixo do esperado | Prestador parceiro | Comissão por serviço | Fase 3 |
 | 7 | **Energia por assinatura** — para quem mora em apartamento ou não tem telhado: indicar usinas de geração compartilhada | Usina | Comissão recorrente por cliente ativo | Fase 3 |
-| 8 | **Solaris Medidor** — o kit ESP32 montado, com dado em tempo real por aparelho | Pessoa física, pequeno negócio | Venda do kit + assinatura, ou comodato dentro do plano | Fase 3 |
-| 9 | **Projetos com distribuidoras** — as distribuidoras são obrigadas por lei (Lei 9.991/2000) a investir parte da receita em P&D e em eficiência energética; o Solaris é exatamente um projeto de eficiência para residência e pequeno negócio, e a CPFL Piratininga atende Sorocaba | Distribuidora | Contrato de projeto; depois licença da "conta explicada" dentro do app dela | Fase 1 a 3 |
-| 10 | **Mercado livre** — quando a baixa tensão puder escolher de quem comprar, o Solaris já conhece a curva de consumo e recomenda a migração | Comercializadora | Comissão de comercialização | Fase 4 |
+| 8 | **Watt Control Medidor** — o kit ESP32 montado, com dado em tempo real por aparelho | Pessoa física, pequeno negócio | Venda do kit + assinatura, ou comodato dentro do plano | Fase 3 |
+| 9 | **Projetos com distribuidoras** — as distribuidoras são obrigadas por lei (Lei 9.991/2000) a investir parte da receita em P&D e em eficiência energética; o Watt Control é exatamente um projeto de eficiência para residência e pequeno negócio, e a CPFL Piratininga atende Sorocaba | Distribuidora | Contrato de projeto; depois licença da "conta explicada" dentro do app dela | Fase 1 a 3 |
+| 10 | **Mercado livre** — quando a baixa tensão puder escolher de quem comprar, o Watt Control já conhece a curva de consumo e recomenda a migração | Comercializadora | Comissão de comercialização | Fase 4 |
 | 11 | **Certificados de energia renovável (I-REC)** — agregar a geração **medida** de milhares de telhados e vender certificados para empresas, dividindo com o dono do telhado | Empresas com meta de energia renovável | Venda de certificados, com repasse | Fase 4 |
 | 12 | **Índices regionais anônimos** — consumo, geração e rendimento por cidade, sempre agregados e com consentimento | Distribuidoras, comercializadoras, pesquisa | Licença de dados | Fase 4 |
 
@@ -212,19 +212,19 @@ gente e integração com inversores.
 
 ## 5. Como se sustenta ao longo do tempo
 
-- **Receita recorrente na base** (Solaris Pro, Solaris+), **transação para
+- **Receita recorrente na base** (Watt Control Pro, Watt Control+), **transação para
   acelerar** (leads, financiamento, serviços) e **projeto para financiar o
   começo** sem vender participação (P&D e eficiência com distribuidora,
   fomento público).
-- **O ritual mensal já existe**: a conta chega todo mês. O Solaris vira o
+- **O ritual mensal já existe**: a conta chega todo mês. O Watt Control vira o
   lugar onde a pessoa abre a fatura — retenção sem truque.
 - **Custo de troca honesto**: quem tem três anos de histórico, créditos
   acompanhados por 60 meses e faturas conferidas não recomeça do zero em
   outro lugar. (E pode levar tudo embora quando quiser — a exportação já
   existe, e é isso que dá confiança para ficar.)
-- **Cada mudança de regra é motivo para abrir o Solaris**: degrau novo do
+- **Cada mudança de regra é motivo para abrir o Watt Control**: degrau novo do
   Fio B, bandeira vermelha, reajuste da distribuidora, abertura do mercado
-  livre. Para um concorrente estrangeiro, cada uma é custo; para o Solaris,
+  livre. Para um concorrente estrangeiro, cada uma é custo; para o Watt Control,
   é produto.
 - **Efeito de rede**: mais telhados medidos, melhor a estimativa regional e o
   comparativo — o que atrai mais telhados.
@@ -245,7 +245,7 @@ recorrente — ela é o que define o preço da conversa.
 | --- | --- | --- | --- |
 | **0 — Provar o cálculo** | até a banca | Informar três faturas reais; montar um medidor ESP32 numa casa real por sete dias; conferir irradiação, bandeira e fator de CO₂ | Erro médio do motor contra fatura publicado, abaixo de 10% |
 | **1 — Piloto** | 3 a 6 meses | Dois ou três integradores de Sorocaba usando o Pro de graça; integração com as duas marcas de inversor mais vendidas na região; alerta por WhatsApp; conversa com a distribuidora sobre projeto de eficiência | % de unidades com dado real; erro médio abaixo de 5% |
-| **2 — Cobrar** | 6 a 12 meses | Pro pago; funil de leads para os integradores parceiros; Solaris+ | Receita recorrente mensal; leads por mês e taxa de fechamento |
+| **2 — Cobrar** | 6 a 12 meses | Pro pago; funil de leads para os integradores parceiros; Watt Control+ | Receita recorrente mensal; leads por mês e taxa de fechamento |
 | **3 — Expandir** | 12 a 24 meses | Outras distribuidoras (a base regional vira nacional), auditoria de fatura, financiamento embarcado, componentes únicos no lugar das duas cascas | Distribuidoras cobertas; valor recuperado em auditoria |
 | **4 — Mercado** | 24 meses ou mais | Mercado livre, certificados de renovável, índices regionais | Clientes migrados; certificados emitidos |
 
@@ -285,4 +285,4 @@ recorrente — ela é o que define o preço da conversa.
 - **Leads por mês e taxa de instalação** — a métrica do funil.
 - **Retenção mês a mês** — o ritual da fatura funcionando.
 - **Reais economizados pelos usuários** — a métrica de impacto, e a que
-  conta a história do Solaris melhor do que qualquer slide.
+  conta a história do Watt Control melhor do que qualquer slide.

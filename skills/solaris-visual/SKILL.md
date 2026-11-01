@@ -1,9 +1,9 @@
 ---
 name: solaris-visual
-description: Regras de aparência do Solaris. Use ao mexer em qualquer arquivo de frontend/css/, ao criar tela nova, ao escolher cor, tamanho de fonte, raio de canto ou animação, ao adicionar gráfico e ao mexer no céu (frontend/js/ceu.js, frontend/css/ceu.css). Impede que a interface volte a parecer template gerado por máquina.
+description: Regras de aparência do Watt Control. Use ao mexer em qualquer arquivo de frontend/css/, ao criar tela nova, ao escolher cor, tamanho de fonte, raio de canto ou animação, ao adicionar gráfico e ao mexer no céu (frontend/js/ceu.js, frontend/css/ceu.css). Impede que a interface volte a parecer template gerado por máquina.
 ---
 
-# Aparência do Solaris
+# Aparência do Watt Control
 
 Estas regras não são preferência. Cada uma resolve um problema concreto, e
 desfazer qualquer uma traz o problema de volta. Antes de mudar uma cor, leia
@@ -11,7 +11,7 @@ o porquê.
 
 ## 0. A ideia: a interface segue o sol
 
-O Solaris fala de luz, então a peça principal da tela é o próprio céu de
+O Watt Control fala de luz, então a peça principal da tela é o próprio céu de
 hoje: o caminho do sol nas 24 horas, calculado para a região de Sorocaba,
 com o sol no lugar em que ele está agora e o fundo na cor da hora (noite,
 crepúsculo, luz dourada, dia). Ele abre a tela de entrada, o painel, o menu

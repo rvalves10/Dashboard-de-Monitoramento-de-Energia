@@ -1,6 +1,6 @@
 ---
 name: solaris-revisao
-description: Roteiro de revisão antes de abrir pull request no Solaris. Use ao terminar qualquer alteração, antes de commitar, e ao revisar o trabalho de outra pessoa do grupo.
+description: Roteiro de revisão antes de abrir pull request no Watt Control. Use ao terminar qualquer alteração, antes de commitar, e ao revisar o trabalho de outra pessoa do grupo.
 ---
 
 # Revisão antes do pull request
@@ -81,7 +81,7 @@ Ele confere sozinho se as listas batem com `frontend/index.html` e se
 `testes/index.html` carrega os mesmos scripts, na mesma ordem. Se reclamar,
 conserte — não contorne.
 
-Commite o `Solaris.html` gerado junto com a alteração.
+Commite o `Watt-Control.html` gerado junto com a alteração.
 
 ## 8. O commit
 

@@ -13,7 +13,7 @@
    presos num balde anonimo que qualquer um do mesmo navegador abria; o
    assistente de IA nao tinha de quem ser assistente, porque nao havia
    perfil; e a primeira coisa que a pessoa via era a casa de outra gente. Com
-   conta, o Solaris sabe com quem esta falando desde o primeiro segundo — que
+   conta, o Watt Control sabe com quem esta falando desde o primeiro segundo — que
    e a condicao para tudo o que veio depois.
 
    Quem so quer passear pelo sistema continua podendo: cria a conta e liga as

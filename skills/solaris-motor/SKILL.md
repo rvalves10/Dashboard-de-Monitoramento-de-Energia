@@ -1,9 +1,9 @@
 ---
 name: solaris-motor
-description: Regras do cálculo do Solaris. Use ao mexer em backend/motor.js, ao mudar qualquer número de tarifa, bandeira, irradiação, arquétipo ou Lei 14.300, ao alterar a divisão por aparelho ou a posição do sol, ao mexer na fatura detalhada (linhasDaConta), e sempre que uma tela for mostrar valor de período passado.
+description: Regras do cálculo do Watt Control. Use ao mexer em backend/motor.js, ao mudar qualquer número de tarifa, bandeira, irradiação, arquétipo ou Lei 14.300, ao alterar a divisão por aparelho ou a posição do sol, ao mexer na fatura detalhada (linhasDaConta), e sempre que uma tela for mostrar valor de período passado.
 ---
 
-# O cálculo do Solaris
+# O cálculo do Watt Control
 
 Esta é a parte que a banca vai questionar. A regra que sustenta todas as
 outras: **nada aqui é digitado — tudo é calculado.**

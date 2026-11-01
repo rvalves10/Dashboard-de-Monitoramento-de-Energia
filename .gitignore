@@ -2,8 +2,8 @@
 *.log
 .DS_Store
 Thumbs.db
-Solaris-UPX.zip
-Solaris-publicar.html
+Watt-Control-UPX.zip
+Watt-Control-publicar.html
 
 # gerado por backend/ferramentas/instalar-skills.mjs — a fonte e skills/
 .claude/skills/

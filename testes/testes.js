@@ -1,5 +1,5 @@
 /* ============================================================
-   SOLARIS — testes do motor
+   WATT CONTROL — testes do motor
    Roda no navegador, sem dependência. Abra testes/index.html.
 
    O que se testa aqui é o que a banca pode questionar: se a energia
@@ -1567,7 +1567,7 @@ grupo('Assistente', () => {
 
 
 /* ================= a conta de luz de verdade =================
-   A comparacao entre o que o Solaris calculou e o que veio na fatura e a
+   A comparacao entre o que o Watt Control calculou e o que veio na fatura e a
    unica coisa no sistema inteiro que nao e autorreferente. Se ela quebrar,
    o projeto volta a conferir consigo mesmo. */
 grupo('Conferencia com a fatura', () => {
@@ -1633,7 +1633,7 @@ grupo('Conferencia com a fatura', () => {
     })));
   });
 
-  teste('o erro tem sinal: positivo quando o Solaris cobra mais que a conta', () => {
+  teste('o erro tem sinal: positivo quando o Watt Control cobra mais que a conta', () => {
     limpoFaturas(() => em(2026, 7, 15, 10, 0, () => comPerfil('residencial', () => {
       const v = visao();
       const linha = v.ledger.linhas[v.ledger.linhas.length - 2];
@@ -1801,7 +1801,7 @@ grupo('Resumo do assistente', () => {
 
 
 /* ================= unidade sem sistema solar =================
-   Metade do Solaris fala de painel: economia, autossuficiencia, creditos,
+   Metade do Watt Control fala de painel: economia, autossuficiencia, creditos,
    retorno do investimento. Quem ainda nao instalou nada tem que conseguir
    usar o resto — e e justamente essa pessoa que mais tem o que ganhar com a
    pergunta "vale a pena?".
@@ -2090,7 +2090,7 @@ grupo('Céu', () => {
 
   teste('o nascer e o pôr batem com Sorocaba', () => {
     /* 13 de outubro em Sorocaba: o sol nasce perto das 5h41 e se poe perto
-       das 18h11. Antes da equacao do tempo o Solaris dizia 5h56 e 18h28. */
+       das 18h11. Antes da equacao do tempo o Watt Control dizia 5h56 e 18h28. */
     const c = ceuDeHoje(new Date(2026, 9, 13, 12, 0));
     ok(c.nascer > 5.55 && c.nascer < 5.8, 'nascer fora: ' + hm(c.nascer));
     ok(c.por > 18.05 && c.por < 18.3, 'por fora: ' + hm(c.por));
@@ -2305,7 +2305,7 @@ function rodar() {
     html += '</section>';
   });
   alvo.innerHTML = html;
-  document.title = (falhas ? '✕ ' : '✓ ') + (total - falhas) + '/' + total + ' — Testes Solaris';
+  document.title = (falhas ? '✕ ' : '✓ ') + (total - falhas) + '/' + total + ' — Testes Watt Control';
 }
 
 async function rodarAssincronos() {

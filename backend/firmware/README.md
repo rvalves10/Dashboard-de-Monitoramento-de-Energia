@@ -66,8 +66,8 @@ Anote os valores de calibração e o erro final: isso vira slide de banca.
 
 ## Ligar no dashboard
 
-1. Conecte o computador na rede WiFi `Solaris-Medidor` (senha `solaris2026`)
-2. No Solaris, vá em **Configurações → Fonte da leitura**
+1. Conecte o computador na rede WiFi `Watt-Control-Medidor` (senha `wattcontrol2026`)
+2. No Watt Control, vá em **Configurações → Fonte da leitura**
 3. Escolha **Medidor físico** e confirme o endereço (padrão `192.168.4.1`)
 
 O app consulta a cada 2 segundos. Se ficar 15 segundos sem resposta, volta

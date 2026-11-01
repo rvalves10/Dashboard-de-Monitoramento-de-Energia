@@ -1,13 +1,13 @@
 /* base.css
    Cores, tipografia, reset e utilitarios. Tudo que o resto herda.
-   Parte do sistema de design do Solaris. A ordem em que os arquivos
+   Parte do sistema de design do Watt Control. A ordem em que os arquivos
    de CSS entram no index.html importa: base, componentes, ceu, telas,
    conta, assistente, movel, responsivo e impressao, nessa sequencia. */
 
 /* ============================================================
-   SOLARIS - sistema de design "Luz do dia"
+   WATT CONTROL - sistema de design "Luz do dia"
 
-   A ideia em uma frase: a interface segue o sol. O Solaris fala de
+   A ideia em uma frase: a interface segue o sol. O Watt Control fala de
    luz, entao a peca principal da tela e o proprio ceu de hoje — o
    arco do sol calculado para a regiao, com o fundo na cor da hora
    (ceu.css). O resto e papel e tinta, para o ceu ser a unica coisa
@@ -128,7 +128,7 @@
 
   /* --- tipografia ---
      Duas vozes. Titulo e numero grande em serifa (Newsreader): e o que
-     tira o Solaris da cara de painel de software e da a ele a de
+     tira o Watt Control da cara de painel de software e da a ele a de
      instrumento com alma. Texto e dado em IBM Plex, Sans para ler e
      Mono para numero que muda.
 

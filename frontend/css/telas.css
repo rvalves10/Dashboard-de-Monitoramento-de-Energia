@@ -1,6 +1,6 @@
 /* telas.css
    Estilos de cada tela: painel, historico, aparelhos, alertas, relatorio.
-   Parte do sistema de design do Solaris. A ordem em que os arquivos
+   Parte do sistema de design do Watt Control. A ordem em que os arquivos
    de CSS entram no index.html importa: base, componentes, ceu, telas,
    conta, assistente, movel, responsivo e impressao, nessa sequencia. */
 
@@ -498,7 +498,7 @@ select.text-in{
 }
 
 /* ---------- a conta de verdade, ao lado da calculada ----------
-   Quatro colunas por linha: o mes, o que veio na fatura, o que o Solaris
+   Quatro colunas por linha: o mes, o que veio na fatura, o que o Watt Control
    calculou e a diferenca. A diferenca e o unico numero colorido — verde ou
    vermelho aqui nao falam de energia, falam de acerto do calculo, entao nao
    conflitam com a regra do ambar. */

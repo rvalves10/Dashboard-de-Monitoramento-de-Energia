@@ -1,6 +1,6 @@
 /* ceu.js — o ceu de hoje, desenhado
 
-   A peca que so o Solaris tem: o caminho do sol nas 24 horas do dia, com o
+   A peca que so o Watt Control tem: o caminho do sol nas 24 horas do dia, com o
    sol no lugar em que ele esta agora, visto da regiao de Sorocaba. Aparece
    em quatro lugares — a entrada, o painel, o menu lateral e o celular — e e
    a mesma funcao nos quatro.
@@ -29,7 +29,7 @@
 
    O fundo do cartao que recebe o arco muda com a fase do ceu (noite,
    crepusculo, luz dourada, dia) — classe ceu--<fase>, em css/ceu.css. Abrir
-   o Solaris as sete da noite e ver o crepusculo nao e decoracao: e a hora
+   o Watt Control as sete da noite e ver o crepusculo nao e decoracao: e a hora
    certa, na cidade certa.
 
    Os rotulos de hora sao HTML por cima do desenho, e nao texto dentro do

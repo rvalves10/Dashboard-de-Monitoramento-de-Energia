@@ -28,9 +28,9 @@ DOM nem monta HTML. Quando você não souber onde uma função deveria morar,
 pergunte de quem ela precisa: é isso que decide.
 
 ```
-Solaris/
+Watt Control/
 ├── index.html            abre o site (só encaminha para frontend/)
-├── Solaris.html          o site inteiro num arquivo só, para mandar por e-mail
+├── Watt-Control.html          o site inteiro num arquivo só, para mandar por e-mail
 │
 ├── frontend/             ◀ o que a pessoa vê
 │   ├── LEIA-ME.md
@@ -286,8 +286,8 @@ mudança, `onclick` se perderia; com delegação, nunca.
 
 | Arquivo | Por quê |
 | --- | --- |
-| `Solaris.html` | É gerado por `node backend/ferramentas/build.mjs`. Editar aqui é jogar fora no próximo build. |
-| `Solaris-publicar.html` | Mesma coisa. Saída, não fonte. |
+| `Watt-Control.html` | É gerado por `node backend/ferramentas/build.mjs`. Editar aqui é jogar fora no próximo build. |
+| `Watt-Control-publicar.html` | Mesma coisa. Saída, não fonte. |
 | o bloco entre `-- >>> GERADO POR` e `-- <<< FIM` no `esquema.sql` | Gerado por `node backend/ferramentas/gerar-regiao-sql.mjs` a partir de `dados/regiao-sorocaba.js`. Edite o JS e rode o gerador. |
 | `design/Solaris.dc.html` | O desenho original. É a referência de como deveria ficar. |
 

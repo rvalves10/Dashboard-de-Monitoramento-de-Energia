@@ -122,7 +122,7 @@ function percentualFioB(ano, direitoAdquirido) {
    motor sempre usou.
 
    POR QUE A AMARELA: a bandeira de cada mes so e anunciada no fim do mes
-   anterior, e o Solaris ainda nao busca esse anuncio. A amarela e o degrau do
+   anterior, e o Watt Control ainda nao busca esse anuncio. A amarela e o degrau do
    meio: num mes verde a conta real vem um pouco menor, num vermelho, maior.
    Por isso toda tela que mostra a bandeira diz "estimada".
 
@@ -595,7 +595,7 @@ const PADRAO = {
   tarifa: { residencial: null, negocio: null },
   extras: [], removidos: [], respondidas: {}, dispensados: [], unidades: [],
   /* As contas de luz de verdade que a pessoa informou, para comparar com o
-     que o Solaris calculou. Uma por unidade e por mes. E o unico dado do
+     que o Watt Control calculou. Uma por unidade e por mes. E o unico dado do
      sistema que nao foi calculado nem simulado: veio da fatura de papel. */
   faturas: [],
   /* O resumo que o assistente escreve sozinho, uma vez por semana. */
@@ -799,7 +799,7 @@ function montarUnidade(f) {
 
   return {
     chave: f.chave, propria: true, arquetipo: f.arquetipo,
-    /* Quando esta unidade foi cadastrada no Solaris. Tudo antes disso e
+    /* Quando esta unidade foi cadastrada no Watt Control. Tudo antes disso e
        reconstrucao a partir do que a pessoa informou; dai para frente e
        o medidor. A tela usa isto para nao vender estimativa como leitura. */
     criadaEm: f.criadaEm || null,
@@ -863,7 +863,7 @@ const WATTS_POR_PAINEL = 550;
 
 /* ---------- e se eu instalasse? ----------
 
-   A pergunta de quem ainda nao tem sistema, e a unica coisa que o Solaris
+   A pergunta de quem ainda nao tem sistema, e a unica coisa que o Watt Control
    pode responder para essa pessoa que nenhum site de orcamento responde: ele
    ja sabe o consumo dela, a tarifa dela, o telhado dela e o sol da cidade
    dela.
@@ -1297,7 +1297,7 @@ function contaSemSolarDoMes(linha, u, t) {
 /* ---------- as faturas de verdade ----------
    A pessoa informa o total que veio na conta de luz de um mes fechado, e o
    sistema mostra o proprio calculo ao lado. E a unica prova de que o motor
-   acerta — sem ela, todo numero do Solaris e autorreferente. */
+   acerta — sem ela, todo numero do Watt Control e autorreferente. */
 function faturas() {
   return (S.faturas || []).filter(f => f.perfil === S.perfil);
 }
@@ -1315,7 +1315,7 @@ function removerFatura(y, m) {
   S.faturas = (S.faturas || []).filter(f => !(f.perfil === S.perfil && f.y === y && f.m === m));
 }
 
-/* O que o Solaris calculou para o mesmo mes, e a diferenca.
+/* O que o Watt Control calculou para o mesmo mes, e a diferenca.
    Devolve null quando o mes nao esta no ledger da unidade. */
 function conferirFatura(f) {
   if (!f) return null;
@@ -1403,7 +1403,7 @@ function alertas() {
         quando: mesReajuste + ', todo ano',
         txt: 'A partir do reajuste a sua conta muda de patamar sem você ter mudado nada em casa. ' +
           'Quando a próxima fatura chegar, confira a tarifa (R$ por kWh) e atualize em Configurações — ' +
-          'todo o cálculo do Solaris depende desse número. Hoje ele está em ' + brl(t, 2) + ' por kWh.'
+          'todo o cálculo do Watt Control depende desse número. Hoje ele está em ' + brl(t, 2) + ' por kWh.'
       });
     }
   }

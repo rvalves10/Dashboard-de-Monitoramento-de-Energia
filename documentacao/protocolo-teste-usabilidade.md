@@ -26,7 +26,7 @@ curso: eles já entendem dashboard e vão achar tudo óbvio.
 
 Prepare o ambiente:
 
-- Abrir o `Solaris.html` **antes** da pessoa chegar
+- Abrir o `Watt-Control.html` **antes** da pessoa chegar
 - Em Configurações → **Apagar meus dados**, para todo mundo começar igual
 - Cronômetro na mão, papel para anotar
 - Se for gravar a tela, **peça permissão** e explique o que será feito com o

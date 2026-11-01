@@ -1,5 +1,5 @@
 /* ============================================================
-   SOLARIS — medidor de corrente
+   WATT CONTROL — medidor de corrente
    ESP32 + SCT-013-030 (sensor de corrente não invasivo)
 
    O ESP32 sobe como access point e serve a leitura em JSON.
@@ -25,8 +25,8 @@
 #include <WebServer.h>
 
 // ---------- configuração ----------
-const char* AP_SSID     = "Solaris-Medidor";
-const char* AP_SENHA    = "solaris2026";   // mínimo 8 caracteres
+const char* AP_SSID     = "Watt-Control-Medidor";
+const char* AP_SENHA    = "wattcontrol2026";   // mínimo 8 caracteres
 
 const int   PINO_SENSOR = 34;      // ADC1, entrada apenas
 const float TENSAO_REDE = 127.0;   // MEDIR com multímetro e ajustar
@@ -95,7 +95,7 @@ void rotaLeitura() {
 void rotaRaiz() {
   servidor.sendHeader("Access-Control-Allow-Origin", "*");
   servidor.send(200, "text/plain",
-    "Solaris - medidor ativo\n"
+    "Watt Control - medidor ativo\n"
     "GET /leitura  -> potencia instantanea em kW\n");
 }
 

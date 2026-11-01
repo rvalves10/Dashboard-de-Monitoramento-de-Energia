@@ -4,7 +4,7 @@
  *
  * A chave do Gemini e nossa e paga por nos. Chave de API em codigo de
  * navegador e chave publicada: basta abrir o DevTools, ou a aba de rede, ou
- * ler o Solaris.html. Em uma hora ela esta rodando no bot de outra pessoa na
+ * ler o Watt-Control.html. Em uma hora ela esta rodando no bot de outra pessoa na
  * nossa fatura.
  *
  * Entao o navegador nao fala com o Google. Ele fala com esta funcao, que roda
@@ -282,7 +282,7 @@ function montarInstrucao(
   const linhas: string[] = [];
 
   linhas.push(
-    'Voce e o assistente do Solaris, um painel de monitoramento de energia solar ' +
+    'Voce e o assistente do Watt Control, um painel de monitoramento de energia solar ' +
     'usado por moradores e donos de pequeno negocio na regiao de Sorocaba, no interior de Sao Paulo.',
     '',
     'COMO VOCE FALA:',
@@ -392,7 +392,7 @@ function montarInstrucao(
         'que nao existe e a forma mais rapida de a pessoa parar de ler os proximos.');
   } else {
     linhas.push('',
-      'Se perguntarem algo fora de energia, conta de luz, energia solar ou do proprio Solaris, ' +
+      'Se perguntarem algo fora de energia, conta de luz, energia solar ou do proprio Watt Control, ' +
       'responda com simpatia que esse nao e o seu assunto e volte para o que voce sabe.');
   }
 

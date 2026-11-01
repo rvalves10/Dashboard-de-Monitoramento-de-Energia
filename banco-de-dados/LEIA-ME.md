@@ -9,7 +9,7 @@ banco.js        escolhe quem responde, e repassa
 ```
 
 Nada acima desta camada sabe qual dos dois atendeu. `Banco.salvarEstado(...)`
-funciona igual nos dois casos, e é isso que permite o Solaris ter servidor
+funciona igual nos dois casos, e é isso que permite o Watt Control ter servidor
 sem perder a promessa de abrir com duplo clique.
 
 ---
@@ -22,7 +22,7 @@ Decidida uma vez, na abertura, e não muda no meio da sessão:
 2. O projeto Supabase respondeu em 6 segundos? Se não, é local.
 3. Deu tudo certo: é Supabase.
 
-**Por que cair para o local em vez de mostrar erro.** O Solaris é apresentado
+**Por que cair para o local em vez de mostrar erro.** O Watt Control é apresentado
 numa banca, testado em campo por gente que abre o arquivo pelo WhatsApp e
 usado em lugar com internet ruim. Um site de monitoramento que não abre
 porque o servidor caiu não monitora nada.

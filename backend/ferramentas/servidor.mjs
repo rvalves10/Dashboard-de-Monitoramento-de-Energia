@@ -48,10 +48,10 @@ createServer(async (req, res) => {
   }
 }).listen(porta, () => {
   console.log('');
-  console.log('  Solaris no ar:');
+  console.log('  Watt Control no ar:');
   console.log('    site      http://localhost:' + porta + '/frontend/index.html');
   console.log('    testes    http://localhost:' + porta + '/testes/index.html');
-  console.log('    um arquivo so   http://localhost:' + porta + '/Solaris.html');
+  console.log('    um arquivo so   http://localhost:' + porta + '/Watt-Control.html');
   console.log('');
   console.log('  Ctrl+C para parar.');
   console.log('');

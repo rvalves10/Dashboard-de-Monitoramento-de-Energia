@@ -1,6 +1,6 @@
 /* agente.js — o assistente de IA, do lado de ca
 
-   O Solaris tem um assistente movido a Google Gemini. Este arquivo e a
+   O Watt Control tem um assistente movido a Google Gemini. Este arquivo e a
    metade que roda no navegador: junta o contexto, manda a pergunta e guarda
    a conversa. A metade que fala com o Google roda no Supabase, em
    banco-de-dados/supabase/functions/agente/.
@@ -70,7 +70,7 @@ const PERGUNTAS_PERFIL = [
   },
   {
     id: 'objetivo',
-    pergunta: 'O que você mais quer do Solaris?',
+    pergunta: 'O que você mais quer do Watt Control?',
     porque: 'Toda resposta vai puxar para o que importa para você.',
     opcoes: [
       { v: 'economizar', r: 'Gastar menos no fim do mês' },
@@ -307,7 +307,7 @@ async function limparConversaDoAgente() {
 function sugestoesDoAgente() {
   if (!semUnidade() && unidade().temSolar === false) {
     /* Quem ainda nao tem painel tem outras perguntas — e a principal delas e
-       a que o Solaris consegue responder com os numeros dela na mao. */
+       a que o Watt Control consegue responder com os numeros dela na mao. */
     const sim = simulacaoSolar(S.perfil);
     const fora = ['Vale a pena instalar energia solar na minha conta?'];
     if (sim) fora.push('Em quanto tempo um sistema de ' + nf(sim.kwp, 1) + ' kWp se pagaria?');

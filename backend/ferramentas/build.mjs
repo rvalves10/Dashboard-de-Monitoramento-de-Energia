@@ -1,13 +1,13 @@
 /* build.mjs
    Junta o site inteiro num arquivo só.
 
-   Serve para duas coisas: mandar o Solaris por e-mail ou WhatsApp sem pasta
+   Serve para duas coisas: mandar o Watt Control por e-mail ou WhatsApp sem pasta
    nenhuma, e publicar online. O site em site/ continua sendo a fonte — este
    arquivo é gerado, nunca editado à mão.
 
    Rodar:  node backend/ferramentas/build.mjs
-   Saída:  Solaris.html            documento completo, abre com duplo clique
-           Solaris-publicar.html   sem tags de documento, para hospedar
+   Saída:  Watt-Control.html            documento completo, abre com duplo clique
+           Watt-Control-publicar.html   sem tags de documento, para hospedar
 */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -93,13 +93,13 @@ const corpo =
   '<a class="pular" href="#conteudo">Pular para o conteúdo</a>\n' +
   '<div id="root"></div>\n' +
   '<div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>\n' +
-  '<noscript><div class="sem-js"><h1>Solaris</h1>' +
+  '<noscript><div class="sem-js"><h1>Watt Control</h1>' +
   '<p>O painel lê o medidor em tempo real e desenha os gráficos no próprio navegador, ' +
   'então precisa de JavaScript ativado para funcionar.</p></div></noscript>';
 
 const cabecalho = `<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Solaris — monitoramento de energia solar</title>
+<title>Watt Control — monitoramento de energia solar</title>
 <meta name="description" content="Painel que mostra para onde vai cada quilowatt da sua casa ou do seu comércio, quanto o sol cobriu e quanto vem na próxima conta.">
 <meta name="theme-color" content="#0B1024">
 ${fontes}`;
@@ -124,7 +124,7 @@ ${jsSeguro}
 
 /* a versão publicada não leva as tags de documento: o serviço que hospeda
    embrulha o conteúdo por conta própria */
-const publicar = `<title>Solaris</title>
+const publicar = `<title>Watt Control</title>
 ${fontes}
 <style>
 ${css}
@@ -135,10 +135,10 @@ ${jsSeguro}
 </script>
 `;
 
-writeFileSync(join(raiz, 'Solaris.html'), completo, 'utf8');
-writeFileSync(join(raiz, 'Solaris-publicar.html'), publicar, 'utf8');
+writeFileSync(join(raiz, 'Watt-Control.html'), completo, 'utf8');
+writeFileSync(join(raiz, 'Watt-Control-publicar.html'), publicar, 'utf8');
 
 const kb = n => (n / 1024).toFixed(0).padStart(4) + ' KB';
-console.log('  Solaris.html                ' + kb(completo.length) + '   (mandar por e-mail, abre com duplo clique)');
-console.log('  Solaris-publicar.html       ' + kb(publicar.length) + '   (publicar online)');
+console.log('  Watt-Control.html                ' + kb(completo.length) + '   (mandar por e-mail, abre com duplo clique)');
+console.log('  Watt-Control-publicar.html       ' + kb(publicar.length) + '   (publicar online)');
 console.log('  ' + CSS.length + ' arquivos de CSS e ' + JS.length + ' de JavaScript, na mesma ordem do site.');

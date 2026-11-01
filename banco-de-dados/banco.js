@@ -2,7 +2,7 @@
 
    Este arquivo nao guarda nada. Ele escolhe.
 
-   O Solaris tem dois bancos com a mesma interface:
+   O Watt Control tem dois bancos com a mesma interface:
 
      supabase.js   Postgres na nuvem. A conta e da pessoa, nao do navegador,
                    e os dados abrem em qualquer aparelho.
@@ -19,7 +19,7 @@
      2. O projeto Supabase respondeu em 6 segundos?  Se nao, e local.
      3. Deu tudo certo: e Supabase.
 
-   Por que cair para o local em vez de mostrar erro: o Solaris e apresentado
+   Por que cair para o local em vez de mostrar erro: o Watt Control e apresentado
    numa banca, testado em campo por gente que abre o arquivo por WhatsApp, e
    usado em lugar com internet ruim. Um site de monitoramento que nao abre
    porque o servidor esta fora nao monitora nada. A tela diz em qual dos dois
@@ -62,10 +62,10 @@ const Banco = {
         return true;
       }
       this.motivoLocal = 'O Supabase está configurado, mas não respondeu. ' +
-        'O Solaris abriu com o banco deste navegador para você não ficar parado.';
+        'O Watt Control abriu com o banco deste navegador para você não ficar parado.';
     } else {
       this.motivoLocal = 'Sem credenciais do Supabase em banco-de-dados/config.js. ' +
-        'O Solaris está gravando neste navegador.';
+        'O Watt Control está gravando neste navegador.';
     }
 
     this.impl = BancoLocal;

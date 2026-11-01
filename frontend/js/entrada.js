@@ -1,11 +1,11 @@
 /* entrada.js — a porta do site
 
-   A tela de entrada e a unica porta do Solaris: ninguem chega ao painel sem
+   A tela de entrada e a unica porta do Watt Control: ninguem chega ao painel sem
    conta. Por isso ela carrega o peso de explicar o produto inteiro antes de
    pedir qualquer coisa — e a primeira coisa que ela mostra nao e um
    formulario, e o ceu de agora na regiao de Sorocaba, com o sol onde ele
    esta. Quem abre as sete da noite ve o crepusculo. E a melhor explicacao
-   possivel do que o Solaris faz: ele sabe onde o sol esta.
+   possivel do que o Watt Control faz: ele sabe onde o sol esta.
 
    Este arquivo so desenha e escuta. Quem confere senha, cria conta e abre
    sessao e o backend/login.js. A tela morava la dentro ate esta versao, o
@@ -33,7 +33,7 @@ function vLogin() {
     '<div class="ent-vitrine-in">' +
       '<div class="ent-marca">' +
         '<span class="ent-ic">' + ico(IC.marca, 22, 'currentColor', 1.9) + '</span>' +
-        '<div><div class="ent-nome">Solaris</div>' +
+        '<div><div class="ent-nome">Watt Control</div>' +
         '<div class="ent-tag">Sua energia, explicada</div></div>' +
       '</div>' +
 
@@ -152,7 +152,7 @@ function cartaoSeguranca(naNuvem) {
     '<span class="ent-modo-ic">' +
     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
     '<path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4"/></svg></span>' +
-    '<span>Este Solaris está rodando <b>sem servidor</b>: a conta vale só neste navegador.</span></div>' +
+    '<span>Este Watt Control está rodando <b>sem servidor</b>: a conta vale só neste navegador.</span></div>' +
 
     '<details class="ent-aviso">' +
       '<summary>O que isso significa para a sua senha</summary>' +
