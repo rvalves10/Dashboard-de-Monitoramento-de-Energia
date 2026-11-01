@@ -1,6 +1,6 @@
 # Backend
 
-A lógica de domínio do Solaris: o cálculo, as contas, as regras e a leitura
+A lógica de domínio do Watt Control: o cálculo, as contas, as regras e a leitura
 da fatura. É onde moram as decisões que a banca vai questionar.
 
 ---

@@ -1,4 +1,4 @@
-/* regiao-sorocaba.js — o que o Solaris sabe sobre onde o cliente mora
+/* regiao-sorocaba.js — o que o Watt Control sabe sobre onde o cliente mora
 
    Por que isto existe: ate aqui o sistema tratava "distribuidora" como uma
    caixa de texto livre. A pessoa digitava "CPFL" e o sistema nao sabia mais

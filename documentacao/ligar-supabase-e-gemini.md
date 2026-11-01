@@ -1,13 +1,13 @@
 # Ligar o Supabase e o Gemini
 
-Passo a passo para sair do Solaris rodando só no navegador e chegar no
-Solaris com banco na nuvem e assistente de IA funcionando.
+Passo a passo para sair do Watt Control rodando só no navegador e chegar no
+Watt Control com banco na nuvem e assistente de IA funcionando.
 
 **Leva uns 20 minutos** (mais 10 se quiser o aviso por e-mail, que é
 opcional). Você só precisa fazer isso **uma vez** — depois é o grupo inteiro
 usando o mesmo projeto.
 
-> **Enquanto você não fizer nada disso, o Solaris continua funcionando.**
+> **Enquanto você não fizer nada disso, o Watt Control continua funcionando.**
 > Ele abre, calcula, grava no banco do navegador e mostra tudo. O que não
 > existe sem esta configuração é o assistente e a conta que abre em vários
 > aparelhos. A tela diz em qual dos dois modos está rodando, em
@@ -183,7 +183,7 @@ aberto — e o consumo alto acontece quando ninguém está olhando. A Edge
 Function `avisos` resolve isso: roda uma vez por dia no servidor, compara o
 consumo do mês com a meta e manda um e-mail.
 
-**Pode pular.** Todo o resto do Solaris funciona sem isso.
+**Pode pular.** Todo o resto do Watt Control funciona sem isso.
 
 ### 3.1 Uma conta de e-mail transacional
 
@@ -201,7 +201,7 @@ domínio no painel do Resend.
 cd banco-de-dados
 
 supabase secrets set RESEND_API_KEY=re_xxxxxxxx
-supabase secrets set AVISOS_REMETENTE="Solaris <avisos@seu-dominio.com>"
+supabase secrets set AVISOS_REMETENTE="Watt Control <avisos@seu-dominio.com>"
 
 # um segredo so nosso, para ninguem na internet disparar os e-mails do projeto
 supabase secrets set AVISOS_SEGREDO=$(openssl rand -hex 24)
@@ -308,6 +308,6 @@ o teste para gente de fora.
 
 ## Voltar atrás
 
-Apague as duas linhas de `supabase` em `config.js` e recarregue. O Solaris
+Apague as duas linhas de `supabase` em `config.js` e recarregue. O Watt Control
 volta a gravar no navegador, com todas as telas funcionando menos o
 assistente. Os dados que subiram continuam no Supabase, esperando.

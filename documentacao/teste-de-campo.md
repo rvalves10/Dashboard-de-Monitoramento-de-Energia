@@ -1,6 +1,6 @@
 # Teste de campo — 7 a 30 dias
 
-Roteiro para a equipe. A ideia é simples: **deixar o Solaris aberto e usar**,
+Roteiro para a equipe. A ideia é simples: **deixar o Watt Control aberto e usar**,
 por pelo menos uma semana, e anotar o que incomodar.
 
 Não precisa de conhecimento técnico. Se você consegue abrir um site, consegue
@@ -10,7 +10,7 @@ participar.
 
 ## Antes de começar (5 minutos)
 
-1. Abra o arquivo **`Solaris.html`** (duplo clique). Se preferir, `index.html`
+1. Abra o arquivo **`Watt-Control.html`** (duplo clique). Se preferir, `index.html`
    também abre a mesma coisa.
 2. Vai aparecer a tela de entrada. Clique em **"Criar conta"**, preencha
    nome, e-mail e senha, e continue. **A conta é obrigatória** — é ela que
@@ -22,7 +22,7 @@ participar.
    tarifa). Se você **já tem sistema solar**, tenha também a nota do
    instalador (kWp e número de painéis) — não tem agora? Coloque valores
    aproximados e corrija depois.
-   **Se você não tem painel nenhum, marque "Ainda não tenho".** O Solaris
+   **Se você não tem painel nenhum, marque "Ainda não tenho".** O Watt Control
    acompanha o seu consumo do mesmo jeito e ainda estima quanto um sistema
    economizaria na sua conta. Testar esse caminho é tão importante quanto o
    outro: é o perfil da maior parte das pessoas.

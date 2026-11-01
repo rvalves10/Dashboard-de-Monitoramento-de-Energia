@@ -1,4 +1,4 @@
--- esquema.sql — o banco do Solaris no Supabase
+-- esquema.sql — o banco do Watt Control no Supabase
 --
 -- COMO USAR: Supabase -> seu projeto -> SQL Editor -> New query -> cole este
 -- arquivo inteiro -> Run. Pode rodar de novo quantas vezes quiser: tudo aqui

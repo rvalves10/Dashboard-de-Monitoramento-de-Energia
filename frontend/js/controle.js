@@ -229,7 +229,7 @@ function syncFatura() {
 
    Quem entrega dado para um sistema tem que conseguir tirar de volta. Isso
    deixou de ser detalhe quando os dados sairam da maquina da pessoa e foram
-   para um servidor nosso: sem exportacao, o Solaris vira uma armadilha para
+   para um servidor nosso: sem exportacao, o Watt Control vira uma armadilha para
    quem usou por seis meses. */
 function carimbo() {
   const d = new Date();
@@ -253,7 +253,7 @@ function baixar(nome, conteudo, tipo) {
   }
 }
 
-/* Tudo que o Solaris guarda sobre a pessoa, num objeto so. Inclui o
+/* Tudo que o Watt Control guarda sobre a pessoa, num objeto so. Inclui o
    historico do medidor e as conversas com o assistente — se esta guardado, sai. */
 async function montarExportacao() {
   const s = sessao() || {};
@@ -691,7 +691,7 @@ const ACOES = {
   fonte: el => {
     MEDIDOR.ativo = el.dataset.v === 'medidor';
     MEDIDOR.ultima = null; MEDIDOR.erro = null;
-    if (MEDIDOR.ativo) { buscarMedidor(); aviso('Procurando o medidor', 'Conecte o computador na rede Solaris-Medidor. Sem resposta em 15 s, o painel volta para a simulação.', 'sun'); }
+    if (MEDIDOR.ativo) { buscarMedidor(); aviso('Procurando o medidor', 'Conecte o computador na rede Watt-Control-Medidor. Sem resposta em 15 s, o painel volta para a simulação.', 'sun'); }
     else aviso('Fonte: simulação', 'O painel voltou a calcular a leitura.', 'sun');
     salvar(); render();
   },
@@ -762,7 +762,7 @@ const ACOES = {
     const dentro = Math.abs(c.erro) <= 10;
     aviso(
       dentro ? 'O cálculo bateu' : 'O cálculo ficou fora por ' + nf(Math.abs(c.erro), 1) + '%',
-      'Fatura de ' + MESES[m] + ': ' + brl(c.real) + ' na conta, ' + brl(c.calculado) + ' no Solaris. ' +
+      'Fatura de ' + MESES[m] + ': ' + brl(c.real) + ' na conta, ' + brl(c.calculado) + ' no Watt Control. ' +
       (dentro
         ? 'Diferença de ' + nf(Math.abs(c.erro), 1) + '%.'
         : 'Confira se a tarifa e o consumo médio cadastrados batem com a fatura.'),
@@ -776,8 +776,8 @@ const ACOES = {
   /* ---------- levar os dados embora ---------- */
   'exportar-json': async () => {
     const dados = await montarExportacao();
-    baixar('solaris-' + carimbo() + '.json', JSON.stringify(dados, null, 2), 'application/json');
-    aviso('Dados exportados', 'O arquivo tem tudo que o Solaris guarda sobre você.', 'good');
+    baixar('watt-control-' + carimbo() + '.json', JSON.stringify(dados, null, 2), 'application/json');
+    aviso('Dados exportados', 'O arquivo tem tudo que o Watt Control guarda sobre você.', 'good');
   },
   'exportar-csv': async () => {
     const linhas = await Banco.leituras(contaAtual(), 0);
@@ -788,7 +788,7 @@ const ACOES = {
     const csv = ['quando,consumo_kw,geracao_kw']
       .concat(linhas.map(l => new Date(l.t).toISOString() + ',' + l.c + ',' + l.g))
       .join('\n');
-    baixar('solaris-leituras-' + carimbo() + '.csv', csv, 'text/csv');
+    baixar('watt-control-leituras-' + carimbo() + '.csv', csv, 'text/csv');
     aviso('Leituras exportadas', nf(linhas.length) + ' linhas, prontas para abrir no Excel.', 'good');
   },
 
@@ -845,7 +845,7 @@ const ACOES = {
     render();
     aviso('Banco limpo',
       (antes ? (antes.contas || 0) + ' contas e ' + nf(antes.leituras || 0) + ' leituras removidas. ' : '') +
-      'O Solaris está como no primeiro dia.', 'bad');
+      'O Watt Control está como no primeiro dia.', 'bad');
   }
 };
 
@@ -1091,7 +1091,7 @@ async function aoEntrar() {
      para quem ainda nao cadastrou nada seria mentira. */
   if (!perfilRespondido()) return;   /* a propria tela ja explica o que fazer */
   if (semUnidade()) {
-    aviso('Tudo pronto, ' + primeiro, 'Cadastre sua primeira unidade para o Solaris começar a calcular.', 'good');
+    aviso('Tudo pronto, ' + primeiro, 'Cadastre sua primeira unidade para o Watt Control começar a calcular.', 'good');
     return;
   }
   avisoDeAbertura('Bem-vindo, ' + primeiro);

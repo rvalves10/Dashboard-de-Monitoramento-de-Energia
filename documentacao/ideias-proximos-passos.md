@@ -1,4 +1,4 @@
-# Ideias para o Solaris
+# Ideias para o Watt Control
 
 Escrito depois da entrada do Supabase, do assistente de IA e da base da
 região de Sorocaba. Cada item diz **que problema real resolve**, porque ideia
@@ -21,7 +21,7 @@ A resposta honesta era "não sabemos".
 
 **O que existe agora.** Na tela de **Relatório**, o cartão *"Confere com a sua
 conta?"*: você escolhe um mês fechado, digita o total que veio na fatura, e o
-Solaris mostra o que ele calculou ao lado, com a diferença em porcentagem. O
+Watt Control mostra o que ele calculou ao lado, com a diferença em porcentagem. O
 número grande do cartão é o **erro médio do motor** contra todas as faturas
 informadas.
 
@@ -30,7 +30,7 @@ Três decisões dentro disso:
 - **Só mês fechado entra.** Comparar meio mês corrente com uma fatura inteira
   não compara nada, e daria um erro enorme que não é erro do motor.
 - **Mês anterior ao cadastro da unidade sai marcado com asterisco.** Ali o
-  Solaris reconstruiu o período, não mediu — a comparação vale menos, e a
+  Watt Control reconstruiu o período, não mediu — a comparação vale menos, e a
   tela diz isso.
 - **Sem fatura nenhuma, o erro médio é `null`, não zero.** Zero diria que o
   motor acerta em cheio, e não há nada que prove isso.
@@ -88,7 +88,7 @@ Duas coisas que decidem se isso é útil ou irritante:
   número fino ela vê no painel, e o e-mail manda ela para lá.
 
 **O risco dessa conta, dito com todas as letras:** o medidor só grava
-enquanto a aba está aberta. Se a pessoa só abre o Solaris de dia, a média
+enquanto a aba está aberta. Se a pessoa só abre o Watt Control de dia, a média
 fica puxada para cima e a projeção exagera. Por isso a função exige uma
 amostra mínima e espalhada — 200 leituras cobrindo 12 horas diferentes — e
 pula a conta quando não tem isso. **Menos avisos é melhor que aviso errado:**
@@ -110,7 +110,7 @@ lembrar.
 **O que existe agora.** No mês do reajuste da distribuidora dela, e no mês
 anterior, entra um alerta: *"A CPFL Piratininga reajusta a tarifa este mês.
 Quando a próxima fatura chegar, confira a tarifa e atualize em
-Configurações — todo o cálculo do Solaris depende desse número."*
+Configurações — todo o cálculo do Watt Control depende desse número."*
 
 Ele cita a tarifa **atual**, a que a pessoa cadastrou. **Não chuta a nova.**
 Isso é honesto, e resolve o problema de verdade, que é a pessoa esquecer.
@@ -130,7 +130,7 @@ para um sistema tem que conseguir tirar de volta.
   assistente, o histórico do medidor e as conversas. Se está guardado, sai.
 - **Leituras (CSV)** — o histórico minuto a minuto, que abre no Excel.
 
-Isto não é enfeite de LGPD: é o que impede o Solaris de virar uma armadilha
+Isto não é enfeite de LGPD: é o que impede o Watt Control de virar uma armadilha
 para quem usou por seis meses.
 
 ---

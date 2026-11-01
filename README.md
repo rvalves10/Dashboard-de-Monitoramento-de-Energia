@@ -1,4 +1,4 @@
-# Solaris
+# Watt Control
 
 Site de monitoramento de energia solar para residência e pequeno negócio.
 Projeto de UPX.
@@ -6,7 +6,7 @@ Projeto de UPX.
 Mostra para onde vai cada quilowatt, quanto o sol cobriu de verdade e quanto
 vem na próxima conta — com a Lei 14.300 já dentro do cálculo.
 
-**A interface segue o sol.** A primeira coisa que o Solaris mostra é o céu
+**A interface segue o sol.** A primeira coisa que o Watt Control mostra é o céu
 de agora na região de Sorocaba: o caminho do sol nas 24 horas, calculado
 pela astronomia, com o sol no lugar em que ele está e o fundo na cor da
 hora. Quem abre às sete da noite vê o crepúsculo.
@@ -20,7 +20,7 @@ Para onde o projeto vai — e como ele se sustenta — está em
 
 **Duplo clique em `index.html`.** O site abre na tela de entrada.
 
-**O login é obrigatório**: crie uma conta e o Solaris passa a saber com quem
+**O login é obrigatório**: crie uma conta e o Watt Control passa a saber com quem
 está falando desde o primeiro segundo — que é o que faz o assistente de IA e
 o painel serem *seus*, e não de um visitante anônimo. Quem só quer passear
 pelo sistema cria a conta e liga as unidades de exemplo em Configurações,
@@ -38,7 +38,7 @@ offline.** Com o Supabase configurado (10 minutos, em
 a conta passa a abrir em qualquer aparelho e o assistente de IA liga.
 
 Se preferir um arquivo só para mandar por e-mail ou WhatsApp, use
-**`Solaris.html`** — é o site inteiro empacotado.
+**`Watt-Control.html`** — é o site inteiro empacotado.
 
 ## Conferir se está tudo certo
 
@@ -111,7 +111,7 @@ Quem mora em Piedade é atendido pela Neoenergia Elektro, não pela CPFL — e
 o sistema sabe disso.
 
 **A conta de verdade, ao lado da calculada.** Na tela de Relatório você
-informa o total que veio numa fatura de papel, e o Solaris mostra o que ele
+informa o total que veio numa fatura de papel, e o Watt Control mostra o que ele
 calculou para o mesmo mês, com a diferença em porcentagem. É a única coisa no
 sistema que não é autorreferente — sem isso, ele confere consigo mesmo.
 
@@ -120,7 +120,7 @@ tarifa, o sistema avisa e manda conferir na fatura. Ele não chuta o valor
 novo: tarifa velha é pior que tarifa nenhuma.
 
 **Levar os dados embora.** Em Configurações, dois botões baixam tudo que o
-Solaris guarda sobre você — em JSON e em CSV.
+Watt Control guarda sobre você — em JSON e em CSV.
 
 **Relatório que imprime limpo.** `Ctrl+P` na tela de Relatório.
 
@@ -138,9 +138,9 @@ frontend/  ──usa──▶  backend/  ──usa──▶  banco-de-dados/
 São **seis pastas**, e nada solto fora delas.
 
 ```
-Solaris/
+Watt Control/
 ├── index.html            abre o site (encaminha para frontend/)
-├── Solaris.html          o site num arquivo só (gerado pelo build)
+├── Watt-Control.html          o site num arquivo só (gerado pelo build)
 │
 ├── frontend/             ◀ o que a pessoa vê
 │   ├── index.html        a página; carrega as camadas na ordem certa
@@ -186,7 +186,7 @@ Detalhe de cada arquivo em [`documentacao/MAPA-DO-PROJETO.md`](documentacao/MAPA
 
 ## Banco de dados
 
-O Solaris tem **dois bancos com a mesma interface**, e escolhe entre eles na
+O Watt Control tem **dois bancos com a mesma interface**, e escolhe entre eles na
 abertura:
 
 | | Quando entra | O que muda |
@@ -198,7 +198,7 @@ Quem decide é o `banco-de-dados/banco.js`, e **o resto do sistema nunca
 pergunta qual dos dois respondeu.** É isso que permite o site continuar
 abrindo com duplo clique depois de ganhar um servidor.
 
-Por que cair para o banco local em vez de mostrar erro: o Solaris é
+Por que cair para o banco local em vez de mostrar erro: o Watt Control é
 apresentado numa banca, testado em campo por gente que abre o arquivo pelo
 WhatsApp e usado em lugar com internet ruim. Um site de monitoramento que não
 abre porque o servidor caiu não monitora nada. **Configurações → Banco de
@@ -233,7 +233,7 @@ Como ligar: [`documentacao/ligar-supabase-e-gemini.md`](documentacao/ligar-supab
 ## O assistente de IA
 
 Google Gemini, com **a chave do grupo — não do cliente.** Ninguém que usa o
-Solaris precisa criar chave, colar chave ou ter conta no Google: abre o site
+Watt Control precisa criar chave, colar chave ou ter conta no Google: abre o site
 e o assistente está lá.
 
 Para isso a chave não pode estar no código do site, onde qualquer pessoa a
@@ -337,7 +337,7 @@ cliente. O que é real:
 
 ## Site, não aplicativo
 
-Hoje o Solaris é um **site**. Ele funciona bem no celular porque é
+Hoje o Watt Control é um **site**. Ele funciona bem no celular porque é
 responsivo: abaixo de 760 px troca o menu lateral por abas embaixo. Isso é
 diferente de ser um **aplicativo**.
 

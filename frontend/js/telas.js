@@ -48,7 +48,7 @@ const IC = {
   ia: 'M12 3a6 6 0 0 0-3.4 10.9c.5.5.9 1.3.9 2.1h5c0-.8.4-1.6.9-2.1A6 6 0 0 0 12 3zM10 19.5h4',
   mapa: 'M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5zM9 4v13M15 6.5v13',
   lua: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z',
-  /* o simbolo do Solaris: o sol nascendo sobre a linha do horizonte */
+  /* o simbolo do Watt Control: o sol nascendo sobre a linha do horizonte */
   marca: 'M5 16.5a7 7 0 0 1 14 0M2 16.5h20M12 6.5V4M6.3 10.3 4.6 8.6M17.7 10.3l1.7-1.7M7.5 20h9'
 };
 function ico(d, sz, cor, sw) {
@@ -109,7 +109,7 @@ function vRail() {
   const semSolar = unidade().temSolar === false;
   return '<aside class="rail">' +
     '<div class="brand"><span class="brand-mark">' + ico(IC.marca, 20, 'currentColor', 1.9) + '</span>' +
-    '<span class="brand-text"><span class="brand-name" style="display:block">Solaris</span><span class="brand-sub" style="display:block">Sua energia, explicada</span></span></div>' +
+    '<span class="brand-text"><span class="brand-name" style="display:block">Watt Control</span><span class="brand-sub" style="display:block">Sua energia, explicada</span></span></div>' +
     '<nav class="nav" aria-label="Seções">' + nav + '</nav>' +
     '<div class="rail-spacer"></div>' +
     '<div class="rail-foot">' +
@@ -249,7 +249,7 @@ function vPainel() {
 
   const fech = new Date(v.y, v.m + 1, 12);
   const conta = '<section class="card"><div class="card-head" style="align-items:center">' +
-    '<h2>Próxima conta</h2><span class="pill pill--warn" title="A ANEEL anuncia a bandeira no fim de cada mês; até lá o Solaris usa a amarela">' +
+    '<h2>Próxima conta</h2><span class="pill pill--warn" title="A ANEEL anuncia a bandeira no fim de cada mês; até lá o Watt Control usa a amarela">' +
     'Bandeira ' + BANDEIRA_ESTIMADA.nome + ' · estimada</span></div>' +
     '<div style="display:flex;align-items:baseline;gap:var(--e2);margin-top:var(--e3);flex-wrap:wrap"><span class="big big-46"><span class="moeda">R$</span>' + nf(v.contaProj) + '</span>' +
     '<span style="font-size:var(--t-sm);color:var(--faint)">fecha ' + fech.getDate() + ' de ' + MESES[fech.getMonth()] + '</span></div>' +
@@ -287,7 +287,7 @@ function vPainel() {
 }
 
 /* ---------- o ceu do painel ----------
-   O cartao que abre o Solaris. A esquerda, o numero que a pessoa veio ver;
+   O cartao que abre o Watt Control. A esquerda, o numero que a pessoa veio ver;
    a direita, o ceu de hoje com o sol onde ele esta, e o que o medidor marca
    neste minuto. O fundo e a cor da hora (ceu.css): abrir as sete da noite
    e ver o crepusculo e saber, antes de ler qualquer coisa, por que os
@@ -376,7 +376,7 @@ function sparkContas(v, u, t) {
 
 /* ---------- vale a pena instalar? ----------
 
-   O cartão que só quem não tem sistema vê, e a coisa que o Solaris pode
+   O cartão que só quem não tem sistema vê, e a coisa que o Watt Control pode
    responder melhor que qualquer site de orçamento: ele já sabe o consumo
    real, a tarifa real, a condição do telhado e o sol da cidade.
 
@@ -819,7 +819,7 @@ function vRelatorio() {
   const hoje = v.data;
   return '<div class="grid12 enter">' +
     '<section class="card s8" style="padding:var(--e6) var(--e7) var(--e7)">' +
-    '<div class="print-head"><span class="brand-mark">' + ico(IC.marca, 18, 'currentColor', 1.9) + '</span><b style="font-family:var(--f-display);font-size:var(--t-md);font-weight:600">Solaris</b></div>' +
+    '<div class="print-head"><span class="brand-mark">' + ico(IC.marca, 18, 'currentColor', 1.9) + '</span><b style="font-family:var(--f-display);font-size:var(--t-md);font-weight:600">Watt Control</b></div>' +
     '<div class="card-head"><div><div class="inv-titulo">' + esc(u.nome) + '</div>' +
     '<div class="card-sub">' + esc(u.distribuidora) + ' · 01 a ' + hoje.getDate() + ' de ' + MESES[v.m] + ' de ' + v.y + '</div></div>' +
     '<button class="ghost-btn no-print" data-act="imprimir">' + ico(IC.print, 14, 'currentColor', 1.9) + 'Imprimir</button></div>' +
@@ -872,7 +872,7 @@ function vRelatorio() {
 
    Este cartao e a resposta para a pergunta que a banca vai fazer primeiro:
    "e bate?". Ate existir uma fatura de papel informada aqui, todo numero do
-   Solaris e autorreferente — ele confere consigo mesmo.
+   Watt Control e autorreferente — ele confere consigo mesmo.
 
    So mes FECHADO entra. Comparar meio mes corrente com uma fatura inteira
    nao compara nada, e daria um erro enorme que nao e erro do motor. */
@@ -887,7 +887,7 @@ function cardConferencia() {
       '<span class="conf-mes">' + MES3[c.m] + '/' + String(c.y).slice(2) +
       (c.medido ? '' : '<i title="mês anterior ao cadastro da unidade: reconstrução">*</i>') + '</span>' +
       '<span class="conf-par"><b>' + brl(c.real) + '</b><i>na fatura</i></span>' +
-      '<span class="conf-par"><b>' + brl(c.calculado) + '</b><i>o Solaris</i></span>' +
+      '<span class="conf-par"><b>' + brl(c.calculado) + '</b><i>o Watt Control</i></span>' +
       '<span class="conf-erro ' + (bom ? 'conf-erro--bom' : 'conf-erro--ruim') + '">' +
       (c.erro >= 0 ? '+' : '−') + nf(Math.abs(c.erro), 1) + '%</span>' +
       '<button class="eq-kill" style="opacity:1" data-act="remover-fatura" data-y="' + c.y + '" data-m="' + c.m + '" ' +
@@ -916,7 +916,7 @@ function cardConferencia() {
     '<h2>Confere com a sua conta?</h2>' +
 
     (medio === null
-      ? '<div class="card-sub">Informe o total de uma conta de luz que já chegou. É a única forma de saber se o cálculo do Solaris acerta.</div>'
+      ? '<div class="card-sub">Informe o total de uma conta de luz que já chegou. É a única forma de saber se o cálculo do Watt Control acerta.</div>'
       : '<div style="display:flex;align-items:baseline;gap:var(--e2);margin-top:var(--e3)">' +
         '<span class="big big-30">' + nf(medio, 1) + '%</span>' +
         '<span style="font-size:var(--t-sm);color:var(--muted)">de erro médio em ' +
@@ -932,7 +932,7 @@ function cardConferencia() {
 
     (lista.some(c => !c.medido)
       ? '<div style="font-size:var(--t-xs);color:var(--faint);margin-top:var(--e3);line-height:var(--lh-snug)">' +
-        '* mês anterior ao cadastro da unidade: o Solaris reconstruiu esse período, não mediu. ' +
+        '* mês anterior ao cadastro da unidade: o Watt Control reconstruiu esse período, não mediu. ' +
         'A comparação vale menos aí.</div>'
       : '') +
     '</section>';
@@ -1077,12 +1077,12 @@ function cardBanco() {
     '<div class="bd-grade" id="bancoNumeros"></div>' +
     '<div class="bd-graf" id="bancoGrafico"></div>' +
 
-    /* Levar os dados embora nao e enfeite de LGPD: e o que impede o Solaris
+    /* Levar os dados embora nao e enfeite de LGPD: e o que impede o Watt Control
        de virar uma armadilha para quem usou por seis meses. Fica junto do
        banco, que e onde a pessoa vem quando quer saber o que esta guardado. */
     '<div class="bd-sair">' +
     '<div><div class="bd-sair-t">Seus dados são seus</div>' +
-    '<div class="bd-sair-s">Baixe tudo o que o Solaris guarda sobre você — unidades, aparelhos, ' +
+    '<div class="bd-sair-s">Baixe tudo o que o Watt Control guarda sobre você — unidades, aparelhos, ' +
     'metas, o histórico do medidor e as conversas com o assistente.</div></div>' +
     '<div class="bd-sair-acoes">' +
     '<button class="ghost-btn" data-act="exportar-json">' + ico(IC.papel, 13, 'currentColor', 1.9) + 'Baixar tudo (JSON)</button>' +
@@ -1139,7 +1139,7 @@ function cardFonte() {
         ? 'Última leitura: <b class="mono" style="color:var(--ink)">' + nf(MEDIDOR.ultima, 3) + ' kW</b>, há ' +
         nf((Date.now() - MEDIDOR.quando) / 1000, 0) + ' segundos. Só o consumo vem do sensor — a geração continua simulada, porque um sensor no quadro geral não separa as duas.'
         : 'Sem resposta do medidor' + (MEDIDOR.erro ? ' (' + esc(MEDIDOR.erro) + ')' : '') +
-        '. Confira se o computador está na rede <b>Solaris-Medidor</b>. Depois de 15 segundos sem leitura o painel volta sozinho para a simulação, para nunca congelar numa apresentação.') +
+        '. Confira se o computador está na rede <b>Watt-Control-Medidor</b>. Depois de 15 segundos sem leitura o painel volta sozinho para a simulação, para nunca congelar numa apresentação.') +
       '</div>'
       : '<div style="font-size:var(--t-sm);color:var(--faint);margin-top:12px;max-width:70ch">' +
       'A simulação calcula tudo a partir da data, da irradiação da região e do padrão de consumo da unidade. É a fonte padrão e não depende de rede.</div>') +
@@ -1163,7 +1163,7 @@ function vPrimeiraUnidade() {
 
       '<h1>' + (primeiro ? primeiro + ', vamos' : 'Vamos') + ' come\u00e7ar<br>pela sua unidade</h1>' +
       '<p class="comecar-d">Sua conta est\u00e1 vazia \u2014 e \u00e9 assim que tem que ser. ' +
-      'Cadastre a casa ou o com\u00e9rcio que voc\u00ea quer acompanhar e o Solaris passa a ' +
+      'Cadastre a casa ou o com\u00e9rcio que voc\u00ea quer acompanhar e o Watt Control passa a ' +
       'calcular gera\u00e7\u00e3o, consumo, cr\u00e9ditos e conta em cima dos <b>seus</b> n\u00fameros.</p>' +
 
       '<div class="comecar-precisa">' +
@@ -1230,7 +1230,7 @@ const PASSOS_UNIDADE = [
 function tituloDoPasso(n) {
   const p = PASSOS_UNIDADE[n - 1];
   if (n === 2 && S.nova.temSolar === false) {
-    return { titulo: 'Seu telhado', sub: 'Duas perguntas, e o Solaris já consegue simular um sistema para você.' };
+    return { titulo: 'Seu telhado', sub: 'Duas perguntas, e o Watt Control já consegue simular um sistema para você.' };
   }
   return p;
 }
@@ -1309,7 +1309,7 @@ function blocoFotoConta() {
    atendido pela Neoenergia Elektro, e se o sistema achar que e CPFL o
    assistente vai citar o telefone errado e o mes de reajuste errado.
 
-   Escolhendo a cidade, o Solaris ja sabe a distribuidora, quando a tarifa
+   Escolhendo a cidade, o Watt Control ja sabe a distribuidora, quando a tarifa
    dela e reajustada e como e o consumo tipico do lugar. Quem esta fora da
    regiao mapeada escolhe "Outra cidade" e digita a distribuidora na mao. */
 function blocoCidade(n) {
@@ -1340,7 +1340,7 @@ function blocoCidade(n) {
         '<input class="text-in" id="unDistribuidora" data-fid="unDistribuidora" data-in="unDistribuidora" ' +
         'type="text" value="' + esc(n.distribuidora) + '" placeholder="Quem manda a conta" ' +
         'autocomplete="off" style="max-width:340px">' +
-        '<div class="dica">Fora da região de Sorocaba o Solaris ainda calcula tudo, mas o ' +
+        '<div class="dica">Fora da região de Sorocaba o Watt Control ainda calcula tudo, mas o ' +
         'assistente não vai saber os prazos e os canais dessa distribuidora.</div></div>') +
     '</div>';
 }
@@ -1352,7 +1352,7 @@ function blocoCidade(n) {
    quanto pagou, e travar a pessoa nessas perguntas é perdê-la ali.
 
    E quem ainda não tem é justamente quem mais tem o que ganhar com o
-   Solaris: ele já vai saber o consumo, a tarifa, o telhado e o sol da cidade
+   Watt Control: ele já vai saber o consumo, a tarifa, o telhado e o sol da cidade
    dela — que é tudo o que falta para responder “vale a pena?”. */
 function blocoTemSolar(n) {
   const opcao = (v, t, d) =>
@@ -1360,7 +1360,7 @@ function blocoTemSolar(n) {
     '<span class="opt-t">' + t + '</span><span class="opt-d">' + d + '</span></button>';
 
   return '<div class="field"><span class="field-lbl">Você já tem sistema solar?</span>' +
-    '<div class="dica">Se ainda não tem, o Solaris acompanha o seu consumo do mesmo jeito — e calcula quanto um sistema economizaria na sua conta.</div>' +
+    '<div class="dica">Se ainda não tem, o Watt Control acompanha o seu consumo do mesmo jeito — e calcula quanto um sistema economizaria na sua conta.</div>' +
     '<div class="opts">' +
     opcao('sim', 'Já tenho painéis instalados', 'Vou informar a potência e o que paguei, e o painel mostra a economia real.') +
     opcao('nao', 'Ainda não tenho', 'O painel mostra para onde vai a sua energia e simula quanto um sistema traria de volta.') +
@@ -1413,7 +1413,7 @@ function vUnidade() {
        simulação, e o tempo para o histórico ter contra o que comparar. */
     corpo = semSolar
       ? blocoTelhado +
-        campo('unMeses', 'Há quantos meses você acompanha essa conta', 'Define o tamanho do histórico que o Solaris reconstrói para você comparar.', n.mesesOperacao, true)
+        campo('unMeses', 'Há quantos meses você acompanha essa conta', 'Define o tamanho do histórico que o Watt Control reconstrói para você comparar.', n.mesesOperacao, true)
       : blocoTelhado +
         campo('unPotencia', 'Potência instalada (kWp)', 'Está na nota do instalador. Some a potência dos painéis e divida por mil.', n.potenciaKwp, true) +
         campo('unPaineis', 'Quantidade de painéis', '', n.paineis, true) +
@@ -1481,7 +1481,7 @@ function previaCard(n, p, at) {
     const contaHoje = contaSemSolar(n.consumoMes, n.tarifa, arq.ilum, arq.minFatura);
 
     return '<section class="card card--dark" style="padding:24px 26px 26px">' +
-      '<h2>O que o Solaris vai te dizer</h2>' +
+      '<h2>O que o Watt Control vai te dizer</h2>' +
       '<div style="font-size:var(--t-sm);color:var(--on-dark-soft);margin-top:12px;line-height:1.55">' +
       'Com o seu consumo e a sua tarifa, ele acompanha para onde vai cada quilowatt e ' +
       'quanto vem na próxima conta — hoje, sem painel nenhum.</div>' +

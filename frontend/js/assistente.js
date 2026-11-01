@@ -85,7 +85,7 @@ function cabecalhoBoasVindas(primeiro, i, total) {
     marcaBoasVindas() +
     '<h1>' + (primeiro ? esc(primeiro) + ', prazer' : 'Prazer') + '. Me conta de você?</h1>' +
     '<p class="boas-d">Cinco perguntas rápidas, nenhuma sobre energia. Elas servem para o ' +
-    'assistente do Solaris falar com você do seu jeito, em vez de responder igual para todo mundo. ' +
+    'assistente do Watt Control falar com você do seu jeito, em vez de responder igual para todo mundo. ' +
     'Dá para pular qualquer uma e mudar tudo depois em Configurações.</p>' +
     '<div class="boas-trilha" role="group" aria-label="Progresso">' +
     '<div class="boas-barra"><i style="width:' + Math.round((i / total) * 100) + '%"></i></div>' +
@@ -97,7 +97,7 @@ function cabecalhoBoasVindas(primeiro, i, total) {
    a conta, e sem ela parecia uma pagina solta, de outro site. */
 function marcaBoasVindas() {
   return '<div class="boas-marca"><span class="brand-mark">' + ico(IC.marca, 18, 'currentColor', 1.9) + '</span>' +
-    '<span>Solaris</span></div>';
+    '<span>Watt Control</span></div>';
 }
 
 function telaFechoBoasVindas(primeiro) {
@@ -234,7 +234,7 @@ function assistenteVazio() {
 
    Sem estas duas linhas a pessoa nao tem como saber se o assistente esta
    olhando a unidade certa — e quem tem casa e comercio cadastrados no mesmo
-   Solaris precisa saber. O titulo do cartao nao repete "Assistente", que ja
+   Watt Control precisa saber. O titulo do cartao nao repete "Assistente", que ja
    esta na barra do topo e na aba: repetir nome de tela e desperdicar a linha
    mais visivel do cartao. */
 function tituloDoContexto() {

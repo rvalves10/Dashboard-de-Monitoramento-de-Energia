@@ -1,6 +1,6 @@
-/* config.js — para onde o Solaris fala
+/* config.js — para onde o Watt Control fala
 
-   Este e o unico arquivo que voce precisa editar para ligar o Solaris no
+   Este e o unico arquivo que voce precisa editar para ligar o Watt Control no
    Supabase. Preencha as duas linhas de `supabase` e recarregue: o site passa
    a gravar no Postgres em vez do banco do navegador, e a mesma conta abre em
    qualquer aparelho.

@@ -1,7 +1,7 @@
 /* local.js — o banco que mora no navegador
 
    E o IndexedDB: contas, estado e leituras gravados na maquina de quem usa.
-   Ate a versao passada este era O banco do Solaris. Hoje ele e a RESERVA:
+   Ate a versao passada este era O banco do Watt Control. Hoje ele e a RESERVA:
    quando o Supabase esta configurado, quem responde e o supabase.js; quando
    nao esta — sem internet, sem credenciais, ou site aberto com duplo clique
    direto do disco — quem responde e este arquivo.

@@ -1,9 +1,9 @@
 # Fase 2 — quando virar aplicativo
 
 **Nada aqui faz parte da entrega deste semestre.** Esta pasta guarda o que
-vai ser útil quando o Solaris deixar de ser só um site.
+vai ser útil quando o Watt Control deixar de ser só um site.
 
-Separei porque misturar as duas coisas confunde: hoje o Solaris é um **site**
+Separei porque misturar as duas coisas confunde: hoje o Watt Control é um **site**
 que funciona bem no celular, e isso é diferente de ser um **aplicativo**.
 
 ---

@@ -33,7 +33,7 @@
  * para la em vez de repetir valores.
  *
  * O RISCO DESSA CONTA, dito com todas as letras: o medidor so grava enquanto
- * a aba esta aberta. Se a pessoa so abre o Solaris de dia, a media fica
+ * a aba esta aberta. Se a pessoa so abre o Watt Control de dia, a media fica
  * puxada para cima pelo consumo diurno e a projecao exagera. Por isso a
  * funcao exige uma amostra minima e espalhada — pelo menos 200 leituras
  * cobrindo 12 horas diferentes do dia — e pula a conta quando nao tem isso.
@@ -44,7 +44,7 @@
  * PUBLICAR (de dentro de banco-de-dados/):
  *
  *   supabase secrets set RESEND_API_KEY=re_xxxxxxxx
- *   supabase secrets set AVISOS_REMETENTE="Solaris <avisos@seu-dominio.com>"
+ *   supabase secrets set AVISOS_REMETENTE="Watt Control <avisos@seu-dominio.com>"
  *   supabase functions deploy avisos --no-verify-jwt
  *
  * O --no-verify-jwt e necessario: quem chama nao e uma pessoa logada, e o
@@ -99,7 +99,7 @@ Deno.serve(async (req: Request) => {
   const SERVICO = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const SEGREDO = Deno.env.get('AVISOS_SEGREDO');
   const RESEND = Deno.env.get('RESEND_API_KEY');
-  const REMETENTE = Deno.env.get('AVISOS_REMETENTE') || 'Solaris <onboarding@resend.dev>';
+  const REMETENTE = Deno.env.get('AVISOS_REMETENTE') || 'Watt Control <onboarding@resend.dev>';
 
   /* Esta funcao roda sem verificacao de JWT, porque quem chama e o agendador
      do banco. O segredo proprio e o que impede a internet inteira de disparar
@@ -202,9 +202,9 @@ Deno.serve(async (req: Request) => {
           `Esta e uma estimativa grosseira, feita a partir da media das leituras ` +
           `que ja subiram. O numero certo, com a curva do seu consumo e os seus ` +
           `creditos, esta no painel.\n\n` +
-          `Abra o Solaris para ver o que subiu e o que da para fazer:\n` +
+          `Abra o Watt Control para ver o que subiu e o que da para fazer:\n` +
           `o assistente ja tem esses numeros na frente dele.\n\n` +
-          `— Solaris\n\n` +
+          `— Watt Control\n\n` +
           `Voce recebeu isto porque a regra "avisar quando eu passar da meta" ` +
           `esta ligada em Alertas e metas. Da para desligar la, a qualquer hora.`
       })
